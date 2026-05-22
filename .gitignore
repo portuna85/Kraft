@@ -1,10 +1,11 @@
+﻿# Build outputs
 .gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### IntelliJ IDEA ###
+# IDE
 .idea/
 *.iws
 *.iml
@@ -13,7 +14,7 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
-### Eclipse ###
+# Eclipse
 .apt_generated
 .classpath
 .factorypath
@@ -25,27 +26,27 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
-### VS Code ###
+# VS Code
 .vscode/
 
-### Claude Code (per-developer settings) ###
+# Local tool settings
 .claude/
 
-### Mac OS ###
+# OS
 .DS_Store
 
-### Logs ###
+# Logs
 *.log
 logs/
 
-### Local secrets (.env 는 git 에 절대 커밋하지 않습니다. .env.example 만 추적) ###
+# Local secrets
 .env
 !.env.example
 
-### Markdown — README 만 추적, 그 외 로컬 전용 ###
+# Docs policy: only keep README and completed log tracked
 *.md
 !README.md
+!completed.md
 
-### docs/ 로컬 전용 ###
+# Local docs workspace
 docs/
-
