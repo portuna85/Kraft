@@ -16,6 +16,11 @@ import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -125,6 +130,45 @@ class LottoCollectionCommandServiceTest {
         CollectResponse response = service.collectAllUntilLatest();
 
         assertThat(response.collected()).isEqualTo(1);
+        verify(singleDrawCollector, times(1)).collectOne(11, false);
+    }
+
+    @Test
+    void collectAllUntilLatestSkipsWhenAnotherRunIsActive() throws Exception {
+        LottoCollectionCommandService service = new LottoCollectionCommandService(
+                winningNumberRepository,
+                singleDrawCollector,
+                rangeCollector,
+                eventPublisher,
+                0,
+                1,
+                2000
+        );
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(10));
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        when(singleDrawCollector.collectOne(11, false)).thenAnswer(invocation -> {
+            started.countDown();
+            if (!release.await(2, TimeUnit.SECONDS)) {
+                throw new AssertionError("test synchronization timeout");
+            }
+            return CollectResponse.ofInserted(1, 11);
+        });
+
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            Future<CollectResponse> first = executor.submit(service::collectAllUntilLatest);
+            assertThat(started.await(2, TimeUnit.SECONDS)).isTrue();
+
+            CollectResponse skipped = service.collectAllUntilLatest();
+            assertThat(skipped.skipped()).isEqualTo(1);
+            assertThat(skipped.collected()).isZero();
+            assertThat(skipped.updated()).isZero();
+
+            release.countDown();
+            CollectResponse completed = first.get(2, TimeUnit.SECONDS);
+            assertThat(completed.collected()).isEqualTo(1);
+        }
+
         verify(singleDrawCollector, times(1)).collectOne(11, false);
     }
 

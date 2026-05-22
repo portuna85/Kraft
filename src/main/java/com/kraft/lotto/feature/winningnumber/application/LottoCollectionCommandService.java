@@ -6,6 +6,8 @@ import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,6 +26,7 @@ public class LottoCollectionCommandService {
     private final BackfillDelaySupport backfillDelay;
     private final int maxCollectPerRun;
     private final int maxHistoryCollect;
+    private final AtomicBoolean running = new AtomicBoolean(false);
 
     LottoCollectionCommandService(WinningNumberRepository winningNumberRepository,
                                   LottoSingleDrawCollector singleDrawCollector,
@@ -42,82 +45,90 @@ public class LottoCollectionCommandService {
     }
 
     public CollectResponse collectNextIfNeeded() {
-        CollectResponse response = collectOneNext();
-        publishCollected(response);
-        return response;
+        return runExclusive("collect-next", () -> {
+            CollectResponse response = collectOneNext();
+            publishCollected(response);
+            return response;
+        });
     }
 
     /**
      * Collect sequential rounds until API indicates latest-not-drawn (empty) or a failure occurs.
      */
     public CollectResponse collectAllUntilLatest() {
-        int totalCollected = 0, totalUpdated = 0, totalSkipped = 0;
-        List<Integer> allFailedRounds = new ArrayList<>();
-        int latestRound = winningNumberRepository.findMaxRound().orElse(0);
-        boolean truncated = true;
+        return runExclusive("collect-all", () -> {
+            int totalCollected = 0, totalUpdated = 0, totalSkipped = 0;
+            List<Integer> allFailedRounds = new ArrayList<>();
+            int latestRound = winningNumberRepository.findMaxRound().orElse(0);
+            boolean truncated = true;
 
-        for (int i = 0; i < maxCollectPerRun; i++) {
-            CollectResponse one = collectOneNext();
-            totalCollected += one.collected();
-            totalUpdated += one.updated();
-            totalSkipped += one.skipped();
-            latestRound = Math.max(latestRound, one.latestRound());
-            allFailedRounds.addAll(one.failedRounds());
-            if (one.notDrawn() || one.failed() > 0) {
-                truncated = false;
-                break;
+            for (int i = 0; i < maxCollectPerRun; i++) {
+                CollectResponse one = collectOneNext();
+                totalCollected += one.collected();
+                totalUpdated += one.updated();
+                totalSkipped += one.skipped();
+                latestRound = Math.max(latestRound, one.latestRound());
+                allFailedRounds.addAll(one.failedRounds());
+                if (one.notDrawn() || one.failed() > 0) {
+                    truncated = false;
+                    break;
+                }
             }
-        }
-        if (truncated) {
-            log.warn("collect-all: MAX_COLLECT_PER_RUN({}) reached, collection stopped", maxCollectPerRun);
-        }
-        CollectResponse aggregated = CollectResponse.of(totalCollected, totalUpdated, totalSkipped,
-                latestRound, allFailedRounds, truncated, truncated ? latestRound + 1 : null, false);
-        publishCollected(aggregated);
-        return aggregated;
+            if (truncated) {
+                log.warn("collect-all: MAX_COLLECT_PER_RUN({}) reached, collection stopped", maxCollectPerRun);
+            }
+            CollectResponse aggregated = CollectResponse.of(totalCollected, totalUpdated, totalSkipped,
+                    latestRound, allFailedRounds, truncated, truncated ? latestRound + 1 : null, false);
+            publishCollected(aggregated);
+            return aggregated;
+        });
     }
 
     public CollectResponse collectAllHistory() {
-        int totalCollected = 0, totalUpdated = 0, totalSkipped = 0;
-        List<Integer> allFailedRounds = new ArrayList<>();
-        int latestRound = 0;
+        return runExclusive("collect-history", () -> {
+            int totalCollected = 0, totalUpdated = 0, totalSkipped = 0;
+            List<Integer> allFailedRounds = new ArrayList<>();
+            int latestRound = 0;
 
-        for (int i = 0; i < maxHistoryCollect; i++) {
-            CollectResponse one = collectOneNext();
-            totalCollected += one.collected();
-            totalUpdated += one.updated();
-            totalSkipped += one.skipped();
-            latestRound = Math.max(latestRound, one.latestRound());
-            allFailedRounds.addAll(one.failedRounds());
-            if (one.notDrawn() || one.failed() > 0) {
-                break;
+            for (int i = 0; i < maxHistoryCollect; i++) {
+                CollectResponse one = collectOneNext();
+                totalCollected += one.collected();
+                totalUpdated += one.updated();
+                totalSkipped += one.skipped();
+                latestRound = Math.max(latestRound, one.latestRound());
+                allFailedRounds.addAll(one.failedRounds());
+                if (one.notDrawn() || one.failed() > 0) {
+                    break;
+                }
+                if ((one.collected() > 0 || one.updated() > 0) && !backfillDelay.pauseIfPossible()) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
-            if ((one.collected() > 0 || one.updated() > 0) && !backfillDelay.pauseIfPossible()) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-        CollectResponse aggregated = CollectResponse.of(totalCollected, totalUpdated, totalSkipped,
-                latestRound, allFailedRounds, false, null, false);
-        publishCollected(aggregated);
-        return aggregated;
+            CollectResponse aggregated = CollectResponse.of(totalCollected, totalUpdated, totalSkipped,
+                    latestRound, allFailedRounds, false, null, false);
+            publishCollected(aggregated);
+            return aggregated;
+        });
     }
 
     public CollectResponse collectMissingOnce() {
-        int maxRound = winningNumberRepository.findMaxRound().orElse(0);
-        if (maxRound <= 0) {
-            return CollectResponse.of(0, 0, 0, 0, List.of(), false, null, false);
-        }
-        Set<Integer> existingRounds = winningNumberRepository.findRoundsBetween(1, maxRound);
-        List<Integer> missingRounds = new ArrayList<>();
-        for (int round = 1; round <= maxRound; round++) {
-            if (!existingRounds.contains(round)) {
-                missingRounds.add(round);
+        return runExclusive("collect-missing", () -> {
+            int maxRound = winningNumberRepository.findMaxRound().orElse(0);
+            if (maxRound <= 0) {
+                return CollectResponse.of(0, 0, 0, 0, List.of(), false, null, false);
             }
-        }
-        CollectResponse aggregated = rangeCollector.collectRange(missingRounds, false, true);
-        publishCollected(aggregated);
-        return aggregated;
+            Set<Integer> existingRounds = winningNumberRepository.findRoundsBetween(1, maxRound);
+            List<Integer> missingRounds = new ArrayList<>();
+            for (int round = 1; round <= maxRound; round++) {
+                if (!existingRounds.contains(round)) {
+                    missingRounds.add(round);
+                }
+            }
+            CollectResponse aggregated = rangeCollector.collectRange(missingRounds, false, true);
+            publishCollected(aggregated);
+            return aggregated;
+        });
     }
 
     private CollectResponse collectOneNext() {
@@ -132,5 +143,18 @@ public class LottoCollectionCommandService {
         eventPublisher.publishEvent(WinningNumbersCollectedEvent.of(
                 response.collected(), response.updated(), response.skipped(), response.failed()
         ));
+    }
+
+    private CollectResponse runExclusive(String operation, Supplier<CollectResponse> action) {
+        if (!running.compareAndSet(false, true)) {
+            int latestRound = winningNumberRepository.findMaxRound().orElse(0);
+            log.warn("{} skipped: another collection run is already active", operation);
+            return CollectResponse.of(0, 0, 1, latestRound, List.of(), false, null, false);
+        }
+        try {
+            return action.get();
+        } finally {
+            running.set(false);
+        }
     }
 }
