@@ -58,7 +58,7 @@
       }
       var parsed = Number(raw);
       if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
-        setFeedbackState(input, feedback, true, label + '는 ' + min + '에서 ' + max + ' 사이의 정수여야 합니다.');
+        setFeedbackState(input, feedback, true, label + '은 ' + min + '에서 ' + max + ' 사이의 정수여야 합니다.');
         return false;
       }
       setFeedbackState(input, feedback, false, '');

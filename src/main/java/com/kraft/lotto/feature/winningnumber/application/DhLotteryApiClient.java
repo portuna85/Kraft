@@ -145,13 +145,14 @@ public class DhLotteryApiClient implements LottoApiClient {
                         String responseBody = response.body() == null ? "" : response.body();
                         count("kraft.api.dhlottery.call.failure", "reason", "http_error");
                         throw new LottoApiClientException("external API HTTP error (round=" + round + ", status=" + response.statusCode()
-                                + ", preview=" + preview(responseBody) + ")", response.statusCode(), response.body());
+                                + ", preview=" + preview(responseBody) + ")", response.statusCode(), response.body(),
+                                LottoApiClientException.FailureReason.HTTP_ERROR);
                     }
                     String body = response.body();
                     if (body == null || body.isBlank()) {
                         count("kraft.api.dhlottery.call.failure", "reason", "blank_body");
                         throw new LottoApiClientException("response body is blank (round=" + round + ")",
-                                response.statusCode(), response.body());
+                                response.statusCode(), response.body(), LottoApiClientException.FailureReason.BLANK_BODY);
                     }
                     if (isHtmlResponse(response)) {
                         count("kraft.api.dhlottery.call.empty", "reason", "not_drawn");
@@ -179,7 +180,8 @@ public class DhLotteryApiClient implements LottoApiClient {
                     circuitBreaker.recordFailure();
                     if (attempt >= attempts) {
                         throw new LottoApiClientException(
-                                "external API call failed (round=" + round + ", attempts=" + attempts + ")", ex);
+                                "external API call failed (round=" + round + ", attempts=" + attempts + ")", ex,
+                                null, null, LottoApiClientException.FailureReason.NETWORK);
                     }
                     count("kraft.api.dhlottery.call.retry");
                     log.warn("dhlottery call failed, retrying: round={}, attempt={}/{}, reason={}",
@@ -193,7 +195,7 @@ public class DhLotteryApiClient implements LottoApiClient {
                         circuitBreaker.recordFailure();
                         throw ex;
                     }
-                    String reason = classifyFailureReason(ex);
+                    String reason = toMetricReason(ex);
                     if ("json_parse".equals(reason)
                             || "validation".equals(reason)
                             || "transform".equals(reason)
@@ -205,7 +207,8 @@ public class DhLotteryApiClient implements LottoApiClient {
                     circuitBreaker.recordFailure();
                     if (attempt >= attempts || !isRetriable(ex)) {
                         throw new LottoApiClientException(
-                                "external API call failed (round=" + round + ", attempts=" + attempts + ")", ex);
+                                "external API call failed (round=" + round + ", attempts=" + attempts + ")", ex,
+                                ex.getResponseCode(), ex.getRawResponse(), ex.getFailureReason());
                     }
                     count("kraft.api.dhlottery.call.retry");
                     log.warn("dhlottery call failed, retrying: round={}, attempt={}/{}, reason={}",
@@ -265,7 +268,8 @@ public class DhLotteryApiClient implements LottoApiClient {
         boolean jsonBody = body.startsWith("{") || body.startsWith("[");
         if (!jsonContentType || !jsonBody) {
             throw new LottoApiClientException("response is not JSON (round=" + round
-                    + ", contentType=" + response.contentType() + ", preview=" + preview(body) + ")", response.statusCode(), response.body());
+                    + ", contentType=" + response.contentType() + ", preview=" + preview(body) + ")", response.statusCode(),
+                    response.body(), LottoApiClientException.FailureReason.NON_JSON);
         }
     }
 
@@ -306,35 +310,24 @@ public class DhLotteryApiClient implements LottoApiClient {
         return "external API request timeout exceeded (round=" + round + ")";
     }
 
-    private static String classifyFailureReason(LottoApiClientException ex) {
-        if (ex == null || ex.getMessage() == null) {
+    private static String toMetricReason(LottoApiClientException ex) {
+        if (ex == null || ex.getFailureReason() == null) {
             return "other";
         }
-        String message = ex.getMessage().toLowerCase();
-        if (message.contains("response is not json")) {
-            return "non_json";
-        }
-        if (message.contains("response parse failed")) {
-            return "json_parse";
-        }
-        if (message.contains("field missing") || message.contains("missing_field")) {
-            return "missing_field";
-        }
-        if (message.contains("response transform failed") || message.contains("transform:")) {
-            return "transform";
-        }
-        if (message.contains("unexpected returnvalue") || message.contains("unexpected_return_value")) {
-            return "unexpected_return_value";
-        }
-        if (message.contains("validation:")) {
-            return "validation";
-        }
-        if (message.contains("field is not integral")
-                || message.contains("field out of")
-                || message.contains("round mismatch")) {
-            return "validation";
-        }
-        return "other";
+        return switch (ex.getFailureReason()) {
+            case HTTP_ERROR -> "http_error";
+            case BLANK_BODY -> "blank_body";
+            case NON_JSON -> "non_json";
+            case NETWORK -> "network";
+            case TIMEOUT -> "timeout";
+            case JSON_PARSE -> "json_parse";
+            case VALIDATION -> "validation";
+            case TRANSFORM -> "transform";
+            case UNEXPECTED_RETURN_VALUE -> "unexpected_return_value";
+            case CIRCUIT_OPEN -> "circuit_open";
+            case MISSING_FIELD -> "missing_field";
+            case OTHER -> "other";
+        };
     }
 
     record ApiRawResponse(int statusCode, String contentType, String body) {

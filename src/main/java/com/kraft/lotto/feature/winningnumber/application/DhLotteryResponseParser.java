@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
+import static com.kraft.lotto.feature.winningnumber.application.LottoApiClientException.FailureReason;
 
 class DhLotteryResponseParser {
 
@@ -24,27 +25,29 @@ class DhLotteryResponseParser {
     Optional<WinningNumber> parse(int round, String body) {
         String trimmed = body == null ? "" : body.trim();
         if (trimmed.startsWith("<")) {
-            throw new LottoApiClientException("response is not JSON (round=" + round + ")");
+            throw new LottoApiClientException("response is not JSON (round=" + round + ")", FailureReason.NON_JSON);
         }
         JsonNode node;
         try {
             node = objectMapper.readTree(body);
         } catch (Exception ex) {
-            throw new LottoApiClientException("response parse failed (round=" + round + ")", ex);
+            throw new LottoApiClientException("response parse failed (round=" + round + ")", ex, FailureReason.JSON_PARSE);
         }
         String returnValue = requiredText(node, "returnValue", round);
         if (!"success".equalsIgnoreCase(returnValue)) {
             if ("fail".equalsIgnoreCase(returnValue)) {
                 return Optional.empty();
             }
-            throw new LottoApiClientException("unexpected_return_value (round=" + round + ", returnValue=" + returnValue + ")");
+            throw new LottoApiClientException("unexpected_return_value (round=" + round + ", returnValue=" + returnValue + ")",
+                    FailureReason.UNEXPECTED_RETURN_VALUE);
         }
         try {
             requireFields(node, round, "drwNo", "drwNoDate", "drwtNo1", "drwtNo2", "drwtNo3",
                     "drwtNo4", "drwtNo5", "drwtNo6", "bnusNo", "firstWinamnt", "firstPrzwnerCo", "totSellamnt");
             int drwNo = requiredInt(node, "drwNo", round);
             if (drwNo != round) {
-                throw new LottoApiClientException("validation: round mismatch request=" + round + ", response=" + drwNo);
+                throw new LottoApiClientException("validation: round mismatch request=" + round + ", response=" + drwNo,
+                        FailureReason.VALIDATION);
             }
             LocalDate drawDate = LocalDate.parse(node.path("drwNoDate").asText());
             List<Integer> mains = List.of(
@@ -62,20 +65,24 @@ class DhLotteryResponseParser {
                     totalSales, firstAccumAmount, body, LocalDateTime.now(clock)
             ));
         } catch (DateTimeParseException | IllegalArgumentException ex) {
-            throw new LottoApiClientException("transform: response transform failed (round=" + round + "): " + ex.getMessage(), ex);
+            throw new LottoApiClientException("transform: response transform failed (round=" + round + "): " + ex.getMessage(),
+                    ex, FailureReason.TRANSFORM);
         }
     }
 
     private static int requiredInt(JsonNode node, String fieldName, int round) {
         JsonNode value = node.get(fieldName);
         if (value == null || value.isNull()) {
-            throw new LottoApiClientException("missing_field: field missing (round=" + round + ", field=" + fieldName + ")");
+            throw new LottoApiClientException("missing_field: field missing (round=" + round + ", field=" + fieldName + ")",
+                    FailureReason.MISSING_FIELD);
         }
         if (!value.isIntegralNumber()) {
-            throw new LottoApiClientException("validation: field is not integral (round=" + round + ", field=" + fieldName + ")");
+            throw new LottoApiClientException("validation: field is not integral (round=" + round + ", field=" + fieldName + ")",
+                    FailureReason.VALIDATION);
         }
         if (!value.canConvertToInt()) {
-            throw new LottoApiClientException("validation: field out of int range (round=" + round + ", field=" + fieldName + ")");
+            throw new LottoApiClientException("validation: field out of int range (round=" + round + ", field=" + fieldName + ")",
+                    FailureReason.VALIDATION);
         }
         return value.asInt();
     }
@@ -90,13 +97,16 @@ class DhLotteryResponseParser {
     private static long requiredLong(JsonNode node, String fieldName, int round) {
         JsonNode value = node.get(fieldName);
         if (value == null || value.isNull()) {
-            throw new LottoApiClientException("missing_field: field missing (round=" + round + ", field=" + fieldName + ")");
+            throw new LottoApiClientException("missing_field: field missing (round=" + round + ", field=" + fieldName + ")",
+                    FailureReason.MISSING_FIELD);
         }
         if (!value.isIntegralNumber()) {
-            throw new LottoApiClientException("validation: field is not integral (round=" + round + ", field=" + fieldName + ")");
+            throw new LottoApiClientException("validation: field is not integral (round=" + round + ", field=" + fieldName + ")",
+                    FailureReason.VALIDATION);
         }
         if (!value.canConvertToLong()) {
-            throw new LottoApiClientException("validation: field out of long range (round=" + round + ", field=" + fieldName + ")");
+            throw new LottoApiClientException("validation: field out of long range (round=" + round + ", field=" + fieldName + ")",
+                    FailureReason.VALIDATION);
         }
         return value.asLong();
     }
@@ -104,14 +114,16 @@ class DhLotteryResponseParser {
     private static void requireFields(JsonNode node, int round, String... fieldNames) {
         for (String fieldName : fieldNames) {
             if (node.path(fieldName).isMissingNode() || node.path(fieldName).isNull()) {
-                throw new LottoApiClientException("missing_field: field missing (round=" + round + ", field=" + fieldName + ")");
+                throw new LottoApiClientException("missing_field: field missing (round=" + round + ", field=" + fieldName + ")",
+                        FailureReason.MISSING_FIELD);
             }
         }
     }
 
     private static String requiredText(JsonNode node, String fieldName, int round) {
         if (node.path(fieldName).isMissingNode() || node.path(fieldName).isNull()) {
-            throw new LottoApiClientException("missing_field: field missing (round=" + round + ", field=" + fieldName + ")");
+            throw new LottoApiClientException("missing_field: field missing (round=" + round + ", field=" + fieldName + ")",
+                    FailureReason.MISSING_FIELD);
         }
         return node.path(fieldName).asText();
     }

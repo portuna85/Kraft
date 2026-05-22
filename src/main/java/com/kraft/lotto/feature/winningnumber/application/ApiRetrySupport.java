@@ -95,6 +95,6 @@ final class ApiRetrySupport {
 class ApiRequestTimeoutException extends LottoApiClientException {
 
     ApiRequestTimeoutException(String message) {
-        super(message);
+        super(message, FailureReason.TIMEOUT);
     }
 }

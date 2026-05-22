@@ -49,9 +49,11 @@ class DhLotteryResponseParserTest {
     @Test
     @DisplayName("JSON 파싱 전 HTML 응답을 거절한다")
     void rejectsHtmlResponse() {
-        assertThatExceptionOfType(LottoApiClientException.class)
+        LottoApiClientException ex = assertThatExceptionOfType(LottoApiClientException.class)
                 .isThrownBy(() -> parser.parse(1202, "<html></html>"))
-                .withMessageContaining("not JSON");
+                .withMessageContaining("not JSON")
+                .actual();
+        assertThat(ex.getFailureReason()).isEqualTo(LottoApiClientException.FailureReason.NON_JSON);
     }
 
     @Test
@@ -73,10 +75,12 @@ class DhLotteryResponseParserTest {
                 }
                 """;
 
-        assertThatExceptionOfType(LottoApiClientException.class)
+        LottoApiClientException ex = assertThatExceptionOfType(LottoApiClientException.class)
                 .isThrownBy(() -> parser.parse(1204, body))
                 .withMessageContaining("field missing")
-                .withMessageContaining("drwtNo1");
+                .withMessageContaining("drwtNo1")
+                .actual();
+        assertThat(ex.getFailureReason()).isEqualTo(LottoApiClientException.FailureReason.MISSING_FIELD);
     }
 
     private static String successBody(int round) {

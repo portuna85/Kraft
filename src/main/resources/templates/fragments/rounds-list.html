@@ -4,29 +4,29 @@
 <div class="card kraft-section kraft-section-rounds" id="rounds" th:fragment="rounds-list">
   <div class="card-body">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-      <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-0">회차 목록</h2>
+      <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-0">&#54924;&#52264; &#47785;&#47197;</h2>
       <form hx-get="/fragments/rounds" hx-target="#rounds" hx-swap="outerHTML">
         <input name="page" type="hidden" value="0">
-        <label class="small text-secondary mb-0" for="sizeSelect">페이지 크기</label>
+        <label class="small text-secondary mb-0" for="sizeSelect">&#54168;&#51060;&#51648; &#53356;&#44592;</label>
         <select id="sizeSelect" class="form-select form-select-sm kraft-size-select" name="size">
           <option value="20" th:selected="${size==20}">20</option>
           <option value="50" th:selected="${size==50}">50</option>
           <option value="100" th:selected="${size==100}">100</option>
         </select>
-        <button class="btn btn-sm btn-outline-secondary kraft-submit-btn" type="submit">적용</button>
+        <button class="btn btn-sm btn-outline-secondary kraft-submit-btn" type="submit">&#51201;&#50857;</button>
       </form>
     </div>
 
     <p class="small text-secondary mb-2">
       <span th:text="${rounds.page + 1}">1</span> /
-      <span th:text="${rounds.totalPages}">1</span> 페이지
-      <span class="ms-1">(총 <span th:text="${rounds.totalElements}">0</span>건)</span>
+      <span th:text="${rounds.totalPages}">1</span> &#54168;&#51060;&#51648;
+      <span class="ms-1">(&#52509; <span th:text="${rounds.totalElements}">0</span>&#44148;)</span>
     </p>
 
     <div class="d-flex flex-column gap-2 mb-3">
       <div class="kraft-list-row" th:each="r : ${rounds.content}">
         <div class="kraft-list-meta">
-          <span class="round" th:text="${r.round + '회'}">0회</span>
+          <span class="round" th:text="${r.round + '&#54924;'}">0&#54924;</span>
           <span class="date" th:text="${r.drawDate}">-</span>
         </div>
         <div class="kraft-balls">
@@ -41,12 +41,12 @@
       </div>
     </div>
 
-    <nav aria-label="회차 목록 페이지">
+    <nav aria-label="&#54924;&#52264; &#47785;&#47197; &#54168;&#51060;&#51648;">
       <ul class="pagination pagination-sm mb-0 kraft-pagination">
         <li class="page-item" th:classappend="${rounds.page == 0} ? 'disabled'">
           <a class="page-link" href="#rounds"
              th:attr="hx-get=|/fragments/rounds?page=${page - 1}&size=${size}|"
-             hx-target="#rounds" hx-swap="outerHTML">이전</a>
+             hx-target="#rounds" hx-swap="outerHTML">&#51060;&#51204;</a>
         </li>
         <li class="page-item active" aria-current="page">
           <span class="page-link" th:text="${rounds.page + 1}">1</span>
@@ -54,7 +54,7 @@
         <li class="page-item" th:classappend="${rounds.page + 1 >= rounds.totalPages} ? 'disabled'">
           <a class="page-link" href="#rounds"
              th:attr="hx-get=|/fragments/rounds?page=${page + 1}&size=${size}|"
-             hx-target="#rounds" hx-swap="outerHTML">다음</a>
+             hx-target="#rounds" hx-swap="outerHTML">&#45796;&#51020;</a>
         </li>
       </ul>
     </nav>
