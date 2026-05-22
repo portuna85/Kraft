@@ -6,6 +6,14 @@
   var navMain = document.getElementById('navMain');
   var navToggleBtn = document.getElementById('navToggleBtn');
 
+  function safeSetLocalStorage(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      // Ignore storage failures (private mode, blocked storage, quota exceeded).
+    }
+  }
+
   function setThemeButtonState(themeButton) {
     var isDark = html.getAttribute('data-bs-theme') === 'dark';
     themeButton.textContent = isDark ? '라이트' : '다크';
@@ -157,7 +165,7 @@
     btn.addEventListener('click', function () {
       var next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-bs-theme', next);
-      localStorage.setItem('theme', next);
+      safeSetLocalStorage('theme', next);
       setThemeButtonState(btn);
     });
   }

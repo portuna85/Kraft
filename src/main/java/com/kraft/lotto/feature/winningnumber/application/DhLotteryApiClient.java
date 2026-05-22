@@ -317,23 +317,14 @@ public class DhLotteryApiClient implements LottoApiClient {
         if (message.contains("response parse failed")) {
             return "json_parse";
         }
-        if (message.contains("field missing")) {
+        if (message.contains("field missing") || message.contains("missing_field")) {
             return "missing_field";
         }
-        if (message.contains("response transform failed")) {
+        if (message.contains("response transform failed") || message.contains("transform:")) {
             return "transform";
         }
-        if (message.contains("unexpected returnvalue")) {
+        if (message.contains("unexpected returnvalue") || message.contains("unexpected_return_value")) {
             return "unexpected_return_value";
-        }
-        if (message.contains("unexpected_return_value")) {
-            return "unexpected_return_value";
-        }
-        if (message.contains("missing_field")) {
-            return "missing_field";
-        }
-        if (message.contains("transform:")) {
-            return "transform";
         }
         if (message.contains("validation:")) {
             return "validation";
