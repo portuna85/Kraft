@@ -71,4 +71,21 @@ public class LottoApiClientException extends RuntimeException {
     public FailureReason getFailureReason() {
         return failureReason;
     }
+
+    public String metricReason() {
+        return switch (failureReason) {
+            case HTTP_ERROR -> "http_error";
+            case BLANK_BODY -> "blank_body";
+            case NON_JSON -> "non_json";
+            case NETWORK -> "network";
+            case TIMEOUT -> "timeout";
+            case JSON_PARSE -> "json_parse";
+            case VALIDATION -> "validation";
+            case TRANSFORM -> "transform";
+            case UNEXPECTED_RETURN_VALUE -> "unexpected_return_value";
+            case CIRCUIT_OPEN -> "circuit_open";
+            case MISSING_FIELD -> "missing_field";
+            case OTHER -> "other";
+        };
+    }
 }

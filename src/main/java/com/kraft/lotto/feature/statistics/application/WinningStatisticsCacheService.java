@@ -45,7 +45,7 @@ public class WinningStatisticsCacheService {
         this.meterRegistry = meterRegistry;
     }
 
-    @Cacheable(cacheNames = "winningNumberFrequency")
+    @Cacheable(cacheNames = "winningNumberFrequency", sync = true)
     @Transactional(readOnly = true)
     public List<NumberFrequencyDto> frequency() {
         long startedAt = System.nanoTime();
@@ -66,6 +66,7 @@ public class WinningStatisticsCacheService {
                 return result;
             }
         }
+        countFrequencyCacheMiss(source);
         List<NumberFrequencyDto> recomputed = recomputeFrequency(totalDraws);
         recordFrequencyLatency(startedAt, source);
         return recomputed;
@@ -105,6 +106,7 @@ public class WinningStatisticsCacheService {
         if (summaryRepository == null) {
             return;
         }
+        long startedAt = System.nanoTime();
         long totalDraws = repository.count();
         int latestRound = repository.findMaxRound().orElse(0);
         if (latestRound == 0) {
@@ -112,6 +114,7 @@ public class WinningStatisticsCacheService {
         }
         List<NumberFrequencyDto> recomputed = recomputeFrequency(totalDraws);
         saveSummary(recomputed, latestRound);
+        recordRefreshLatency(startedAt);
     }
 
     private List<NumberFrequencyDto> recomputeFrequency(long totalDraws) {
@@ -172,6 +175,21 @@ public class WinningStatisticsCacheService {
         }
         meterRegistry.timer("kraft.statistics.frequency.latency", "source", source)
                 .record(Duration.ofNanos(System.nanoTime() - startedAtNano));
+    }
+
+    private void recordRefreshLatency(long startedAtNano) {
+        if (meterRegistry == null) {
+            return;
+        }
+        meterRegistry.timer("kraft.statistics.frequency.summary.refresh.latency")
+                .record(Duration.ofNanos(System.nanoTime() - startedAtNano));
+    }
+
+    private void countFrequencyCacheMiss(String source) {
+        if (meterRegistry == null) {
+            return;
+        }
+        meterRegistry.counter("kraft.statistics.frequency.cache.miss", "source", source).increment();
     }
 
     public static String combinationPrizeHistoryCacheKey(List<Integer> numbers) {

@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.boot.EnvironmentPostProcessor;
@@ -44,6 +45,7 @@ public class RequiredConfigValidator implements EnvironmentPostProcessor, Ordere
             Pattern.compile("^jdbc:[a-zA-Z0-9]+://([A-Za-z0-9._-]+)");
     private static final Pattern JDBC_ENDPOINT_PATTERN =
             Pattern.compile("^jdbc:[a-zA-Z0-9]+://([A-Za-z0-9._-]+)(?::(\\d+))?");
+    private static final Pattern ENV_HINT_PATTERN = Pattern.compile("\\(env:\\s*([A-Z0-9_]+)");
 
     public static List<String> requiredDeployEnvVars() {
         return REQUIRED_DEPLOY_ENV_VARS;
@@ -105,14 +107,16 @@ public class RequiredConfigValidator implements EnvironmentPostProcessor, Ordere
                     ============================================================%n\
                     KraftLotto startup validation failed.%n\
                     Please review environment variables and active profile.%n\
+                    Active profiles: %s%n\
                     ============================================================%n\
                     %s%n\
                     %n\
                     Quick checks:%n\
                       - Make sure .env exists and is correctly populated from .env.example.%n\
                       - Verify required values are available for the active profile.%n\
+                      - Confirm each missing key has a matching env var value.%n\
                       - If running with Docker, ensure expected profile and env vars are set.%n\
-                    """.formatted(String.join(System.lineSeparator(), problems));
+                    """.formatted(activeProfilesText(env), String.join(System.lineSeparator(), problems));
             throw new StartupValidationException(msg);
         }
     }
@@ -123,7 +127,12 @@ public class RequiredConfigValidator implements EnvironmentPostProcessor, Ordere
     }
 
     private static String format(String key, String desc, String reason) {
-        return "  - [" + key + "] " + desc + " => " + reason;
+        StringBuilder line = new StringBuilder("  - [").append(key).append("] ").append(desc).append(" => ").append(reason);
+        String envHint = extractEnvHint(desc);
+        if (envHint != null) {
+            line.append(NL).append("      - action: set ").append(envHint);
+        }
+        return line.toString();
     }
 
     private static String safeGet(ConfigurableEnvironment env, String key) {
@@ -290,6 +299,19 @@ public class RequiredConfigValidator implements EnvironmentPostProcessor, Ordere
         return System.getProperty("org.gradle.test.worker") != null
                 || "true".equalsIgnoreCase(System.getProperty("kraft.skip.required-config-validator"))
                 || Boolean.parseBoolean(env.getProperty("kraft.skip.required-config-validator", "false"));
+    }
+
+    private static String activeProfilesText(ConfigurableEnvironment env) {
+        String[] profiles = env.getActiveProfiles();
+        if (profiles == null || profiles.length == 0) {
+            return "<none>";
+        }
+        return Arrays.stream(profiles).sorted().reduce((a, b) -> a + "," + b).orElse("<none>");
+    }
+
+    private static String extractEnvHint(String desc) {
+        Matcher matcher = ENV_HINT_PATTERN.matcher(desc);
+        return matcher.find() ? matcher.group(1) : null;
     }
 
     record JdbcEndpoint(String host, int port) {

@@ -45,7 +45,10 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
 
         while (selected.size() < SIZE) {
             if (++initialPickAttempts > initialPickMaxAttempts) {
-                throw new RecommendGenerationTimeoutException("initial pick exceeded max attempts");
+                throw new RecommendGenerationTimeoutException(
+                        "initial pick exceeded max attempts",
+                        RecommendGenerationTimeoutException.FailureReason.INITIAL_PICK_TIMEOUT
+                );
             }
             int n = rng.nextInt(MAX_NUMBER) + 1;
             if (selected.contains(n)) {
@@ -70,7 +73,10 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
         int fixupAttempts = 0;
         while (hasLongRun(numbers, longRunThreshold)) {
             if (++fixupAttempts > fixupMaxAttempts) {
-                throw new RecommendGenerationTimeoutException("fixup exceeded max attempts");
+                throw new RecommendGenerationTimeoutException(
+                        "fixup exceeded max attempts",
+                        RecommendGenerationTimeoutException.FailureReason.FIXUP_TIMEOUT
+                );
             }
             List<Integer> longRunIndices = findLongRunIndices(numbers, longRunThreshold);
             int replaceIndex;

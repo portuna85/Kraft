@@ -4,35 +4,14 @@
 <div class="card mb-4 kraft-section kraft-section-recommend" id="recommend" th:fragment="recommend-card">
   <div class="card-body">
     <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">추천 조합</h2>
-    <form class="kraft-inline-form kraft-inline-form-count mb-3"
-          id="recommendForm"
-          method="get"
-          th:action="@{/}"
-          hx-get="/fragments/recommend"
-          hx-target="#recommend"
-          hx-swap="outerHTML">
+    <form class="kraft-inline-form kraft-inline-form-count mb-3" id="recommendForm" method="get" th:action="@{/}" hx-get="/fragments/recommend" hx-target="#recommend" hx-swap="outerHTML">
       <input name="round" th:if="${round != null}" th:value="${round}" type="hidden">
       <label class="kraft-inline-label" for="countInput">추천 세트 수 (1~10)</label>
-      <input
-        id="countInput"
-        class="form-control form-control-sm kraft-number-input"
-        max="10"
-        min="1"
-        name="count"
-        required
-        aria-required="true"
-        aria-describedby="countInputFeedback"
-        th:value="${count}"
-        type="number"
-        inputmode="numeric"
-        pattern="[0-9]*"
-      >
+      <input id="countInput" class="form-control form-control-sm kraft-number-input" max="10" min="1" name="count" required aria-required="true" aria-describedby="countInputFeedback" th:value="${count}" type="number" inputmode="numeric" pattern="[0-9]*">
       <button class="btn btn-sm btn-primary kraft-submit-btn" type="submit">생성</button>
     </form>
     <p class="small text-secondary mb-3">입력값은 생성할 추천 세트 개수이며, 아래 번호 목록과는 다른 값입니다.</p>
-    <div id="countInputFeedback" class="invalid-feedback d-block kraft-input-feedback visually-hidden" aria-live="polite">
-      1부터 10 사이의 정수를 입력해 주세요.
-    </div>
+    <div id="countInputFeedback" class="invalid-feedback d-block kraft-input-feedback visually-hidden" aria-live="polite">1부터 10 사이의 정수를 입력해 주세요.</div>
     <div class="kraft-combo" th:each="c : ${combinations}">
       <div class="kraft-balls kraft-balls-compact">
         <th:block th:each="n : ${c.numbers}">

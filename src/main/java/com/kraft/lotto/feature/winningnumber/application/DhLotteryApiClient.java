@@ -195,7 +195,7 @@ public class DhLotteryApiClient implements LottoApiClient {
                         circuitBreaker.recordFailure();
                         throw ex;
                     }
-                    String reason = toMetricReason(ex);
+                    String reason = ex.metricReason();
                     if ("json_parse".equals(reason)
                             || "validation".equals(reason)
                             || "transform".equals(reason)
@@ -308,26 +308,6 @@ public class DhLotteryApiClient implements LottoApiClient {
 
     private static String timeoutMessage(int round) {
         return "external API request timeout exceeded (round=" + round + ")";
-    }
-
-    private static String toMetricReason(LottoApiClientException ex) {
-        if (ex == null || ex.getFailureReason() == null) {
-            return "other";
-        }
-        return switch (ex.getFailureReason()) {
-            case HTTP_ERROR -> "http_error";
-            case BLANK_BODY -> "blank_body";
-            case NON_JSON -> "non_json";
-            case NETWORK -> "network";
-            case TIMEOUT -> "timeout";
-            case JSON_PARSE -> "json_parse";
-            case VALIDATION -> "validation";
-            case TRANSFORM -> "transform";
-            case UNEXPECTED_RETURN_VALUE -> "unexpected_return_value";
-            case CIRCUIT_OPEN -> "circuit_open";
-            case MISSING_FIELD -> "missing_field";
-            case OTHER -> "other";
-        };
     }
 
     record ApiRawResponse(int statusCode, String contentType, String body) {

@@ -119,6 +119,46 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
+    @DisplayName("요약을 재사용하지 못하면 frequency cache miss 메트릭을 기록한다")
+    void recordsCacheMissMetricWhenSummaryCannotBeUsed() {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
+        when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(List.of(
+                new WinningNumberFrequencySummaryEntity(1, 10L, 1200)
+        ));
+        when(winningNumberRepository.findAllNumbersForFrequency()).thenReturn(List.<Object[]>of(
+                new Object[]{1, 2, 3, 4, 5, 6}
+        ));
+
+        WinningStatisticsCacheService cacheService =
+                new WinningStatisticsCacheService(winningNumberRepository, summaryRepository, meterRegistry);
+        cacheService.frequency();
+
+        assertThat(meterRegistry.get("kraft.statistics.frequency.cache.miss")
+                .tag("source", "recompute")
+                .counter()
+                .count()).isEqualTo(1.0);
+    }
+
+    @Test
+    @DisplayName("요약 갱신 지연시간 메트릭을 기록한다")
+    void recordsRefreshLatencyMetric() {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
+        when(winningNumberRepository.findAllNumbersForFrequency()).thenReturn(List.<Object[]>of(
+                new Object[]{1, 2, 3, 4, 5, 6}
+        ));
+
+        WinningStatisticsCacheService cacheService =
+                new WinningStatisticsCacheService(winningNumberRepository, summaryRepository, meterRegistry);
+        cacheService.refreshFrequencySummary();
+
+        assertThat(meterRegistry.get("kraft.statistics.frequency.summary.refresh.latency")
+                .timer()
+                .count()).isEqualTo(1L);
+    }
+
+    @Test
     @DisplayName("combinationPrizeHistory는 1등과 2등을 올바르게 분류하고 번호를 정렬한다")
     void combinationPrizeHistoryClassifiesFirstAndSecond() {
         WinningNumberRepository.PrizeHitWithRankRow first = prizeHitRow(100, LocalDate.of(2020, 1, 1), 1);

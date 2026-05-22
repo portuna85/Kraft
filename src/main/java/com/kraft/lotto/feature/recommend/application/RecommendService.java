@@ -46,6 +46,7 @@ public class RecommendService {
                     .toList();
             return new RecommendResponse(combinations);
         } catch (RecommendGenerationTimeoutException ex) {
+            recordFailure(ex);
             throw new BusinessException(ErrorCode.LOTTO_GENERATION_TIMEOUT, ex.getMessage(), ex);
         } finally {
             recordLatency(started);
@@ -75,5 +76,18 @@ public class RecommendService {
             return;
         }
         meterRegistry.summary("kraft.recommend.request.count").record(count);
+    }
+
+    private void recordFailure(RecommendGenerationTimeoutException ex) {
+        if (meterRegistry == null) {
+            return;
+        }
+        String reason = switch (ex.getReason()) {
+            case ATTEMPT_EXHAUSTED -> "attempt_exhausted";
+            case INITIAL_PICK_TIMEOUT -> "initial_pick_timeout";
+            case FIXUP_TIMEOUT -> "fixup_timeout";
+            case OTHER -> "other";
+        };
+        meterRegistry.counter("kraft.recommend.generation.failure", "reason", reason).increment();
     }
 }

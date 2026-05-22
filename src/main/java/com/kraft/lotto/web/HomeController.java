@@ -58,7 +58,9 @@ public class HomeController {
             @RequestParam(defaultValue = "20") int size,
             Model model
     ) {
-        var rounds = queryService.list(page, size);
+        int safePage = PublicQueryParams.normalizePage(page);
+        int safeSize = PublicQueryParams.normalizeSize(size);
+        var rounds = queryService.list(safePage, safeSize);
         model.addAttribute("rounds", rounds);
         model.addAttribute("page", rounds.page());
         model.addAttribute("size", rounds.size());
@@ -66,17 +68,20 @@ public class HomeController {
     }
 
     private void addHomeModel(Integer round, Model model) {
+        Integer safeRound = PublicQueryParams.normalizeRound(round);
         model.addAttribute("expectedRound", queryService.expectedCurrentRound());
         model.addAttribute("latest", queryService.findLatest().orElse(null));
-        model.addAttribute("result", round == null ? null : queryService.getByRound(round));
+        model.addAttribute("result", safeRound == null ? null : queryService.getByRound(safeRound));
     }
 
     private void addRecommendModel(int count, Integer round, Model model) {
-        var recommendation = recommendService.recommend(count);
-        model.addAttribute("count", Math.clamp(count, 1, 10));
+        int safeCount = PublicQueryParams.normalizeCount(count);
+        Integer safeRound = PublicQueryParams.normalizeRound(round);
+        var recommendation = recommendService.recommend(safeCount);
+        model.addAttribute("count", safeCount);
         model.addAttribute("combinations", recommendation.combinations());
         model.addAttribute("rules", recommendService.rules());
-        model.addAttribute("round", round);
+        model.addAttribute("round", safeRound);
     }
 
     private static long maxFrequency(List<NumberFrequencyDto> frequencies) {

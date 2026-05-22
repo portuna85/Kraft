@@ -143,4 +143,78 @@ class RecommendServiceTest {
 
         assertThat(registry.find("kraft.recommend.request.count").summary()).isNotNull();
     }
+
+    @Test
+    @DisplayName("추천 생성 실패 reason 메트릭을 기록한다")
+    void recordsFailureReasonMetricOnTimeout() {
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        List<ExclusionRule> rules = List.of(excludeAll());
+        var service = new RecommendService(
+                rules,
+                new LottoRecommender(rules, new RandomLottoNumberGenerator(new Random(FIXED_SEED)), 5, registry),
+                registry
+        );
+
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.recommend(1))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_GENERATION_TIMEOUT);
+
+        assertThat(registry.get("kraft.recommend.generation.failure")
+                .tag("reason", "attempt_exhausted")
+                .counter()
+                .count()).isEqualTo(1.0);
+    }
+
+    @Test
+    @DisplayName("initial pick timeout 실패 reason 메트릭을 기록한다")
+    void recordsInitialPickTimeoutReasonMetric() {
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        LottoRecommender failingRecommender = new LottoRecommender(List.of(), new Random(FIXED_SEED), 1) {
+            @Override
+            public List<LottoCombination> recommend(int count) {
+                throw new RecommendGenerationTimeoutException(
+                        "initial pick exceeded max attempts",
+                        RecommendGenerationTimeoutException.FailureReason.INITIAL_PICK_TIMEOUT
+                );
+            }
+        };
+        var service = new RecommendService(List.of(), failingRecommender, registry);
+
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.recommend(1))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_GENERATION_TIMEOUT);
+
+        assertThat(registry.get("kraft.recommend.generation.failure")
+                .tag("reason", "initial_pick_timeout")
+                .counter()
+                .count()).isEqualTo(1.0);
+    }
+
+    @Test
+    @DisplayName("fixup timeout 실패 reason 메트릭을 기록한다")
+    void recordsFixupTimeoutReasonMetric() {
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        LottoRecommender failingRecommender = new LottoRecommender(List.of(), new Random(FIXED_SEED), 1) {
+            @Override
+            public List<LottoCombination> recommend(int count) {
+                throw new RecommendGenerationTimeoutException(
+                        "fixup exceeded max attempts",
+                        RecommendGenerationTimeoutException.FailureReason.FIXUP_TIMEOUT
+                );
+            }
+        };
+        var service = new RecommendService(List.of(), failingRecommender, registry);
+
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.recommend(1))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_GENERATION_TIMEOUT);
+
+        assertThat(registry.get("kraft.recommend.generation.failure")
+                .tag("reason", "fixup_timeout")
+                .counter()
+                .count()).isEqualTo(1.0);
+    }
 }

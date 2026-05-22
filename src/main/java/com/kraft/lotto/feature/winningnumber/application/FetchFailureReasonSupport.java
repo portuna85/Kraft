@@ -13,6 +13,14 @@ final class FetchFailureReasonSupport {
         return "reason=" + classifyFailureReason(safe) + "; " + safe;
     }
 
+    static String normalizeFailureMessage(LottoApiClientException ex) {
+        if (ex == null) {
+            return normalizeFailureMessage((String) null);
+        }
+        String message = ex.getMessage() == null ? "" : ex.getMessage();
+        return "reason=" + ex.metricReason() + "; " + message;
+    }
+
     static String extractReason(String message) {
         if (message == null || message.isBlank()) {
             return "other";
@@ -78,4 +86,3 @@ final class FetchFailureReasonSupport {
         return "other";
     }
 }
-

@@ -63,7 +63,7 @@ class LottoSingleDrawCollector {
             };
         } catch (LottoApiClientException ex) {
             log.warn("lotto draw collect failed: drwNo={}", drwNo, ex);
-            saveLog(drwNo, LottoFetchStatus.FAILED, FetchFailureReasonSupport.normalizeFailureMessage(ex.getMessage()), ex.getResponseCode(), ex.getRawResponse());
+            saveLog(drwNo, LottoFetchStatus.FAILED, FetchFailureReasonSupport.normalizeFailureMessage(ex), ex.getResponseCode(), ex.getRawResponse());
             return CollectResponse.ofFailed(List.of(drwNo), winningNumberRepository.findMaxRound().orElse(0), false);
         } catch (RuntimeException ex) {
             log.warn("lotto draw collect failed: drwNo={}", drwNo, ex);

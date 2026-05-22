@@ -38,16 +38,19 @@
   }
 
   function bindTableSort() {
-    var tables = document.querySelectorAll('table.table');
+    var tables = document.querySelectorAll('.ops-sortable-table');
     tables.forEach(function (table) {
       var headers = table.querySelectorAll('thead th');
       headers.forEach(function (header, index) {
-        header.style.cursor = 'pointer';
-        header.addEventListener('click', function () {
-          var asc = header.getAttribute('data-sort-dir') !== 'asc';
-          headers.forEach(function (h) { h.removeAttribute('data-sort-dir'); });
-          header.setAttribute('data-sort-dir', asc ? 'asc' : 'desc');
-          sortTableByColumn(table, index, asc);
+        var btn = header.querySelector('.ops-sort-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+          var ascending = header.getAttribute('aria-sort') !== 'ascending';
+          headers.forEach(function (h) {
+            h.setAttribute('aria-sort', 'none');
+          });
+          header.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');
+          sortTableByColumn(table, index, ascending);
         });
       });
     });
@@ -62,27 +65,30 @@
         var fullEl = cell.querySelector('.ops-msg-full');
         if (!shortEl || !fullEl) return;
 
-        var expanded = !fullEl.classList.contains('d-none');
+        var expanded = btn.getAttribute('aria-expanded') === 'true';
         if (expanded) {
           fullEl.classList.add('d-none');
           shortEl.classList.remove('d-none');
-          btn.textContent = 'more';
+          btn.textContent = '더보기';
+          btn.setAttribute('aria-expanded', 'false');
         } else {
           fullEl.classList.remove('d-none');
           shortEl.classList.add('d-none');
-          btn.textContent = 'less';
+          btn.textContent = '접기';
+          btn.setAttribute('aria-expanded', 'true');
         }
       });
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      bindTableSort();
-      bindMessageToggle();
-    });
-  } else {
+  function init() {
     bindTableSort();
     bindMessageToggle();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 }());

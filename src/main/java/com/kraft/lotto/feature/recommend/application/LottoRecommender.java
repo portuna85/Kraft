@@ -60,7 +60,9 @@ public class LottoRecommender {
                 recordRejectionRate(attempts, rejected);
                 recordTimeout();
                 throw new RecommendGenerationTimeoutException(
-                        "recommend generation attempts exceeded (max=" + maxAttempts + ")");
+                        "recommend generation attempts exceeded (max=" + maxAttempts + ")",
+                        RecommendGenerationTimeoutException.FailureReason.ATTEMPT_EXHAUSTED
+                );
             }
             attempts++;
             LottoCombination candidate = numberGenerator.generate();

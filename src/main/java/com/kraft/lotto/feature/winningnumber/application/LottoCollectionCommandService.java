@@ -149,7 +149,7 @@ public class LottoCollectionCommandService {
         if (!running.compareAndSet(false, true)) {
             int latestRound = winningNumberRepository.findMaxRound().orElse(0);
             log.warn("{} skipped: another collection run is already active", operation);
-            return CollectResponse.of(0, 0, 1, latestRound, List.of(), false, null, false);
+            return CollectResponse.ofOverlapSkipped(latestRound);
         }
         try {
             return action.get();

@@ -3,39 +3,24 @@
 <body>
 <div class="card mb-4 kraft-section kraft-section-round-search" id="round-search" th:fragment="round-search-card">
   <div class="card-body">
-    <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">&#54924;&#52264; &#44160;&#49353;</h2>
+    <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">회차 검색</h2>
     <form class="kraft-inline-form kraft-inline-form-round mb-3" id="roundSearchForm" method="get" th:action="@{/}">
       <input name="count" th:value="${count}" type="hidden">
-      <label class="kraft-inline-label" for="roundInput">&#54924;&#52264;</label>
-      <input
-        id="roundInput"
-        class="form-control form-control-sm kraft-round-input"
-        max="3000"
-        min="1"
-        name="round"
-        required
-        aria-required="true"
-        aria-describedby="roundInputFeedback"
-        th:value="${round}"
-        type="number"
-        inputmode="numeric"
-        pattern="[0-9]*"
-      >
-      <button class="btn btn-sm btn-outline-primary kraft-submit-btn" type="submit">&#44160;&#49353;</button>
+      <label class="kraft-inline-label" for="roundInput">회차</label>
+      <input id="roundInput" class="form-control form-control-sm kraft-round-input" max="3000" min="1" name="round" required aria-required="true" aria-describedby="roundInputFeedback" th:value="${round}" type="number" inputmode="numeric" pattern="[0-9]*">
+      <button class="btn btn-sm btn-outline-primary kraft-submit-btn" type="submit">검색</button>
     </form>
-    <div id="roundInputFeedback" class="invalid-feedback d-block kraft-input-feedback visually-hidden" aria-live="polite">
-      1&#48512;&#53552; 3000 &#49324;&#51060;&#51032; &#54924;&#52264;&#47484; &#51077;&#47141;&#54644; &#51452;&#49464;&#50836;.
-    </div>
+    <div id="roundInputFeedback" class="invalid-feedback d-block kraft-input-feedback visually-hidden" aria-live="polite">1부터 3000 사이의 회차를 입력해 주세요.</div>
     <div th:if="${result != null}">
       <dl class="row g-2 mb-3">
-        <dt class="col-5 col-sm-3 fw-normal text-secondary">&#54924;&#52264;</dt>
-        <dd class="col-7 col-sm-9 mb-0 fw-semibold" th:text="${result.round + '&#54924;'}">0&#54924;</dd>
-        <dt class="col-5 col-sm-3 fw-normal text-secondary">&#52628;&#52392;&#51068;</dt>
+        <dt class="col-5 col-sm-3 fw-normal text-secondary">회차</dt>
+        <dd class="col-7 col-sm-9 mb-0 fw-semibold" th:text="${result.round + '회'}">0회</dd>
+        <dt class="col-5 col-sm-3 fw-normal text-secondary">추첨일</dt>
         <dd class="col-7 col-sm-9 mb-0" th:text="${#temporals.format(result.drawDate,'yyyy.MM.dd')}">-</dd>
-        <dt class="col-5 col-sm-3 fw-normal text-secondary">1&#46321; &#45817;&#52392;&#44552;</dt>
-        <dd class="col-7 col-sm-9 mb-0 font-monospace" th:text="${#numbers.formatInteger(result.firstPrize,1,'COMMA') + '&#50896;'}">0&#50896;</dd>
-        <dt class="col-5 col-sm-3 fw-normal text-secondary">1&#46321; &#45817;&#52392;&#51088;</dt>
-        <dd class="col-7 col-sm-9 mb-0" th:text="${result.firstWinners + '&#47749;'}">0&#47749;</dd>
+        <dt class="col-5 col-sm-3 fw-normal text-secondary">1등 당첨금</dt>
+        <dd class="col-7 col-sm-9 mb-0 font-monospace" th:text="${#numbers.formatInteger(result.firstPrize,1,'COMMA') + '원'}">0원</dd>
+        <dt class="col-5 col-sm-3 fw-normal text-secondary">1등 당첨자</dt>
+        <dd class="col-7 col-sm-9 mb-0" th:text="${result.firstWinners + '명'}">0명</dd>
       </dl>
       <div class="kraft-balls">
         <th:block th:each="n : ${result.numbers}">

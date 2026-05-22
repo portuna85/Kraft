@@ -111,29 +111,29 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("낮은 추천 개수 값을 서비스에 그대로 전달하고 렌더링 시에만 보정한다")
+    @DisplayName("낮은 추천 개수 값은 1로 보정해 서비스에 전달한다")
     void homeWithInvalidLowCountPassesAsIs() throws Exception {
-        stubRecommend(0, 1);
+        stubRecommend(1, 1);
         stubHomeFrame();
 
         mockMvc.perform(get("/").param("count", "0"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("count", 1));
 
-        verify(recommendService).recommend(0);
+        verify(recommendService).recommend(1);
     }
 
     @Test
-    @DisplayName("높은 추천 개수 값을 서비스에 그대로 전달하고 렌더링 시에만 보정한다")
+    @DisplayName("높은 추천 개수 값은 10으로 보정해 서비스에 전달한다")
     void homeWithCountAboveMaxPassesAsIs() throws Exception {
-        stubRecommend(11, 10);
+        stubRecommend(10, 10);
         stubHomeFrame();
 
         mockMvc.perform(get("/").param("count", "11"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("count", 10));
 
-        verify(recommendService).recommend(11);
+        verify(recommendService).recommend(10);
     }
 
     @Test
@@ -154,7 +154,7 @@ class HomeControllerTest {
     void homeWithInvalidRoundReturnsErrorView() throws Exception {
         stubRecommend(5, 5);
         stubHomeFrame();
-        when(queryService.getByRound(9999))
+        when(queryService.getByRound(3000))
                 .thenThrow(new BusinessException(ErrorCode.WINNING_NUMBER_NOT_FOUND));
 
         mockMvc.perform(get("/").param("round", "9999"))

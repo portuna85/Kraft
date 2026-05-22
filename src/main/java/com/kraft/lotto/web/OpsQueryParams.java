@@ -18,7 +18,7 @@ final class OpsQueryParams {
         if (drwNo == null) {
             return null;
         }
-        return Math.max(1, drwNo);
+        return PublicQueryParams.normalizeRound(drwNo);
     }
 
     static Range normalizeRange(Integer drwNoFrom, Integer drwNoTo) {

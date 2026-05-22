@@ -49,7 +49,7 @@ public class WinningStatisticsService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "winningFrequencySummary")
+    @Cacheable(cacheNames = "winningFrequencySummary", sync = true)
     public FrequencySummaryDto frequencySummary() {
         List<NumberFrequencyDto> frequencies = cacheService.frequency();
         List<Integer> lowSixNumbers = frequencies.stream()

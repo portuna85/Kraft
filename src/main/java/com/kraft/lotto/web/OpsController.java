@@ -3,13 +3,12 @@ package com.kraft.lotto.web;
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
-import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogsResponseDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
-import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonsResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,7 +28,7 @@ public class OpsController {
 
     @GetMapping("/ops/fetch-logs/failure-reasons")
     @Operation(summary = "Summarize recent collection failure reasons")
-    public List<FetchFailureReasonDto> summarizeFailureReasons(
+    public FetchFailureReasonsResponseDto summarizeFailureReasons(
             @RequestParam(defaultValue = "200") int limit,
             @RequestParam(required = false) String reason,
             @RequestParam(required = false) Integer drwNoFrom,
@@ -38,12 +37,12 @@ public class OpsController {
     ) {
         applyNoStore(response);
         NormalizedQuery query = normalize(limit, reason, drwNoFrom, drwNoTo);
-        return fetchLogQueryService.summarizeRecentFailureReasons(query.limit(), query.reason(), query.from(), query.to());
+        return fetchLogQueryService.failureReasonsResponse(query.limit(), query.reason(), query.from(), query.to());
     }
 
     @GetMapping("/ops/fetch-logs/failures")
     @Operation(summary = "List recent collection failure logs")
-    public List<FetchFailureLogDto> recentFailures(
+    public FetchFailureLogsResponseDto recentFailures(
             @RequestParam(defaultValue = "100") int limit,
             @RequestParam(required = false) String reason,
             @RequestParam(required = false) Integer drwNoFrom,
@@ -52,7 +51,7 @@ public class OpsController {
     ) {
         applyNoStore(response);
         NormalizedQuery query = normalize(limit, reason, drwNoFrom, drwNoTo);
-        return fetchLogQueryService.listRecentFailures(query.limit(), query.reason(), query.from(), query.to());
+        return fetchLogQueryService.failuresResponse(query.limit(), query.reason(), query.from(), query.to());
     }
 
     @GetMapping("/ops/fetch-logs/failure-overview")

@@ -69,11 +69,15 @@
         실패 원인이 없습니다.
       </div>
       <div th:unless="${#lists.isEmpty(overview.reasons)}" class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
+        <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="실패 원인 표">
           <thead>
           <tr>
-            <th scope="col">원인</th>
-            <th scope="col" class="text-end">건수</th>
+            <th scope="col" aria-sort="none">
+              <button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">원인</button>
+            </th>
+            <th scope="col" class="text-end" aria-sort="none">
+              <button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">건수</button>
+            </th>
           </tr>
           </thead>
           <tbody>
@@ -101,15 +105,15 @@
         실패 로그가 없습니다.
       </div>
       <div th:unless="${#lists.isEmpty(pagedFailures)}" class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
+        <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="실패 로그 표">
           <thead>
           <tr>
-            <th scope="col">ID</th>
-            <th scope="col">회차</th>
-            <th scope="col">원인</th>
-            <th scope="col">코드</th>
-            <th scope="col">메시지</th>
-            <th scope="col">수집 시각</th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">ID</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">회차</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">원인</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">코드</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">메시지</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">수집 시각</button></th>
           </tr>
           </thead>
           <tbody>
@@ -124,9 +128,10 @@
             <td th:text="${row.responseCode}">500</td>
             <td class="text-break">
               <span class="ops-msg-short" th:text="${#strings.abbreviate(row.message, 120)}">message</span>
-              <span class="ops-msg-full d-none" th:text="${row.message}">message</span>
+              <span class="ops-msg-full d-none" th:id="${'ops-msg-' + row.id}" th:text="${row.message}">message</span>
               <button type="button" class="btn btn-sm btn-link p-0 ms-1 ops-msg-toggle"
-                      th:if="${row.message != null and #strings.length(row.message) > 120}">더보기</button>
+                      th:if="${row.message != null and #strings.length(row.message) > 120}"
+                      th:attr="aria-controls=${'ops-msg-' + row.id},aria-expanded='false'">더보기</button>
             </td>
             <td th:text="${#temporals.format(row.fetchedAt, 'yyyy-MM-dd HH:mm:ss')}">time</td>
           </tr>

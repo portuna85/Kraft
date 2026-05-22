@@ -6,7 +6,25 @@ package com.kraft.lotto.feature.recommend.application;
  */
 public class RecommendGenerationTimeoutException extends RuntimeException {
 
+    public enum FailureReason {
+        ATTEMPT_EXHAUSTED,
+        INITIAL_PICK_TIMEOUT,
+        FIXUP_TIMEOUT,
+        OTHER
+    }
+
+    private final FailureReason reason;
+
     public RecommendGenerationTimeoutException(String message) {
+        this(message, FailureReason.OTHER);
+    }
+
+    public RecommendGenerationTimeoutException(String message, FailureReason reason) {
         super(message);
+        this.reason = reason == null ? FailureReason.OTHER : reason;
+    }
+
+    public FailureReason getReason() {
+        return reason;
     }
 }

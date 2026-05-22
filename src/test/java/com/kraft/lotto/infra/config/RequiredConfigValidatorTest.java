@@ -42,6 +42,9 @@ class RequiredConfigValidatorTest {
         assertThat(problems).anyMatch(it -> it.contains("kraft.recommend.rules.long-run-threshold"));
         assertThat(problems).anyMatch(it -> it.contains("kraft.recommend.rules.decade-threshold"));
         assertThat(problems).anyMatch(it -> it.contains("kraft.api.client"));
+        assertThat(problems).anyMatch(it -> it.contains("action: set KRAFT_API_URL"));
+        assertThat(problems).anyMatch(it -> it.contains("action: set KRAFT_SECURITY_OPS_REQUIRED_TOKEN"));
+        assertThat(problems).anyMatch(it -> it.contains("action: set KRAFT_RECOMMEND_MAX_ATTEMPTS"));
     }
 
     @Test

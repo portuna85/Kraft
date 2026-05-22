@@ -22,7 +22,9 @@ public record CollectResponse(
         boolean truncated,
         Integer nextRound,
         boolean notDrawn,
-        boolean dataChanged
+        boolean dataChanged,
+        boolean skippedExecution,
+        String skippedReason
 ) {
     public CollectResponse {
         failedRounds = List.copyOf(failedRounds);
@@ -36,6 +38,19 @@ public record CollectResponse(
                                      boolean truncated,
                                      Integer nextRound,
                                      boolean notDrawn) {
+        return of(collected, updated, skipped, latestRound, failedRounds, truncated, nextRound, notDrawn, false, null);
+    }
+
+    public static CollectResponse of(int collected,
+                                     int updated,
+                                     int skipped,
+                                     int latestRound,
+                                     List<Integer> failedRounds,
+                                     boolean truncated,
+                                     Integer nextRound,
+                                     boolean notDrawn,
+                                     boolean skippedExecution,
+                                     String skippedReason) {
         return new CollectResponse(
                 collected,
                 updated,
@@ -46,7 +61,9 @@ public record CollectResponse(
                 truncated,
                 nextRound,
                 notDrawn,
-                (collected + updated) > 0
+                (collected + updated) > 0,
+                skippedExecution,
+                skippedReason
         );
     }
 
@@ -68,5 +85,9 @@ public record CollectResponse(
 
     public static CollectResponse ofNotDrawn(int latestRound) {
         return of(0, 0, 0, latestRound, List.of(), false, null, true);
+    }
+
+    public static CollectResponse ofOverlapSkipped(int latestRound) {
+        return of(0, 0, 1, latestRound, List.of(), false, null, false, true, "overlap");
     }
 }

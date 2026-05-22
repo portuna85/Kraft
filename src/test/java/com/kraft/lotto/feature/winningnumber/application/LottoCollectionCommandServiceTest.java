@@ -163,6 +163,8 @@ class LottoCollectionCommandServiceTest {
             assertThat(skipped.skipped()).isEqualTo(1);
             assertThat(skipped.collected()).isZero();
             assertThat(skipped.updated()).isZero();
+            assertThat(skipped.skippedExecution()).isTrue();
+            assertThat(skipped.skippedReason()).isEqualTo("overlap");
 
             release.countDown();
             CollectResponse completed = first.get(2, TimeUnit.SECONDS);

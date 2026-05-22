@@ -3,8 +3,10 @@ package com.kraft.lotto.feature.winningnumber.application;
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogsResponseDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonsResponseDto;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -71,6 +73,28 @@ public class LottoFetchLogQueryService {
                 logLimit,
                 summarizeRecentFailureReasons(reasonLimit, reason, drwNoFrom, drwNoTo),
                 listRecentFailures(logLimit, reason, drwNoFrom, drwNoTo)
+        );
+    }
+
+    public FetchFailureReasonsResponseDto failureReasonsResponse(int limit, String reason, Integer drwNoFrom, Integer drwNoTo) {
+        return new FetchFailureReasonsResponseDto(
+                LocalDateTime.now(clock),
+                limit,
+                reason,
+                drwNoFrom,
+                drwNoTo,
+                summarizeRecentFailureReasons(limit, reason, drwNoFrom, drwNoTo)
+        );
+    }
+
+    public FetchFailureLogsResponseDto failuresResponse(int limit, String reason, Integer drwNoFrom, Integer drwNoTo) {
+        return new FetchFailureLogsResponseDto(
+                LocalDateTime.now(clock),
+                limit,
+                reason,
+                drwNoFrom,
+                drwNoTo,
+                listRecentFailures(limit, reason, drwNoFrom, drwNoTo)
         );
     }
 
