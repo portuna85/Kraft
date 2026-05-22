@@ -1,0 +1,28 @@
+# 로컬 개발 전용 오버라이드 파일입니다.
+# 사용법: docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+# 서버(prod)에서는 docker compose up -d 만 실행하면 됩니다.
+
+services:
+    mariadb:
+        # Expose DB port to host only for local dev (DBeaver, IntelliJ DB tool, etc.).
+        ports:
+            - "${KRAFT_DB_PORT:-3306}:3306"
+
+    app:
+        environment:
+            SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+            KRAFT_IN_CONTAINER: "false"
+            KRAFT_DB_HOST_REWRITE: "false"
+            # Helpful JVM flags for development. Override JAVA_OPTS only locally.
+            JAVA_OPTS: >-
+                -XX:MaxRAMPercentage=50
+                -XX:+UseG1GC
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/app/logs
+                -Duser.timezone=Asia/Seoul
+                -Djdk.tracePinnedThreads=full
+        # Optional: enable remote JVM debugging on port 5005
+        # ports:
+        #   - "5005:5005"
+        # command: >-
+        #   sh -c "exec java $$JAVA_OPTS -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -jar /app/app.jar"

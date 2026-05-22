@@ -1,0 +1,24 @@
+spring:
+  thymeleaf:
+    cache: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+kraft:
+  history-init:
+    enabled: ${KRAFT_HISTORY_INIT_ENABLED:false}
+  api:
+    client: ${KRAFT_API_CLIENT:real}

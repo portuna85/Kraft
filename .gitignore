@@ -1,0 +1,51 @@
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### VS Code ###
+.vscode/
+
+### Claude Code (per-developer settings) ###
+.claude/
+
+### Mac OS ###
+.DS_Store
+
+### Logs ###
+*.log
+logs/
+
+### Local secrets (.env 는 git 에 절대 커밋하지 않습니다. .env.example 만 추적) ###
+.env
+!.env.example
+
+### Markdown — README 만 추적, 그 외 로컬 전용 ###
+*.md
+!README.md
+
+### docs/ 로컬 전용 ###
+docs/
+

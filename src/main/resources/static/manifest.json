@@ -1,0 +1,19 @@
+{
+  "name": "kraft-lotto",
+  "short_name": "kLo",
+  "description": "로또 6/45 당첨번호 수집·분석 및 번호 추천",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b3a66",
+  "theme_color": "#0b3a66",
+  "lang": "ko",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/images/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

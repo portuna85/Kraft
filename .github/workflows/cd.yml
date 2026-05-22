@@ -1,0 +1,132 @@
+name: CD - Deploy to kraft-server
+
+on:
+  workflow_run:
+    workflows: [ "CI" ]
+    branches: [ main ]
+    types: [ completed ]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref (commit SHA / tag / branch) to deploy"
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy via Docker Compose
+    runs-on: [ self-hosted, linux, x64 ]
+    environment: production
+    timeout-minutes: 20
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    env:
+      DOCKER_BUILDKIT: '1'
+      COMPOSE_DOCKER_CLI_BUILD: '1'
+      COMPOSE_FILE: 'docker-compose.yml'
+
+    steps:
+      - name: Resolve deploy ref
+        id: ref
+        run: |
+          set -euo pipefail
+          case "${{ github.event_name }}" in
+            workflow_run)    value="${{ github.event.workflow_run.head_sha }}" ;;
+            workflow_dispatch) value="${{ github.event.inputs.ref }}" ;;
+            *)               value="${{ github.sha }}" ;;
+          esac
+          echo "value=$value" >> "$GITHUB_OUTPUT"
+
+      - name: Verify deployment prerequisites
+        run: |
+          set -euo pipefail
+          command -v jq >/dev/null 2>&1            || { echo "::error::jq is not installed"; exit 1; }
+          docker compose version >/dev/null 2>&1   || { echo "::error::docker compose plugin is not available"; exit 1; }
+
+      - name: Fix workspace permissions (self-hosted)
+        run: sudo chown -R "$USER":"$USER" "$GITHUB_WORKSPACE" || true
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.ref.outputs.value }}
+
+      - name: Make deploy scripts executable
+        run: chmod +x scripts/deploy/*.sh
+
+      - name: Verify prod profile resources exist in source
+        run: |
+          set -euo pipefail
+          test -f src/main/resources/application.yml
+          test -f src/main/resources/application-local.yml
+          test -f src/main/resources/application-prod.yml
+
+      - name: Validate & mask production secrets
+        env:
+          ALL_SECRETS_JSON: ${{ toJson(secrets) }}
+        run: |
+          set -euo pipefail
+          ./scripts/deploy/validate-env.sh
+          while IFS= read -r name; do
+            [ -z "$name" ] && continue
+            value="$(printf '%s' "$ALL_SECRETS_JSON" | jq -r --arg key "$name" '.[$key] // ""')"
+            [ -z "$value" ] && continue
+            printf '::add-mask::%s\n' "$value"
+          done < .required-envs
+
+      - name: Render .env
+        env:
+          ALL_SECRETS_JSON: ${{ toJson(secrets) }}
+          KRAFT_DB_NAME: ${{ secrets.KRAFT_DB_NAME }}
+          KRAFT_APP_IMAGE_TAG: ${{ steps.ref.outputs.value }}
+        run: ./scripts/deploy/render-env.sh
+
+      - name: Validate Docker Compose file
+        run: docker compose config -q
+
+      - name: Prepare logs directory for bind mount
+        run: ./scripts/deploy/prepare-logs.sh
+
+      - name: Build & restart services
+        env:
+          KRAFT_APP_IMAGE_REF: kraft-lotto-app
+          KRAFT_APP_IMAGE_TAG: ${{ steps.ref.outputs.value }}
+        run: ./scripts/deploy/build-and-up.sh
+
+      - name: Verify prod profile env in container
+        run: |
+          set -euo pipefail
+          PROFILE="$(docker compose exec -T app sh -lc 'printenv SPRING_PROFILES_ACTIVE')"
+          echo "SPRING_PROFILES_ACTIVE=$PROFILE"
+          test "$PROFILE" = "prod"
+
+      - name: Wait for app readiness
+        run: ./scripts/deploy/wait-readiness.sh
+
+      - name: Rollback on readiness failure
+        if: failure()
+        run: ./scripts/deploy/rollback.sh
+
+      - name: Smoke test
+        run: ./scripts/deploy/smoke-test.sh
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          {
+            echo "### Deployment summary"
+            echo ""
+            echo "- ref: \`${{ steps.ref.outputs.value }}\`"
+            echo "- event: \`${{ github.event_name }}\`"
+            echo "- status: \`${{ job.status }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cleanup secrets artifacts
+        if: always()
+        run: rm -f .env .required-envs

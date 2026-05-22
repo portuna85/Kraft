@@ -1,0 +1,118 @@
+spring:
+  application:
+    name: kraft-lotto
+  profiles:
+    default: local
+  threads:
+    virtual:
+      enabled: true
+  thymeleaf:
+    cache: true
+  web:
+    resources:
+      static-locations: classpath:/static/
+      chain:
+        enabled: true
+        strategy:
+          content:
+            enabled: true
+            paths: /**
+      cache:
+        period: 31536000
+        cachecontrol:
+          max-age: 31536000
+  datasource:
+    url: ${KRAFT_DB_URL:jdbc:mariadb://${KRAFT_DB_HOST:mariadb}:${KRAFT_DB_PORT:3306}/${KRAFT_DB_NAME}?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Seoul&connectTimeout=3000}
+    username: ${KRAFT_DB_USER}
+    password: ${KRAFT_DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+  db:
+    connectivity-check:
+      enabled: ${KRAFT_DB_CONNECTIVITY_CHECK_ENABLED:true}
+      timeout-ms: ${KRAFT_DB_CONNECTIVITY_CHECK_TIMEOUT_MS:1500}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+  forward-headers-strategy: native
+
+logging:
+  file:
+    path: ${KRAFT_LOG_PATH:./logs}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+kraft:
+  public-base-url: ${KRAFT_PUBLIC_BASE_URL:https://www.kraft.io.kr}
+  security:
+    headers:
+      enabled: ${KRAFT_SECURITY_HEADERS_ENABLED:true}
+      content-security-policy: ${KRAFT_SECURITY_CSP:default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'}
+      x-frame-options: ${KRAFT_SECURITY_X_FRAME_OPTIONS:DENY}
+      referrer-policy: ${KRAFT_SECURITY_REFERRER_POLICY:strict-origin-when-cross-origin}
+    actuator:
+      enabled: ${KRAFT_SECURITY_ACTUATOR_ENABLED:true}
+      trust-forwarded-for: ${KRAFT_SECURITY_ACTUATOR_TRUST_FORWARDED_FOR:false}
+      allowed-ips: ${KRAFT_SECURITY_ACTUATOR_ALLOWED_IPS:127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+    rate-limit:
+      enabled: ${KRAFT_SECURITY_RATE_LIMIT_ENABLED:true}
+      trust-forwarded-for: ${KRAFT_SECURITY_RATE_LIMIT_TRUST_FORWARDED_FOR:false}
+      max-requests: ${KRAFT_SECURITY_RATE_LIMIT_MAX_REQUESTS:120}
+      window-seconds: ${KRAFT_SECURITY_RATE_LIMIT_WINDOW_SECONDS:60}
+    ops:
+      enabled: ${KRAFT_SECURITY_OPS_ENABLED:true}
+      trust-forwarded-for: ${KRAFT_SECURITY_OPS_TRUST_FORWARDED_FOR:false}
+      required-token: ${KRAFT_SECURITY_OPS_REQUIRED_TOKEN:}
+      allowed-ips: ${KRAFT_SECURITY_OPS_ALLOWED_IPS:127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+  history-init:
+    enabled: ${KRAFT_HISTORY_INIT_ENABLED:true}
+  collect:
+    max-per-run: ${KRAFT_COLLECT_MAX_PER_RUN:52}
+    max-history-collect: ${KRAFT_COLLECT_MAX_HISTORY_COLLECT:2000}
+    auto:
+      enabled: ${KRAFT_COLLECT_AUTO_ENABLED:true}
+      zone: ${KRAFT_COLLECT_AUTO_ZONE:Asia/Seoul}
+      cron:
+        saturday-22-30: ${KRAFT_COLLECT_AUTO_CRON_SATURDAY_22_30:0 30 22 ? * SAT}
+        sunday-07-00: ${KRAFT_COLLECT_AUTO_CRON_SUNDAY_07_00:0 0 7 ? * SUN}
+  api:
+    client: ${KRAFT_API_CLIENT:mock}
+    url: ${KRAFT_API_URL:https://www.dhlottery.co.kr/common.do}
+    connect-timeout-ms: ${KRAFT_API_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${KRAFT_API_READ_TIMEOUT_MS:5000}
+    request-timeout-ms: ${KRAFT_API_REQUEST_TIMEOUT_MS:10000}
+    max-retries: ${KRAFT_API_MAX_RETRIES:2}
+    retry-backoff-ms: ${KRAFT_API_RETRY_BACKOFF_MS:700}
+    backfill-delay-ms: ${KRAFT_API_BACKFILL_DELAY_MS:700}
+    mock-latest-round: ${KRAFT_API_MOCK_LATEST_ROUND:0}
+    circuit-breaker-enabled: ${KRAFT_API_CIRCUIT_BREAKER_ENABLED:true}
+    circuit-breaker-failure-threshold: ${KRAFT_API_CIRCUIT_BREAKER_FAILURE_THRESHOLD:5}
+    circuit-breaker-open-duration-ms: ${KRAFT_API_CIRCUIT_BREAKER_OPEN_DURATION_MS:30000}
+    circuit-breaker-half-open-max-calls: ${KRAFT_API_CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS:1}
+  recommend:
+    max-attempts: ${KRAFT_RECOMMEND_MAX_ATTEMPTS:5000}
+    initial-pick-max-attempts: ${KRAFT_RECOMMEND_INITIAL_PICK_MAX_ATTEMPTS:10000}
+    fixup-max-attempts: ${KRAFT_RECOMMEND_FIXUP_MAX_ATTEMPTS:1000}
+    rules:
+      birthday-threshold: ${KRAFT_RECOMMEND_RULE_BIRTHDAY_THRESHOLD:31}
+      long-run-threshold: ${KRAFT_RECOMMEND_RULE_LONG_RUN_THRESHOLD:5}
+      decade-threshold: ${KRAFT_RECOMMEND_RULE_DECADE_THRESHOLD:5}

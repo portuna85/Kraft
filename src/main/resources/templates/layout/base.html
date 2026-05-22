@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title,content)">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="로또 6/45 당첨번호 조회, 분석, 추천 서비스">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0b3a66">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#061d3a">
+  <link rel="icon" th:href="@{/images/favicon.svg}" type="image/svg+xml">
+  <link rel="manifest" th:href="@{/manifest.json}">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="최고의 번호">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <script th:src="@{/js/theme-init.js}"></script>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+  <title th:text="${title}">최고의 번호</title>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-md border-bottom sticky-top">
+  <div class="container kraft-container">
+    <a class="navbar-brand fw-bold" href="/">최고의 번호</a>
+    <button id="navToggleBtn" class="navbar-toggler border-0 shadow-none" type="button"
+            aria-controls="navMain" aria-expanded="false" aria-label="메뉴 열기">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav me-auto ms-2 gap-1">
+        <li class="nav-item"><a class="nav-link" href="/#recommend">번호 추천</a></li>
+        <li class="nav-item"><a class="nav-link" href="/#round-search">회차 검색</a></li>
+        <li class="nav-item"><a class="nav-link" href="/#frequency">빈도</a></li>
+        <li class="nav-item"><a class="nav-link" href="/#rounds">회차 목록</a></li>
+        <li class="nav-item"><a class="nav-link" href="/admin/ops">운영</a></li>
+      </ul>
+      <button id="theme-btn" class="btn btn-sm btn-outline-secondary ms-auto mt-2 mt-md-0"
+              type="button" aria-label="테마 전환" aria-pressed="false">다크</button>
+    </div>
+  </div>
+</nav>
+
+<main class="kraft-main" th:insert="${content}"></main>
+
+<nav class="kraft-bottom-nav d-md-none" aria-label="Section shortcuts"
+     th:if="${#httpServletRequest == null or #httpServletRequest.requestURI == null or !#strings.startsWith(#httpServletRequest.requestURI, '/admin')}">
+  <a href="#latest" class="kraft-bottom-nav-item">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    <span>최신</span>
+  </a>
+  <a href="#recommend" class="kraft-bottom-nav-item">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="3"/>
+      <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+      <circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+      <circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none"/>
+      <circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none"/>
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    </svg>
+    <span>추천</span>
+  </a>
+  <a href="#round-search" class="kraft-bottom-nav-item">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <span>검색</span>
+  </a>
+  <a href="#frequency" class="kraft-bottom-nav-item">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+    </svg>
+    <span>빈도</span>
+  </a>
+  <a href="#rounds" class="kraft-bottom-nav-item">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>
+    <span>회차</span>
+  </a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"
+        integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6pMp+" crossorigin="anonymous"></script>
+<script th:src="@{/js/ui.js}"></script>
+</body>
+</html>

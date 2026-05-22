@@ -1,0 +1,32 @@
+spring:
+  thymeleaf:
+    cache: false
+  web:
+    resources:
+      cache:
+        period: 0
+        cachecontrol:
+          no-store: true
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+kraft:
+  history-init:
+    enabled: true
+  api:
+    client: ${KRAFT_API_CLIENT:real}
+    backfill-delay-ms: 200
+    mock-latest-round: ${KRAFT_API_MOCK_LATEST_ROUND:0}
