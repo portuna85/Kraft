@@ -8,7 +8,7 @@ create table if not exists backfill_jobs (
     created_at datetime(6) not null,
     started_at datetime(6) null,
     completed_at datetime(6) null,
-    constraint pk_backfill_jobs primary key (job_id),
+    primary key (job_id),
     constraint ck_backfill_jobs_status check (status in ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED')),
     constraint ck_backfill_jobs_from_round check (from_round >= 1),
     constraint ck_backfill_jobs_to_round check (to_round >= 1),

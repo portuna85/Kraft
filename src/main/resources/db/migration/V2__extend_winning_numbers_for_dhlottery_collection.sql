@@ -12,7 +12,7 @@ CREATE TABLE lotto_fetch_logs (
     response_code INT          NULL,
     raw_response  LONGTEXT     NULL,
     fetched_at    TIMESTAMP     NOT NULL,
-    CONSTRAINT pk_lotto_fetch_logs PRIMARY KEY (id),
+    PRIMARY KEY (id),
     CONSTRAINT chk_lfl_drw_no_positive CHECK (drw_no > 0),
     CONSTRAINT chk_lfl_status CHECK (status IN ('SUCCESS', 'FAILED', 'SKIPPED'))
 );
