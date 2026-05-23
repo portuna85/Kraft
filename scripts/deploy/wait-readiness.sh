@@ -2,8 +2,8 @@
 set -euo pipefail
 
 CONTAINER_NAME="${CONTAINER_NAME:-kraft-lotto-app}"
-HEALTH_URL="${HEALTH_URL:-http://localhost:8080/actuator/health/readiness}"
-MAX_ATTEMPTS="${MAX_ATTEMPTS:-60}"
+HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:8080/actuator/health/readiness}"
+MAX_ATTEMPTS="${MAX_ATTEMPTS:-120}"
 SLEEP_SECONDS="${SLEEP_SECONDS:-5}"
 
 print_diagnostics() {
