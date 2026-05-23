@@ -46,6 +46,7 @@ logs/
 # Docs policy: only keep README and completed log tracked
 *.md
 !README.md
+!docs/*.md
 
 # Local docs workspace
-docs/
+# docs/
