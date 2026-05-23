@@ -41,6 +41,8 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    validate-on-migrate: false
+    ignore-missing-migrations: true
 
 server:
   port: 8080
