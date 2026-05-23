@@ -3,7 +3,6 @@ package com.kraft.lotto.web;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -53,8 +52,7 @@ class OpsPageControllerTest {
                         .param("pageSize", "1000")
                         .param("reason", " timeout ")
                         .param("drwNoFrom", "-2")
-                        .param("drwNoTo", "9999")
-                        .param("opsToken", " abc "))
+                        .param("drwNoTo", "9999"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin-ops"))
                 .andExpect(model().attribute("reasonLimit", 2000))
@@ -64,8 +62,7 @@ class OpsPageControllerTest {
                 .andExpect(model().attribute("reason", "timeout"))
                 .andExpect(model().attribute("drwNoFrom", 1))
                 .andExpect(model().attribute("drwNoTo", 3000))
-                .andExpect(model().attribute("opsToken", "abc"))
-                .andExpect(cookie().exists("KRAFT_OPS_TOKEN"));
+                .andExpect(model().attributeDoesNotExist("opsToken"));
 
         verify(fetchLogQueryService).failureOverview(2000, 1, "timeout", 1, 3000);
         verify(fetchLogQueryService).listRecentFailuresPage(0, 100, "timeout", 1, 3000);

@@ -3,9 +3,6 @@ package com.kraft.lotto.web;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,12 +21,10 @@ public class OpsPageController {
             @RequestParam(defaultValue = "100") int logLimit,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int pageSize,
-            @RequestParam(required = false) String opsToken,
             @RequestParam(required = false) String reason,
             @RequestParam(required = false) Integer drwNoFrom,
             @RequestParam(required = false) Integer drwNoTo,
             HttpServletRequest request,
-            HttpServletResponse response,
             Model model
     ) {
         int safeReasonLimit = OpsQueryParams.normalizeLimit(reasonLimit);
@@ -54,12 +49,8 @@ public class OpsPageController {
                 range.to()
         );
 
-        String safeToken = OpsQueryParams.normalizeToken(opsToken);
-        setOpsTokenCookie(request, response, safeToken);
-
         model.addAttribute("overview", overview);
         model.addAttribute("pagedFailures", pagedFailures.rows());
-        model.addAttribute("opsToken", safeToken);
         model.addAttribute("reason", safeReason == null ? "" : safeReason);
         model.addAttribute("drwNoFrom", range.from());
         model.addAttribute("drwNoTo", range.to());
@@ -69,17 +60,5 @@ public class OpsPageController {
         model.addAttribute("pageSize", pagedFailures.pageSize());
         model.addAttribute("hasNext", pagedFailures.hasNext());
         return "admin-ops";
-    }
-
-    private void setOpsTokenCookie(HttpServletRequest request, HttpServletResponse response, String token) {
-        int maxAge = token.isBlank() ? 0 : 60 * 60 * 12;
-        String sameSite = request.isSecure() ? "None" : "Lax";
-        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
-        StringBuilder cookieAttr = new StringBuilder("KRAFT_OPS_TOKEN=");
-        cookieAttr.append(encodedToken).append("; Path=/; Max-Age=").append(maxAge).append("; HttpOnly; SameSite=").append(sameSite);
-        if (request.isSecure()) {
-            cookieAttr.append("; Secure");
-        }
-        response.addHeader("Set-Cookie", cookieAttr.toString());
     }
 }

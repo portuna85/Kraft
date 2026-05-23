@@ -89,6 +89,17 @@ class OpsControllerTest {
     }
 
     @Test
+    @DisplayName("recommend stats endpoint returns 200 with metric fields")
+    void recommendStatsReturns200() throws Exception {
+        mockMvc.perform(get("/ops/recommend/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.generationCount").exists())
+                .andExpect(jsonPath("$.timeoutCount").exists())
+                .andExpect(jsonPath("$.failuresByReason").exists())
+                .andExpect(jsonPath("$.rejectionsByRule").exists());
+    }
+
+    @Test
     @DisplayName("failure-overview keeps existing wrapper contract")
     void returnsOverview() throws Exception {
         when(fetchLogQueryService.failureOverview(2000, 1, null, null, null))

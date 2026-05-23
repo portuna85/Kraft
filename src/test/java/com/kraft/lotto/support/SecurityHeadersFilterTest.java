@@ -28,4 +28,54 @@ class SecurityHeadersFilterTest {
         assertThat(response.getHeader("Referrer-Policy")).isEqualTo("strict-origin-when-cross-origin");
         assertThat(response.getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
     }
+
+    @Test
+    @DisplayName("HSTS 활성화 시 Strict-Transport-Security 헤더를 추가한다")
+    void hstsHeaderIsAddedWhenEnabled() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getHeaders().setHstsEnabled(true);
+        properties.getHeaders().setHstsMaxAgeSeconds(31536000L);
+        properties.getHeaders().setHstsIncludeSubDomains(true);
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(response.getHeader("Strict-Transport-Security"))
+                .isEqualTo("max-age=31536000; includeSubDomains");
+    }
+
+    @Test
+    @DisplayName("HSTS 비활성화 시 Strict-Transport-Security 헤더를 추가하지 않는다")
+    void hstsHeaderIsAbsentWhenDisabled() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(response.getHeader("Strict-Transport-Security")).isNull();
+    }
+
+    @Test
+    @DisplayName("HSTS includeSubDomains=false 이면 헤더에 includeSubDomains가 포함되지 않는다")
+    void hstsHeaderWithoutIncludeSubDomains() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getHeaders().setHstsEnabled(true);
+        properties.getHeaders().setHstsMaxAgeSeconds(31536000L);
+        properties.getHeaders().setHstsIncludeSubDomains(false);
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(response.getHeader("Strict-Transport-Security"))
+                .isEqualTo("max-age=31536000");
+    }
 }

@@ -64,6 +64,10 @@ public class KraftSecurityProperties {
         @NotBlank
         private String permissionsPolicy = "geolocation=(), microphone=(), camera=()";
 
+        private boolean hstsEnabled = false;
+        private long hstsMaxAgeSeconds = 31536000L;
+        private boolean hstsIncludeSubDomains = true;
+
         public boolean isEnabled() {
             return enabled;
         }
@@ -102,6 +106,30 @@ public class KraftSecurityProperties {
 
         public void setPermissionsPolicy(String permissionsPolicy) {
             this.permissionsPolicy = permissionsPolicy;
+        }
+
+        public boolean isHstsEnabled() {
+            return hstsEnabled;
+        }
+
+        public void setHstsEnabled(boolean hstsEnabled) {
+            this.hstsEnabled = hstsEnabled;
+        }
+
+        public long getHstsMaxAgeSeconds() {
+            return hstsMaxAgeSeconds;
+        }
+
+        public void setHstsMaxAgeSeconds(long hstsMaxAgeSeconds) {
+            this.hstsMaxAgeSeconds = hstsMaxAgeSeconds;
+        }
+
+        public boolean isHstsIncludeSubDomains() {
+            return hstsIncludeSubDomains;
+        }
+
+        public void setHstsIncludeSubDomains(boolean hstsIncludeSubDomains) {
+            this.hstsIncludeSubDomains = hstsIncludeSubDomains;
         }
     }
 

@@ -38,6 +38,11 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             response.setHeader("Referrer-Policy", securityProperties.getHeaders().getReferrerPolicy());
             response.setHeader("Permissions-Policy", securityProperties.getHeaders().getPermissionsPolicy());
             response.setHeader("X-Content-Type-Options", "nosniff");
+            if (securityProperties.getHeaders().isHstsEnabled()) {
+                String hstsValue = "max-age=" + securityProperties.getHeaders().getHstsMaxAgeSeconds()
+                        + (securityProperties.getHeaders().isHstsIncludeSubDomains() ? "; includeSubDomains" : "");
+                response.setHeader("Strict-Transport-Security", hstsValue);
+            }
         }
         filterChain.doFilter(request, response);
     }

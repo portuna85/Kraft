@@ -24,6 +24,10 @@ jobs:
     name: Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout
@@ -75,6 +79,24 @@ jobs:
           name: app-jar-${{ github.run_id }}
           path: build/libs/app.jar
           retention-days: 1
+
+      - name: Scan JAR for vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: build/libs/app.jar
+          format: table
+          exit-code: '0'
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/libs/
+          format: cyclonedx-json
+          output-file: sbom.json
+          artifact-name: sbom-${{ github.run_id }}
 
       - name: Upload test report
         if: always()

@@ -71,6 +71,9 @@ final class FetchFailureReasonSupport {
         if (lower.contains("response is not json")) {
             return "non_json";
         }
+        if (lower.contains("html response for expected round") || lower.contains("html_upstream_blocked")) {
+            return "html_upstream_blocked";
+        }
         if (lower.contains("timeout")) {
             return "timeout";
         }

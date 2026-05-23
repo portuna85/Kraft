@@ -32,4 +32,39 @@ class ClientIpResolverTest {
 
         assertThat(resolved).isEqualTo("203.0.113.10");
     }
+
+    @Test
+    @DisplayName("trustForwardedFor=true 이지만 X-Forwarded-For 헤더가 없으면 remoteAddr를 사용한다")
+    void fallsBackToRemoteAddrWhenForwardedForHeaderAbsent() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        request.setRemoteAddr("203.0.113.10");
+
+        String resolved = ClientIpResolver.resolve(request, true);
+
+        assertThat(resolved).isEqualTo("203.0.113.10");
+    }
+
+    @Test
+    @DisplayName("trustForwardedFor=true 이지만 X-Forwarded-For 헤더가 공백이면 remoteAddr를 사용한다")
+    void fallsBackToRemoteAddrWhenForwardedForHeaderIsBlank() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        request.setRemoteAddr("203.0.113.10");
+        request.addHeader("X-Forwarded-For", "   ");
+
+        String resolved = ClientIpResolver.resolve(request, true);
+
+        assertThat(resolved).isEqualTo("203.0.113.10");
+    }
+
+    @Test
+    @DisplayName("X-Forwarded-For 값이 모두 공백 항목이면 remoteAddr를 사용한다")
+    void fallsBackToRemoteAddrWhenAllCandidatesAreBlank() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        request.setRemoteAddr("203.0.113.10");
+        request.addHeader("X-Forwarded-For", " , , ");
+
+        String resolved = ClientIpResolver.resolve(request, true);
+
+        assertThat(resolved).isEqualTo("203.0.113.10");
+    }
 }

@@ -40,6 +40,8 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("org.flywaydb:flyway-mysql")
+    implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.2")
+    implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.9.2")
 
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
     compileOnly("org.projectlombok:lombok:$lombokVersion")
@@ -47,6 +49,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("net.jqwik:jqwik:1.9.2")
     testImplementation("org.springframework.boot:spring-boot-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
@@ -143,6 +146,10 @@ tasks.register<Test>("performanceSmokeTest") {
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-Xlint:unchecked")
+}
+
+springBoot {
+    buildInfo()
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {

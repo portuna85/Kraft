@@ -35,8 +35,9 @@ public class DhLotteryApiClient implements LottoApiClient {
     private final ApiCircuitBreaker circuitBreaker;
 
     private static final Set<String> ALLOWED_FAILURE_REASONS = Set.of(
-            "http_error", "blank_body", "non_json", "network", "timeout", "json_parse", "validation",
-            "transform", "unexpected_return_value", "circuit_open", "missing_field", "other"
+            "http_error", "blank_body", "non_json", "html_upstream_blocked", "network", "timeout",
+            "json_parse", "validation", "transform", "unexpected_return_value", "circuit_open",
+            "missing_field", "other"
     );
 
     public DhLotteryApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl) {
@@ -155,14 +156,15 @@ public class DhLotteryApiClient implements LottoApiClient {
                                 response.statusCode(), response.body(), LottoApiClientException.FailureReason.BLANK_BODY);
                     }
                     if (isHtmlResponse(response)) {
-                        count("kraft.api.dhlottery.call.empty", "reason", "not_drawn");
-                        int expectedRound = expectedRoundAsOf(LocalDate.now());
-                        if (round <= expectedRound) {
-                            log.warn("lotto API HTML response for existing round={} (expectedRound={}) - server may be blocking requests",
-                                    round, expectedRound);
-                        } else {
-                            log.debug("lotto round not yet drawn (HTML response): round={}", round);
+                        if (round <= expectedRoundAsOf(LocalDate.now())) {
+                            count("kraft.api.dhlottery.call.failure", "reason", "html_upstream_blocked");
+                            throw new LottoApiClientException(
+                                    "HTML response for expected round=" + round + " (server may be blocking)",
+                                    response.statusCode(), preview(response.body()),
+                                    LottoApiClientException.FailureReason.HTML_UPSTREAM_BLOCKED);
                         }
+                        log.debug("lotto round not yet drawn (HTML response): round={}", round);
+                        count("kraft.api.dhlottery.call.empty", "reason", "not_drawn");
                         circuitBreaker.recordSuccess();
                         return Optional.empty();
                     }

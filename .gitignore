@@ -32,6 +32,9 @@ bin/
 # Local tool settings
 .claude/
 
+# JQwik property-based test cache
+.jqwik-database
+
 # OS
 .DS_Store
 

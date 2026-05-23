@@ -10,6 +10,7 @@ public class LottoApiClientException extends RuntimeException {
         HTTP_ERROR,
         BLANK_BODY,
         NON_JSON,
+        HTML_UPSTREAM_BLOCKED,
         NETWORK,
         TIMEOUT,
         JSON_PARSE,
@@ -77,6 +78,7 @@ public class LottoApiClientException extends RuntimeException {
             case HTTP_ERROR -> "http_error";
             case BLANK_BODY -> "blank_body";
             case NON_JSON -> "non_json";
+            case HTML_UPSTREAM_BLOCKED -> "html_upstream_blocked";
             case NETWORK -> "network";
             case TIMEOUT -> "timeout";
             case JSON_PARSE -> "json_parse";

@@ -35,10 +35,6 @@
           <label class="form-label mb-1" for="pageSize">페이지 크기</label>
           <input id="pageSize" name="pageSize" type="number" min="5" max="100" class="form-control" th:value="${pageSize}">
         </div>
-        <div class="col-12 col-md-2">
-          <label class="form-label mb-1" for="opsToken">운영 토큰</label>
-          <input id="opsToken" name="opsToken" class="form-control" th:value="${opsToken}" placeholder="선택">
-        </div>
         <div class="col-12 col-md-2 d-grid">
           <button type="submit" class="btn btn-primary">적용</button>
         </div>
@@ -83,7 +79,7 @@
           <tbody>
           <tr th:each="row : ${overview.reasons}">
             <td>
-              <a th:href="@{/admin/ops(reason=${row.reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit},pageSize=${pageSize},opsToken=${opsToken})}">
+              <a th:href="@{/admin/ops(reason=${row.reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit},pageSize=${pageSize})}">
                 <code th:text="${row.reason}">reason</code>
               </a>
             </td>
@@ -121,7 +117,7 @@
             <td th:text="${row.id}">1</td>
             <td th:text="${row.drwNo}">1000</td>
             <td>
-              <a th:href="@{/admin/ops(reason=${row.reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit},pageSize=${pageSize},opsToken=${opsToken})}">
+              <a th:href="@{/admin/ops(reason=${row.reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit},pageSize=${pageSize})}">
                 <code th:text="${row.reason}">reason</code>
               </a>
             </td>
@@ -141,13 +137,13 @@
       <div class="d-flex justify-content-between align-items-center mt-3">
         <a class="btn btn-sm btn-outline-secondary"
            th:classappend="${page <= 0} ? ' disabled'"
-           th:href="@{/admin/ops(page=${page - 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit},opsToken=${opsToken})}">
+           th:href="@{/admin/ops(page=${page - 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">
           이전
         </a>
         <span class="small text-body-secondary" th:text="'페이지 ' + (${page} + 1)">페이지 1</span>
         <a class="btn btn-sm btn-outline-secondary"
            th:classappend="${!hasNext} ? ' disabled'"
-           th:href="@{/admin/ops(page=${page + 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit},opsToken=${opsToken})}">
+           th:href="@{/admin/ops(page=${page + 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">
           다음
         </a>
       </div>

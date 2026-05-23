@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -29,7 +30,6 @@ public class OpsAccessFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(OpsAccessFilter.class);
     private static final String TOKEN_HEADER = "X-Ops-Token";
-    private static final String TOKEN_QUERY_PARAM = "opsToken";
     private static final String TOKEN_COOKIE = "KRAFT_OPS_TOKEN";
 
     private final KraftSecurityProperties securityProperties;
@@ -78,17 +78,40 @@ public class OpsAccessFilter extends OncePerRequestFilter {
 
         String requiredToken = securityProperties.getOps().getRequiredToken();
         if (!requiredToken.isBlank()) {
-            String requestToken = resolveRequestToken(request);
-            if (requestToken == null || !requiredToken.equals(requestToken.trim())) {
-                log.warn("Blocked ops access due to missing/invalid token from ip={} path={}",
-                        LogSanitizer.sanitizeLogValue(clientIp),
-                        LogSanitizer.maskSensitivePath(request.getRequestURI()));
-                response.sendError(HttpStatus.UNAUTHORIZED.value(), "Missing or invalid ops token.");
-                return;
+            String headerToken = request.getHeader(TOKEN_HEADER);
+            boolean isPost = "POST".equalsIgnoreCase(request.getMethod());
+
+            if (isPost) {
+                if (headerToken == null || headerToken.isBlank() || !tokensMatch(requiredToken, headerToken.trim())) {
+                    log.warn("Blocked ops POST access: missing/invalid header token ip={} path={}",
+                            LogSanitizer.sanitizeLogValue(clientIp),
+                            LogSanitizer.maskSensitivePath(request.getRequestURI()));
+                    response.sendError(HttpStatus.UNAUTHORIZED.value(), "POST requires X-Ops-Token header.");
+                    return;
+                }
+            } else {
+                String requestToken = resolveRequestToken(request);
+                if (requestToken == null || !tokensMatch(requiredToken, requestToken.trim())) {
+                    log.warn("Blocked ops access due to missing/invalid token from ip={} path={}",
+                            LogSanitizer.sanitizeLogValue(clientIp),
+                            LogSanitizer.maskSensitivePath(request.getRequestURI()));
+                    response.sendError(HttpStatus.UNAUTHORIZED.value(), "Missing or invalid ops token.");
+                    return;
+                }
             }
         }
 
+        log.info("Ops access granted ip={} method={} path={}",
+                LogSanitizer.sanitizeLogValue(clientIp),
+                request.getMethod(),
+                LogSanitizer.maskSensitivePath(request.getRequestURI()));
         filterChain.doFilter(request, response);
+    }
+
+    private static boolean tokensMatch(String expected, String actual) {
+        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
+        byte[] actualBytes = actual.getBytes(StandardCharsets.UTF_8);
+        return MessageDigest.isEqual(expectedBytes, actualBytes);
     }
 
     private static String resolveRequestToken(HttpServletRequest request) {
@@ -97,10 +120,6 @@ public class OpsAccessFilter extends OncePerRequestFilter {
             return requestToken;
         }
         requestToken = findTokenCookie(request);
-        if (requestToken != null && !requestToken.isBlank()) {
-            return requestToken;
-        }
-        requestToken = request.getParameter(TOKEN_QUERY_PARAM);
         if (requestToken != null && !requestToken.isBlank()) {
             return requestToken;
         }

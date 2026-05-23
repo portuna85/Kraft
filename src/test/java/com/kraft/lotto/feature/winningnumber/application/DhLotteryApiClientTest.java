@@ -142,15 +142,29 @@ class DhLotteryApiClientTest {
         }
 
         @Test
-        @DisplayName("HTML 응답은 미추첨 회차로 간주하여 빈 Optional을 반환한다")
-        void fetchReturnsEmptyOnHtmlBody() {
+        @DisplayName("미추첨 미래 회차 HTML 응답은 빈 Optional을 반환한다")
+        void fetchReturnsEmptyOnHtmlBodyForFutureRound() {
             ScriptedDhLotteryApiClient scriptedClient = new ScriptedDhLotteryApiClient(
                     2,
                     new DhLotteryApiClient.ApiRawResponse(200, "text/html", "<html>not drawn</html>")
             );
 
-            assertThat(scriptedClient.fetch(1102)).isEmpty();
+            assertThat(scriptedClient.fetch(9999)).isEmpty();
             assertThat(scriptedClient.fetchCalls()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("이미 추첨됐어야 할 회차에 HTML 응답이 오면 예외가 발생한다")
+        void fetchThrowsOnHtmlBodyForExpectedRound() {
+            ScriptedDhLotteryApiClient scriptedClient = new ScriptedDhLotteryApiClient(
+                    0,
+                    new DhLotteryApiClient.ApiRawResponse(200, "text/html", "<html>blocked</html>")
+            );
+
+            assertThatThrownBy(() -> scriptedClient.fetch(1))
+                    .isInstanceOf(LottoApiClientException.class)
+                    .extracting(e -> ((LottoApiClientException) e).getFailureReason())
+                    .isEqualTo(LottoApiClientException.FailureReason.HTML_UPSTREAM_BLOCKED);
         }
 
         @Test
@@ -169,7 +183,7 @@ class DhLotteryApiClientTest {
                     new DhLotteryApiClient.ApiRawResponse(200, "text/html", "<html>not drawn</html>")
             );
 
-            assertThat(scriptedClient.fetch(1102)).isEmpty();
+            assertThat(scriptedClient.fetch(9999)).isEmpty();
             assertThat(breaker.stateName()).isEqualTo("closed");
         }
 

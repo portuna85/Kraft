@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="로또 6/45 당첨번호 조회, 분석, 추천 서비스">
+  <link rel="canonical" th:href="${@environment.getProperty('kraft.public-base-url', 'https://kraft.io.kr')} + '/'">
+  <meta property="og:type" content="website">
+  <meta property="og:title" th:content="${title}">
+  <meta property="og:description" content="로또 6/45 당첨번호 조회, 분석, 추천 서비스">
+  <meta property="og:url" th:content="${@environment.getProperty('kraft.public-base-url', 'https://kraft.io.kr')} + '/'">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" th:content="${title}">
+  <meta name="twitter:description" content="로또 6/45 당첨번호 조회, 분석, 추천 서비스">
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0b3a66">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#061d3a">
   <link rel="icon" th:href="@{/images/favicon.svg}" type="image/svg+xml">

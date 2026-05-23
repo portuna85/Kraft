@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +36,7 @@ public class WinningNumberAutoCollectScheduler {
             cron = "${kraft.collect.auto.cron.saturday-22-30:0 30 22 ? * SAT}",
             zone = "${kraft.collect.auto.zone:Asia/Seoul}"
     )
+    @SchedulerLock(name = "collect-all-sat-22-30", lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
     public void collectSaturday2230() {
         runCollectAll("sat-22-30");
     }
@@ -43,6 +45,7 @@ public class WinningNumberAutoCollectScheduler {
             cron = "${kraft.collect.auto.cron.sunday-07-00:0 0 7 ? * SUN}",
             zone = "${kraft.collect.auto.zone:Asia/Seoul}"
     )
+    @SchedulerLock(name = "collect-all-sun-07-00", lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
     public void collectSunday0700() {
         runCollectAll("sun-07-00");
     }

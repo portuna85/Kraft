@@ -43,13 +43,13 @@ public class SeoController {
     }
 
     private String publicBaseUrl() {
-        String configured = environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr");
+        String configured = environment.getProperty("kraft.public-base-url", "https://kraft.io.kr");
         return trimTrailingSlash(configured);
     }
 
     private static String trimTrailingSlash(String value) {
         if (value == null || value.isBlank()) {
-            return "https://www.kraft.io.kr";
+            return "https://kraft.io.kr";
         }
         String trimmed = value.trim();
         while (trimmed.endsWith("/")) {

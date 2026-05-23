@@ -1,4 +1,4 @@
-FROM eclipse-temurin:25-jdk AS build
+FROM eclipse-temurin:25-jdk@sha256:c2b7ea21649875fb9052237ac4e3cd4ef63968a2a389a0a1b1a72a5e53e5c93f AS build
 WORKDIR /workspace
 ARG GRADLE_BUILD_ARGS=""
 
@@ -13,7 +13,7 @@ COPY src ./src
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew --no-daemon clean bootJar -x test $GRADLE_BUILD_ARGS
 
-FROM eclipse-temurin:25-jre
+FROM eclipse-temurin:25-jre@sha256:04262e8782d6b034ee5d7c1c5d4e8938fcf2063a76b4bfcd84e5d994d09c27bc
 WORKDIR /app
 
 RUN apt-get update \
