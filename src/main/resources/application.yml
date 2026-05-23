@@ -2,7 +2,7 @@ spring:
   application:
     name: kraft-lotto
   profiles:
-    default: local
+    default: prod
   threads:
     virtual:
       enabled: true
