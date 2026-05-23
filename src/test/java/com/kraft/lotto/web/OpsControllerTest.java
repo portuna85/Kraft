@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(OpsController.class)
 @Import(TestCacheConfig.class)
-@DisplayName("OpsController test")
+@DisplayName("운영 도구 API 컨트롤러 테스트")
 class OpsControllerTest {
 
     @Autowired
@@ -37,7 +37,7 @@ class OpsControllerTest {
     LottoCollectionCommandService collectionCommandService;
 
     @Test
-    @DisplayName("failure-reasons endpoint returns wrapped response and normalized params")
+    @DisplayName("failure-reasons 엔드포인트가 래핑된 응답과 정규화된 파라미터를 반환한다")
     void returnsWrappedReasonsResponse() throws Exception {
         when(fetchLogQueryService.failureReasonsResponse(2000, "timeout", 1, 3000))
                 .thenReturn(new FetchFailureReasonsResponseDto(
@@ -64,7 +64,7 @@ class OpsControllerTest {
     }
 
     @Test
-    @DisplayName("failures endpoint returns wrapped response and normalized range")
+    @DisplayName("failures 엔드포인트가 래핑된 응답과 정규화된 범위를 반환한다")
     void returnsWrappedFailuresResponse() throws Exception {
         when(fetchLogQueryService.failuresResponse(1, null, 10, 20))
                 .thenReturn(new FetchFailureLogsResponseDto(
@@ -89,7 +89,7 @@ class OpsControllerTest {
     }
 
     @Test
-    @DisplayName("recommend stats endpoint returns 200 with metric fields")
+    @DisplayName("추천 통계 엔드포인트가 200 상태코드와 지표 필드들을 반환한다")
     void recommendStatsReturns200() throws Exception {
         mockMvc.perform(get("/ops/recommend/stats"))
                 .andExpect(status().isOk())
@@ -100,7 +100,7 @@ class OpsControllerTest {
     }
 
     @Test
-    @DisplayName("failure-overview keeps existing wrapper contract")
+    @DisplayName("failure-overview가 기존 래퍼 계약을 유지한다")
     void returnsOverview() throws Exception {
         when(fetchLogQueryService.failureOverview(2000, 1, null, null, null))
                 .thenReturn(new FetchFailureOverviewDto(

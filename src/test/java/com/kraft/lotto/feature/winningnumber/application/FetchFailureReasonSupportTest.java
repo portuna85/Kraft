@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("FetchFailureReasonSupport test")
+@DisplayName("수집 실패 사유 지원 테스트")
 class FetchFailureReasonSupportTest {
 
     @Test

@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(OpsPageController.class)
 @Import(TestCacheConfig.class)
-@DisplayName("OpsPageController test")
+@DisplayName("운영 도구 페이지 컨트롤러 테스트")
 class OpsPageControllerTest {
 
     @Autowired

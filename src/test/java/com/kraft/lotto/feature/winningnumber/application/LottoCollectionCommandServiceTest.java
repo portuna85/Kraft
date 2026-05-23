@@ -134,6 +134,7 @@ class LottoCollectionCommandServiceTest {
     }
 
     @Test
+    @DisplayName("다른 수집 작업이 진행 중이면 최신 회차 수집을 건너뛴다")
     void collectAllUntilLatestSkipsWhenAnotherRunIsActive() throws Exception {
         LottoCollectionCommandService service = new LottoCollectionCommandService(
                 winningNumberRepository,

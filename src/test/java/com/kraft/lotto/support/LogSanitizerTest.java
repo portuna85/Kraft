@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("LogSanitizer")
+@DisplayName("로그 정화기")
 class LogSanitizerTest {
 
     @Test

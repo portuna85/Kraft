@@ -10,7 +10,7 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-@DisplayName("Ops access filter")
+@DisplayName("운영 도구 접근 필터 테스트")
 class OpsAccessFilterTest {
 
     @Test

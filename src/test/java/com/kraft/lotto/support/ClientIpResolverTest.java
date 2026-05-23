@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-@DisplayName("ClientIpResolver")
+@DisplayName("클라이언트 IP 리졸버")
 class ClientIpResolverTest {
 
     @Test
