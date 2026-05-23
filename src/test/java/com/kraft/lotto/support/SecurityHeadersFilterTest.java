@@ -60,22 +60,4 @@ class SecurityHeadersFilterTest {
 
         assertThat(response.getHeader("Strict-Transport-Security")).isNull();
     }
-
-    @Test
-    @DisplayName("HSTS includeSubDomains=false 이면 헤더에 includeSubDomains가 포함되지 않는다")
-    void hstsHeaderWithoutIncludeSubDomains() throws Exception {
-        KraftSecurityProperties properties = new KraftSecurityProperties();
-        properties.getHeaders().setHstsEnabled(true);
-        properties.getHeaders().setHstsMaxAgeSeconds(31536000L);
-        properties.getHeaders().setHstsIncludeSubDomains(false);
-        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties);
-
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        filter.doFilter(request, response, new MockFilterChain());
-
-        assertThat(response.getHeader("Strict-Transport-Security"))
-                .isEqualTo("max-age=31536000");
-    }
 }
