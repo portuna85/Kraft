@@ -70,6 +70,26 @@
     </div>
   </div>
 
+  <div class="card mb-4" th:if="${retentionStatus != null}">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0">Log Retention</h2>
+        <span class="badge text-bg-secondary" th:text="${retentionStatus.enabled} ? 'Enabled' : 'Disabled'">Enabled</span>
+      </div>
+      <div class="small text-body-secondary mb-2">
+        <span th:text="'Days: ' + ${retentionStatus.retentionDays}">Days</span>
+        <span class="mx-2">|</span>
+        <span th:text="'Batch: ' + ${retentionStatus.deleteBatchSize}">Batch</span>
+      </div>
+      <div class="small">
+        <div th:text="'Cutoff: ' + ${#temporals.format(retentionStatus.cutoff, 'yyyy-MM-dd HH:mm:ss')}">Cutoff</div>
+        <div th:text="'Eligible: ' + ${retentionStatus.purgeEligibleLogs} + ' / Total: ' + ${retentionStatus.totalLogs}">Eligible / Total</div>
+        <div th:text="${retentionStatus.oldestFetchedAt == null ? 'Oldest: -' : 'Oldest: ' + #temporals.format(retentionStatus.oldestFetchedAt, 'yyyy-MM-dd HH:mm:ss')}">Oldest</div>
+        <div th:text="${retentionStatus.newestFetchedAt == null ? 'Newest: -' : 'Newest: ' + #temporals.format(retentionStatus.newestFetchedAt, 'yyyy-MM-dd HH:mm:ss')}">Newest</div>
+      </div>
+    </div>
+  </div>
+
   <div class="card mb-4">
     <div class="card-body">
       <h2 class="h5 mb-3">Failure Reasons</h2>

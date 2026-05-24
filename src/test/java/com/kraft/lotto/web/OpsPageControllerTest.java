@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -45,6 +46,20 @@ class OpsPageControllerTest {
                 ));
         when(fetchLogQueryService.listRecentFailuresPage(0, 20, "timeout", 1, 3000))
                 .thenReturn(new LottoFetchLogQueryService.PagedFailures(List.of(), 0, 20, false));
+        when(fetchLogQueryService.retentionStatus(true, 90, 1000, "0 30 3 * * *", "Asia/Seoul"))
+                .thenReturn(new FetchLogRetentionStatusDto(
+                        LocalDateTime.of(2026, 5, 24, 12, 0),
+                        true,
+                        90,
+                        1000,
+                        "0 30 3 * * *",
+                        "Asia/Seoul",
+                        LocalDateTime.of(2026, 2, 24, 12, 0),
+                        100L,
+                        10L,
+                        LocalDateTime.of(2025, 1, 1, 0, 0),
+                        LocalDateTime.of(2026, 5, 24, 11, 59)
+                ));
 
         mockMvc.perform(get("/admin/ops")
                         .param("reasonLimit", "200")
@@ -67,6 +82,7 @@ class OpsPageControllerTest {
 
         verify(fetchLogQueryService).failureOverview(200, 100, "timeout", 1, 3000);
         verify(fetchLogQueryService).listRecentFailuresPage(0, 20, "timeout", 1, 3000);
+        verify(fetchLogQueryService).retentionStatus(true, 90, 1000, "0 30 3 * * *", "Asia/Seoul");
     }
 
     @Test
@@ -93,11 +109,26 @@ class OpsPageControllerTest {
                 ));
         when(fetchLogQueryService.listRecentFailuresPage(0, 20, null, null, null))
                 .thenReturn(new LottoFetchLogQueryService.PagedFailures(List.of(), 0, 20, false));
+        when(fetchLogQueryService.retentionStatus(true, 90, 1000, "0 30 3 * * *", "Asia/Seoul"))
+                .thenReturn(new FetchLogRetentionStatusDto(
+                        LocalDateTime.of(2026, 5, 24, 12, 0),
+                        true,
+                        90,
+                        1000,
+                        "0 30 3 * * *",
+                        "Asia/Seoul",
+                        LocalDateTime.of(2026, 2, 24, 12, 0),
+                        100L,
+                        10L,
+                        LocalDateTime.of(2025, 1, 1, 0, 0),
+                        LocalDateTime.of(2026, 5, 24, 11, 59)
+                ));
 
         mockMvc.perform(get("/admin/ops"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Quick reason filters")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("data-reason=\"timeout\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString(">Reset<")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(">Reset<")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Log Retention")));
     }
 }
