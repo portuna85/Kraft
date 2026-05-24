@@ -18,8 +18,6 @@ import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryServi
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberPageDto;
-import com.kraft.lotto.support.BusinessException;
-import com.kraft.lotto.support.ErrorCode;
 import com.kraft.lotto.support.GlobalExceptionHandler;
 import java.util.List;
 import java.util.Optional;
@@ -136,7 +134,7 @@ class HomeControllerTest {
     void homeWithValidRoundShowsResult() throws Exception {
         WinningNumberDto dto = winningNumber(1100);
         stubHomeFrame();
-        when(queryService.getByRound(1100)).thenReturn(dto);
+        when(queryService.findByRound(1100)).thenReturn(Optional.of(dto));
 
         mockMvc.perform(get("/").param("round", "1100"))
                 .andExpect(status().isOk())
@@ -147,12 +145,12 @@ class HomeControllerTest {
     @DisplayName("존재하지 않는 회차 조회 시 에러 뷰를 렌더링한다")
     void homeWithInvalidRoundReturnsErrorView() throws Exception {
         stubHomeFrame();
-        when(queryService.getByRound(2000))
-                .thenThrow(new BusinessException(ErrorCode.WINNING_NUMBER_NOT_FOUND));
+        when(queryService.findByRound(2000)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/").param("round", "2000"))
-                .andExpect(status().isNotFound())
-                .andExpect(view().name("error"));
+                .andExpect(status().isOk())
+                .andExpect(view().name("home"))
+                .andExpect(model().attribute("result", (Object) null));
     }
 
     @Test
@@ -168,7 +166,7 @@ class HomeControllerTest {
     void homeWithRoundShowsResultAndExpectedRound() throws Exception {
         WinningNumberDto dto = winningNumber(500);
         stubHomeFrame();
-        when(queryService.getByRound(500)).thenReturn(dto);
+        when(queryService.findByRound(500)).thenReturn(Optional.of(dto));
 
         mockMvc.perform(get("/").param("round", "500"))
                 .andExpect(status().isOk())

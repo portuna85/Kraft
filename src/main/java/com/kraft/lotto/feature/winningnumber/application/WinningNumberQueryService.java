@@ -50,6 +50,15 @@ public class WinningNumberQueryService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.WINNING_NUMBER_NOT_FOUND));
     }
 
+    public Optional<WinningNumberDto> findByRound(int round) {
+        if (round <= 0 || round > MAX_ROUND) {
+            throw new BusinessException(ErrorCode.LOTTO_INVALID_TARGET_ROUND);
+        }
+        return repository.findById(round)
+                .map(WinningNumberMapper::toDomain)
+                .map(WinningNumberDto::from);
+    }
+
     public int expectedCurrentRound() {
         return LottoDrawSchedule.expectedRound(LocalDate.now(clock));
     }

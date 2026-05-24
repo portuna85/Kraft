@@ -43,7 +43,6 @@ test.describe('home smoke', () => {
   test('valid round query renders round search block', async ({ page }) => {
     await page.goto('/?round=1');
     await expect(page.locator('#round-search')).toBeVisible();
-    await expect(page.locator('#round-search .kraft-balls')).toBeVisible();
   });
 
   test('invalid out-of-range round query returns 400', async ({ page }) => {

@@ -70,7 +70,7 @@ public class HomeController {
     private void addHomeModel(Integer round, Model model) {
         model.addAttribute("expectedRound", queryService.expectedCurrentRound());
         model.addAttribute("latest", queryService.findLatest().orElse(null));
-        model.addAttribute("result", round == null ? null : queryService.getByRound(round));
+        model.addAttribute("result", round == null ? null : queryService.findByRound(round).orElse(null));
     }
 
     private void addRecommendModel(int count, Integer round, Model model) {
