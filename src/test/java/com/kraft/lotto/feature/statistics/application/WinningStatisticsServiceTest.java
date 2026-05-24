@@ -77,6 +77,81 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
+    @DisplayName("요약 데이터의 공 번호가 범위를 벗어나면 재계산한다")
+    void recomputesWhenSummaryHasOutOfRangeBall() {
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
+        when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(invalidSummaryRows(1201, 46, 1L));
+        when(winningNumberRepository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 2L), ballFrequencyRow(2, 2L), ballFrequencyRow(3, 2L),
+                ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
+        ));
+
+        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        List<NumberFrequencyDto> result = cacheService.frequency();
+
+        assertThat(result).hasSize(45);
+        verify(winningNumberRepository).findBallFrequencies();
+    }
+
+    @Test
+    @DisplayName("요약 데이터의 빈도가 음수면 재계산한다")
+    void recomputesWhenSummaryHasNegativeHitCount() {
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
+        when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(invalidSummaryRows(1201, 1, -1L));
+        when(winningNumberRepository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 2L), ballFrequencyRow(2, 2L), ballFrequencyRow(3, 2L),
+                ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
+        ));
+
+        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        cacheService.frequency();
+
+        verify(winningNumberRepository).findBallFrequencies();
+    }
+
+    @Test
+    @DisplayName("요약 데이터에 중복 공 번호가 있으면 재계산한다")
+    void recomputesWhenSummaryHasDuplicateBall() {
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
+        List<WinningNumberFrequencySummaryEntity> rows = new ArrayList<>();
+        rows.add(new WinningNumberFrequencySummaryEntity(1, 1L, 1201));
+        rows.add(new WinningNumberFrequencySummaryEntity(1, 1L, 1201));
+        for (int i = 3; i <= 45; i++) {
+            rows.add(new WinningNumberFrequencySummaryEntity(i, 1L, 1201));
+        }
+        when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(rows);
+        when(winningNumberRepository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 2L), ballFrequencyRow(2, 2L), ballFrequencyRow(3, 2L),
+                ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
+        ));
+
+        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        cacheService.frequency();
+
+        verify(winningNumberRepository).findBallFrequencies();
+    }
+
+    @Test
+    @DisplayName("요약 라운드가 최신 회차와 다르면 재계산한다")
+    void recomputesWhenSummaryRoundMismatch() {
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
+        List<WinningNumberFrequencySummaryEntity> rows = new ArrayList<>();
+        for (int i = 1; i <= 45; i++) {
+            rows.add(new WinningNumberFrequencySummaryEntity(i, 1L, 1200));
+        }
+        when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(rows);
+        when(winningNumberRepository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 2L), ballFrequencyRow(2, 2L), ballFrequencyRow(3, 2L),
+                ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
+        ));
+
+        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        cacheService.frequency();
+
+        verify(winningNumberRepository).findBallFrequencies();
+    }
+
+    @Test
     @DisplayName("빈도 요약 갱신 시 재계산된 결과를 저장하고 메트릭을 기록한다")
     void refreshFrequencySummarySavesAndRecordsMetrics() {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
@@ -160,6 +235,18 @@ class WinningStatisticsServiceTest {
         assertThat(meterRegistry.get("kraft.statistics.frequency.summary.refresh.latency")
                 .timer()
                 .count()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("최신 회차가 0이면 요약 저장 없이 종료한다")
+    void refreshFrequencySummaryReturnsWhenLatestRoundIsZero() {
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(0));
+
+        WinningStatisticsCacheService cacheService =
+                new WinningStatisticsCacheService(winningNumberRepository, summaryRepository, new SimpleMeterRegistry());
+        cacheService.refreshFrequencySummary();
+
+        verify(summaryRepository, never()).saveAll(ArgumentMatchers.anyList());
     }
 
     @Test
@@ -291,6 +378,30 @@ class WinningStatisticsServiceTest {
         assertThat(summary.frequencies()).isEqualTo(freqList);
     }
 
+    @Test
+    @DisplayName("서비스 frequency는 캐시 서비스 결과를 그대로 반환한다")
+    void frequencyDelegatesToCacheService() {
+        WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        List<NumberFrequencyDto> frequencies = List.of(new NumberFrequencyDto(1, 1L, 1.0));
+        when(mockCacheService.frequency()).thenReturn(frequencies);
+        WinningStatisticsService service = new WinningStatisticsService(mockCacheService);
+
+        assertThat(service.frequency()).isEqualTo(frequencies);
+    }
+
+    @Test
+    @DisplayName("서비스 combinationPrizeHistory는 캐시 서비스 결과를 그대로 반환한다")
+    void combinationPrizeHistoryDelegatesToCacheService() {
+        WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        var history = new com.kraft.lotto.feature.winningnumber.web.dto.CombinationPrizeHistoryDto(
+                List.of(1, 2, 3, 4, 5, 6), 0, 0, List.of(), List.of()
+        );
+        when(mockCacheService.combinationPrizeHistory(List.of(1, 2, 3, 4, 5, 6))).thenReturn(history);
+        WinningStatisticsService service = new WinningStatisticsService(mockCacheService);
+
+        assertThat(service.combinationPrizeHistory(List.of(1, 2, 3, 4, 5, 6))).isEqualTo(history);
+    }
+
     private static WinningNumberRepository.BallFrequencyRow ballFrequencyRow(int ball, long hitCount) {
         return new WinningNumberRepository.BallFrequencyRow() {
             @Override
@@ -317,5 +428,17 @@ class WinningStatisticsServiceTest {
                 return prizeRank;
             }
         };
+    }
+
+    private static List<WinningNumberFrequencySummaryEntity> invalidSummaryRows(int latestRound, int invalidBall, long invalidCount) {
+        List<WinningNumberFrequencySummaryEntity> rows = new ArrayList<>();
+        for (int i = 1; i <= 45; i++) {
+            if (i == 1) {
+                rows.add(new WinningNumberFrequencySummaryEntity(invalidBall, invalidCount, latestRound));
+            } else {
+                rows.add(new WinningNumberFrequencySummaryEntity(i, 1L, latestRound));
+            }
+        }
+        return rows;
     }
 }
