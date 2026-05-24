@@ -151,48 +151,16 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
       - name: Install E2E dependencies
         run: |
           npm ci
           npx playwright install --with-deps chromium
 
-      - name: Start app (local profile + H2 for E2E)
-        env:
-          SPRING_PROFILES_ACTIVE: local
-          KRAFT_SKIP_REQUIRED_CONFIG_VALIDATOR: true
-          KRAFT_DB_URL: jdbc:h2:mem:e2e;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
-          KRAFT_DB_USER: sa
-          KRAFT_DB_PASSWORD: ""
-          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
-          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
-          SPRING_FLYWAY_ENABLED: false
-          KRAFT_DB_CONNECTIVITY_CHECK_ENABLED: false
-          KRAFT_SECURITY_OPS_ENABLED: false
-        run: |
-          ./gradlew bootRun > app.log 2>&1 &
-          echo $! > app.pid
-
-      - name: Wait for readiness
-        run: |
-          for i in {1..60}; do
-            if curl -fsS http://localhost:8080/actuator/health/readiness >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "::error::app did not become ready in time"
-          tail -n 200 app.log || true
-          exit 1
-
       - name: Run Playwright smoke tests
         run: npm run test:e2e
-
-      - name: Stop app
-        if: always()
-        run: |
-          if [ -f app.pid ]; then
-            kill "$(cat app.pid)" || true
-          fi
 
       - name: Upload E2E artifacts
         if: always()
@@ -200,7 +168,6 @@ jobs:
         with:
           name: e2e-artifacts-${{ github.run_id }}
           path: |
-            app.log
             test-results/
             playwright-report/
           retention-days: 14
