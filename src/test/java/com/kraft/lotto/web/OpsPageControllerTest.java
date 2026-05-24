@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(OpsPageController.class)
 @Import(TestCacheConfig.class)
-@DisplayName("운영 도구 페이지 컨트롤러 테스트")
+@DisplayName("Ops page controller tests")
 class OpsPageControllerTest {
 
     @Autowired
@@ -32,39 +32,50 @@ class OpsPageControllerTest {
     LottoFetchLogQueryService fetchLogQueryService;
 
     @Test
-    @DisplayName("입력 파라미터를 정규화해 모델에 반영한다")
-    void normalizesRequestParamsAndBindsModel() throws Exception {
-        when(fetchLogQueryService.failureOverview(2000, 1, "timeout", 1, 3000))
+    @DisplayName("valid request binds model as expected")
+    void bindsModelForValidRequest() throws Exception {
+        when(fetchLogQueryService.failureOverview(200, 100, "timeout", 1, 3000))
                 .thenReturn(new FetchFailureOverviewDto(
                         LocalDateTime.of(2026, 5, 22, 12, 0),
-                        2000,
-                        1,
+                        200,
+                        100,
                         List.of(),
                         List.of()
                 ));
-        when(fetchLogQueryService.listRecentFailuresPage(0, 100, "timeout", 1, 3000))
-                .thenReturn(new LottoFetchLogQueryService.PagedFailures(List.of(), 0, 100, false));
+        when(fetchLogQueryService.listRecentFailuresPage(0, 20, "timeout", 1, 3000))
+                .thenReturn(new LottoFetchLogQueryService.PagedFailures(List.of(), 0, 20, false));
 
         mockMvc.perform(get("/admin/ops")
-                        .param("reasonLimit", "99999")
-                        .param("logLimit", "0")
-                        .param("page", "-1")
-                        .param("pageSize", "1000")
+                        .param("reasonLimit", "200")
+                        .param("logLimit", "100")
+                        .param("page", "0")
+                        .param("pageSize", "20")
                         .param("reason", " timeout ")
                         .param("drwNoFrom", "-2")
                         .param("drwNoTo", "9999"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin-ops"))
-                .andExpect(model().attribute("reasonLimit", 2000))
-                .andExpect(model().attribute("logLimit", 1))
+                .andExpect(model().attribute("reasonLimit", 200))
+                .andExpect(model().attribute("logLimit", 100))
                 .andExpect(model().attribute("page", 0))
-                .andExpect(model().attribute("pageSize", 100))
+                .andExpect(model().attribute("pageSize", 20))
                 .andExpect(model().attribute("reason", "timeout"))
                 .andExpect(model().attribute("drwNoFrom", 1))
                 .andExpect(model().attribute("drwNoTo", 3000))
                 .andExpect(model().attributeDoesNotExist("opsToken"));
 
-        verify(fetchLogQueryService).failureOverview(2000, 1, "timeout", 1, 3000);
-        verify(fetchLogQueryService).listRecentFailuresPage(0, 100, "timeout", 1, 3000);
+        verify(fetchLogQueryService).failureOverview(200, 100, "timeout", 1, 3000);
+        verify(fetchLogQueryService).listRecentFailuresPage(0, 20, "timeout", 1, 3000);
+    }
+
+    @Test
+    @DisplayName("out-of-range params return 400")
+    void invalidParamsReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/admin/ops")
+                        .param("reasonLimit", "0")
+                        .param("logLimit", "2001")
+                        .param("page", "-1")
+                        .param("pageSize", "101"))
+                .andExpect(status().isBadRequest());
     }
 }
