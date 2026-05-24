@@ -57,11 +57,7 @@ jobs:
       # test finalizedBy jacocoTestReport
       - name: Build + Test + Static analysis + Coverage
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            ./gradlew check bootJar -PstrictStatic=true -PstrictCoverage=true
-          else
-            ./gradlew check bootJar -PstrictStatic=true
-          fi
+          ./gradlew check bootJar -PstrictStatic=true -PstrictCoverage=true
 
       - name: Verify prod profile resources packaged in jar
         run: |
@@ -126,6 +122,79 @@ jobs:
           path: |
             build/reports/jacoco/test/html/
             build/reports/jacoco/test/jacocoTestReport.xml
+          retention-days: 14
+
+  e2e-smoke:
+    name: E2E Smoke (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install E2E dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Start app (test profile)
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          KRAFT_SKIP_REQUIRED_CONFIG_VALIDATOR: true
+        run: |
+          ./gradlew bootRun > app.log 2>&1 &
+          echo $! > app.pid
+
+      - name: Wait for readiness
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:8080/actuator/health/readiness >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::app did not become ready in time"
+          tail -n 200 app.log || true
+          exit 1
+
+      - name: Run Playwright smoke tests
+        run: npm run test:e2e
+
+      - name: Stop app
+        if: always()
+        run: |
+          if [ -f app.pid ]; then
+            kill "$(cat app.pid)" || true
+          fi
+
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts-${{ github.run_id }}
+          path: |
+            app.log
+            test-results/
+            playwright-report/
           retention-days: 14
 
   performance-smoke:

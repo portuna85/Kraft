@@ -51,3 +51,16 @@ Verification for this follow-up:
 
 - `node --check tests/e2e/smoke.spec.js`
 - `./gradlew.bat test --tests com.kraft.lotto.web.OpsPageControllerTest --tests com.kraft.lotto.web.OpsControllerTest --tests com.kraft.lotto.web.HomeControllerWebMvcTest`
+
+---
+
+Step-by-step progress update:
+
+Step 1 completed: CI Playwright smoke integration
+
+- Added `e2e-smoke` job to `.github/workflows/ci.yml` after `build-test`.
+- Job provisions JDK + Node, installs Playwright Chromium, starts app with `test` profile, waits for readiness, runs `npm run test:e2e`, uploads E2E artifacts.
+- Verified test discovery locally:
+  - `npm run -s test:e2e -- --list` (9 tests listed)
+- Verified related web tests:
+  - `./gradlew.bat test --tests com.kraft.lotto.web.OpsPageControllerTest` (passed)
