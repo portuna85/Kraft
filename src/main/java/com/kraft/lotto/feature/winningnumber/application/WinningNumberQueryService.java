@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 import com.kraft.lotto.feature.winningnumber.domain.LottoDrawSchedule;
+import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberMapper;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberDto;
@@ -20,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class WinningNumberQueryService {
 
-    public static final int MAX_ROUND = 3000;
     static final int DEFAULT_PAGE_SIZE = 20;
     static final int MAX_PAGE_SIZE = 100;
 
@@ -41,7 +41,7 @@ public class WinningNumberQueryService {
     }
 
     public WinningNumberDto getByRound(int round) {
-        if (round <= 0 || round > MAX_ROUND) {
+        if (round < LottoRoundPolicy.MIN_ROUND || round > LottoRoundPolicy.MAX_ROUND) {
             throw new BusinessException(ErrorCode.LOTTO_INVALID_TARGET_ROUND);
         }
         return repository.findById(round)
@@ -51,7 +51,7 @@ public class WinningNumberQueryService {
     }
 
     public Optional<WinningNumberDto> findByRound(int round) {
-        if (round <= 0 || round > MAX_ROUND) {
+        if (round < LottoRoundPolicy.MIN_ROUND || round > LottoRoundPolicy.MAX_ROUND) {
             throw new BusinessException(ErrorCode.LOTTO_INVALID_TARGET_ROUND);
         }
         return repository.findById(round)

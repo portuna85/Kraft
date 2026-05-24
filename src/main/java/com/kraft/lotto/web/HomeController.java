@@ -2,6 +2,7 @@ package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.recommend.application.RecommendService;
 import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
+import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
 import jakarta.validation.constraints.Max;
@@ -29,7 +30,7 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(
-            @RequestParam(required = false) @Min(1) @Max(3000) Integer round,
+            @RequestParam(required = false) @Min(LottoRoundPolicy.MIN_ROUND) @Max(LottoRoundPolicy.MAX_ROUND) Integer round,
             Model model
     ) {
         addHomeModel(PublicQueryParams.normalizeRound(round), model);
@@ -39,7 +40,7 @@ public class HomeController {
     @GetMapping("/fragments/recommend")
     public String recommend(
             @RequestParam(defaultValue = "5") @Min(1) @Max(10) int count,
-            @RequestParam(required = false) @Min(1) @Max(3000) Integer round,
+            @RequestParam(required = false) @Min(LottoRoundPolicy.MIN_ROUND) @Max(LottoRoundPolicy.MAX_ROUND) Integer round,
             Model model
     ) {
         addRecommendModel(PublicQueryParams.normalizeCount(count), PublicQueryParams.normalizeRound(round), model);

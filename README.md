@@ -81,3 +81,11 @@ python scripts/check_utf8.py
 ```
 
 The CI pipeline also runs this validation.
+
+## Workspace Policy
+
+- Local test artifacts are not committed:
+  - `node_modules/`
+  - `test-results/`
+- If they are created during local validation, remove them before commit.
+- Completion log file standard: `docs/completedd.md` (force-add may be required due ignore rules).

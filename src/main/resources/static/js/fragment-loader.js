@@ -26,6 +26,14 @@
     return '콘텐츠를 불러왔습니다.';
   }
 
+  function focusLoadedSection(target) {
+    if (!target) return;
+    var heading = target.querySelector('h2, .card-title, [data-focus-target]');
+    if (!heading) return;
+    heading.setAttribute('tabindex', '-1');
+    heading.focus();
+  }
+
   function notifyLoaded() {
     document.dispatchEvent(new CustomEvent('kraft:fragmentLoaded'));
   }
@@ -58,6 +66,8 @@
       })
       .then(function (fragmentHtml) {
         target.outerHTML = fragmentHtml;
+        var updated = document.getElementById(target.id);
+        focusLoadedSection(updated);
         announce('콘텐츠를 불러왔습니다.');
         notifyLoaded();
       })
@@ -87,6 +97,7 @@
     document.body.addEventListener('htmx:afterSwap', function (event) {
       var target = event.target;
       setUiState(target, 'success', stateMessage(target.id));
+      focusLoadedSection(target);
       clearInFlight(target);
       notifyLoaded();
     });

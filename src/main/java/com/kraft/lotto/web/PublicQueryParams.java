@@ -1,11 +1,11 @@
 package com.kraft.lotto.web;
 
+import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
+
 final class PublicQueryParams {
 
     private static final int MIN_COUNT = 1;
     private static final int MAX_COUNT = 10;
-    private static final int MIN_ROUND = 1;
-    private static final int MAX_ROUND = 3000;
     private static final int MIN_PAGE = 0;
     private static final int MIN_SIZE = 1;
     private static final int MAX_SIZE = 100;
@@ -21,7 +21,7 @@ final class PublicQueryParams {
         if (round == null) {
             return null;
         }
-        return Math.max(MIN_ROUND, Math.min(round, MAX_ROUND));
+        return LottoRoundPolicy.clamp(round);
     }
 
     static int normalizePage(int page) {

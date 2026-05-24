@@ -49,6 +49,14 @@ test.describe('home smoke', () => {
     const response = await page.goto('/?round=9999');
     expect(response.status()).toBe(400);
   });
+
+  test('loads fragments via fetch fallback when htmx script is blocked', async ({ page }) => {
+    await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
+    await page.goto('/');
+    await expect(page.locator('#recommend .kraft-combo').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#frequency .card-title')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#rounds .card-title')).toBeVisible({ timeout: 15000 });
+  });
 });
 
 test.describe('responsive smoke', () => {

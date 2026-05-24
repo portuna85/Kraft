@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.winningnumber.web.validation;
 
+import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.ElementType;
@@ -12,15 +13,15 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = RoundValidator.class)
 public @interface ValidRound {
 
-    String message() default "round는 숫자 형식의 유효한 회차 범위여야 합니다.";
+    String message() default "round는 숫자 형식이며 유효한 회차 범위여야 합니다.";
 
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
 
-    int min() default 1;
+    int min() default LottoRoundPolicy.MIN_ROUND;
 
-    int max() default 3000;
+    int max() default LottoRoundPolicy.MAX_ROUND;
 
     boolean allowNull() default false;
 }
