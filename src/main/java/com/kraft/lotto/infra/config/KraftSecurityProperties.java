@@ -25,6 +25,16 @@ public class KraftSecurityProperties {
     @Valid
     private final Ops ops = new Ops();
 
+    private List<String> trustedProxies = new ArrayList<>(List.of());
+
+    public List<String> getTrustedProxies() {
+        return List.copyOf(trustedProxies);
+    }
+
+    public void setTrustedProxies(List<String> trustedProxies) {
+        this.trustedProxies = trustedProxies == null ? new ArrayList<>() : new ArrayList<>(trustedProxies);
+    }
+
     @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Spring @ConfigurationProperties exposes nested mutable groups by design")
     public Headers getHeaders() {
         return headers;

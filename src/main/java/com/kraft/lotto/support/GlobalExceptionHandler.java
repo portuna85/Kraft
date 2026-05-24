@@ -1,6 +1,7 @@
 package com.kraft.lotto.support;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,11 @@ public class GlobalExceptionHandler {
                 ? code.getDefaultMessage()
                 : ex.getMessage();
         return errorView(code.getHttpStatus(), "요청 처리 실패", message);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ModelAndView handleConstraintViolation(ConstraintViolationException ex) {
+        return errorView(HttpStatus.BAD_REQUEST, "잘못된 요청", "요청 파라미터 값이 허용 범위를 벗어났습니다.");
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

@@ -22,6 +22,9 @@ public record KraftApiProperties(
         boolean circuitBreakerEnabled,
         @Positive @Max(100) int circuitBreakerFailureThreshold,
         @Positive @Max(300_000) int circuitBreakerOpenDurationMs,
-        @Positive @Max(10) int circuitBreakerHalfOpenMaxCalls
+        @Positive @Max(10) int circuitBreakerHalfOpenMaxCalls,
+        String userAgent,
+        String referer,
+        String acceptLanguage
 ) {
 }

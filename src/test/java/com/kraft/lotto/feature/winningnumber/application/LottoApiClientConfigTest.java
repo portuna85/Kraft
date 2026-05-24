@@ -33,7 +33,10 @@ class LottoApiClientConfigTest {
                 true,
                 5,
                 30_000,
-                1
+                1,
+                null,
+                null,
+                null
         );
         WinningNumberRepository repository = mock(WinningNumberRepository.class);
         when(repository.findMaxRound()).thenReturn(Optional.of(1223));

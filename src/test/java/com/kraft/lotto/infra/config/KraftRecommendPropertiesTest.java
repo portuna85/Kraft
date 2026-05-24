@@ -21,7 +21,7 @@ class KraftRecommendPropertiesTest {
     }
 
     @Test
-    @DisplayName("decade-threshold가 1이면 생성에 실패한다")
+    @DisplayName("decade-threshold가 2 미만이면 생성에 실패한다")
     void rejectsTooSmallDecadeThreshold() {
         assertThatThrownBy(() -> new KraftRecommendProperties(
                 5000,
@@ -29,6 +29,18 @@ class KraftRecommendPropertiesTest {
                 1_000,
                 new KraftRecommendProperties.Rules(31, 5, 1)
         )).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("decade-threshold가 2이면 실현 불가능한 설정으로 생성에 실패한다")
+    void rejectsFeasibilityViolatingDecadeThreshold() {
+        assertThatThrownBy(() -> new KraftRecommendProperties(
+                5000,
+                10_000,
+                1_000,
+                new KraftRecommendProperties.Rules(31, 5, 2)
+        )).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("3 and 6");
     }
 
     @Test

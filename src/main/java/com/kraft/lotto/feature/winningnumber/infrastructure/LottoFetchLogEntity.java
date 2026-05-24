@@ -9,8 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "lotto_fetch_logs")
@@ -36,8 +34,7 @@ public class LottoFetchLogEntity {
     @Column(name = "response_code")
     private Integer responseCode;
 
-    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
-    @Column(name = "raw_response")
+    @Column(name = "raw_response", length = 4000)
     private String rawResponse;
 
     @Column(name = "fetched_at", nullable = false)

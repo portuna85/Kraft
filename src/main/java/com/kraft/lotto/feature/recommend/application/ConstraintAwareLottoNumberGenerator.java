@@ -51,14 +51,8 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
                 );
             }
             int n = rng.nextInt(MAX_NUMBER) + 1;
-            if (selected.contains(n)) {
-                continue;
-            }
-            if (birthdayAboveCount == 0 && selected.size() == SIZE - 1 && n <= birthdayThreshold) {
-                continue;
-            }
             int bucket = bucketIndex(n);
-            if (decadeBuckets[bucket] >= Math.max(1, decadeThreshold - 1)) {
+            if (shouldSkipInitialPick(selected, birthdayAboveCount, decadeBuckets, n, bucket)) {
                 continue;
             }
 
@@ -87,12 +81,9 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
             }
             int old = numbers.get(replaceIndex);
             int newNumber = rng.nextInt(MAX_NUMBER) + 1;
-            if (numbers.contains(newNumber)) {
-                continue;
-            }
             int oldBucket = bucketIndex(old);
             int newBucket = bucketIndex(newNumber);
-            if (decadeBuckets[newBucket] >= Math.max(1, decadeThreshold - 1)) {
+            if (shouldSkipFixup(numbers, decadeBuckets, newNumber, newBucket)) {
                 continue;
             }
             numbers.set(replaceIndex, newNumber);
@@ -142,6 +133,31 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
             return 3;
         }
         return 4;
+    }
+
+    private boolean shouldSkipInitialPick(Set<Integer> selected,
+                                          int birthdayAboveCount,
+                                          int[] decadeBuckets,
+                                          int n,
+                                          int bucket) {
+        if (selected.contains(n)) {
+            return true;
+        }
+        if (birthdayAboveCount == 0 && selected.size() == SIZE - 1 && n <= birthdayThreshold) {
+            return true;
+        }
+        return exceedsDecadeThreshold(decadeBuckets, bucket);
+    }
+
+    private boolean shouldSkipFixup(List<Integer> numbers, int[] decadeBuckets, int newNumber, int newBucket) {
+        if (numbers.contains(newNumber)) {
+            return true;
+        }
+        return exceedsDecadeThreshold(decadeBuckets, newBucket);
+    }
+
+    private boolean exceedsDecadeThreshold(int[] decadeBuckets, int bucket) {
+        return decadeBuckets[bucket] >= Math.max(1, decadeThreshold - 1);
     }
 
     private static boolean hasLongRun(List<Integer> numbers, int threshold) {

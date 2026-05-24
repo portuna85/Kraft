@@ -9,12 +9,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface LottoFetchLogRepository extends JpaRepository<LottoFetchLogEntity, Long> {
+    String FAILED_STATUS = "com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchStatus.FAILED";
+
     long deleteByFetchedAtBefore(LocalDateTime cutoff);
 
     @Query("select l.id from LottoFetchLogEntity l where l.fetchedAt < :cutoff order by l.id")
     List<Long> findIdsByFetchedAtBefore(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
 
-    @Query("select l from LottoFetchLogEntity l where l.status = com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchStatus.FAILED order by l.fetchedAt desc")
+    @Query("select l from LottoFetchLogEntity l where l.status = " + FAILED_STATUS + " order by l.fetchedAt desc")
     List<LottoFetchLogEntity> findRecentFailed(Pageable pageable);
 
     @Query("""
@@ -78,6 +80,11 @@ public interface LottoFetchLogRepository extends JpaRepository<LottoFetchLogEnti
                                                                         Integer drwNoFrom,
                                                                         Integer drwNoTo,
                                                                         String reasonPattern) {
-        return findRecentFailedFilteredByReason(drwNoFrom, drwNoTo, reasonPattern, PageRequest.of(0, Math.max(1, limit)));
+        return findRecentFailedFilteredByReason(
+                drwNoFrom,
+                drwNoTo,
+                reasonPattern,
+                PageRequest.of(0, Math.max(1, limit))
+        );
     }
 }

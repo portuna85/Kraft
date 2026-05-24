@@ -140,84 +140,11 @@ public class DhLotteryApiClient implements LottoApiClient {
                     throw new CircuitBreakerOpenException("dhlottery circuit breaker open (round=" + round + ")");
                 }
                 try {
-                    ApiRawResponse response = doFetch(round);
-                    retrySupport.throwIfExpired(deadline, timeoutMessage(round));
-                    if (response.statusCode() >= 400) {
-                        String responseBody = response.body() == null ? "" : response.body();
-                        count("kraft.api.dhlottery.call.failure", "reason", "http_error");
-                        throw new LottoApiClientException("external API HTTP error (round=" + round + ", status=" + response.statusCode()
-                                + ", preview=" + preview(responseBody) + ")", response.statusCode(), response.body(),
-                                LottoApiClientException.FailureReason.HTTP_ERROR);
-                    }
-                    String body = response.body();
-                    if (body == null || body.isBlank()) {
-                        count("kraft.api.dhlottery.call.failure", "reason", "blank_body");
-                        throw new LottoApiClientException("response body is blank (round=" + round + ")",
-                                response.statusCode(), response.body(), LottoApiClientException.FailureReason.BLANK_BODY);
-                    }
-                    if (isHtmlResponse(response)) {
-                        if (round <= expectedRoundAsOf(LocalDate.now())) {
-                            count("kraft.api.dhlottery.call.failure", "reason", "html_upstream_blocked");
-                            throw new LottoApiClientException(
-                                    "HTML response for expected round=" + round + " (server may be blocking)",
-                                    response.statusCode(), preview(response.body()),
-                                    LottoApiClientException.FailureReason.HTML_UPSTREAM_BLOCKED);
-                        }
-                        log.debug("lotto round not yet drawn (HTML response): round={}", round);
-                        count("kraft.api.dhlottery.call.empty", "reason", "not_drawn");
-                        circuitBreaker.recordSuccess();
-                        return Optional.empty();
-                    }
-                    validateJsonResponse(round, response);
-                    Optional<WinningNumber> parsed = parse(round, body);
-                    if (parsed.isEmpty()) {
-                        count("kraft.api.dhlottery.call.empty", "reason", "not_drawn");
-                    } else {
-                        count("kraft.api.dhlottery.call.success");
-                    }
-                    circuitBreaker.recordSuccess();
-                    return parsed;
+                    return executeAttempt(round, deadline);
                 } catch (RestClientException ex) {
-                    count("kraft.api.dhlottery.call.failure", "reason", "network");
-                    circuitBreaker.recordFailure();
-                    if (attempt >= attempts) {
-                        throw new LottoApiClientException(
-                                "external API call failed (round=" + round + ", attempts=" + attempts + ")", ex,
-                                null, null, LottoApiClientException.FailureReason.NETWORK);
-                    }
-                    count("kraft.api.dhlottery.call.retry");
-                    log.warn("dhlottery call failed, retrying: round={}, attempt={}/{}, reason={}",
-                            round, attempt, attempts, ex.getMessage());
-                    log.debug("dhlottery retry detail: round={}, attempt={}/{}, cause={}({})",
-                            round, attempt, attempts, ex.getClass().getSimpleName(), ex.getMessage());
-                    sleepBackoff(deadline, round);
+                    handleRestClientException(round, deadline, attempts, attempt, ex);
                 } catch (LottoApiClientException ex) {
-                    if (ex instanceof ApiRequestTimeoutException) {
-                        count("kraft.api.dhlottery.call.failure", "reason", "timeout");
-                        circuitBreaker.recordFailure();
-                        throw ex;
-                    }
-                    String reason = ex.metricReason();
-                    if ("json_parse".equals(reason)
-                            || "validation".equals(reason)
-                            || "transform".equals(reason)
-                            || "unexpected_return_value".equals(reason)
-                            || "non_json".equals(reason)
-                            || "missing_field".equals(reason)) {
-                        count("kraft.api.dhlottery.call.failure", "reason", reason);
-                    }
-                    circuitBreaker.recordFailure();
-                    if (attempt >= attempts || !isRetriable(ex)) {
-                        throw new LottoApiClientException(
-                                "external API call failed (round=" + round + ", attempts=" + attempts + ")", ex,
-                                ex.getResponseCode(), ex.getRawResponse(), ex.getFailureReason());
-                    }
-                    count("kraft.api.dhlottery.call.retry");
-                    log.warn("dhlottery call failed, retrying: round={}, attempt={}/{}, reason={}",
-                            round, attempt, attempts, ex.getMessage());
-                    log.debug("dhlottery retry detail: round={}, attempt={}/{}, cause={}({})",
-                            round, attempt, attempts, ex.getClass().getSimpleName(), ex.getMessage());
-                    sleepBackoff(deadline, round);
+                    handleClientException(round, deadline, attempts, attempt, ex);
                 }
             }
         } finally {
@@ -225,6 +152,138 @@ public class DhLotteryApiClient implements LottoApiClient {
                 meterRegistry.timer("kraft.api.dhlottery.latency")
                         .record(System.nanoTime() - started, TimeUnit.NANOSECONDS);
             }
+        }
+    }
+
+    private Optional<WinningNumber> executeAttempt(int round, long deadline) {
+        ApiRawResponse response = doFetch(round);
+        retrySupport.throwIfExpired(deadline, timeoutMessage(round));
+        validateResponseStatus(round, response);
+        String body = validateResponseBody(round, response);
+        if (isHtmlResponse(response)) {
+            return handleHtmlResponse(round, response);
+        }
+        validateJsonResponse(round, response);
+        return handleParsedResponse(round, body);
+    }
+
+    private void validateResponseStatus(int round, ApiRawResponse response) {
+        if (response.statusCode() < 400) {
+            return;
+        }
+        String responseBody = response.body() == null ? "" : response.body();
+        count("kraft.api.dhlottery.call.failure", "reason", "http_error");
+        throw new LottoApiClientException(
+                "external API HTTP error (round=" + round + ", status=" + response.statusCode()
+                        + ", preview=" + preview(responseBody) + ")",
+                response.statusCode(),
+                response.body(),
+                LottoApiClientException.FailureReason.HTTP_ERROR
+        );
+    }
+
+    private String validateResponseBody(int round, ApiRawResponse response) {
+        String body = response.body();
+        if (body != null && !body.isBlank()) {
+            return body;
+        }
+        count("kraft.api.dhlottery.call.failure", "reason", "blank_body");
+        throw new LottoApiClientException(
+                "response body is blank (round=" + round + ")",
+                response.statusCode(),
+                response.body(),
+                LottoApiClientException.FailureReason.BLANK_BODY
+        );
+    }
+
+    private Optional<WinningNumber> handleHtmlResponse(int round, ApiRawResponse response) {
+        if (round <= expectedRoundAsOf(LocalDate.now())) {
+            count("kraft.api.dhlottery.call.failure", "reason", "html_upstream_blocked");
+            throw new LottoApiClientException(
+                    "HTML response for expected round=" + round + " (server may be blocking)",
+                    response.statusCode(),
+                    preview(response.body()),
+                    LottoApiClientException.FailureReason.HTML_UPSTREAM_BLOCKED
+            );
+        }
+        log.debug("lotto round not yet drawn (HTML response): round={}", round);
+        count("kraft.api.dhlottery.call.empty", "reason", "not_drawn");
+        circuitBreaker.recordSuccess();
+        return Optional.empty();
+    }
+
+    private Optional<WinningNumber> handleParsedResponse(int round, String body) {
+        Optional<WinningNumber> parsed = parse(round, body);
+        if (parsed.isEmpty()) {
+            count("kraft.api.dhlottery.call.empty", "reason", "not_drawn");
+        } else {
+            count("kraft.api.dhlottery.call.success");
+        }
+        circuitBreaker.recordSuccess();
+        return parsed;
+    }
+
+    private void handleRestClientException(int round,
+                                           long deadline,
+                                           int attempts,
+                                           int attempt,
+                                           RestClientException ex) {
+        count("kraft.api.dhlottery.call.failure", "reason", "network");
+        circuitBreaker.recordFailure();
+        if (attempt >= attempts) {
+            throw new LottoApiClientException(
+                    "external API call failed (round=" + round + ", attempts=" + attempts + ")",
+                    ex,
+                    null,
+                    null,
+                    LottoApiClientException.FailureReason.NETWORK
+            );
+        }
+        count("kraft.api.dhlottery.call.retry");
+        log.warn("dhlottery call failed, retrying: round={}, attempt={}/{}, reason={}",
+                round, attempt, attempts, ex.getMessage());
+        log.debug("dhlottery retry detail: round={}, attempt={}/{}, cause={}({})",
+                round, attempt, attempts, ex.getClass().getSimpleName(), ex.getMessage());
+        sleepBackoff(deadline, round);
+    }
+
+    private void handleClientException(int round,
+                                       long deadline,
+                                       int attempts,
+                                       int attempt,
+                                       LottoApiClientException ex) {
+        if (ex instanceof ApiRequestTimeoutException) {
+            count("kraft.api.dhlottery.call.failure", "reason", "timeout");
+            circuitBreaker.recordFailure();
+            throw ex;
+        }
+        countFailureReasonMetric(ex.metricReason());
+        circuitBreaker.recordFailure();
+        if (attempt >= attempts || !isRetriable(ex)) {
+            throw new LottoApiClientException(
+                    "external API call failed (round=" + round + ", attempts=" + attempts + ")",
+                    ex,
+                    ex.getResponseCode(),
+                    ex.getRawResponse(),
+                    ex.getFailureReason()
+            );
+        }
+        count("kraft.api.dhlottery.call.retry");
+        log.warn("dhlottery call failed, retrying: round={}, attempt={}/{}, reason={}",
+                round, attempt, attempts, ex.getMessage());
+        log.debug("dhlottery retry detail: round={}, attempt={}/{}, cause={}({})",
+                round, attempt, attempts, ex.getClass().getSimpleName(), ex.getMessage());
+        sleepBackoff(deadline, round);
+    }
+
+    private void countFailureReasonMetric(String reason) {
+        if ("json_parse".equals(reason)
+                || "validation".equals(reason)
+                || "transform".equals(reason)
+                || "unexpected_return_value".equals(reason)
+                || "non_json".equals(reason)
+                || "missing_field".equals(reason)) {
+            count("kraft.api.dhlottery.call.failure", "reason", reason);
         }
     }
 

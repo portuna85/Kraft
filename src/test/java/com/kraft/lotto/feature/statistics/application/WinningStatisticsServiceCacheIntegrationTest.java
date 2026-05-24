@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
+import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.BallFrequencyRow;
 import com.kraft.lotto.support.BusinessException;
 import com.kraft.lotto.support.ErrorCode;
 import java.util.List;
@@ -65,8 +66,9 @@ class WinningStatisticsServiceCacheIntegrationTest {
     @Test
     @DisplayName("빈도 요약이 프록시를 통해 캐시를 사용하여 중복 빈도 집계 쿼리를 방지한다")
     void frequencySummaryUsesCachedFrequencyViaProxy() {
-        when(repository.findAllNumbersForFrequency()).thenReturn(List.<Object[]>of(
-                new Object[]{1, 2, 3, 4, 5, 6}
+        when(repository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 1L), ballFrequencyRow(2, 1L), ballFrequencyRow(3, 1L),
+                ballFrequencyRow(4, 1L), ballFrequencyRow(5, 1L), ballFrequencyRow(6, 1L)
         ));
         when(repository.findPrizeHitsByNumbers(anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt()))
                 .thenReturn(List.of());
@@ -75,7 +77,7 @@ class WinningStatisticsServiceCacheIntegrationTest {
         service.frequencySummary();
         service.frequencySummary();
 
-        verify(repository, times(1)).findAllNumbersForFrequency();
+        verify(repository, times(1)).findBallFrequencies();
     }
 
     @Test
@@ -87,6 +89,13 @@ class WinningStatisticsServiceCacheIntegrationTest {
         assertInvalidCombinationRejected(List.of(1, 2, 3, 4, 5, 46));
 
         verify(repository, never()).findPrizeHitsByNumbers(anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt());
+    }
+
+    private static BallFrequencyRow ballFrequencyRow(int ball, long hitCount) {
+        return new BallFrequencyRow() {
+            @Override public Integer getBall() { return ball; }
+            @Override public Long getHitCount() { return hitCount; }
+        };
     }
 
     private void assertInvalidCombinationRejected(List<Integer> numbers) {

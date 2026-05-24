@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(OpsPageController.class)
 @Import(TestCacheConfig.class)
-@DisplayName("Ops page controller tests")
+@DisplayName("운영 페이지 컨트롤러 테스트")
 class OpsPageControllerTest {
 
     @Autowired
@@ -32,7 +32,7 @@ class OpsPageControllerTest {
     LottoFetchLogQueryService fetchLogQueryService;
 
     @Test
-    @DisplayName("valid request binds model as expected")
+    @DisplayName("유효한 요청은 모델을 정상 바인딩한다")
     void bindsModelForValidRequest() throws Exception {
         when(fetchLogQueryService.failureOverview(200, 100, "timeout", 1, 3000))
                 .thenReturn(new FetchFailureOverviewDto(
@@ -69,7 +69,7 @@ class OpsPageControllerTest {
     }
 
     @Test
-    @DisplayName("out-of-range params return 400")
+    @DisplayName("범위를 벗어난 파라미터는 400을 반환한다")
     void invalidParamsReturnBadRequest() throws Exception {
         mockMvc.perform(get("/admin/ops")
                         .param("reasonLimit", "0")

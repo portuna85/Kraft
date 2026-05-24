@@ -141,10 +141,10 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("trustForwardedFor=true 이면 X-Forwarded-For 첫 IP로 허용 여부를 판단한다")
+    @DisplayName("trustedProxies에 remoteAddr가 포함되면 X-Forwarded-For 첫 IP로 허용 여부를 판단한다")
     void usesForwardedForWhenTrusted() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
-        properties.getOps().setTrustForwardedFor(true);
+        properties.setTrustedProxies(java.util.List.of("203.0.113.10"));
         properties.getOps().setAllowedIps(java.util.List.of("198.51.100.1"));
         properties.getOps().setRequiredToken("expected-token");
         OpsAccessFilter filter = new OpsAccessFilter(properties);

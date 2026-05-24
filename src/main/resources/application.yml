@@ -91,6 +91,7 @@ kraft:
       trust-forwarded-for: ${KRAFT_SECURITY_OPS_TRUST_FORWARDED_FOR:false}
       required-token: ${KRAFT_SECURITY_OPS_REQUIRED_TOKEN:}
       allowed-ips: ${KRAFT_SECURITY_OPS_ALLOWED_IPS:127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+    trusted-proxies: ${KRAFT_SECURITY_TRUSTED_PROXIES:}
   history-init:
     enabled: ${KRAFT_HISTORY_INIT_ENABLED:true}
   collect:
@@ -116,6 +117,19 @@ kraft:
     circuit-breaker-failure-threshold: ${KRAFT_API_CIRCUIT_BREAKER_FAILURE_THRESHOLD:5}
     circuit-breaker-open-duration-ms: ${KRAFT_API_CIRCUIT_BREAKER_OPEN_DURATION_MS:30000}
     circuit-breaker-half-open-max-calls: ${KRAFT_API_CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS:1}
+    user-agent: ${KRAFT_API_USER_AGENT:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36}
+    referer: ${KRAFT_API_REFERER:https://www.dhlottery.co.kr/gameResult.do?method=byWin}
+    accept-language: ${KRAFT_API_ACCEPT_LANGUAGE:ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7}
+  cache:
+    winning-number-frequency:
+      ttl-minutes: ${KRAFT_CACHE_FREQUENCY_TTL_MINUTES:10}
+      max-size: ${KRAFT_CACHE_FREQUENCY_MAX_SIZE:1}
+    combination-prize-history:
+      ttl-minutes: ${KRAFT_CACHE_PRIZE_HISTORY_TTL_MINUTES:30}
+      max-size: ${KRAFT_CACHE_PRIZE_HISTORY_MAX_SIZE:200}
+    winning-frequency-summary:
+      ttl-minutes: ${KRAFT_CACHE_FREQUENCY_SUMMARY_TTL_MINUTES:5}
+      max-size: ${KRAFT_CACHE_FREQUENCY_SUMMARY_MAX_SIZE:1}
   recommend:
     max-attempts: ${KRAFT_RECOMMEND_MAX_ATTEMPTS:5000}
     initial-pick-max-attempts: ${KRAFT_RECOMMEND_INITIAL_PICK_MAX_ATTEMPTS:10000}

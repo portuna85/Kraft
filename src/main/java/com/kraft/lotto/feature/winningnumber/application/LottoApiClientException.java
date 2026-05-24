@@ -7,19 +7,29 @@ package com.kraft.lotto.feature.winningnumber.application;
 public class LottoApiClientException extends RuntimeException {
 
     public enum FailureReason {
-        HTTP_ERROR,
-        BLANK_BODY,
-        NON_JSON,
-        HTML_UPSTREAM_BLOCKED,
-        NETWORK,
-        TIMEOUT,
-        JSON_PARSE,
-        VALIDATION,
-        TRANSFORM,
-        UNEXPECTED_RETURN_VALUE,
-        CIRCUIT_OPEN,
-        MISSING_FIELD,
-        OTHER
+        HTTP_ERROR("http_error"),
+        BLANK_BODY("blank_body"),
+        NON_JSON("non_json"),
+        HTML_UPSTREAM_BLOCKED("html_upstream_blocked"),
+        NETWORK("network"),
+        TIMEOUT("timeout"),
+        JSON_PARSE("json_parse"),
+        VALIDATION("validation"),
+        TRANSFORM("transform"),
+        UNEXPECTED_RETURN_VALUE("unexpected_return_value"),
+        CIRCUIT_OPEN("circuit_open"),
+        MISSING_FIELD("missing_field"),
+        OTHER("other");
+
+        private final String metricName;
+
+        FailureReason(String metricName) {
+            this.metricName = metricName;
+        }
+
+        public String metricName() {
+            return metricName;
+        }
     }
 
     private final Integer responseCode;
@@ -74,20 +84,6 @@ public class LottoApiClientException extends RuntimeException {
     }
 
     public String metricReason() {
-        return switch (failureReason) {
-            case HTTP_ERROR -> "http_error";
-            case BLANK_BODY -> "blank_body";
-            case NON_JSON -> "non_json";
-            case HTML_UPSTREAM_BLOCKED -> "html_upstream_blocked";
-            case NETWORK -> "network";
-            case TIMEOUT -> "timeout";
-            case JSON_PARSE -> "json_parse";
-            case VALIDATION -> "validation";
-            case TRANSFORM -> "transform";
-            case UNEXPECTED_RETURN_VALUE -> "unexpected_return_value";
-            case CIRCUIT_OPEN -> "circuit_open";
-            case MISSING_FIELD -> "missing_field";
-            case OTHER -> "other";
-        };
+        return failureReason.metricName();
     }
 }

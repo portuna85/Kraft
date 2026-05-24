@@ -53,7 +53,7 @@ class WinningStatisticsServiceTest {
         assertThat(result).hasSize(45);
         assertThat(result.get(0).number()).isEqualTo(1);
         assertThat(result.get(0).count()).isEqualTo(2L);
-        verify(winningNumberRepository, never()).findAllNumbersForFrequency();
+        verify(winningNumberRepository, never()).findBallFrequencies();
     }
 
     @Test
@@ -63,9 +63,9 @@ class WinningStatisticsServiceTest {
         when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(List.of(
                 new WinningNumberFrequencySummaryEntity(1, 10L, 1200)
         ));
-        when(winningNumberRepository.findAllNumbersForFrequency()).thenReturn(List.of(
-                new Object[]{1, 2, 3, 4, 5, 6},
-                new Object[]{1, 2, 3, 4, 5, 6}
+        when(winningNumberRepository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 2L), ballFrequencyRow(2, 2L), ballFrequencyRow(3, 2L),
+                ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
         ));
 
         WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
@@ -81,8 +81,9 @@ class WinningStatisticsServiceTest {
     void refreshFrequencySummarySavesAndRecordsMetrics() {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
-        when(winningNumberRepository.findAllNumbersForFrequency()).thenReturn(List.<Object[]>of(
-                new Object[]{1, 2, 3, 4, 5, 6}
+        when(winningNumberRepository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 1L), ballFrequencyRow(2, 1L), ballFrequencyRow(3, 1L),
+                ballFrequencyRow(4, 1L), ballFrequencyRow(5, 1L), ballFrequencyRow(6, 1L)
         ));
 
         WinningStatisticsCacheService cacheService =
@@ -103,8 +104,9 @@ class WinningStatisticsServiceTest {
         when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(List.of(
                 new WinningNumberFrequencySummaryEntity(1, 10L, 1200)
         ));
-        when(winningNumberRepository.findAllNumbersForFrequency()).thenReturn(List.<Object[]>of(
-                new Object[]{1, 2, 3, 4, 5, 6}
+        when(winningNumberRepository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 1L), ballFrequencyRow(2, 1L), ballFrequencyRow(3, 1L),
+                ballFrequencyRow(4, 1L), ballFrequencyRow(5, 1L), ballFrequencyRow(6, 1L)
         ));
 
         WinningStatisticsCacheService cacheService =
@@ -126,8 +128,9 @@ class WinningStatisticsServiceTest {
         when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(List.of(
                 new WinningNumberFrequencySummaryEntity(1, 10L, 1200)
         ));
-        when(winningNumberRepository.findAllNumbersForFrequency()).thenReturn(List.<Object[]>of(
-                new Object[]{1, 2, 3, 4, 5, 6}
+        when(winningNumberRepository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 1L), ballFrequencyRow(2, 1L), ballFrequencyRow(3, 1L),
+                ballFrequencyRow(4, 1L), ballFrequencyRow(5, 1L), ballFrequencyRow(6, 1L)
         ));
 
         WinningStatisticsCacheService cacheService =
@@ -145,8 +148,9 @@ class WinningStatisticsServiceTest {
     void recordsRefreshLatencyMetric() {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
-        when(winningNumberRepository.findAllNumbersForFrequency()).thenReturn(List.<Object[]>of(
-                new Object[]{1, 2, 3, 4, 5, 6}
+        when(winningNumberRepository.findBallFrequencies()).thenReturn(List.of(
+                ballFrequencyRow(1, 1L), ballFrequencyRow(2, 1L), ballFrequencyRow(3, 1L),
+                ballFrequencyRow(4, 1L), ballFrequencyRow(5, 1L), ballFrequencyRow(6, 1L)
         ));
 
         WinningStatisticsCacheService cacheService =
@@ -205,7 +209,7 @@ class WinningStatisticsServiceTest {
 
     @Test
     @DisplayName("dataChanged=false인 이벤트 수신 시 요약 갱신을 수행하지 않는다")
-    void evictCachesOnCollected_dataNotChanged_noSummaryRefresh() {
+    void evictCachesOnCollectedDataNotChangedNoSummaryRefresh() {
         WinningStatisticsCacheService mockCacheService = org.mockito.Mockito.mock(WinningStatisticsCacheService.class);
         WinningStatisticsService service = new WinningStatisticsService(mockCacheService);
         WinningNumbersCollectedEvent event = WinningNumbersCollectedEvent.of(0, 0, 0, 0);
@@ -217,7 +221,7 @@ class WinningStatisticsServiceTest {
 
     @Test
     @DisplayName("dataChanged=true인 이벤트 수신 시 통계 캐시를 비우고 요약을 갱신한다")
-    void evictCachesOnCollected_dataChanged_clearsCachesAndRefreshes() {
+    void evictCachesOnCollectedDataChangedClearsCachesAndRefreshes() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
         CacheManager cacheManager = mock(CacheManager.class);
         Cache frequency = mock(Cache.class);
@@ -252,6 +256,15 @@ class WinningStatisticsServiceTest {
         var summary = service.frequencySummary();
 
         assertThat(summary.frequencies()).isEqualTo(freqList);
+    }
+
+    private static WinningNumberRepository.BallFrequencyRow ballFrequencyRow(int ball, long hitCount) {
+        return new WinningNumberRepository.BallFrequencyRow() {
+            @Override
+            public Integer getBall() { return ball; }
+            @Override
+            public Long getHitCount() { return hitCount; }
+        };
     }
 
     private static WinningNumberRepository.PrizeHitWithRankRow prizeHitRow(int round, LocalDate drawDate, int prizeRank) {

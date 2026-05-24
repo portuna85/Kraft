@@ -3,10 +3,13 @@ package com.kraft.lotto.feature.winningnumber.application;
 import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
+import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +30,8 @@ public class LottoCollectionCommandService {
     private final int maxCollectPerRun;
     private final int maxHistoryCollect;
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicReference<String> currentOperation = new AtomicReference<>(null);
+    private final AtomicReference<Instant> startedAt = new AtomicReference<>(null);
 
     LottoCollectionCommandService(WinningNumberRepository winningNumberRepository,
                                   LottoSingleDrawCollector singleDrawCollector,
@@ -46,28 +51,28 @@ public class LottoCollectionCommandService {
 
     public CollectResponse collectNextIfNeeded() {
         return runExclusive("collect-next", () -> {
-            CollectResponse response = collectOneNext();
+            int nextRound = winningNumberRepository.findMaxRound().orElse(0) + 1;
+            CollectResponse response = singleDrawCollector.collectOne(nextRound, false);
             publishCollected(response);
             return response;
         });
     }
 
-    /**
-     * Collect sequential rounds until API indicates latest-not-drawn (empty) or a failure occurs.
-     */
     public CollectResponse collectAllUntilLatest() {
         return runExclusive("collect-all", () -> {
             int totalCollected = 0, totalUpdated = 0, totalSkipped = 0;
             List<Integer> allFailedRounds = new ArrayList<>();
             int latestRound = winningNumberRepository.findMaxRound().orElse(0);
+            int nextRound = latestRound + 1;
             boolean truncated = true;
 
             for (int i = 0; i < maxCollectPerRun; i++) {
-                CollectResponse one = collectOneNext();
+                CollectResponse one = singleDrawCollector.collectOne(nextRound, false);
                 totalCollected += one.collected();
                 totalUpdated += one.updated();
                 totalSkipped += one.skipped();
                 latestRound = Math.max(latestRound, one.latestRound());
+                nextRound = latestRound + 1;
                 allFailedRounds.addAll(one.failedRounds());
                 if (one.notDrawn() || one.failed() > 0) {
                     truncated = false;
@@ -88,14 +93,16 @@ public class LottoCollectionCommandService {
         return runExclusive("collect-history", () -> {
             int totalCollected = 0, totalUpdated = 0, totalSkipped = 0;
             List<Integer> allFailedRounds = new ArrayList<>();
-            int latestRound = 0;
+            int latestRound = winningNumberRepository.findMaxRound().orElse(0);
+            int nextRound = latestRound + 1;
 
             for (int i = 0; i < maxHistoryCollect; i++) {
-                CollectResponse one = collectOneNext();
+                CollectResponse one = singleDrawCollector.collectOne(nextRound, false);
                 totalCollected += one.collected();
                 totalUpdated += one.updated();
                 totalSkipped += one.skipped();
                 latestRound = Math.max(latestRound, one.latestRound());
+                nextRound = latestRound + 1;
                 allFailedRounds.addAll(one.failedRounds());
                 if (one.notDrawn() || one.failed() > 0) {
                     break;
@@ -131,11 +138,6 @@ public class LottoCollectionCommandService {
         });
     }
 
-    private CollectResponse collectOneNext() {
-        int nextRound = winningNumberRepository.findMaxRound().orElse(0) + 1;
-        return singleDrawCollector.collectOne(nextRound, false);
-    }
-
     private void publishCollected(CollectResponse response) {
         if (eventPublisher == null) {
             return;
@@ -145,16 +147,27 @@ public class LottoCollectionCommandService {
         ));
     }
 
+    public CollectStatusResponse getStatus() {
+        if (!running.get()) {
+            return CollectStatusResponse.idle();
+        }
+        return CollectStatusResponse.active(currentOperation.get(), startedAt.get());
+    }
+
     private CollectResponse runExclusive(String operation, Supplier<CollectResponse> action) {
         if (!running.compareAndSet(false, true)) {
             int latestRound = winningNumberRepository.findMaxRound().orElse(0);
             log.warn("{} skipped: another collection run is already active", operation);
             return CollectResponse.ofOverlapSkipped(latestRound);
         }
+        currentOperation.set(operation);
+        startedAt.set(Instant.now());
         try {
             return action.get();
         } finally {
             running.set(false);
+            currentOperation.set(null);
+            startedAt.set(null);
         }
     }
 }

@@ -27,8 +27,8 @@ class WinningNumberRepositoryDataJpaTest {
     WinningNumberRepository repository;
 
     @Test
-    @DisplayName("findAllNumbersForFrequency는 저장된 회차당 6개의 번호를 반환한다")
-    void findAllNumbersForFrequencyReturnsRows() {
+    @DisplayName("findBallFrequencies는 각 볼 번호별 출현 횟수를 집계하여 반환한다")
+    void findBallFrequenciesReturnsAggregatedCounts() {
         repository.save(entity(
                 1001, LocalDate.of(2026, 5, 10),
                 1, 2, 3, 4, 5, 6,
@@ -36,14 +36,23 @@ class WinningNumberRepositoryDataJpaTest {
         ));
         repository.save(entity(
                 1002, LocalDate.of(2026, 5, 17),
-                8, 9, 10, 11, 12, 13,
-                14
+                1, 2, 3, 4, 5, 7,
+                8
         ));
 
-        List<Object[]> rows = repository.findAllNumbersForFrequency();
+        List<WinningNumberRepository.BallFrequencyRow> rows = repository.findBallFrequencies();
 
-        assertThat(rows).hasSize(2);
-        assertThat(rows).allSatisfy(row -> assertThat(row).hasSize(6));
+        assertThat(rows).isNotEmpty();
+        assertThat(rows).allSatisfy(row -> {
+            assertThat(row.getBall()).isBetween(1, 45);
+            assertThat(row.getHitCount()).isPositive();
+        });
+        WinningNumberRepository.BallFrequencyRow ball1 = rows.stream()
+                .filter(r -> r.getBall() == 1).findFirst().orElseThrow();
+        assertThat(ball1.getHitCount()).isEqualTo(2L);
+        WinningNumberRepository.BallFrequencyRow ball6 = rows.stream()
+                .filter(r -> r.getBall() == 6).findFirst().orElseThrow();
+        assertThat(ball6.getHitCount()).isEqualTo(1L);
     }
 
     @Test

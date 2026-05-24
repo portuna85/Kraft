@@ -1,5 +1,7 @@
 package com.kraft.lotto.web;
 
+import static com.kraft.lotto.support.fixtures.LottoTestFixtures.combinationDtos;
+import static com.kraft.lotto.support.fixtures.LottoTestFixtures.winningNumberDto;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -7,8 +9,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-import static com.kraft.lotto.support.fixtures.LottoTestFixtures.combinationDtos;
-import static com.kraft.lotto.support.fixtures.LottoTestFixtures.winningNumberDto;
 
 import com.kraft.lotto.feature.recommend.application.RecommendService;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
@@ -58,15 +58,12 @@ class HomeControllerTest {
     @Test
     @DisplayName("기본 모델 값을 사용하여 홈 페이지를 렌더링한다")
     void homeWithDefaultParamsRendersView() throws Exception {
-        stubRecommend(5, 5);
         stubHomeFrame();
 
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("home"))
-                .andExpect(model().attribute("count", 5))
-                .andExpect(model().attribute("expectedRound", 1200))
-                .andExpect(model().attribute("combinations", is(combinationDtos(5))));
+                .andExpect(model().attribute("expectedRound", 1200));
     }
 
     @Test
@@ -111,12 +108,11 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("낮은 추천 개수 값은 1로 보정해 서비스에 전달한다")
-    void homeWithInvalidLowCountPassesAsIs() throws Exception {
+    @DisplayName("추천 프래그먼트에서 낮은 count 값은 그대로 1로 전달한다")
+    void recommendFragmentWithLowCountCallsService() throws Exception {
         stubRecommend(1, 1);
-        stubHomeFrame();
 
-        mockMvc.perform(get("/").param("count", "0"))
+        mockMvc.perform(get("/fragments/recommend").param("count", "1"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("count", 1));
 
@@ -124,12 +120,11 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("높은 추천 개수 값은 10으로 보정해 서비스에 전달한다")
-    void homeWithCountAboveMaxPassesAsIs() throws Exception {
+    @DisplayName("추천 프래그먼트에서 count=10은 그대로 서비스에 전달한다")
+    void recommendFragmentWithMaxCountCallsService() throws Exception {
         stubRecommend(10, 10);
-        stubHomeFrame();
 
-        mockMvc.perform(get("/").param("count", "11"))
+        mockMvc.perform(get("/fragments/recommend").param("count", "10"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("count", 10));
 
@@ -140,7 +135,6 @@ class HomeControllerTest {
     @DisplayName("회차가 존재할 경우 회차 검색 결과를 모델에 추가한다")
     void homeWithValidRoundShowsResult() throws Exception {
         WinningNumberDto dto = winningNumber(1100);
-        stubRecommend(5, 5);
         stubHomeFrame();
         when(queryService.getByRound(1100)).thenReturn(dto);
 
@@ -152,12 +146,11 @@ class HomeControllerTest {
     @Test
     @DisplayName("존재하지 않는 회차 조회 시 에러 뷰를 렌더링한다")
     void homeWithInvalidRoundReturnsErrorView() throws Exception {
-        stubRecommend(5, 5);
         stubHomeFrame();
-        when(queryService.getByRound(3000))
+        when(queryService.getByRound(2000))
                 .thenThrow(new BusinessException(ErrorCode.WINNING_NUMBER_NOT_FOUND));
 
-        mockMvc.perform(get("/").param("round", "9999"))
+        mockMvc.perform(get("/").param("round", "2000"))
                 .andExpect(status().isNotFound())
                 .andExpect(view().name("error"));
     }
@@ -171,18 +164,15 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("모델에 추천 개수와 회차 정보를 유지한다")
-    void countAndRoundPreservedInModel() throws Exception {
+    @DisplayName("회차 검색 결과와 최신 회차 정보를 모델에 포함한다")
+    void homeWithRoundShowsResultAndExpectedRound() throws Exception {
         WinningNumberDto dto = winningNumber(500);
-        stubRecommend(3, 3);
         stubHomeFrame();
         when(queryService.getByRound(500)).thenReturn(dto);
 
-        mockMvc.perform(get("/").param("count", "3").param("round", "500"))
+        mockMvc.perform(get("/").param("round", "500"))
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("count", 3))
-                .andExpect(model().attribute("round", 500))
-                .andExpect(model().attribute("combinations", is(combinationDtos(3))))
+                .andExpect(model().attribute("expectedRound", 1200))
                 .andExpect(model().attribute("result", dto));
     }
 

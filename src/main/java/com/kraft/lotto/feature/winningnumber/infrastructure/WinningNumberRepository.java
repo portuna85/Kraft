@@ -31,8 +31,25 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
             """)
     List<CombinationRow> findAllCombinationsOrderByRoundAsc();
 
-    @Query("select w.n1, w.n2, w.n3, w.n4, w.n5, w.n6 from WinningNumberEntity w")
-    List<Object[]> findAllNumbersForFrequency();
+    @Query(value = """
+            SELECT sub.ball AS ball, SUM(sub.hit) AS hitCount
+            FROM (
+                SELECT n1 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n1
+                UNION ALL
+                SELECT n2 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n2
+                UNION ALL
+                SELECT n3 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n3
+                UNION ALL
+                SELECT n4 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n4
+                UNION ALL
+                SELECT n5 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n5
+                UNION ALL
+                SELECT n6 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n6
+            ) sub
+            GROUP BY sub.ball
+            ORDER BY sub.ball ASC
+            """, nativeQuery = true)
+    List<BallFrequencyRow> findBallFrequencies();
 
     @Query(value = """
             select sub.round as round, sub.draw_date as drawDate, sub.prize_rank as prizeRank
@@ -62,6 +79,11 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
             """, nativeQuery = true)
     List<PrizeHitWithRankRow> findPrizeHitsByNumbers(
             Integer n1, Integer n2, Integer n3, Integer n4, Integer n5, Integer n6);
+
+    interface BallFrequencyRow {
+        Integer getBall();
+        Long getHitCount();
+    }
 
     interface CombinationRow {
         Integer getN1();

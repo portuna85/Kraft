@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,7 @@ public class WinningStatisticsService {
         return new FrequencySummaryDto(frequencies, lowSixHistory);
     }
 
+    @Async
     @EventListener
     public void evictCachesOnCollected(WinningNumbersCollectedEvent event) {
         if (!event.dataChanged()) {

@@ -122,7 +122,10 @@ public class DatasourceUrlAutoFixer
         return jdbcUrl.substring(0, queryStart) + "?***";
     }
 
-    @SuppressFBWarnings(value = "DMI_HARDCODED_ABSOLUTE_FILENAME", justification = "Container detection intentionally checks Linux sentinel paths")
+    @SuppressFBWarnings(
+            value = "DMI_HARDCODED_ABSOLUTE_FILENAME",
+            justification = "Container detection intentionally checks Linux sentinel paths"
+    )
     private static boolean isInsideContainer(ConfigurableEnvironment env) {
         String forced = env.getProperty("KRAFT_IN_CONTAINER");
         if (forced != null) {

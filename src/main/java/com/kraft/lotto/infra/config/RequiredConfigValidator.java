@@ -58,45 +58,8 @@ public class RequiredConfigValidator implements EnvironmentPostProcessor, Ordere
         }
 
         List<String> problems = new ArrayList<>();
-        for (Map.Entry<String, String> entry : REQUIRED.entrySet()) {
-            String key = entry.getKey();
-            String raw;
-            try {
-                raw = env.getProperty(key);
-            } catch (RuntimeException placeholderFail) {
-                problems.add(format(key, entry.getValue(), "placeholder resolution failed: " + placeholderFail.getMessage()));
-                continue;
-            }
-
-            if (raw == null || raw.isBlank()) {
-                problems.add(format(key, entry.getValue(), "value is blank"));
-            } else if (raw.contains("${")) {
-                problems.add(format(key, entry.getValue(), "unresolved placeholder: " + raw));
-            }
-        }
-
-        String jdbcUrl = safeGet(env, "spring.datasource.url");
-        if (jdbcUrl != null && !jdbcUrl.isBlank() && !jdbcUrl.contains("${")) {
-            String host = extractJdbcHost(jdbcUrl);
-            if (host != null && !isHostResolvable(host)) {
-                problems.add(
-                        "  - [spring.datasource.url] DB host is not resolvable by DNS: '" + host + "'" + NL
-                                + "      - For local runtime, set KRAFT_DB_LOCAL_HOST=localhost or adjust KRAFT_DB_URL" + NL
-                                + "      - To skip host rewrite, set KRAFT_DB_HOST_REWRITE=false"
-                );
-            }
-            JdbcEndpoint endpoint = extractJdbcEndpoint(jdbcUrl);
-            boolean checkEnabled = Boolean.parseBoolean(env.getProperty("kraft.db.connectivity-check.enabled", "true"));
-            int timeoutMs = Integer.parseInt(env.getProperty("kraft.db.connectivity-check.timeout-ms", "1500"));
-            if (checkEnabled && endpoint != null && !isTcpReachable(endpoint.host(), endpoint.port(), timeoutMs)) {
-                problems.add(
-                        "  - [spring.datasource.url] DB endpoint is not reachable: " + endpoint.host() + ":" + endpoint.port() + NL
-                                + "      - Ensure DB is running and reachable from this host" + NL
-                                + "      - For local docker-compose, start DB first: docker compose up -d" + NL
-                                + "      - To skip this precheck, set kraft.db.connectivity-check.enabled=false"
-                );
-            }
-        }
+        validateRequiredEntries(env, problems);
+        validateJdbcConnectivity(env, problems);
 
         addProdOperationalConfigProblems(env, problems);
         addProfilePolicyProblems(env, problems);
@@ -141,6 +104,62 @@ public class RequiredConfigValidator implements EnvironmentPostProcessor, Ordere
         } catch (RuntimeException ex) {
             return null;
         }
+    }
+
+    private static void validateRequiredEntries(ConfigurableEnvironment env, List<String> problems) {
+        for (Map.Entry<String, String> entry : REQUIRED.entrySet()) {
+            String key = entry.getKey();
+            String raw;
+            try {
+                raw = env.getProperty(key);
+            } catch (RuntimeException placeholderFail) {
+                problems.add(format(key, entry.getValue(), "placeholder resolution failed: " + placeholderFail.getMessage()));
+                continue;
+            }
+            if (raw == null || raw.isBlank()) {
+                problems.add(format(key, entry.getValue(), "value is blank"));
+                continue;
+            }
+            if (raw.contains("${")) {
+                problems.add(format(key, entry.getValue(), "unresolved placeholder: " + raw));
+            }
+        }
+    }
+
+    private static void validateJdbcConnectivity(ConfigurableEnvironment env, List<String> problems) {
+        String jdbcUrl = safeGet(env, "spring.datasource.url");
+        if (jdbcUrl == null || jdbcUrl.isBlank() || jdbcUrl.contains("${")) {
+            return;
+        }
+        addJdbcHostResolutionProblem(jdbcUrl, problems);
+        addJdbcTcpReachabilityProblem(env, jdbcUrl, problems);
+    }
+
+    private static void addJdbcHostResolutionProblem(String jdbcUrl, List<String> problems) {
+        String host = extractJdbcHost(jdbcUrl);
+        if (host == null || isHostResolvable(host)) {
+            return;
+        }
+        problems.add(
+                "  - [spring.datasource.url] DB host is not resolvable by DNS: '" + host + "'" + NL
+                        + "      - For local runtime, set KRAFT_DB_LOCAL_HOST=localhost or adjust KRAFT_DB_URL" + NL
+                        + "      - To skip host rewrite, set KRAFT_DB_HOST_REWRITE=false"
+        );
+    }
+
+    private static void addJdbcTcpReachabilityProblem(ConfigurableEnvironment env, String jdbcUrl, List<String> problems) {
+        JdbcEndpoint endpoint = extractJdbcEndpoint(jdbcUrl);
+        boolean checkEnabled = Boolean.parseBoolean(env.getProperty("kraft.db.connectivity-check.enabled", "true"));
+        int timeoutMs = Integer.parseInt(env.getProperty("kraft.db.connectivity-check.timeout-ms", "1500"));
+        if (!checkEnabled || endpoint == null || isTcpReachable(endpoint.host(), endpoint.port(), timeoutMs)) {
+            return;
+        }
+        problems.add(
+                "  - [spring.datasource.url] DB endpoint is not reachable: " + endpoint.host() + ":" + endpoint.port() + NL
+                        + "      - Ensure DB is running and reachable from this host" + NL
+                        + "      - For local docker-compose, start DB first: docker compose up -d" + NL
+                        + "      - To skip this precheck, set kraft.db.connectivity-check.enabled=false"
+        );
     }
 
     static void addProdOperationalConfigProblems(ConfigurableEnvironment env, List<String> problems) {

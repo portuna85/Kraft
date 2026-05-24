@@ -19,6 +19,9 @@ class KraftPropertiesBindingTest {
     @Autowired
     KraftRecommendProperties recommend;
 
+    @Autowired
+    KraftCacheProperties cache;
+
     @Test
     @DisplayName("API 설정 프로퍼티를 바인딩한다")
     void bindsApiProperties() {
@@ -39,5 +42,16 @@ class KraftPropertiesBindingTest {
         assertThat(recommend.rules().birthdayThreshold()).isEqualTo(31);
         assertThat(recommend.rules().longRunThreshold()).isEqualTo(5);
         assertThat(recommend.rules().decadeThreshold()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("캐시 설정 프로퍼티를 바인딩한다")
+    void bindsCacheProperties() {
+        assertThat(cache.winningNumberFrequency().ttlMinutes()).isEqualTo(10);
+        assertThat(cache.winningNumberFrequency().maxSize()).isEqualTo(1);
+        assertThat(cache.combinationPrizeHistory().ttlMinutes()).isEqualTo(30);
+        assertThat(cache.combinationPrizeHistory().maxSize()).isEqualTo(200);
+        assertThat(cache.winningFrequencySummary().ttlMinutes()).isEqualTo(5);
+        assertThat(cache.winningFrequencySummary().maxSize()).isEqualTo(1);
     }
 }

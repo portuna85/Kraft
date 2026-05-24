@@ -33,9 +33,9 @@ public record KraftRecommendProperties(int maxAttempts,
                 throw new IllegalArgumentException(
                         "kraft.recommend.rules.long-run-threshold must be between 2 and 6");
             }
-            if (decadeThreshold < 2 || decadeThreshold > 6) {
+            if (decadeThreshold < 3 || decadeThreshold > 6) {
                 throw new IllegalArgumentException(
-                        "kraft.recommend.rules.decade-threshold must be between 2 and 6");
+                        "kraft.recommend.rules.decade-threshold must be between 3 and 6");
             }
         }
     }

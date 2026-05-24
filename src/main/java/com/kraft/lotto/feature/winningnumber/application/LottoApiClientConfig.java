@@ -46,14 +46,19 @@ public class LottoApiClientConfig {
                 .build();
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(Duration.ofMillis(readTimeoutMs));
-        return RestClient.builder()
+        var builder = RestClient.builder()
                 .requestFactory(requestFactory)
-                .defaultHeader(HttpHeaders.USER_AGENT,
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36")
-                .defaultHeader(HttpHeaders.ACCEPT, "application/json, text/javascript, */*; q=0.01")
-                .defaultHeader(HttpHeaders.ACCEPT_LANGUAGE, "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
-                .defaultHeader("Referer", "https://www.dhlottery.co.kr/gameResult.do?method=byWin")
-                .build();
+                .defaultHeader(HttpHeaders.ACCEPT, "application/json, text/javascript, */*; q=0.01");
+        if (properties.userAgent() != null && !properties.userAgent().isBlank()) {
+            builder.defaultHeader(HttpHeaders.USER_AGENT, properties.userAgent());
+        }
+        if (properties.acceptLanguage() != null && !properties.acceptLanguage().isBlank()) {
+            builder.defaultHeader(HttpHeaders.ACCEPT_LANGUAGE, properties.acceptLanguage());
+        }
+        if (properties.referer() != null && !properties.referer().isBlank()) {
+            builder.defaultHeader("Referer", properties.referer());
+        }
+        return builder.build();
     }
 
     @Bean

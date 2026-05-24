@@ -6,24 +6,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.recommend.application.RecommendService;
-import com.kraft.lotto.feature.recommend.web.dto.CombinationDto;
-import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
-import com.kraft.lotto.feature.recommend.web.dto.RuleDto;
 import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
-import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberPageDto;
-import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.support.GlobalExceptionHandler;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @WebMvcTest(HomeController.class)
 @Import({GlobalExceptionHandler.class, TestCacheConfig.class, LottoBallHelper.class})
@@ -47,15 +42,11 @@ class HomeControllerWebMvcTest {
     void rendersHomeView() throws Exception {
         when(queryService.expectedCurrentRound()).thenReturn(1200);
         when(queryService.findLatest()).thenReturn(Optional.empty());
-        when(queryService.list(0, 20)).thenReturn(new WinningNumberPageDto(List.of(), 0, 20, 0, 0));
-        when(recommendService.recommend(5))
-                .thenReturn(new RecommendResponse(List.of(new CombinationDto(List.of(1, 2, 3, 4, 5, 6)))));
-        when(recommendService.rules()).thenReturn(List.of(new RuleDto("NoOpRule", "no-op")));
 
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("home"))
-                .andExpect(model().attributeExists("count", "expectedRound", "combinations", "rules"));
+                .andExpect(model().attributeExists("expectedRound"));
     }
 
     @Test

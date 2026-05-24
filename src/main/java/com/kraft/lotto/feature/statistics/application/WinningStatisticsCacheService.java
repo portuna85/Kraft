@@ -119,10 +119,8 @@ public class WinningStatisticsCacheService {
 
     private List<NumberFrequencyDto> recomputeFrequency(long totalDraws) {
         long[] counts = new long[LOTTO_NUMBER_MAX + 1];
-        for (Object[] row : repository.findAllNumbersForFrequency()) {
-            for (Object number : row) {
-                counts[(Integer) number]++;
-            }
+        for (WinningNumberRepository.BallFrequencyRow row : repository.findBallFrequencies()) {
+            counts[row.getBall()] = row.getHitCount();
         }
         return IntStream.rangeClosed(LOTTO_NUMBER_MIN, LOTTO_NUMBER_MAX)
                 .mapToObj(n -> new NumberFrequencyDto(n, counts[n], calculateRate(counts[n], totalDraws)))

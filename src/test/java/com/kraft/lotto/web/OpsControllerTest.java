@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
+import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogsResponseDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonsResponseDto;
@@ -35,6 +36,9 @@ class OpsControllerTest {
 
     @MockitoBean
     LottoCollectionCommandService collectionCommandService;
+
+    @MockitoBean
+    LockingTaskExecutor lockingTaskExecutor;
 
     @Test
     @DisplayName("failure-reasons 엔드포인트가 래핑된 응답과 정규화된 파라미터를 반환한다")

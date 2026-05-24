@@ -1,6 +1,19 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 final class FetchFailureReasonSupport {
+    private static final String[][] REASON_RULES = {
+            {"missing_field", "missing_field", "field missing"},
+            {"validation", "validation:", "round mismatch", "field is not integral", "field out of"},
+            {"transform", "transform:", "response transform failed"},
+            {"unexpected_return_value", "unexpected_return_value", "unexpected returnvalue"},
+            {"json_parse", "response parse failed", "parse failed"},
+            {"non_json", "response is not json"},
+            {"html_upstream_blocked", "html response for expected round", "html_upstream_blocked"},
+            {"timeout", "timeout"},
+            {"http_error", "http error"},
+            {"network", "network"},
+            {"circuit_open", "circuit"}
+    };
 
     private FetchFailureReasonSupport() {
     }
@@ -52,39 +65,13 @@ final class FetchFailureReasonSupport {
 
     private static String classifyFailureReason(String message) {
         String lower = message == null ? "" : message.toLowerCase();
-        if (lower.contains("missing_field") || lower.contains("field missing")) {
-            return "missing_field";
-        }
-        if (lower.contains("validation:") || lower.contains("round mismatch")
-                || lower.contains("field is not integral") || lower.contains("field out of")) {
-            return "validation";
-        }
-        if (lower.contains("transform:") || lower.contains("response transform failed")) {
-            return "transform";
-        }
-        if (lower.contains("unexpected_return_value") || lower.contains("unexpected returnvalue")) {
-            return "unexpected_return_value";
-        }
-        if (lower.contains("response parse failed") || lower.contains("parse failed")) {
-            return "json_parse";
-        }
-        if (lower.contains("response is not json")) {
-            return "non_json";
-        }
-        if (lower.contains("html response for expected round") || lower.contains("html_upstream_blocked")) {
-            return "html_upstream_blocked";
-        }
-        if (lower.contains("timeout")) {
-            return "timeout";
-        }
-        if (lower.contains("http error")) {
-            return "http_error";
-        }
-        if (lower.contains("network")) {
-            return "network";
-        }
-        if (lower.contains("circuit")) {
-            return "circuit_open";
+        for (String[] rule : REASON_RULES) {
+            String reason = rule[0];
+            for (int i = 1; i < rule.length; i++) {
+                if (lower.contains(rule[i])) {
+                    return reason;
+                }
+            }
         }
         return "other";
     }

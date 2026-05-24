@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
+import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogsResponseDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonsResponseDto;
@@ -14,9 +15,13 @@ import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import net.javacrumbs.shedlock.core.LockConfiguration;
+import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,16 +34,21 @@ import org.springframework.web.bind.annotation.RestController;
 @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Spring-managed constructor; ObjectProvider lookup does not throw")
 public class OpsController {
 
+    private static final Duration MANUAL_LOCK_MAX = Duration.ofMinutes(10);
+
     private final LottoFetchLogQueryService fetchLogQueryService;
     private final LottoCollectionCommandService collectionCommandService;
+    private final LockingTaskExecutor lockingTaskExecutor;
     private final MeterRegistry meterRegistry;
 
     @Autowired
     public OpsController(LottoFetchLogQueryService fetchLogQueryService,
                          LottoCollectionCommandService collectionCommandService,
+                         LockingTaskExecutor lockingTaskExecutor,
                          ObjectProvider<MeterRegistry> meterRegistryProvider) {
         this.fetchLogQueryService = fetchLogQueryService;
         this.collectionCommandService = collectionCommandService;
+        this.lockingTaskExecutor = lockingTaskExecutor;
         this.meterRegistry = meterRegistryProvider.getIfAvailable();
     }
 
@@ -90,18 +100,25 @@ public class OpsController {
                 reasonQuery.limit(), safeLogLimit, reasonQuery.reason(), reasonQuery.from(), reasonQuery.to());
     }
 
+    @GetMapping("/ops/collect/status")
+    @Operation(summary = "Get current collection job status")
+    public CollectStatusResponse collectStatus(HttpServletResponse response) {
+        applyNoStore(response);
+        return collectionCommandService.getStatus();
+    }
+
     @PostMapping("/ops/collect")
     @Operation(summary = "Collect winning numbers up to latest round")
     public CollectResponse collectLatest(HttpServletResponse response) {
         applyNoStore(response);
-        return collectionCommandService.collectAllUntilLatest();
+        return withLock("ops-collect", collectionCommandService::collectAllUntilLatest);
     }
 
     @PostMapping("/ops/collect/missing")
     @Operation(summary = "Collect only missing rounds once")
     public CollectResponse collectMissing(HttpServletResponse response) {
         applyNoStore(response);
-        return collectionCommandService.collectMissingOnce();
+        return withLock("ops-collect-missing", collectionCommandService::collectMissingOnce);
     }
 
     @GetMapping("/ops/recommend/stats")
@@ -138,6 +155,19 @@ public class OpsController {
                 timeoutCount, failuresByReason,
                 attemptCount, rejectionCount, rejectionsByRule
         );
+    }
+
+    private CollectResponse withLock(String lockName, java.util.function.Supplier<CollectResponse> action) {
+        try {
+            var result = lockingTaskExecutor.executeWithLock(
+                    action::get,
+                    new LockConfiguration(Instant.now(), lockName, MANUAL_LOCK_MAX, Duration.ZERO));
+            return result.wasExecuted() ? result.getResult() : CollectResponse.ofOverlapSkipped(0);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new RuntimeException("collection lock failed", e);
+        }
     }
 
     private void applyNoStore(HttpServletResponse response) {

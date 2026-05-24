@@ -58,7 +58,7 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
         long windowNanos = TimeUnit.SECONDS.toNanos(securityProperties.getRateLimit().getWindowSeconds());
         int maxRequests = securityProperties.getRateLimit().getMaxRequests();
 
-        String clientIp = ClientIpResolver.resolve(request, securityProperties.getRateLimit().isTrustForwardedFor());
+        String clientIp = ClientIpResolver.resolve(request, securityProperties.getTrustedProxies());
         String counterKey = clientIp + "|" + request.getRequestURI();
         FixedWindowCounter counter = counters.get(counterKey, key -> new FixedWindowCounter(now));
 

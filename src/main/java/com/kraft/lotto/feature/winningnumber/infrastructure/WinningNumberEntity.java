@@ -113,10 +113,17 @@ public class WinningNumberEntity {
         this.firstWinners = firstWinners;
         this.totalSales = totalSales;
         this.firstAccumAmount = firstAccumAmount;
-        this.rawJson = rawJson;
+        this.rawJson = truncate(rawJson, 4000);
         this.fetchedAt = fetchedAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    private static String truncate(String value, int maxLength) {
+        if (value == null || value.length() <= maxLength) {
+            return value;
+        }
+        return value.substring(0, maxLength);
     }
 
     public void updateFrom(WinningNumberEntity source, LocalDateTime updatedAt) {
