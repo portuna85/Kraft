@@ -3,19 +3,18 @@ package com.kraft.lotto.support;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-@DisplayName("운영 도구 접근 필터 테스트")
+@DisplayName("운영 접근 제어 필터 테스트")
 class OpsAccessFilterTest {
 
     @Test
-    @DisplayName("헤더 토큰이 있으면 쿠키보다 우선된다")
-    void headerTokenHasPriorityOverCookie() throws Exception {
+    @DisplayName("헤더 토큰이 유효하지 않으면 인증을 거부한다")
+    void invalidHeaderTokenIsRejected() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
         properties.getOps().setRequiredToken("expected-token");
@@ -24,7 +23,6 @@ class OpsAccessFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/ops/fetch-logs/failures");
         request.setRemoteAddr("127.0.0.1");
         request.addHeader("X-Ops-Token", "invalid-token");
-        request.setCookies(new Cookie("KRAFT_OPS_TOKEN", "expected-token"));
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();
@@ -36,7 +34,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("쿼리 파라미터 토큰만 있으면 인증이 거부된다")
+    @DisplayName("쿼리 파라미터 토큰만 있으면 인증을 거부한다")
     void queryParamTokenAloneIsRejected() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
@@ -57,8 +55,8 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("헤더가 없으면 쿠키 토큰으로 인증한다")
-    void usesCookieTokenWhenHeaderIsMissing() throws Exception {
+    @DisplayName("헤더 없이 쿠키 토큰만 있으면 인증을 거부한다")
+    void cookieOnlyTokenIsRejected() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
         properties.getOps().setRequiredToken("expected-token");
@@ -66,28 +64,7 @@ class OpsAccessFilterTest {
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/admin/ops");
         request.setRemoteAddr("127.0.0.1");
-        request.setCookies(new Cookie("KRAFT_OPS_TOKEN", "expected-token"));
-
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
-
-        filter.doFilter(request, response, chain);
-
-        assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(chain.getRequest()).isNotNull();
-    }
-
-    @Test
-    @DisplayName("POST 요청에 쿠키 토큰만 있으면 인증이 거부된다")
-    void postWithCookieOnlyTokenIsRejected() throws Exception {
-        KraftSecurityProperties properties = new KraftSecurityProperties();
-        properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
-        properties.getOps().setRequiredToken("expected-token");
-        OpsAccessFilter filter = new OpsAccessFilter(properties);
-
-        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/ops/collect");
-        request.setRemoteAddr("127.0.0.1");
-        request.setCookies(new Cookie("KRAFT_OPS_TOKEN", "expected-token"));
+        request.addHeader("Cookie", "KRAFT_OPS_TOKEN=expected-token");
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();
@@ -99,7 +76,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("POST 요청에 헤더 토큰이 있으면 인증에 성공한다")
+    @DisplayName("POST 요청도 헤더 토큰이 유효하면 인증에 성공한다")
     void postWithHeaderTokenIsAccepted() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
@@ -120,7 +97,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("인증에 성공하면 필터 체인이 계속 진행된다 (감사 로그 기록 시점)")
+    @DisplayName("인증 성공 시 필터 체인을 계속 진행한다")
     void successfulAccessProceedsToFilterChain() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
@@ -141,7 +118,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("trustedProxies에 remoteAddr가 포함되면 X-Forwarded-For 첫 IP로 허용 여부를 판단한다")
+    @DisplayName("trusted proxy면 X-Forwarded-For 첫 IP를 기준으로 허용 여부를 판단한다")
     void usesForwardedForWhenTrusted() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.setTrustedProxies(java.util.List.of("203.0.113.10"));

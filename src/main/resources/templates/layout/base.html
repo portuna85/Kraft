@@ -20,9 +20,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="최고의 번호">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <script th:src="@{/js/cdn-status.js}"></script>
+  <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
   <script th:src="@{/js/theme-init.js}"></script>
   <link rel="stylesheet" th:href="@{/css/app.css}">
   <title th:text="${title}">최고의 번호</title>
@@ -53,12 +51,11 @@
   <a href="#frequency" class="kraft-bottom-nav-item"><span>빈도</span></a>
   <a href="#rounds" class="kraft-bottom-nav-item"><span>회차</span></a>
 </nav>
-<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6pMp+" crossorigin="anonymous"></script>
+<script th:src="@{/vendor/htmx/htmx.min.js}"></script>
 <script th:src="@{/js/theme.js}"></script>
 <script th:src="@{/js/validation.js}"></script>
 <script th:src="@{/js/bottom-nav.js}"></script>
 <script th:src="@{/js/fragment-loader.js}"></script>
 <script th:src="@{/js/main.js}"></script>
-<script th:src="@{/js/cdn-check.js}"></script>
 </body>
 </html>
