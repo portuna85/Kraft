@@ -51,10 +51,19 @@ test.describe('home smoke', () => {
   });
 });
 
-test.describe('mobile nav', () => {
-  test('shows bottom navigation on mobile viewport', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
+test.describe('responsive smoke', () => {
+  test('shows bottom navigation on mobile', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.includes('mobile'));
     await page.goto('/');
     await expect(page.locator('.kraft-bottom-nav')).toBeVisible();
+  });
+
+  test('renders ops filters on mobile', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.includes('mobile'));
+    await page.goto('/admin/ops');
+    await expect(page.locator('form[action="/admin/ops"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Apply' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Reset' })).toBeVisible();
+    await expect(page.locator('.ops-reason-quick')).toHaveCount(3);
   });
 });

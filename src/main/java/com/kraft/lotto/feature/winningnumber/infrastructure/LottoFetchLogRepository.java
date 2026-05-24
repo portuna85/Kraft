@@ -12,6 +12,7 @@ public interface LottoFetchLogRepository extends JpaRepository<LottoFetchLogEnti
     String FAILED_STATUS = "com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchStatus.FAILED";
 
     long deleteByFetchedAtBefore(LocalDateTime cutoff);
+    long countByFetchedAtBefore(LocalDateTime cutoff);
 
     @Query("select l.id from LottoFetchLogEntity l where l.fetchedAt < :cutoff order by l.id")
     List<Long> findIdsByFetchedAtBefore(@Param("cutoff") LocalDateTime cutoff, Pageable pageable);
@@ -67,6 +68,12 @@ public interface LottoFetchLogRepository extends JpaRepository<LottoFetchLogEnti
             where l.status = com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchStatus.FAILED
             """)
     long countRecentFailed();
+
+    @Query("select min(l.fetchedAt) from LottoFetchLogEntity l")
+    LocalDateTime findOldestFetchedAt();
+
+    @Query("select max(l.fetchedAt) from LottoFetchLogEntity l")
+    LocalDateTime findNewestFetchedAt();
 
     default List<LottoFetchLogEntity> findRecentFailed(int limit) {
         return findRecentFailed(PageRequest.of(0, Math.max(1, limit)));

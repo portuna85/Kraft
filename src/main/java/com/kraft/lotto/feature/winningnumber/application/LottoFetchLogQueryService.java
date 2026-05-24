@@ -7,6 +7,7 @@ import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogsResponseDto
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonsResponseDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -95,6 +96,30 @@ public class LottoFetchLogQueryService {
                 drwNoFrom,
                 drwNoTo,
                 listRecentFailures(limit, reason, drwNoFrom, drwNoTo)
+        );
+    }
+
+    public FetchLogRetentionStatusDto retentionStatus(boolean enabled,
+                                                      int retentionDays,
+                                                      int deleteBatchSize,
+                                                      String cron,
+                                                      String zone) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime cutoff = now.minusDays(Math.max(1, retentionDays));
+        long totalLogs = fetchLogRepository.count();
+        long purgeEligibleLogs = fetchLogRepository.countByFetchedAtBefore(cutoff);
+        return new FetchLogRetentionStatusDto(
+                now,
+                enabled,
+                Math.max(1, retentionDays),
+                Math.max(100, deleteBatchSize),
+                cron,
+                zone,
+                cutoff,
+                totalLogs,
+                purgeEligibleLogs,
+                fetchLogRepository.findOldestFetchedAt(),
+                fetchLogRepository.findNewestFetchedAt()
         );
     }
 

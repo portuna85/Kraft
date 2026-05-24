@@ -21,3 +21,26 @@
 ## 검증
 - `./gradlew.bat test --tests com.kraft.lotto.web.OpsPageControllerTest --tests com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandServiceTest --tests com.kraft.lotto.support.OpsAccessFilterTest --tests com.kraft.lotto.support.ActuatorAccessFilterTest`
 - `python scripts/check_utf8.py`
+
+## 2026-05-24 P2 잔여 추가 진행
+- 단위: 운영 API 접근 제어 시나리오 보강
+  - `OpsApiAccessScenarioTest` 추가
+  - `GET /ops/collect/status` 기준으로 다음 시나리오 검증
+    - 토큰 없음 -> 401
+    - 잘못된 토큰 -> 401
+    - allowlist 외 IP -> 403
+    - 정상 토큰 + 허용 IP -> 200
+
+- 단위: 모바일 viewport E2E 확장
+  - Playwright 프로젝트 mobile-chrome(Pixel 7) 추가
+  - 모바일 전용 smoke 추가: 하단 네비 노출, /admin/ops 필터 UI 렌더링
+  - 검증: npx playwright test (18 passed, 2 skipped)
+
+
+- 단위: fetch log retention 상태 가시화(P2)
+  - API 추가: GET /ops/fetch-logs/retention-status
+  - 응답: enabled, retentionDays, deleteBatchSize, cron, zone, cutoff, totalLogs, purgeEligibleLogs, oldest/newest fetchedAt
+  - 운영 페이지에 Open Retention JSON 링크 추가
+  - 테스트 추가: LottoFetchLogQueryServiceTest, OpsApiAccessScenarioTest(retention-status)
+  - 검증: 관련 gradle test + UTF-8 check 통과
+

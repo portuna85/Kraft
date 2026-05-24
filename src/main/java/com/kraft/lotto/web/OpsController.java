@@ -10,6 +10,7 @@ import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogsResponseDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonsResponseDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +19,7 @@ import java.time.Instant;
 import net.javacrumbs.shedlock.core.LockConfiguration;
 import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,16 +36,31 @@ public class OpsController {
     private final LottoCollectionCommandService collectionCommandService;
     private final RecommendMetricsQueryService recommendMetricsQueryService;
     private final LockingTaskExecutor lockingTaskExecutor;
+    private final boolean logRetentionEnabled;
+    private final int logRetentionDays;
+    private final int logRetentionDeleteBatchSize;
+    private final String logRetentionCron;
+    private final String collectZone;
 
     @Autowired
     public OpsController(LottoFetchLogQueryService fetchLogQueryService,
                          LottoCollectionCommandService collectionCommandService,
                          RecommendMetricsQueryService recommendMetricsQueryService,
-                         LockingTaskExecutor lockingTaskExecutor) {
+                         LockingTaskExecutor lockingTaskExecutor,
+                         @Value("${kraft.collect.log-retention.enabled:true}") boolean logRetentionEnabled,
+                         @Value("${kraft.collect.log-retention.days:90}") int logRetentionDays,
+                         @Value("${kraft.collect.log-retention.delete-batch-size:1000}") int logRetentionDeleteBatchSize,
+                         @Value("${kraft.collect.log-retention.cron:0 30 3 * * *}") String logRetentionCron,
+                         @Value("${kraft.collect.auto.zone:Asia/Seoul}") String collectZone) {
         this.fetchLogQueryService = fetchLogQueryService;
         this.collectionCommandService = collectionCommandService;
         this.recommendMetricsQueryService = recommendMetricsQueryService;
         this.lockingTaskExecutor = lockingTaskExecutor;
+        this.logRetentionEnabled = logRetentionEnabled;
+        this.logRetentionDays = logRetentionDays;
+        this.logRetentionDeleteBatchSize = logRetentionDeleteBatchSize;
+        this.logRetentionCron = logRetentionCron;
+        this.collectZone = collectZone;
     }
 
     private record NormalizedQuery(int limit, String reason, Integer from, Integer to) {
@@ -92,6 +109,19 @@ public class OpsController {
         int safeLogLimit = OpsQueryParams.normalizeLogLimit(logLimit);
         return fetchLogQueryService.failureOverview(
                 reasonQuery.limit(), safeLogLimit, reasonQuery.reason(), reasonQuery.from(), reasonQuery.to());
+    }
+
+    @GetMapping("/ops/fetch-logs/retention-status")
+    @Operation(summary = "Get fetch log retention configuration and purge eligibility")
+    public FetchLogRetentionStatusDto fetchLogRetentionStatus(HttpServletResponse response) {
+        applyNoStore(response);
+        return fetchLogQueryService.retentionStatus(
+                logRetentionEnabled,
+                logRetentionDays,
+                logRetentionDeleteBatchSize,
+                logRetentionCron,
+                collectZone
+        );
     }
 
     @GetMapping("/ops/collect/status")
