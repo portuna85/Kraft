@@ -65,4 +65,44 @@ class ActuatorAccessFilterTest {
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(chain.getRequest()).isNotNull();
     }
+
+    @Test
+    @DisplayName("trusted proxy가 아니면 X-Forwarded-For를 신뢰하지 않는다")
+    void ignoresForwardedForWhenRemoteProxyIsNotTrusted() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.setTrustedProxies(java.util.List.of("203.0.113.10"));
+        properties.getActuator().setAllowedIps(java.util.List.of("198.51.100.1"));
+        ActuatorAccessFilter filter = new ActuatorAccessFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/actuator/health");
+        request.setRemoteAddr("203.0.113.20");
+        request.addHeader("X-Forwarded-For", "198.51.100.1, 203.0.113.20");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(403);
+        assertThat(chain.getRequest()).isNull();
+    }
+
+    @Test
+    @DisplayName("trusted proxy이면 X-Forwarded-For 첫 값을 기준으로 허용한다")
+    void usesForwardedForWhenRemoteProxyIsTrusted() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.setTrustedProxies(java.util.List.of("203.0.113.10"));
+        properties.getActuator().setAllowedIps(java.util.List.of("198.51.100.1"));
+        ActuatorAccessFilter filter = new ActuatorAccessFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/actuator/health");
+        request.setRemoteAddr("203.0.113.10");
+        request.addHeader("X-Forwarded-For", "198.51.100.1, 203.0.113.10");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(chain.getRequest()).isNotNull();
+    }
 }

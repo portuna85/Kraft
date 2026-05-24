@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
@@ -77,5 +78,26 @@ class OpsPageControllerTest {
                         .param("page", "-1")
                         .param("pageSize", "101"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("운영 페이지는 빠른 필터와 초기화 버튼을 렌더링한다")
+    void rendersQuickReasonFiltersAndReset() throws Exception {
+        when(fetchLogQueryService.failureOverview(200, 100, null, null, null))
+                .thenReturn(new FetchFailureOverviewDto(
+                        LocalDateTime.of(2026, 5, 22, 12, 0),
+                        200,
+                        100,
+                        List.of(),
+                        List.of()
+                ));
+        when(fetchLogQueryService.listRecentFailuresPage(0, 20, null, null, null))
+                .thenReturn(new LottoFetchLogQueryService.PagedFailures(List.of(), 0, 20, false));
+
+        mockMvc.perform(get("/admin/ops"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Quick reason filters")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("data-reason=\"timeout\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(">Reset<")));
     }
 }

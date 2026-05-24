@@ -39,6 +39,14 @@
 
   function bindTableSort() {
     var tables = document.querySelectorAll('.ops-sortable-table');
+    var liveRegion = document.getElementById('ops-sort-announcer');
+    if (!liveRegion) {
+      liveRegion = document.createElement('div');
+      liveRegion.id = 'ops-sort-announcer';
+      liveRegion.className = 'visually-hidden';
+      liveRegion.setAttribute('aria-live', 'polite');
+      document.body.appendChild(liveRegion);
+    }
     tables.forEach(function (table) {
       var headers = table.querySelectorAll('thead th');
       headers.forEach(function (header, index) {
@@ -49,6 +57,7 @@
           headers.forEach(function (h) { h.setAttribute('aria-sort', 'none'); });
           header.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');
           sortTableByColumn(table, index, ascending);
+          liveRegion.textContent = btn.textContent.trim() + ' sorted ' + (ascending ? 'ascending' : 'descending');
         });
       });
     });
@@ -79,9 +88,21 @@
     });
   }
 
+  function bindQuickReasonFilter() {
+    var reasonInput = document.getElementById('reason');
+    if (!reasonInput || !reasonInput.form) return;
+    document.querySelectorAll('.ops-reason-quick').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        reasonInput.value = btn.getAttribute('data-reason') || '';
+        reasonInput.form.requestSubmit();
+      });
+    });
+  }
+
   function init() {
     bindTableSort();
     bindMessageToggle();
+    bindQuickReasonFilter();
   }
 
   if (document.readyState === 'loading') {

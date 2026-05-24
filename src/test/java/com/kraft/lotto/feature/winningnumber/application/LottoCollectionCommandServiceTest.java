@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
+import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -173,6 +175,49 @@ class LottoCollectionCommandServiceTest {
         }
 
         verify(singleDrawCollector, times(1)).collectOne(11, false);
+    }
+
+    @Test
+    @DisplayName("실행 중에는 active 상태를 반환하고 완료 후 idle로 복귀한다")
+    void statusTransitionsFromActiveToIdle() throws Exception {
+        LottoCollectionCommandService service = new LottoCollectionCommandService(
+                winningNumberRepository,
+                singleDrawCollector,
+                rangeCollector,
+                eventPublisher,
+                0,
+                1,
+                2000
+        );
+        when(winningNumberRepository.findMaxRound())
+                .thenReturn(Optional.of(10))
+                .thenReturn(Optional.of(10));
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicReference<CollectStatusResponse> statusDuringRun = new AtomicReference<>();
+
+        when(singleDrawCollector.collectOne(11, false)).thenAnswer(invocation -> {
+            statusDuringRun.set(service.getStatus());
+            started.countDown();
+            if (!release.await(2, TimeUnit.SECONDS)) {
+                throw new AssertionError("test synchronization timeout");
+            }
+            return CollectResponse.ofInserted(1, 11);
+        });
+
+        try (ExecutorService executor = Executors.newSingleThreadExecutor()) {
+            Future<CollectResponse> future = executor.submit(service::collectAllUntilLatest);
+            assertThat(started.await(2, TimeUnit.SECONDS)).isTrue();
+            CollectStatusResponse active = statusDuringRun.get();
+            assertThat(active.running()).isTrue();
+            assertThat(active.operation()).isEqualTo("collect-all");
+            release.countDown();
+            future.get(2, TimeUnit.SECONDS);
+        }
+
+        CollectStatusResponse idle = service.getStatus();
+        assertThat(idle.running()).isFalse();
+        assertThat(idle.operation()).isNull();
     }
 
     private LottoCollectionCommandService service() {

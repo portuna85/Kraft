@@ -162,4 +162,27 @@ class OpsAccessFilterTest {
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(chain.getRequest()).isNotNull();
     }
+
+    @Test
+    @DisplayName("trusted proxy가 아니면 X-Forwarded-For를 신뢰하지 않는다")
+    void ignoresForwardedForWhenRemoteIsNotTrustedProxy() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.setTrustedProxies(java.util.List.of("203.0.113.10"));
+        properties.getOps().setAllowedIps(java.util.List.of("198.51.100.1"));
+        properties.getOps().setRequiredToken("expected-token");
+        OpsAccessFilter filter = new OpsAccessFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/admin/ops");
+        request.setRemoteAddr("203.0.113.11");
+        request.addHeader("X-Forwarded-For", "198.51.100.1, 203.0.113.11");
+        request.addHeader("X-Ops-Token", "expected-token");
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(403);
+        assertThat(chain.getRequest()).isNull();
+    }
 }

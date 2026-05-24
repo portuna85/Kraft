@@ -1,15 +1,11 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
-import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +21,11 @@ public class LottoCollectionCommandService {
     private final WinningNumberRepository winningNumberRepository;
     private final LottoSingleDrawCollector singleDrawCollector;
     private final LottoRangeCollector rangeCollector;
-    private final ApplicationEventPublisher eventPublisher;
+    private final CollectionEventNotifier eventNotifier;
+    private final CollectionRunState runState;
     private final BackfillDelaySupport backfillDelay;
     private final int maxCollectPerRun;
     private final int maxHistoryCollect;
-    private final AtomicBoolean running = new AtomicBoolean(false);
-    private final AtomicReference<String> currentOperation = new AtomicReference<>(null);
-    private final AtomicReference<Instant> startedAt = new AtomicReference<>(null);
 
     LottoCollectionCommandService(WinningNumberRepository winningNumberRepository,
                                   LottoSingleDrawCollector singleDrawCollector,
@@ -43,7 +37,8 @@ public class LottoCollectionCommandService {
         this.winningNumberRepository = winningNumberRepository;
         this.singleDrawCollector = singleDrawCollector;
         this.rangeCollector = rangeCollector;
-        this.eventPublisher = eventPublisher;
+        this.eventNotifier = new CollectionEventNotifier(eventPublisher);
+        this.runState = new CollectionRunState();
         this.backfillDelay = new BackfillDelaySupport(backfillDelayMs);
         this.maxCollectPerRun = maxCollectPerRun;
         this.maxHistoryCollect = maxHistoryCollect;
@@ -53,7 +48,7 @@ public class LottoCollectionCommandService {
         return runExclusive("collect-next", () -> {
             int nextRound = winningNumberRepository.findMaxRound().orElse(0) + 1;
             CollectResponse response = singleDrawCollector.collectOne(nextRound, false);
-            publishCollected(response);
+            eventNotifier.publishCollected(response);
             return response;
         });
     }
@@ -84,7 +79,7 @@ public class LottoCollectionCommandService {
             }
             CollectResponse aggregated = CollectResponse.of(totalCollected, totalUpdated, totalSkipped,
                     latestRound, allFailedRounds, truncated, truncated ? latestRound + 1 : null, false);
-            publishCollected(aggregated);
+            eventNotifier.publishCollected(aggregated);
             return aggregated;
         });
     }
@@ -114,7 +109,7 @@ public class LottoCollectionCommandService {
             }
             CollectResponse aggregated = CollectResponse.of(totalCollected, totalUpdated, totalSkipped,
                     latestRound, allFailedRounds, false, null, false);
-            publishCollected(aggregated);
+            eventNotifier.publishCollected(aggregated);
             return aggregated;
         });
     }
@@ -133,41 +128,24 @@ public class LottoCollectionCommandService {
                 }
             }
             CollectResponse aggregated = rangeCollector.collectRange(missingRounds, false, true);
-            publishCollected(aggregated);
+            eventNotifier.publishCollected(aggregated);
             return aggregated;
         });
     }
 
-    private void publishCollected(CollectResponse response) {
-        if (eventPublisher == null) {
-            return;
-        }
-        eventPublisher.publishEvent(WinningNumbersCollectedEvent.of(
-                response.collected(), response.updated(), response.skipped(), response.failed()
-        ));
-    }
-
     public CollectStatusResponse getStatus() {
-        if (!running.get()) {
-            return CollectStatusResponse.idle();
-        }
-        return CollectStatusResponse.active(currentOperation.get(), startedAt.get());
+        return runState.status();
     }
 
     private CollectResponse runExclusive(String operation, Supplier<CollectResponse> action) {
-        if (!running.compareAndSet(false, true)) {
-            int latestRound = winningNumberRepository.findMaxRound().orElse(0);
-            log.warn("{} skipped: another collection run is already active", operation);
-            return CollectResponse.ofOverlapSkipped(latestRound);
-        }
-        currentOperation.set(operation);
-        startedAt.set(Instant.now());
-        try {
-            return action.get();
-        } finally {
-            running.set(false);
-            currentOperation.set(null);
-            startedAt.set(null);
-        }
+        return runState.runExclusive(
+                operation,
+                action,
+                () -> {
+                    int latestRound = winningNumberRepository.findMaxRound().orElse(0);
+                    log.warn("{} skipped: another collection run is already active", operation);
+                    return CollectResponse.ofOverlapSkipped(latestRound);
+                }
+        );
     }
 }
