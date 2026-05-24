@@ -156,10 +156,18 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
-      - name: Start app (test profile)
+      - name: Start app (local profile + H2 for E2E)
         env:
-          SPRING_PROFILES_ACTIVE: test
+          SPRING_PROFILES_ACTIVE: local
           KRAFT_SKIP_REQUIRED_CONFIG_VALIDATOR: true
+          KRAFT_DB_URL: jdbc:h2:mem:e2e;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+          KRAFT_DB_USER: sa
+          KRAFT_DB_PASSWORD: ""
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+          SPRING_FLYWAY_ENABLED: false
+          KRAFT_DB_CONNECTIVITY_CHECK_ENABLED: false
+          KRAFT_SECURITY_OPS_ENABLED: false
         run: |
           ./gradlew bootRun > app.log 2>&1 &
           echo $! > app.pid

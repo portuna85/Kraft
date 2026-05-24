@@ -45,6 +45,7 @@ dependencies {
     implementation("org.webjars:bootstrap:5.3.3")
 
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
+    runtimeOnly("com.h2database:h2")
     compileOnly("org.projectlombok:lombok:$lombokVersion")
     compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.8")
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
