@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.recommend.application;
 
 import com.kraft.lotto.feature.recommend.web.dto.RecommendStatsDto;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -17,6 +18,10 @@ public class RecommendMetricsQueryService {
     private final MeterRegistry meterRegistry;
 
     @Autowired
+    @SuppressFBWarnings(
+            value = "CT_CONSTRUCTOR_THROW",
+            justification = "Spring ObjectProvider lookup may throw; failing fast during bean construction is intentional."
+    )
     public RecommendMetricsQueryService(ObjectProvider<MeterRegistry> meterRegistryProvider) {
         this.meterRegistry = meterRegistryProvider.getIfAvailable();
     }

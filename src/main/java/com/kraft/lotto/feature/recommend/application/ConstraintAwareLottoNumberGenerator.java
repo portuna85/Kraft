@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.recommend.application;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,10 +20,18 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
     private final int initialPickMaxAttempts;
     private final int fixupMaxAttempts;
 
+    @SuppressFBWarnings(
+            value = "CT_CONSTRUCTOR_THROW",
+            justification = "Fail-fast constructor validation for immutable generator configuration."
+    )
     ConstraintAwareLottoNumberGenerator(int birthdayThreshold, int longRunThreshold, int decadeThreshold) {
         this(birthdayThreshold, longRunThreshold, decadeThreshold, 10_000, 1_000);
     }
 
+    @SuppressFBWarnings(
+            value = "CT_CONSTRUCTOR_THROW",
+            justification = "Fail-fast constructor validation for immutable generator configuration."
+    )
     ConstraintAwareLottoNumberGenerator(int birthdayThreshold,
                                         int longRunThreshold,
                                         int decadeThreshold,

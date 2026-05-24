@@ -2,7 +2,6 @@ package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.recommend.application.RecommendMetricsQueryService;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendStatsDto;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Tag(name = "Ops", description = "Operational endpoints for collection and failure logs")
-@SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Spring-managed constructor; ObjectProvider lookup does not throw")
 public class OpsController {
 
     private static final Duration MANUAL_LOCK_MAX = Duration.ofMinutes(10);
