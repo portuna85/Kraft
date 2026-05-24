@@ -64,3 +64,17 @@ Step 1 completed: CI Playwright smoke integration
   - `npm run -s test:e2e -- --list` (9 tests listed)
 - Verified related web tests:
   - `./gradlew.bat test --tests com.kraft.lotto.web.OpsPageControllerTest` (passed)
+
+Step 2 completed: core template text recovery
+
+- Recovered broken mojibake text in key user-facing templates:
+  - `templates/layout/base.html`
+  - `templates/home.html`
+  - `templates/fragments/latest-card.html`
+  - `templates/fragments/rounds-list.html`
+- Standardized labels and loading/error copy into clean readable text to remove rendering noise and malformed markup risk.
+
+Verification:
+
+- `./gradlew.bat test --tests com.kraft.lotto.web.HomeControllerTest --tests com.kraft.lotto.web.HomeControllerWebMvcTest --tests com.kraft.lotto.web.OpsPageControllerTest`
+- `npm run -s test:e2e -- --list`
