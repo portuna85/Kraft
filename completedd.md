@@ -78,3 +78,23 @@ Verification:
 
 - `./gradlew.bat test --tests com.kraft.lotto.web.HomeControllerTest --tests com.kraft.lotto.web.HomeControllerWebMvcTest --tests com.kraft.lotto.web.OpsPageControllerTest`
 - `npm run -s test:e2e -- --list`
+
+Step 3 completed: Korean text restoration and remaining template cleanup
+
+- Reverted prior English text replacement and restored Korean UX copy in UTF-8.
+- Completed cleanup for all remaining templates:
+  - `templates/layout/base.html`
+  - `templates/home.html`
+  - `templates/admin-ops.html`
+  - `templates/error.html`
+  - `templates/fragments/latest-card.html`
+  - `templates/fragments/round-search-card.html`
+  - `templates/fragments/recommend-card.html`
+  - `templates/fragments/frequency-card.html`
+  - `templates/fragments/rounds-list.html`
+  - `templates/fragments/lotto-ball.html`
+
+Verification:
+
+- `./gradlew.bat test --tests com.kraft.lotto.web.HomeControllerTest --tests com.kraft.lotto.web.HomeControllerWebMvcTest --tests com.kraft.lotto.web.OpsPageControllerTest --tests com.kraft.lotto.web.OpsControllerTest`
+- Broken-text residue search on templates (`rg -F`) returned no matches for known mojibake markers.

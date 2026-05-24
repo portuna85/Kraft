@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('kLo', ~{::section})}">
+      th:replace="~{layout/base :: layout('최고의 번호', ~{::section})}">
 <section class="kraft-page">
   <header class="kraft-hero">
-    <p class="eyebrow">Lotto Number Recommendation</p>
-    <h1>kLo</h1>
-    <p class="kraft-hero-description">Rule-based randomized lotto combinations built from historical draw data.</p>
+    <p class="eyebrow">로또 번호 추천</p>
+    <h1>최고의 번호</h1>
+    <p class="kraft-hero-description">과거 당첨 데이터를 분석해 규칙 기반으로 번호 조합을 추천합니다.</p>
   </header>
 
   <th:block th:replace="~{fragments/latest-card :: latest-card}"></th:block>
@@ -13,11 +13,11 @@
        hx-get="/fragments/recommend" hx-trigger="load" hx-swap="outerHTML"
        aria-busy="true" aria-live="polite">
     <div class="card-body">
-      <div class="kraft-state kraft-state-loading" data-state="loading">Loading recommended numbers...</div>
+      <div class="kraft-state kraft-state-loading" data-state="loading">추천 번호를 불러오는 중입니다...</div>
       <div class="kraft-state kraft-state-error" data-state="error" hidden>
-        Failed to load data.
+        데이터를 불러오지 못했습니다.
         <div class="mt-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary kraft-retry-btn" data-target="recommend">Retry</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary kraft-retry-btn" data-target="recommend">다시 시도</button>
         </div>
       </div>
     </div>
@@ -29,11 +29,11 @@
        hx-get="/fragments/frequency" hx-trigger="load" hx-swap="outerHTML"
        aria-busy="true" aria-live="polite">
     <div class="card-body">
-      <div class="kraft-state kraft-state-loading" data-state="loading">Loading number frequency...</div>
+      <div class="kraft-state kraft-state-loading" data-state="loading">번호 빈도를 불러오는 중입니다...</div>
       <div class="kraft-state kraft-state-error" data-state="error" hidden>
-        Failed to load data.
+        데이터를 불러오지 못했습니다.
         <div class="mt-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary kraft-retry-btn" data-target="frequency">Retry</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary kraft-retry-btn" data-target="frequency">다시 시도</button>
         </div>
       </div>
     </div>
@@ -42,11 +42,11 @@
   <div id="rounds" class="card kraft-section kraft-section-rounds" hx-get="/fragments/rounds" hx-trigger="load" hx-swap="outerHTML"
        aria-busy="true" aria-live="polite">
     <div class="card-body">
-      <div class="kraft-state kraft-state-loading" data-state="loading">Loading rounds...</div>
+      <div class="kraft-state kraft-state-loading" data-state="loading">회차 목록을 불러오는 중입니다...</div>
       <div class="kraft-state kraft-state-error" data-state="error" hidden>
-        Failed to load data.
+        데이터를 불러오지 못했습니다.
         <div class="mt-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary kraft-retry-btn" data-target="rounds">Retry</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary kraft-retry-btn" data-target="rounds">다시 시도</button>
         </div>
       </div>
     </div>

@@ -5,7 +5,6 @@
   <div class="card-body">
     <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">회차 검색</h2>
     <form class="kraft-inline-form kraft-inline-form-round mb-3" id="roundSearchForm" method="get" th:action="@{/}">
-      <input name="count" th:value="${count}" type="hidden">
       <label class="kraft-inline-label" for="roundInput">회차</label>
       <input id="roundInput" class="form-control form-control-sm kraft-round-input" max="3000" min="1" name="round" required aria-required="true" aria-describedby="roundInputFeedback" th:value="${round}" type="number" inputmode="numeric" pattern="[0-9]*">
       <button class="btn btn-sm btn-outline-primary kraft-submit-btn" type="submit">검색</button>

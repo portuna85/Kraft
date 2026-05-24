@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(${(errorTitle != null ? errorTitle : '오류') + ' — 최고의 번호'}, ~{::section})}">
+      th:replace="~{layout/base :: layout(${(errorTitle != null ? errorTitle : '오류') + ' - 최고의 번호'}, ~{::section})}">
 <head>
-  <title th:text="${errorTitle != null ? errorTitle : '오류'} + ' — 최고의 번호'">오류 — 최고의 번호</title>
+  <title th:text="${errorTitle != null ? errorTitle : '오류'} + ' - 최고의 번호'">오류 - 최고의 번호</title>
 </head>
 <body>
 <section class="container kraft-container py-5">
@@ -10,7 +10,7 @@
     <h1 class="display-6 fw-semibold text-danger"
         th:text="${errorTitle != null ? errorTitle : '오류가 발생했습니다'}">오류가 발생했습니다</h1>
     <p class="text-secondary mt-2"
-       th:text="${errorMessage != null ? errorMessage : '잠시 후 다시 시도해 주세요.'}">잠시 후 다시 시도해 주세요.</p>
+       th:text="${errorMessage != null ? errorMessage : '잠시 후 다시 시도해 주세요'}">잠시 후 다시 시도해 주세요</p>
     <a class="btn btn-outline-primary mt-3" href="/">홈으로 돌아가기</a>
   </div>
 </section>
