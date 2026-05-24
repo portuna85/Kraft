@@ -243,6 +243,39 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
+    @DisplayName("cacheManager가 없으면 캐시 삭제를 건너뛰고 요약만 갱신한다")
+    void evictCachesOnCollectedWithoutCacheManager() {
+        WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        WinningStatisticsService service = new WinningStatisticsService(mockCacheService);
+        WinningNumbersCollectedEvent event = WinningNumbersCollectedEvent.of(1, 0, 0, 0);
+
+        service.evictCachesOnCollected(event);
+
+        verify(mockCacheService).refreshFrequencySummary();
+    }
+
+    @Test
+    @DisplayName("특정 캐시가 null이면 나머지 캐시만 삭제한다")
+    void evictCachesOnCollectedWithPartiallyMissingCaches() {
+        WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        CacheManager cacheManager = mock(CacheManager.class);
+        Cache frequency = mock(Cache.class);
+        Cache summary = mock(Cache.class);
+        when(cacheManager.getCache("winningNumberFrequency")).thenReturn(frequency);
+        when(cacheManager.getCache("combinationPrizeHistory")).thenReturn(null);
+        when(cacheManager.getCache("winningFrequencySummary")).thenReturn(summary);
+
+        WinningStatisticsService service = new WinningStatisticsService(mockCacheService, cacheManager);
+        WinningNumbersCollectedEvent event = WinningNumbersCollectedEvent.of(1, 0, 0, 0);
+
+        service.evictCachesOnCollected(event);
+
+        verify(frequency).clear();
+        verify(summary).clear();
+        verify(mockCacheService).refreshFrequencySummary();
+    }
+
+    @Test
     @DisplayName("frequencySummary는 빈도 목록을 포함한다")
     void frequencySummaryContainsFrequencyList() {
         WinningStatisticsCacheService mockCacheService = org.mockito.Mockito.mock(WinningStatisticsCacheService.class);
