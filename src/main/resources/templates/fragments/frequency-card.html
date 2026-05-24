@@ -1,15 +1,14 @@
 <!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<!-- required model attributes: frequency, maxFreq -->
 <div class="card mb-4 kraft-section kraft-section-frequency" id="frequency" th:fragment="frequency-card">
   <div class="card-body">
-    <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">번호별 출현 빈도</h2>
+    <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">Number Frequency</h2>
     <div class="kraft-freq-grid">
       <div class="kraft-freq-cell" th:each="f : ${frequency}">
         <span th:replace="~{fragments/lotto-ball :: ball(${f.number}, '')}">1</span>
-        <progress class="bar" th:attr="max=${maxFreq},value=${f.count},aria-label=|번호 ${f.number} 출현 빈도|"></progress>
-        <small th:text="${f.count}" th:attr="aria-label=|번호 ${f.number} 출현 횟수 ${f.count}회|">0</small>
+        <progress class="bar" th:attr="max=${maxFreq},value=${f.count},aria-label=|Number ${f.number} frequency|"></progress>
+        <small th:text="${f.count}" th:attr="aria-label=|Number ${f.number} appears ${f.count} times|">0</small>
       </div>
     </div>
   </div>

@@ -17,12 +17,12 @@
   function validateBoundInput(input, feedback, min, max, label) {
     var raw = input.value.trim();
     if (!raw) {
-      setFeedbackState(input, feedback, true, label + ' 입력은 필수입니다.');
+      setFeedbackState(input, feedback, true, label + ' is required.');
       return false;
     }
     var parsed = Number(raw);
     if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
-      setFeedbackState(input, feedback, true, label + '은(는) ' + min + '에서 ' + max + ' 사이의 정수여야 합니다.');
+      setFeedbackState(input, feedback, true, label + ' must be an integer between ' + min + ' and ' + max + '.');
       return false;
     }
     setFeedbackState(input, feedback, false, '');
@@ -34,6 +34,7 @@
     var feedback = document.getElementById(inputId + 'Feedback');
     if (!input || !feedback || input.dataset.validationBound === 'true') return;
     input.dataset.validationBound = 'true';
+    input.setAttribute('aria-describedby', inputId + 'Feedback');
 
     function validate() {
       return validateBoundInput(input, feedback, min, max, label);
@@ -58,8 +59,11 @@
           if (!fieldFeedback) return;
           var fMin = Number(field.getAttribute('min') || 1);
           var fMax = Number(field.getAttribute('max') || 3000);
-          var fLabel = (form.querySelector('label[for="' + field.id + '"]') || {}).textContent || '입력값';
-          if (!validateBoundInput(field, fieldFeedback, fMin, fMax, fLabel.trim()) && !firstInvalid) firstInvalid = field;
+          var labelEl = form.querySelector('label[for="' + field.id + '"]');
+          var fLabel = labelEl ? labelEl.textContent : 'Input';
+          if (!validateBoundInput(field, fieldFeedback, fMin, fMax, fLabel.trim()) && !firstInvalid) {
+            firstInvalid = field;
+          }
         });
         if (firstInvalid) {
           event.preventDefault();
@@ -72,8 +76,8 @@
   }
 
   function bindDynamicValidation() {
-    bindNumberInputValidation('countInput', 1, 10, '추천 세트 수');
-    bindNumberInputValidation('roundInput', 1, 3000, '회차');
+    bindNumberInputValidation('countInput', 1, 10, 'Set count');
+    bindNumberInputValidation('roundInput', 1, 3000, 'Round');
   }
 
   bindDynamicValidation();

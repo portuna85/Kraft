@@ -46,9 +46,7 @@
         if (!btn) return;
         btn.addEventListener('click', function () {
           var ascending = header.getAttribute('aria-sort') !== 'ascending';
-          headers.forEach(function (h) {
-            h.setAttribute('aria-sort', 'none');
-          });
+          headers.forEach(function (h) { h.setAttribute('aria-sort', 'none'); });
           header.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');
           sortTableByColumn(table, index, ascending);
         });
@@ -69,12 +67,12 @@
         if (expanded) {
           fullEl.classList.add('d-none');
           shortEl.classList.remove('d-none');
-          btn.textContent = '더보기';
+          btn.textContent = 'Show';
           btn.setAttribute('aria-expanded', 'false');
         } else {
           fullEl.classList.remove('d-none');
           shortEl.classList.add('d-none');
-          btn.textContent = '접기';
+          btn.textContent = 'Hide';
           btn.setAttribute('aria-expanded', 'true');
         }
       });

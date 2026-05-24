@@ -32,7 +32,7 @@ public class HomeController {
             @RequestParam(required = false) @Min(1) @Max(3000) Integer round,
             Model model
     ) {
-        addHomeModel(round, model);
+        addHomeModel(PublicQueryParams.normalizeRound(round), model);
         return "home";
     }
 
@@ -42,7 +42,7 @@ public class HomeController {
             @RequestParam(required = false) @Min(1) @Max(3000) Integer round,
             Model model
     ) {
-        addRecommendModel(count, round, model);
+        addRecommendModel(PublicQueryParams.normalizeCount(count), PublicQueryParams.normalizeRound(round), model);
         return RECOMMEND_FRAGMENT;
     }
 
@@ -60,7 +60,9 @@ public class HomeController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             Model model
     ) {
-        var rounds = queryService.list(page, size);
+        int safePage = PublicQueryParams.normalizePage(page);
+        int safeSize = PublicQueryParams.normalizeSize(size);
+        var rounds = queryService.list(safePage, safeSize);
         model.addAttribute("rounds", rounds);
         model.addAttribute("page", rounds.page());
         model.addAttribute("size", rounds.size());

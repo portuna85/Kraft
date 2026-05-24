@@ -1,42 +1,42 @@
 <!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('운영 대시보드', ~{::section})}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Ops Dashboard', ~{::section})}">
 <section class="kraft-page">
   <header class="kraft-hero">
-    <p class="eyebrow">운영</p>
-    <h1>수집 실패 대시보드</h1>
-    <p class="kraft-hero-description">실패 원인과 최근 수집 실패 로그를 확인합니다.</p>
+    <p class="eyebrow">Operations</p>
+    <h1>Collection Failure Dashboard</h1>
+    <p class="kraft-hero-description">Review failure reasons and recent collection failures.</p>
   </header>
 
   <div class="card mb-4">
     <div class="card-body">
       <form method="get" action="/admin/ops" class="row g-2 align-items-end">
         <div class="col-12 col-md-2">
-          <label class="form-label mb-1" for="reason">원인</label>
+          <label class="form-label mb-1" for="reason">Reason</label>
           <input id="reason" name="reason" class="form-control" th:value="${reason}" placeholder="timeout">
         </div>
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1" for="drwNoFrom">시작 회차</label>
+          <label class="form-label mb-1" for="drwNoFrom">From Round</label>
           <input id="drwNoFrom" name="drwNoFrom" type="number" min="1" class="form-control" th:value="${drwNoFrom}">
         </div>
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1" for="drwNoTo">종료 회차</label>
+          <label class="form-label mb-1" for="drwNoTo">To Round</label>
           <input id="drwNoTo" name="drwNoTo" type="number" min="1" class="form-control" th:value="${drwNoTo}">
         </div>
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1" for="reasonLimit">원인 표시 개수</label>
+          <label class="form-label mb-1" for="reasonLimit">Reason Limit</label>
           <input id="reasonLimit" name="reasonLimit" type="number" min="1" max="2000" class="form-control" th:value="${reasonLimit}">
         </div>
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1" for="logLimit">로그 표시 개수</label>
+          <label class="form-label mb-1" for="logLimit">Log Limit</label>
           <input id="logLimit" name="logLimit" type="number" min="1" max="2000" class="form-control" th:value="${logLimit}">
         </div>
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1" for="pageSize">페이지 크기</label>
+          <label class="form-label mb-1" for="pageSize">Page Size</label>
           <input id="pageSize" name="pageSize" type="number" min="5" max="100" class="form-control" th:value="${pageSize}">
         </div>
         <div class="col-12 col-md-2 d-grid">
-          <button type="submit" class="btn btn-primary">적용</button>
+          <button type="submit" class="btn btn-primary">Apply</button>
         </div>
       </form>
 
@@ -44,15 +44,15 @@
       <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-sm btn-outline-primary"
            th:href="@{/ops/fetch-logs/failure-overview(reasonLimit=${reasonLimit},logLimit=${logLimit},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo})}">
-          개요 JSON 열기
+          Open Overview JSON
         </a>
         <a class="btn btn-sm btn-outline-primary"
            th:href="@{/ops/fetch-logs/failure-reasons(limit=${reasonLimit},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo})}">
-          원인 JSON 열기
+          Open Reasons JSON
         </a>
         <a class="btn btn-sm btn-outline-primary"
            th:href="@{/ops/fetch-logs/failures(limit=${logLimit},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo})}">
-          실패 로그 JSON 열기
+          Open Failures JSON
         </a>
       </div>
     </div>
@@ -60,20 +60,16 @@
 
   <div class="card mb-4">
     <div class="card-body">
-      <h2 class="h5 mb-3">실패 원인</h2>
+      <h2 class="h5 mb-3">Failure Reasons</h2>
       <div th:if="${#lists.isEmpty(overview.reasons)}" class="kraft-state kraft-state-empty">
-        실패 원인이 없습니다.
+        No failure reasons found.
       </div>
       <div th:unless="${#lists.isEmpty(overview.reasons)}" class="table-responsive">
-        <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="실패 원인 표">
+        <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="Failure reasons table">
           <thead>
           <tr>
-            <th scope="col" aria-sort="none">
-              <button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">원인</button>
-            </th>
-            <th scope="col" class="text-end" aria-sort="none">
-              <button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">건수</button>
-            </th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Reason</button></th>
+            <th scope="col" class="text-end" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Count</button></th>
           </tr>
           </thead>
           <tbody>
@@ -94,40 +90,34 @@
   <div class="card">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h5 mb-0">최근 실패 로그</h2>
-        <small class="text-body-secondary" th:text="'생성 시각: ' + ${#temporals.format(overview.generatedAt, 'yyyy-MM-dd HH:mm:ss')}">생성 시각</small>
+        <h2 class="h5 mb-0">Recent Failure Logs</h2>
+        <small class="text-body-secondary" th:text="'Generated at: ' + ${#temporals.format(overview.generatedAt, 'yyyy-MM-dd HH:mm:ss')}">Generated at</small>
       </div>
-      <div th:if="${#lists.isEmpty(pagedFailures)}" class="kraft-state kraft-state-empty">
-        실패 로그가 없습니다.
-      </div>
+      <div th:if="${#lists.isEmpty(pagedFailures)}" class="kraft-state kraft-state-empty">No failure logs found.</div>
       <div th:unless="${#lists.isEmpty(pagedFailures)}" class="table-responsive">
-        <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="실패 로그 표">
+        <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="Failure logs table">
           <thead>
           <tr>
             <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">ID</button></th>
-            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">회차</button></th>
-            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">원인</button></th>
-            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">코드</button></th>
-            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">메시지</button></th>
-            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">수집 시각</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Round</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Reason</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Code</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Message</button></th>
+            <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Fetched At</button></th>
           </tr>
           </thead>
           <tbody>
           <tr th:each="row : ${pagedFailures}">
             <td th:text="${row.id}">1</td>
             <td th:text="${row.drwNo}">1000</td>
-            <td>
-              <a th:href="@{/admin/ops(reason=${row.reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit},pageSize=${pageSize})}">
-                <code th:text="${row.reason}">reason</code>
-              </a>
-            </td>
+            <td><code th:text="${row.reason}">reason</code></td>
             <td th:text="${row.responseCode}">500</td>
             <td class="text-break">
               <span class="ops-msg-short" th:text="${#strings.abbreviate(row.message, 120)}">message</span>
               <span class="ops-msg-full d-none" th:id="${'ops-msg-' + row.id}" th:text="${row.message}">message</span>
               <button type="button" class="btn btn-sm btn-link p-0 ms-1 ops-msg-toggle"
                       th:if="${row.message != null and #strings.length(row.message) > 120}"
-                      th:attr="aria-controls=${'ops-msg-' + row.id},aria-expanded='false'">더보기</button>
+                      th:attr="aria-controls=${'ops-msg-' + row.id},aria-expanded='false'">Show</button>
             </td>
             <td th:text="${#temporals.format(row.fetchedAt, 'yyyy-MM-dd HH:mm:ss')}">time</td>
           </tr>
@@ -137,15 +127,11 @@
       <div class="d-flex justify-content-between align-items-center mt-3">
         <a class="btn btn-sm btn-outline-secondary"
            th:classappend="${page <= 0} ? ' disabled'"
-           th:href="@{/admin/ops(page=${page - 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">
-          이전
-        </a>
-        <span class="small text-body-secondary" th:text="'페이지 ' + (${page} + 1)">페이지 1</span>
+           th:href="@{/admin/ops(page=${page - 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">Prev</a>
+        <span class="small text-body-secondary" th:text="'Page ' + (${page} + 1)">Page 1</span>
         <a class="btn btn-sm btn-outline-secondary"
            th:classappend="${!hasNext} ? ' disabled'"
-           th:href="@{/admin/ops(page=${page + 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">
-          다음
-        </a>
+           th:href="@{/admin/ops(page=${page + 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">Next</a>
       </div>
     </div>
   </div>

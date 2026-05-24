@@ -14,6 +14,14 @@ final class OpsQueryParams {
         return Math.max(MIN_LIMIT, Math.min(limit, MAX_LIMIT));
     }
 
+    static int normalizeReasonLimit(int limit) {
+        return normalizeLimit(limit);
+    }
+
+    static int normalizeLogLimit(int limit) {
+        return normalizeLimit(limit);
+    }
+
     static Integer normalizeDrwNo(Integer drwNo) {
         if (drwNo == null) {
             return null;

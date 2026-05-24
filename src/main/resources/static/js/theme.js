@@ -7,9 +7,9 @@
 
   function setState() {
     var dark = html.getAttribute('data-bs-theme') === 'dark';
-    btn.textContent = dark ? '라이트' : '다크';
+    btn.textContent = dark ? 'Light' : 'Dark';
     btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
-    btn.setAttribute('aria-label', dark ? '라이트 테마로 전환' : '다크 테마로 전환');
+    btn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
   }
 
   setState();

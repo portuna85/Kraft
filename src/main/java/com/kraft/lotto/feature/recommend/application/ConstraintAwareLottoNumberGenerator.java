@@ -28,6 +28,21 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
                                         int decadeThreshold,
                                         int initialPickMaxAttempts,
                                         int fixupMaxAttempts) {
+        if (birthdayThreshold < 1 || birthdayThreshold > MAX_NUMBER - 1) {
+            throw new IllegalArgumentException("birthdayThreshold must be between 1 and 44");
+        }
+        if (longRunThreshold < 2 || longRunThreshold > SIZE) {
+            throw new IllegalArgumentException("longRunThreshold must be between 2 and 6");
+        }
+        if (decadeThreshold < 3 || decadeThreshold > SIZE) {
+            throw new IllegalArgumentException("decadeThreshold must be between 3 and 6");
+        }
+        if (initialPickMaxAttempts <= 0) {
+            throw new IllegalArgumentException("initialPickMaxAttempts must be positive");
+        }
+        if (fixupMaxAttempts <= 0) {
+            throw new IllegalArgumentException("fixupMaxAttempts must be positive");
+        }
         this.birthdayThreshold = birthdayThreshold;
         this.longRunThreshold = longRunThreshold;
         this.decadeThreshold = decadeThreshold;

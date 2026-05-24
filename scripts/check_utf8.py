@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import re
 import subprocess
 
 TEXT_EXTENSIONS = {
@@ -37,6 +38,8 @@ SKIP_DIRS = {".git", ".gradle", "build", "node_modules", ".idea"}
 MOJIBAKE_MARKERS = (
     "\ufffd",  # replacement character (U+FFFD)
 )
+HANGUL_OR_CJK_RE = re.compile(r"[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af\u4e00-\u9fff]")
+URL_RE = re.compile(r"https?://")
 
 
 def is_text_target(path: Path) -> bool:
@@ -99,6 +102,10 @@ def main() -> int:
         marker = next((m for m in MOJIBAKE_MARKERS if m in decoded), None)
         if marker is not None:
             failures.append(f"{rel}: suspicious mojibake marker detected ({marker!r})")
+            continue
+        suspicious_line = find_suspicious_mojibake_line(decoded)
+        if suspicious_line is not None:
+            failures.append(f"{rel}: suspicious mojibake pattern at line {suspicious_line}")
     if failures:
         print("UTF-8 validation failed:")
         for failure in failures:
@@ -107,6 +114,27 @@ def main() -> int:
     scope = "staged files" if args.staged else "repository"
     print(f"UTF-8 validation passed ({scope}).")
     return 0
+
+
+def find_suspicious_mojibake_line(text: str) -> int | None:
+    """
+    Heuristic guard for mojibake that still decodes as valid UTF-8.
+    We only flag lines that contain Hangul/CJK and abnormally dense '?' tokens.
+    """
+    for i, raw_line in enumerate(text.splitlines(), start=1):
+        line = raw_line.strip()
+        if not line:
+            continue
+        if URL_RE.search(line):
+            continue
+        if not HANGUL_OR_CJK_RE.search(line):
+            continue
+        q_count = line.count("?")
+        if q_count >= 3:
+            return i
+        if "??" in line and q_count >= 2:
+            return i
+    return None
 
 
 if __name__ == "__main__":

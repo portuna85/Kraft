@@ -2,7 +2,6 @@ package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -28,22 +27,25 @@ public class OpsPageController {
             @RequestParam(required = false) String reason,
             @RequestParam(required = false) Integer drwNoFrom,
             @RequestParam(required = false) Integer drwNoTo,
-            HttpServletRequest request,
             Model model
     ) {
+        int safeReasonLimit = OpsQueryParams.normalizeReasonLimit(reasonLimit);
+        int safeLogLimit = OpsQueryParams.normalizeLogLimit(logLimit);
+        int safePage = PublicQueryParams.normalizePage(page);
+        int safePageSize = PublicQueryParams.normalizeSize(pageSize);
         String safeReason = OpsQueryParams.normalizeReason(reason);
         OpsQueryParams.Range range = OpsQueryParams.normalizeRange(drwNoFrom, drwNoTo);
 
         FetchFailureOverviewDto overview = fetchLogQueryService.failureOverview(
-                reasonLimit,
-                logLimit,
+                safeReasonLimit,
+                safeLogLimit,
                 safeReason,
                 range.from(),
                 range.to()
         );
         var pagedFailures = fetchLogQueryService.listRecentFailuresPage(
-                page,
-                pageSize,
+                safePage,
+                safePageSize,
                 safeReason,
                 range.from(),
                 range.to()
@@ -54,8 +56,8 @@ public class OpsPageController {
         model.addAttribute("reason", safeReason == null ? "" : safeReason);
         model.addAttribute("drwNoFrom", range.from());
         model.addAttribute("drwNoTo", range.to());
-        model.addAttribute("reasonLimit", reasonLimit);
-        model.addAttribute("logLimit", logLimit);
+        model.addAttribute("reasonLimit", safeReasonLimit);
+        model.addAttribute("logLimit", safeLogLimit);
         model.addAttribute("page", pagedFailures.page());
         model.addAttribute("pageSize", pagedFailures.pageSize());
         model.addAttribute("hasNext", pagedFailures.hasNext());

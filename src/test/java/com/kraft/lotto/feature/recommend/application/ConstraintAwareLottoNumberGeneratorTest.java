@@ -8,24 +8,36 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("제약 조건 인식 로또 번호 생성기 테스트")
+@DisplayName("ConstraintAwareLottoNumberGenerator")
 class ConstraintAwareLottoNumberGeneratorTest {
 
     @Test
-    @DisplayName("불가능한 제약 조건일 경우 타임아웃 예외가 발생한다")
-    void throwsTimeoutWhenConstraintsAreImpossible() {
-        var generator = new ConstraintAwareLottoNumberGenerator(
-                45,
-                2,
-                1
-        );
-
-        assertThatThrownBy(generator::generate)
-                .isInstanceOf(RecommendGenerationTimeoutException.class);
+    @DisplayName("invalid threshold values fail fast")
+    void rejectsInvalidThresholds() {
+        assertThatThrownBy(() -> new ConstraintAwareLottoNumberGenerator(0, 4, 3))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("birthdayThreshold");
+        assertThatThrownBy(() -> new ConstraintAwareLottoNumberGenerator(31, 1, 3))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("longRunThreshold");
+        assertThatThrownBy(() -> new ConstraintAwareLottoNumberGenerator(31, 4, 2))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("decadeThreshold");
     }
 
     @Test
-    @DisplayName("생성된 조합은 6개의 고유하고 정렬된 1~45 번호를 포함한다")
+    @DisplayName("non-positive attempt bounds fail fast")
+    void rejectsNonPositiveAttemptBounds() {
+        assertThatThrownBy(() -> new ConstraintAwareLottoNumberGenerator(31, 4, 3, 0, 100))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("initialPickMaxAttempts");
+        assertThatThrownBy(() -> new ConstraintAwareLottoNumberGenerator(31, 4, 3, 100, 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("fixupMaxAttempts");
+    }
+
+    @Test
+    @DisplayName("generated combination has six unique sorted numbers")
     void generatedCombinationHasSixUniqueSortedNumbers() {
         var generator = new ConstraintAwareLottoNumberGenerator(31, 4, 3);
 
@@ -39,7 +51,7 @@ class ConstraintAwareLottoNumberGeneratorTest {
     }
 
     @Test
-    @DisplayName("birthdayThreshold 초과 번호가 반드시 1개 이상 포함된다")
+    @DisplayName("combination includes at least one number above birthday threshold")
     void birthdayThresholdConstraintSatisfied() {
         int threshold = 31;
         var generator = new ConstraintAwareLottoNumberGenerator(threshold, 4, 3);
@@ -51,7 +63,7 @@ class ConstraintAwareLottoNumberGeneratorTest {
     }
 
     @Test
-    @DisplayName("연속 번호 fixup이 동작하여 3개 이상 연속 번호가 없다")
+    @DisplayName("fixup removes long consecutive runs")
     void consecutiveRunFixupWorks() {
         var generator = new ConstraintAwareLottoNumberGenerator(31, 3, 3);
 
@@ -61,14 +73,14 @@ class ConstraintAwareLottoNumberGeneratorTest {
                 boolean threeConsecutive = numbers.get(j) - numbers.get(j - 1) == 1
                         && numbers.get(j + 1) - numbers.get(j) == 1;
                 assertThat(threeConsecutive)
-                        .as("연속 3개 발견: %s", numbers)
+                        .as("found 3-consecutive run: %s", numbers)
                         .isFalse();
             }
         }
     }
 
     @Test
-    @DisplayName("decadeThreshold=3일 때 각 십단위 구간에 최대 2개 이하의 번호가 선택된다")
+    @DisplayName("decade threshold is respected")
     void decadeBucketDistributionRespected() {
         var generator = new ConstraintAwareLottoNumberGenerator(31, 4, 3);
 
@@ -80,7 +92,7 @@ class ConstraintAwareLottoNumberGeneratorTest {
                 buckets[b]++;
             }
             for (int count : buckets) {
-                assertThat(count).as("십단위 구간 초과: %s", numbers).isLessThanOrEqualTo(2);
+                assertThat(count).as("decade bucket overflow: %s", numbers).isLessThanOrEqualTo(2);
             }
         }
     }
