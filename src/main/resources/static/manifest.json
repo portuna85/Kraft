@@ -2,7 +2,7 @@
   "id": "/",
   "name": "kraft-lotto",
   "short_name": "kLo",
-  "description": "로또 6/45 당첨번호 수집, 분석, 번호 추천",
+  "description": "Lotto 6/45 collection, analysis, and recommendation service",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -34,14 +34,9 @@
   ],
   "shortcuts": [
     {
-      "name": "번호 추천",
-      "short_name": "추천",
+      "name": "Number Recommend",
+      "short_name": "Recommend",
       "url": "/#recommend"
-    },
-    {
-      "name": "운영 대시보드",
-      "short_name": "운영",
-      "url": "/admin/ops"
     }
   ]
 }

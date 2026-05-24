@@ -4,13 +4,17 @@ import com.kraft.lotto.feature.recommend.application.RecommendService;
 import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+@Validated
 @Controller
 @RequiredArgsConstructor
 public class HomeController {
@@ -25,19 +29,17 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(
-            @RequestParam(defaultValue = "5") int count,
-            @RequestParam(required = false) Integer round,
+            @RequestParam(required = false) @Min(1) @Max(3000) Integer round,
             Model model
     ) {
-        addRecommendModel(count, round, model);
         addHomeModel(round, model);
         return "home";
     }
 
     @GetMapping("/fragments/recommend")
     public String recommend(
-            @RequestParam(defaultValue = "5") int count,
-            @RequestParam(required = false) Integer round,
+            @RequestParam(defaultValue = "5") @Min(1) @Max(10) int count,
+            @RequestParam(required = false) @Min(1) @Max(3000) Integer round,
             Model model
     ) {
         addRecommendModel(count, round, model);
@@ -54,13 +56,11 @@ public class HomeController {
 
     @GetMapping("/fragments/rounds")
     public String rounds(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             Model model
     ) {
-        int safePage = PublicQueryParams.normalizePage(page);
-        int safeSize = PublicQueryParams.normalizeSize(size);
-        var rounds = queryService.list(safePage, safeSize);
+        var rounds = queryService.list(page, size);
         model.addAttribute("rounds", rounds);
         model.addAttribute("page", rounds.page());
         model.addAttribute("size", rounds.size());
@@ -68,20 +68,17 @@ public class HomeController {
     }
 
     private void addHomeModel(Integer round, Model model) {
-        Integer safeRound = PublicQueryParams.normalizeRound(round);
         model.addAttribute("expectedRound", queryService.expectedCurrentRound());
         model.addAttribute("latest", queryService.findLatest().orElse(null));
-        model.addAttribute("result", safeRound == null ? null : queryService.getByRound(safeRound));
+        model.addAttribute("result", round == null ? null : queryService.getByRound(round));
     }
 
     private void addRecommendModel(int count, Integer round, Model model) {
-        int safeCount = PublicQueryParams.normalizeCount(count);
-        Integer safeRound = PublicQueryParams.normalizeRound(round);
-        var recommendation = recommendService.recommend(safeCount);
-        model.addAttribute("count", safeCount);
+        var recommendation = recommendService.recommend(count);
+        model.addAttribute("count", count);
         model.addAttribute("combinations", recommendation.combinations());
         model.addAttribute("rules", recommendService.rules());
-        model.addAttribute("round", safeRound);
+        model.addAttribute("round", round);
     }
 
     private static long maxFrequency(List<NumberFrequencyDto> frequencies) {
