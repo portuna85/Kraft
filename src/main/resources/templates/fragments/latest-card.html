@@ -3,23 +3,23 @@
 <body>
 <div class="card mb-4 kraft-section kraft-section-latest" id="latest" th:fragment="latest-card">
   <div class="card-body">
-    <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">Latest Round</h2>
+    <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">최신 회차</h2>
     <div th:if="${latest != null}">
       <div class="d-flex align-items-center gap-2 mb-2">
-        <span class="fw-semibold" th:text="${latest.round + 'th winning numbers'}">0th winning numbers</span>
-        <span class="badge bg-warning text-dark small fw-normal" th:if="${latest.round < expectedRound}" th:text="${(expectedRound - latest.round) + ' rounds behind'}">N rounds behind</span>
+        <span class="fw-semibold" th:text="${latest.round + '회 당첨번호'}">0회 당첨번호</span>
+        <span class="badge bg-warning text-dark small fw-normal" th:if="${latest.round < expectedRound}" th:text="${(expectedRound - latest.round) + '회 미수집'}">N회 미수집</span>
       </div>
       <div class="kraft-balls mb-3">
         <th:block th:each="n : ${latest.numbers}"><span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span></th:block>
         <span class="kraft-bonus-group"><span class="kraft-ball-plus" aria-hidden="true">+</span><span th:replace="~{fragments/lotto-ball :: ball(${latest.bonusNumber}, 'bonus ')}">0</span></span>
       </div>
       <div class="kraft-draw-meta">
-        <div class="kraft-meta-item"><span class="kraft-meta-label">Draw Date</span><span class="kraft-meta-value" th:text="${#temporals.format(latest.drawDate,'yyyy.MM.dd')}">-</span></div>
-        <div class="kraft-meta-item"><span class="kraft-meta-label">1st Prize</span><span class="kraft-meta-value font-monospace" th:text="${#numbers.formatInteger(latest.firstPrize,1,'COMMA') + ' KRW'}">0 KRW</span></div>
-        <div class="kraft-meta-item"><span class="kraft-meta-label">Winners</span><span class="kraft-meta-value" th:text="${latest.firstWinners + ' people'}">0 people</span></div>
+        <div class="kraft-meta-item"><span class="kraft-meta-label">추첨일</span><span class="kraft-meta-value" th:text="${#temporals.format(latest.drawDate,'yyyy.MM.dd')}">-</span></div>
+        <div class="kraft-meta-item"><span class="kraft-meta-label">1등 당첨금</span><span class="kraft-meta-value font-monospace" th:text="${#numbers.formatInteger(latest.firstPrize,1,'COMMA') + ' 원'}">0 원</span></div>
+        <div class="kraft-meta-item"><span class="kraft-meta-label">당첨자 수</span><span class="kraft-meta-value" th:text="${latest.firstWinners + '명'}">0명</span></div>
       </div>
     </div>
-    <p class="text-secondary mb-0" th:if="${latest == null}">No collected round data yet.</p>
+    <p class="text-secondary mb-0" th:if="${latest == null}">수집된 회차 데이터가 없습니다.</p>
   </div>
 </div>
 </body>
