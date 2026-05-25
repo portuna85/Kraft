@@ -18,22 +18,28 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
 /**
- * 프로젝트 루트의 {@code .env} 파일을 Spring {@link ConfigurableEnvironment} 에 주입한다.
- * <p>
- * 적용 우선순위:
+ * 선택적으로 {@code .env} 파일을 Spring {@link ConfigurableEnvironment} 에 주입한다.
+ *
+ * <p>기본 원칙:
  * <ol>
- *   <li>이미 시스템/OS 환경 변수에 동일 키가 있으면 그 값을 우선한다 (덮어쓰지 않음).</li>
- *   <li>{@code .env} 키 = 가장 낮은 우선순위 PropertySource 로 등록.</li>
+ *   <li>실제 OS 환경 변수와 시스템 프로퍼티를 최우선으로 사용한다.</li>
+ *   <li>{@code .env} 는 보조 수단이며, 파일이 없거나 비활성화되면 아무 작업도 하지 않는다.</li>
  * </ol>
- * 지원 문법:
+ *
+ * <p>제어 방법:
+ * <ul>
+ *   <li>{@code KRAFT_DOTENV_ENABLED=false} - 파일 로딩 비활성화.</li>
+ *   <li>{@code KRAFT_DOTENV_PATH=/path/to/.env} - 특정 파일을 명시적으로 사용.</li>
+ *   <li>미지정 시 현재 작업 디렉터리와 상위 디렉터리에서 {@code .env} 를 탐색한다.</li>
+ * </ul>
+ *
+ * <p>지원 문법:
  * <ul>
  *   <li>{@code KEY=VALUE} (공백 트리밍)</li>
  *   <li>{@code # ...} 주석 / 빈 줄 무시</li>
  *   <li>선택적 {@code export } 접두사 허용</li>
  *   <li>큰따옴표/작은따옴표로 감싼 값의 따옴표 제거</li>
  * </ul>
- * 본 처리기는 의도적으로 외부 의존성 없이 작성되었으며, 운영 컨테이너에서는 docker-compose 의 env_file 이
- * 우선 적용되므로 별다른 부작용이 없다.
  */
 public class DotenvEnvironmentPostProcessor
         implements EnvironmentPostProcessor, ApplicationListener<ApplicationPreparedEvent>, Ordered {
@@ -47,9 +53,13 @@ public class DotenvEnvironmentPostProcessor
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
-        Path file = locateDotenvFile();
+        if (isDisabled(env)) {
+            log.debug(".env 로딩이 비활성화되어 있습니다.");
+            return;
+        }
+        Path file = locateDotenvFile(env);
         if (file == null) {
-            log.debug(".env 파일을 찾지 못했습니다 (정상: 컨테이너/CI 환경).");
+            log.debug(".env 파일을 찾지 못했습니다. 환경변수만 사용합니다.");
             return;
         }
         Map<String, Object> parsed = parse(file);
@@ -82,8 +92,17 @@ public class DotenvEnvironmentPostProcessor
         return ORDER;
     }
 
+    private static boolean isDisabled(ConfigurableEnvironment env) {
+        return "false".equalsIgnoreCase(env.getProperty("KRAFT_DOTENV_ENABLED", "true").trim());
+    }
+
     /** 현재 작업 디렉터리 → 상위로 한 단계까지 .env 를 탐색한다. */
-    private static Path locateDotenvFile() {
+    private static Path locateDotenvFile(ConfigurableEnvironment env) {
+        String explicitPath = env.getProperty("KRAFT_DOTENV_PATH");
+        if (explicitPath != null && !explicitPath.isBlank()) {
+            Path path = Paths.get(explicitPath.trim());
+            return Files.isRegularFile(path) ? path : null;
+        }
         Path cwd = Paths.get("").toAbsolutePath();
         Path here = cwd.resolve(".env");
         if (Files.isRegularFile(here)) {

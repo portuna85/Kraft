@@ -24,7 +24,7 @@ import org.springframework.core.env.MapPropertySource;
  * <p>해결하는 시나리오:
  * <pre>
  *   $ ./gradlew bootRun        # 호스트 OS 에서 실행
- *   .env: KRAFT_DB_URL=jdbc:mariadb://mariadb:3306/...
+ *   env: KRAFT_DB_URL=jdbc:mariadb://mariadb:3306/...
  *   → java.net.UnknownHostException: mariadb
  * </pre>
  *
@@ -35,7 +35,7 @@ import org.springframework.core.env.MapPropertySource;
  *   <li>컨테이너 외부 + JDBC URL 이 {@code //mariadb}/{@code //db}/{@code //postgres} 등
  *       compose 서비스명을 가리키면 {@code //localhost} (또는
  *       {@code KRAFT_DB_LOCAL_HOST} 값) 로 치환.</li>
- *   <li>치환 결과는 가장 높은 우선순위 PropertySource 로 등록되어 원본 .env 값을 덮는다.</li>
+ *   <li>치환 결과는 가장 높은 우선순위 PropertySource 로 등록되어 원본 환경값을 덮는다.</li>
  * </ol>
  *
  * <p>이 처리기는 의도적으로 보수적이다. 명시 옵트아웃: {@code KRAFT_DB_HOST_REWRITE=false}.

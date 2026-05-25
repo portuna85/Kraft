@@ -14,6 +14,8 @@ services:
       TZ: Asia/Seoul
     networks:
       - kraft-net
+    ports:
+      - "127.0.0.1:${KRAFT_DB_PORT:-3306}:3306"
     volumes:
       - kraft-lotto-db:/var/lib/mysql
     healthcheck:

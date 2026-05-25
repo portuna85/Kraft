@@ -23,7 +23,7 @@ import org.springframework.web.client.RestClient;
  *   <li>그 외(기본 포함) → {@link MockLottoApiClient}</li>
  * </ul>
  * 외부 표기({@code real})와 내부 구현체({@code dhlottery})를 동시에 허용하여
- * .env / 운영 매니페스트에서 직관적인 토큰을 그대로 사용할 수 있게 한다.
+ * 환경변수나 배포 매니페스트에서 직관적인 토큰을 그대로 사용할 수 있게 한다.
  */
 @Configuration
 public class LottoApiClientConfig {

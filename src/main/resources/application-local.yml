@@ -1,4 +1,9 @@
 spring:
+  datasource:
+    url: ${KRAFT_DB_URL:jdbc:mariadb://${KRAFT_DB_HOST:localhost}:${KRAFT_DB_PORT:3306}/${KRAFT_DB_NAME:kraft_lotto}?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Seoul&connectTimeout=3000}
+    username: ${KRAFT_DB_USER}
+    password: ${KRAFT_DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
   thymeleaf:
     cache: false
   web:
@@ -25,8 +30,12 @@ springdoc:
 
 kraft:
   history-init:
-    enabled: true
+    enabled: false
+  collect:
+    auto:
+      enabled: false
   api:
-    client: ${KRAFT_API_CLIENT:real}
+    client: ${KRAFT_API_CLIENT:mock}
+    url: ${KRAFT_API_URL:http://localhost}
     backfill-delay-ms: 200
     mock-latest-round: ${KRAFT_API_MOCK_LATEST_ROUND:0}

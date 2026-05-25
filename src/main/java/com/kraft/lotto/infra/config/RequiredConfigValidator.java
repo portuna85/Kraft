@@ -75,8 +75,7 @@ public class RequiredConfigValidator implements EnvironmentPostProcessor, Ordere
                     %s%n\
                     %n\
                     Quick checks:%n\
-                      - Make sure .env exists and is correctly populated from .env.example.%n\
-                      - Verify required values are available for the active profile.%n\
+                      - Verify required values are available as environment variables or .env entries.%n\
                       - Confirm each missing key has a matching env var value.%n\
                       - If running with Docker, ensure expected profile and env vars are set.%n\
                     """.formatted(activeProfilesText(env), String.join(System.lineSeparator(), problems));
