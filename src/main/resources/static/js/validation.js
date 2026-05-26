@@ -75,9 +75,17 @@
     }
   }
 
+  function bindFromElement(id, label) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var min = Number(el.getAttribute('min') || 1);
+    var max = Number(el.getAttribute('max') || 9999);
+    bindNumberInputValidation(id, min, max, label);
+  }
+
   function bindDynamicValidation() {
-    bindNumberInputValidation('countInput', 1, 10, '세트 수');
-    bindNumberInputValidation('roundInput', 1, 3000, '회차');
+    bindFromElement('countInput', '세트 수');
+    bindFromElement('roundInput', '회차');
   }
 
   bindDynamicValidation();

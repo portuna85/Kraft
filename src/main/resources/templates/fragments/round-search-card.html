@@ -6,10 +6,10 @@
     <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">회차 검색</h2>
     <form class="kraft-inline-form kraft-inline-form-round mb-3" id="roundSearchForm" method="get" th:action="@{/}">
       <label class="kraft-inline-label" for="roundInput">회차</label>
-      <input id="roundInput" class="form-control form-control-sm kraft-round-input" max="3000" min="1" name="round" required aria-required="true" aria-describedby="roundInputFeedback" th:value="${round}" type="number" inputmode="numeric" pattern="[0-9]*">
+      <input id="roundInput" class="form-control form-control-sm kraft-round-input" th:attr="max=${maxRound}" min="1" name="round" required aria-required="true" aria-describedby="roundInputFeedback" th:value="${round}" type="number" inputmode="numeric" pattern="[0-9]*">
       <button class="btn btn-sm btn-outline-primary kraft-submit-btn" type="submit">검색</button>
     </form>
-    <div id="roundInputFeedback" class="invalid-feedback d-block kraft-input-feedback visually-hidden" aria-live="polite">1 ~ 3000 사이의 정수를 입력하세요.</div>
+    <div id="roundInputFeedback" class="invalid-feedback d-block kraft-input-feedback visually-hidden" aria-live="polite" th:text="|1 ~ ${maxRound} 사이의 정수를 입력하세요.|">1 ~ 3000 사이의 정수를 입력하세요.</div>
     <div th:if="${result != null}">
       <dl class="row g-2 mb-3">
         <dt class="col-5 col-sm-3 fw-normal text-secondary">회차</dt>

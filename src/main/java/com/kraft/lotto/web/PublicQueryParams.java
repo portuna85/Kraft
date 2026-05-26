@@ -4,8 +4,8 @@ import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
 
 final class PublicQueryParams {
 
-    private static final int MIN_COUNT = 1;
-    private static final int MAX_COUNT = 10;
+    static final int MIN_COUNT = 1;
+    static final int MAX_COUNT = 10;
     private static final int MIN_PAGE = 0;
     private static final int MIN_SIZE = 1;
     private static final int MAX_SIZE = 100;

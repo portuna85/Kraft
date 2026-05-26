@@ -39,7 +39,7 @@ public class HomeController {
 
     @GetMapping("/fragments/recommend")
     public String recommend(
-            @RequestParam(defaultValue = "5") @Min(1) @Max(10) int count,
+            @RequestParam(defaultValue = "5") @Min(PublicQueryParams.MIN_COUNT) @Max(PublicQueryParams.MAX_COUNT) int count,
             @RequestParam(required = false) @Min(LottoRoundPolicy.MIN_ROUND) @Max(LottoRoundPolicy.MAX_ROUND) Integer round,
             Model model
     ) {
@@ -74,6 +74,7 @@ public class HomeController {
         model.addAttribute("expectedRound", queryService.expectedCurrentRound());
         model.addAttribute("latest", queryService.findLatest().orElse(null));
         model.addAttribute("result", round == null ? null : queryService.findByRound(round).orElse(null));
+        model.addAttribute("maxRound", LottoRoundPolicy.MAX_ROUND);
     }
 
     private void addRecommendModel(int count, Integer round, Model model) {
@@ -82,6 +83,7 @@ public class HomeController {
         model.addAttribute("combinations", recommendation.combinations());
         model.addAttribute("rules", recommendService.rules());
         model.addAttribute("round", round);
+        model.addAttribute("maxCount", PublicQueryParams.MAX_COUNT);
     }
 
     private static long maxFrequency(List<NumberFrequencyDto> frequencies) {
