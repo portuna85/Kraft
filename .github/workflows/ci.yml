@@ -72,25 +72,54 @@ jobs:
           path: build/libs/app.jar
           retention-days: 1
 
-      - name: Scan JAR for vulnerabilities (Trivy)
+      - name: Install Trivy CLI
         if: github.event_name != 'pull_request'
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: fs
-          scan-ref: build/libs/app.jar
-          format: table
-          exit-code: '0'
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          for i in 1 2 3; do
+            curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+              | sh -s -- -b "$RUNNER_TEMP/bin" && break
+            sleep $((i * 2))
+          done
+          trivy --version
 
-      - name: Generate SBOM (Syft)
+      - name: Scan JAR for vulnerabilities (Trivy CLI)
         if: github.event_name != 'pull_request'
-        uses: anchore/sbom-action@v0
+        run: |
+          set -euo pipefail
+          trivy fs build/libs/app.jar \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 0
+
+      - name: Install Syft CLI
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          for i in 1 2 3; do
+            curl -fsSL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+              | sh -s -- -b "$RUNNER_TEMP/bin" && break
+            sleep $((i * 2))
+          done
+          syft version
+
+      - name: Generate SBOM (Syft CLI)
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          syft scan build/libs/ -o cyclonedx-json=sbom.json
+
+      - name: Upload SBOM
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
         with:
-          path: build/libs/
-          format: cyclonedx-json
-          output-file: sbom.json
-          artifact-name: sbom-${{ github.run_id }}
+          name: sbom-${{ github.run_id }}
+          path: sbom.json
+          retention-days: 14
 
       - name: Upload test report
         if: always()
