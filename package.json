@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:docker": "docker run --rm -v \"$PWD:/work\" -w /work mcr.microsoft.com/playwright:v1.60.0-noble bash -lc \"npm ci --prefer-offline --no-audit && npm run test:e2e\""
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
