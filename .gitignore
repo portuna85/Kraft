@@ -49,8 +49,14 @@ logs/
 !.env.local.example
 !.env.prod.example
 
-# Local docs workspace
-docs/
+# Documentation policy
+*.md
+!README.md
+!complement.md
+!docs/
+docs/*
+!docs/improvement.md
 
-# Local agent instruction file
+# Local agent instruction files
 AGENTS.md
+CLAUDE.md
