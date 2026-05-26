@@ -12,7 +12,7 @@ CREATE TABLE winning_numbers (
     first_winners INT         NOT NULL,
     total_sales   BIGINT      NOT NULL,
     created_at    TIMESTAMP   NOT NULL,
-    PRIMARY KEY (round),
+    CONSTRAINT pk_winning_numbers PRIMARY KEY (round),
     CONSTRAINT chk_wn_round_positive       CHECK (round > 0),
     CONSTRAINT chk_wn_n1_range             CHECK (n1 BETWEEN 1 AND 45),
     CONSTRAINT chk_wn_n2_range             CHECK (n2 BETWEEN 1 AND 45),
