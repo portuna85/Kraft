@@ -52,6 +52,8 @@ public class WinningNumberAutoCollectScheduler {
     }
 
     private void runCollectAll(String trigger) {
+        // ShedLock prevents concurrent runs across nodes; AtomicBoolean guards within a single node
+        // in case the scheduler fires twice before the lock is released (e.g. clock skew).
         if (!running.compareAndSet(false, true)) {
             log.warn("lotto collect-all skipped trigger={} reason=overlap", trigger);
             recordOverlapSkip(trigger);

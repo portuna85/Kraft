@@ -57,7 +57,7 @@
           headers.forEach(function (h) { h.setAttribute('aria-sort', 'none'); });
           header.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');
           sortTableByColumn(table, index, ascending);
-          liveRegion.textContent = btn.textContent.trim() + ' sorted ' + (ascending ? 'ascending' : 'descending');
+          liveRegion.textContent = btn.textContent.trim() + ' sorted ' + (ascending ? 'ascending' : 'descending') + ' (current page only)';
         });
       });
     });

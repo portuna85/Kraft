@@ -1,15 +1,13 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kraft.lotto.feature.winningnumber.domain.LottoDrawSchedule;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjusters;
 
 import java.util.Optional;
 import java.util.Set;
@@ -42,26 +40,7 @@ public class DhLotteryApiClient implements LottoApiClient {
     );
 
     public DhLotteryApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl) {
-        this(restClient, objectMapper, baseUrl, 0, 0, null, Clock.systemDefaultZone(), ApiCircuitBreaker.disabled());
-    }
-
-    public DhLotteryApiClient(RestClient restClient,
-                              ObjectMapper objectMapper,
-                              String baseUrl,
-                              int maxRetries,
-                              int retryBackoffMs,
-                              MeterRegistry meterRegistry) {
-        this(restClient, objectMapper, baseUrl, maxRetries, retryBackoffMs, 0, meterRegistry, ApiCircuitBreaker.disabled());
-    }
-
-    public DhLotteryApiClient(RestClient restClient,
-                              ObjectMapper objectMapper,
-                              String baseUrl,
-                              int maxRetries,
-                              int retryBackoffMs,
-                              int requestTimeoutMs,
-                              MeterRegistry meterRegistry) {
-        this(restClient, objectMapper, baseUrl, maxRetries, retryBackoffMs, requestTimeoutMs, meterRegistry, ApiCircuitBreaker.disabled());
+        this(restClient, objectMapper, baseUrl, 0, null, Clock.systemDefaultZone(), new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
     }
 
     public DhLotteryApiClient(RestClient restClient,
@@ -74,38 +53,6 @@ public class DhLotteryApiClient implements LottoApiClient {
                               ApiCircuitBreaker circuitBreaker) {
         this(restClient, objectMapper, baseUrl, maxRetries, meterRegistry, Clock.systemDefaultZone(),
                 new ApiRetrySupport(retryBackoffMs, requestTimeoutMs), circuitBreaker);
-    }
-
-    DhLotteryApiClient(RestClient restClient,
-                       ObjectMapper objectMapper,
-                       String baseUrl,
-                       int maxRetries,
-                       int retryBackoffMs,
-                       MeterRegistry meterRegistry,
-                       Clock clock) {
-        this(restClient, objectMapper, baseUrl, maxRetries, retryBackoffMs, meterRegistry, clock, ApiCircuitBreaker.disabled());
-    }
-
-    DhLotteryApiClient(RestClient restClient,
-                       ObjectMapper objectMapper,
-                       String baseUrl,
-                       int maxRetries,
-                       int retryBackoffMs,
-                       MeterRegistry meterRegistry,
-                       Clock clock,
-                       ApiCircuitBreaker circuitBreaker) {
-        this(restClient, objectMapper, baseUrl, maxRetries, meterRegistry, clock,
-                new ApiRetrySupport(retryBackoffMs, 0), circuitBreaker);
-    }
-
-    DhLotteryApiClient(RestClient restClient,
-                       ObjectMapper objectMapper,
-                       String baseUrl,
-                       int maxRetries,
-                       MeterRegistry meterRegistry,
-                       Clock clock,
-                       ApiRetrySupport retrySupport) {
-        this(restClient, objectMapper, baseUrl, maxRetries, meterRegistry, clock, retrySupport, ApiCircuitBreaker.disabled());
     }
 
     DhLotteryApiClient(RestClient restClient,
@@ -199,7 +146,7 @@ public class DhLotteryApiClient implements LottoApiClient {
     }
 
     private Optional<WinningNumber> handleHtmlResponse(int round, ApiRawResponse response) {
-        if (round <= expectedRoundAsOf(LocalDate.now(clock))) {
+        if (round <= LottoDrawSchedule.expectedRound(LocalDate.now(clock))) {
             count("kraft.api.dhlottery.call.failure", "reason", "html_upstream_blocked");
             throw new LottoApiClientException(
                     "HTML response for expected round=" + round + " (server may be blocking)",
@@ -312,16 +259,6 @@ public class DhLotteryApiClient implements LottoApiClient {
     private static boolean isHtmlResponse(ApiRawResponse response) {
         String contentType = response.contentType() == null ? "" : response.contentType().toLowerCase();
         return contentType.contains("text/html");
-    }
-
-    private static final LocalDate FIRST_DRAW_DATE = LocalDate.of(2002, 12, 7);
-
-    private static int expectedRoundAsOf(LocalDate asOf) {
-        LocalDate lastSat = asOf.with(TemporalAdjusters.previousOrSame(DayOfWeek.SATURDAY));
-        if (lastSat.isBefore(FIRST_DRAW_DATE)) {
-            return 0;
-        }
-        return (int) ChronoUnit.WEEKS.between(FIRST_DRAW_DATE, lastSat) + 1;
     }
 
     private static void validateJsonResponse(int round, ApiRawResponse response) {

@@ -227,9 +227,9 @@ class DhLotteryApiClientTest {
                     new ObjectMapper(),
                     "http://localhost",
                     maxRetries,
-                    0,
                     null,
                     Clock.systemDefaultZone(),
+                    new ApiRetrySupport(0, 0),
                     ApiCircuitBreaker.disabled()
             );
             this.scripted = new ArrayList<>(List.of(scripted));

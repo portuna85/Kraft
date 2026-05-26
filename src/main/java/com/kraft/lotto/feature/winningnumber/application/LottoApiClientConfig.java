@@ -10,6 +10,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -30,8 +32,13 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class LottoApiClientConfig {
 
-    private static final Set<String> DHLOTTERY_TOKENS = Set.of("dhlottery", "real");
-    private static final Set<String> SMOK_TOKENS = Set.of("smok");
+    static final Set<String> DHLOTTERY_TOKENS = Set.of("dhlottery", "real");
+    static final Set<String> SMOK_TOKENS = Set.of("smok");
+
+    public static Set<String> prodAllowedClientTokens() {
+        return Stream.concat(DHLOTTERY_TOKENS.stream(), SMOK_TOKENS.stream())
+                .collect(Collectors.toUnmodifiableSet());
+    }
     private final Clock clock;
 
     @Autowired

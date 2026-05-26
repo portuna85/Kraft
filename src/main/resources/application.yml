@@ -74,6 +74,7 @@ kraft:
       content-security-policy: ${KRAFT_SECURITY_CSP:default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'}
       x-frame-options: ${KRAFT_SECURITY_X_FRAME_OPTIONS:DENY}
       referrer-policy: ${KRAFT_SECURITY_REFERRER_POLICY:strict-origin-when-cross-origin}
+      permissions-policy: ${KRAFT_SECURITY_PERMISSIONS_POLICY:geolocation=(), microphone=(), camera=()}
       hsts-enabled: ${KRAFT_SECURITY_HSTS_ENABLED:false}
       hsts-max-age-seconds: ${KRAFT_SECURITY_HSTS_MAX_AGE_SECONDS:31536000}
       hsts-include-sub-domains: ${KRAFT_SECURITY_HSTS_INCLUDE_SUB_DOMAINS:true}

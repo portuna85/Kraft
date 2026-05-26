@@ -62,7 +62,7 @@ public class LottoCollectionCommandService {
             List<Integer> allFailedRounds = new ArrayList<>();
             int latestRound = winningNumberRepository.findMaxRound().orElse(0);
             int nextRound = latestRound + 1;
-            boolean truncated = true;
+            boolean reachedEnd = false;
 
             for (int i = 0; i < maxCollectPerRun; i++) {
                 int targetRound = nextRound;
@@ -73,12 +73,12 @@ public class LottoCollectionCommandService {
                 latestRound = Math.max(latestRound, one.latestRound());
                 allFailedRounds.addAll(one.failedRounds());
                 if (one.notDrawn()) {
-                    truncated = false;
+                    reachedEnd = true;
                     break;
                 }
                 if (one.failed() > 0) {
                     if (stopOnFailure) {
-                        truncated = false;
+                        reachedEnd = true;
                         break;
                     }
                     log.warn("collect-all: continuing after failure at round {} (stopOnFailure=false)", targetRound);
@@ -87,6 +87,7 @@ public class LottoCollectionCommandService {
                 }
                 nextRound = latestRound + 1;
             }
+            boolean truncated = !reachedEnd;
             if (truncated) {
                 log.warn("collect-all: MAX_COLLECT_PER_RUN({}) reached, collection stopped", maxCollectPerRun);
             }

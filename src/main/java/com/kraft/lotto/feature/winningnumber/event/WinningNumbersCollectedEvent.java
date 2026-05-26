@@ -13,10 +13,6 @@ public record WinningNumbersCollectedEvent(int collected,
                                            boolean dataChanged,
                                            Instant occurredAt) {
 
-    public static WinningNumbersCollectedEvent of(int collected, int skipped, int failed) {
-        return of(collected, 0, skipped, failed);
-    }
-
     public static WinningNumbersCollectedEvent of(int collected, int updated, int skipped, int failed) {
         return new WinningNumbersCollectedEvent(collected, updated, skipped, failed, (collected + updated) > 0, Instant.now());
     }

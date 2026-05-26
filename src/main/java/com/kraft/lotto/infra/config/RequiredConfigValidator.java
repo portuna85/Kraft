@@ -1,5 +1,6 @@
 package com.kraft.lotto.infra.config;
 
+import com.kraft.lotto.feature.winningnumber.application.LottoApiClientConfig;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -182,7 +183,7 @@ public class RequiredConfigValidator implements EnvironmentPostProcessor, Ordere
                 "Recommend decade threshold (env: KRAFT_RECOMMEND_RULE_DECADE_THRESHOLD)", 3, 6);
 
         String apiClient = safeGet(env, "kraft.api.client");
-        Set<String> allowedProdClients = Set.of("real", "dhlottery", "smok");
+        Set<String> allowedProdClients = LottoApiClientConfig.prodAllowedClientTokens();
         if (apiClient == null || apiClient.isBlank()
                 || !allowedProdClients.contains(apiClient.trim().toLowerCase())) {
             problems.add(format(

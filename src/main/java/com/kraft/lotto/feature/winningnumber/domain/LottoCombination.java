@@ -29,7 +29,7 @@ public record LottoCombination(List<Integer> numbers) {
                 throw new IllegalArgumentException("로또 번호는 중복될 수 없습니다: " + n);
             }
         }
-        numbers = List.copyOf(numbers.stream().sorted().toList());
+        numbers = numbers.stream().sorted().toList();
     }
 
     public static LottoCombination of(Integer... numbers) {

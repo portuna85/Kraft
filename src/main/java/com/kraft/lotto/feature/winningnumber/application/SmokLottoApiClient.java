@@ -42,16 +42,6 @@ public class SmokLottoApiClient implements LottoApiClient {
     private final ApiCircuitBreaker circuitBreaker;
 
     public SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl,
-                               int maxRetries, int retryBackoffMs, MeterRegistry meterRegistry) {
-        this(restClient, objectMapper, baseUrl, maxRetries, retryBackoffMs, 0, meterRegistry, ApiCircuitBreaker.disabled());
-    }
-
-    public SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl,
-                              int maxRetries, int retryBackoffMs, int requestTimeoutMs, MeterRegistry meterRegistry) {
-        this(restClient, objectMapper, baseUrl, maxRetries, retryBackoffMs, requestTimeoutMs, meterRegistry, ApiCircuitBreaker.disabled());
-    }
-
-    public SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl,
                               int maxRetries, int retryBackoffMs, int requestTimeoutMs, MeterRegistry meterRegistry,
                               ApiCircuitBreaker circuitBreaker) {
         this(restClient, objectMapper, baseUrl, maxRetries, meterRegistry, Clock.systemDefaultZone(),
@@ -59,24 +49,7 @@ public class SmokLottoApiClient implements LottoApiClient {
     }
 
     SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl, Clock clock) {
-        this(restClient, objectMapper, baseUrl, 0, 0, null, clock, ApiCircuitBreaker.disabled());
-    }
-
-    SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl,
-                       int maxRetries, int retryBackoffMs, MeterRegistry meterRegistry, Clock clock) {
-        this(restClient, objectMapper, baseUrl, maxRetries, retryBackoffMs, meterRegistry, clock, ApiCircuitBreaker.disabled());
-    }
-
-    SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl,
-                       int maxRetries, int retryBackoffMs, MeterRegistry meterRegistry, Clock clock,
-                       ApiCircuitBreaker circuitBreaker) {
-        this(restClient, objectMapper, baseUrl, maxRetries, meterRegistry, clock,
-                new ApiRetrySupport(retryBackoffMs, 0), circuitBreaker);
-    }
-
-    SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl,
-                       int maxRetries, MeterRegistry meterRegistry, Clock clock, ApiRetrySupport retrySupport) {
-        this(restClient, objectMapper, baseUrl, maxRetries, meterRegistry, clock, retrySupport, ApiCircuitBreaker.disabled());
+        this(restClient, objectMapper, baseUrl, 0, null, clock, new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
     }
 
     SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl,

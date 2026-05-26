@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test;
 class WinningNumbersCollectedEventTest {
 
     @Test
-    @DisplayName("3-인자 팩토리는 updated=0으로 위임한다")
-    void threeArgFactoryDelegatesWithUpdatedZero() {
-        WinningNumbersCollectedEvent event = WinningNumbersCollectedEvent.of(2, 1, 0);
+    @DisplayName("4-인자 팩토리: collected+updated > 0이면 dataChanged=true")
+    void fourArgFactoryWithCollectedSetsDataChanged() {
+        WinningNumbersCollectedEvent event = WinningNumbersCollectedEvent.of(2, 0, 1, 0);
 
         assertThat(event.collected()).isEqualTo(2);
         assertThat(event.updated()).isZero();

@@ -14,6 +14,10 @@ import java.time.LocalDateTime;
 @Table(name = "lotto_fetch_logs")
 public class LottoFetchLogEntity {
 
+    static final int MESSAGE_MAX_LENGTH = 500;
+    static final int RAW_RESPONSE_MAX_LENGTH = 4000;
+    static final int FAILURE_REASON_MAX_LENGTH = 64;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,16 +32,16 @@ public class LottoFetchLogEntity {
     @Column(name = "status", nullable = false, length = 20)
     private LottoFetchStatus status;
 
-    @Column(name = "message", length = 500)
+    @Column(name = "message", length = MESSAGE_MAX_LENGTH)
     private String message;
 
-    @Column(name = "failure_reason", length = 64)
+    @Column(name = "failure_reason", length = FAILURE_REASON_MAX_LENGTH)
     private String failureReason;
 
     @Column(name = "response_code")
     private Integer responseCode;
 
-    @Column(name = "raw_response", length = 4000)
+    @Column(name = "raw_response", length = RAW_RESPONSE_MAX_LENGTH)
     private String rawResponse;
 
     @Column(name = "fetched_at", nullable = false)
@@ -56,10 +60,10 @@ public class LottoFetchLogEntity {
         this.drwNo = drwNo;
         this.winningRound = winningRound;
         this.status = status;
-        this.message = truncate(message, 500);
+        this.message = truncate(message, MESSAGE_MAX_LENGTH);
         this.failureReason = resolveFailureReason(status, this.message);
         this.responseCode = responseCode;
-        this.rawResponse = truncate(rawResponse, 4000);
+        this.rawResponse = truncate(rawResponse, RAW_RESPONSE_MAX_LENGTH);
         this.fetchedAt = fetchedAt;
     }
 
@@ -91,6 +95,6 @@ public class LottoFetchLogEntity {
         if (sep <= "reason=".length()) {
             return null;
         }
-        return truncate(message.substring("reason=".length(), sep).trim().toLowerCase(), 64);
+        return truncate(message.substring("reason=".length(), sep).trim().toLowerCase(), FAILURE_REASON_MAX_LENGTH);
     }
 }
