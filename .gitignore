@@ -1,4 +1,7 @@
-﻿# Build outputs
+﻿# Node
+node_modules/
+
+# Build outputs
 .gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -52,3 +55,5 @@ logs/
 
 # Local docs workspace (not tracked)
 docs/
+
+CLAUDE.md
