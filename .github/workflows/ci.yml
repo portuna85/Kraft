@@ -209,8 +209,6 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
@@ -230,6 +228,7 @@ jobs:
           path: |
             test-results/
             playwright-report/
+          if-no-files-found: ignore
           retention-days: 14
 
   performance-smoke:
