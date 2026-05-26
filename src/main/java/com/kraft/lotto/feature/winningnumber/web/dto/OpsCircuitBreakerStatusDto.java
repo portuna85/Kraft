@@ -7,10 +7,13 @@ public record OpsCircuitBreakerStatusDto(
         LocalDateTime generatedAt,
         Map<String, CircuitBreakerState> clients
 ) {
+    public OpsCircuitBreakerStatusDto {
+        clients = Map.copyOf(clients);
+    }
+
     public record CircuitBreakerState(
             boolean enabled,
             String state
     ) {
     }
 }
-
