@@ -68,65 +68,19 @@ public class SmokLottoApiClient implements LottoApiClient {
     @Override
     public Optional<WinningNumber> fetch(int round) {
         long started = retrySupport.nowNanos();
-        long deadline = retrySupport.deadlineFrom(started);
-        int attempts = maxRetries + 1;
         count("kraft.api.smok.call.total");
-        int attempt = 0;
         try {
-            while (true) {
-                retrySupport.throwIfExpired(deadline, timeoutMessage(round));
-                attempt++;
-                if (!circuitBreaker.tryAcquirePermission()) {
-                    count("kraft.api.smok.call.failure", "reason", "circuit_open");
-                    throw new CircuitBreakerOpenException("smok circuit breaker open (round=" + round + ")");
-                }
-                try {
-                    URI uri = URI.create(baseUrl + "/" + round + ".json");
-                    RawResult raw = doFetch(uri);
-                    retrySupport.throwIfExpired(deadline, timeoutMessage(round));
-                    if (raw.statusCode() == 404) {
-                        count("kraft.api.smok.call.empty", "reason", "not_drawn");
-                        circuitBreaker.recordSuccess();
-                        return Optional.empty();
-                    }
-                    if (raw.statusCode() >= 400) {
-                        count("kraft.api.smok.call.failure", "reason", "http_error");
-                        throw new LottoApiClientException(
-                                "smok API HTTP error (round=" + round + ", status=" + raw.statusCode() + ")",
-                                raw.statusCode(), raw.body());
-                    }
-                    Optional<WinningNumber> parsed = parse(round, raw.body());
-                    count("kraft.api.smok.call.success");
-                    circuitBreaker.recordSuccess();
-                    return parsed;
-                } catch (RestClientException ex) {
-                    count("kraft.api.smok.call.failure", "reason", "network");
-                    circuitBreaker.recordFailure();
-                    if (attempt >= attempts) {
-                        throw new LottoApiClientException(
-                                "smok API call failed (round=" + round + ", attempts=" + attempts + ")", ex);
-                    }
-                    count("kraft.api.smok.call.retry");
-                    log.warn("smok call failed, retrying: round={}, attempt={}/{}, reason={}",
-                            round, attempt, attempts, ex.getMessage());
-                    sleepBackoff(deadline, round);
-                } catch (LottoApiClientException ex) {
-                    if (ex instanceof ApiRequestTimeoutException) {
-                        count("kraft.api.smok.call.failure", "reason", "timeout");
-                        circuitBreaker.recordFailure();
-                        throw ex;
-                    }
-                    circuitBreaker.recordFailure();
-                    if (attempt >= attempts || !isRetriable(ex)) {
-                        throw new LottoApiClientException(
-                                "smok API call failed (round=" + round + ", attempts=" + attempts + ")", ex);
-                    }
-                    count("kraft.api.smok.call.retry");
-                    log.warn("smok call failed, retrying: round={}, attempt={}/{}, reason={}",
-                            round, attempt, attempts, ex.getMessage());
-                    sleepBackoff(deadline, round);
-                }
-            }
+            return ApiCallExecutor.executeWithRetry(
+                    retrySupport,
+                    maxRetries,
+                    circuitBreaker,
+                    timeoutMessage(round),
+                    "smok circuit breaker open (round=" + round + ")",
+                    deadline -> executeAttempt(round, deadline),
+                    (attempt, attempts, deadline, ex) -> handleRestClientException(round, deadline, attempts, attempt, ex),
+                    (attempt, attempts, deadline, ex) -> handleClientException(round, deadline, attempts, attempt, ex),
+                    () -> count("kraft.api.smok.call.failure", "reason", "circuit_open")
+            );
         } finally {
             if (meterRegistry != null) {
                 meterRegistry.timer("kraft.api.smok.latency")
@@ -143,6 +97,27 @@ public class SmokLottoApiClient implements LottoApiClient {
                     String body = StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8);
                     return new RawResult(status, body);
                 });
+    }
+
+    private Optional<WinningNumber> executeAttempt(int round, long deadline) {
+        URI uri = URI.create(baseUrl + "/" + round + ".json");
+        RawResult raw = doFetch(uri);
+        retrySupport.throwIfExpired(deadline, timeoutMessage(round));
+        if (raw.statusCode() == 404) {
+            count("kraft.api.smok.call.empty", "reason", "not_drawn");
+            circuitBreaker.recordSuccess();
+            return Optional.empty();
+        }
+        if (raw.statusCode() >= 400) {
+            count("kraft.api.smok.call.failure", "reason", "http_error");
+            throw new LottoApiClientException(
+                    "smok API HTTP error (round=" + round + ", status=" + raw.statusCode() + ")",
+                    raw.statusCode(), raw.body());
+        }
+        Optional<WinningNumber> parsed = parse(round, raw.body());
+        count("kraft.api.smok.call.success");
+        circuitBreaker.recordSuccess();
+        return parsed;
     }
 
     Optional<WinningNumber> parse(int round, String body) {
@@ -227,6 +202,44 @@ public class SmokLottoApiClient implements LottoApiClient {
 
     private void sleepBackoff(long deadline, int round) {
         retrySupport.sleepBeforeRetry(deadline, timeoutMessage(round), "retry sleep interrupted");
+    }
+
+    private void handleRestClientException(int round,
+                                           long deadline,
+                                           int attempts,
+                                           int attempt,
+                                           RestClientException ex) {
+        count("kraft.api.smok.call.failure", "reason", "network");
+        circuitBreaker.recordFailure();
+        if (attempt >= attempts) {
+            throw new LottoApiClientException(
+                    "smok API call failed (round=" + round + ", attempts=" + attempts + ")", ex);
+        }
+        count("kraft.api.smok.call.retry");
+        log.warn("smok call failed, retrying: round={}, attempt={}/{}, reason={}",
+                round, attempt, attempts, ex.getMessage());
+        sleepBackoff(deadline, round);
+    }
+
+    private void handleClientException(int round,
+                                       long deadline,
+                                       int attempts,
+                                       int attempt,
+                                       LottoApiClientException ex) {
+        if (ex instanceof ApiRequestTimeoutException) {
+            count("kraft.api.smok.call.failure", "reason", "timeout");
+            circuitBreaker.recordFailure();
+            throw ex;
+        }
+        circuitBreaker.recordFailure();
+        if (attempt >= attempts || !isRetriable(ex)) {
+            throw new LottoApiClientException(
+                    "smok API call failed (round=" + round + ", attempts=" + attempts + ")", ex);
+        }
+        count("kraft.api.smok.call.retry");
+        log.warn("smok call failed, retrying: round={}, attempt={}/{}, reason={}",
+                round, attempt, attempts, ex.getMessage());
+        sleepBackoff(deadline, round);
     }
 
     private void count(String metricName, String... tags) {

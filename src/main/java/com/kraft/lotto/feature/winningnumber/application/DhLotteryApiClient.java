@@ -76,26 +76,19 @@ public class DhLotteryApiClient implements LottoApiClient {
     @Override
     public Optional<WinningNumber> fetch(int round) {
         long started = retrySupport.nowNanos();
-        long deadline = retrySupport.deadlineFrom(started);
-        int attempts = maxRetries + 1;
         count("kraft.api.dhlottery.call.total");
-        int attempt = 0;
         try {
-            while (true) {
-                retrySupport.throwIfExpired(deadline, timeoutMessage(round));
-                attempt++;
-                if (!circuitBreaker.tryAcquirePermission()) {
-                    count("kraft.api.dhlottery.call.failure", "reason", "circuit_open");
-                    throw new CircuitBreakerOpenException("dhlottery circuit breaker open (round=" + round + ")");
-                }
-                try {
-                    return executeAttempt(round, deadline);
-                } catch (RestClientException ex) {
-                    handleRestClientException(round, deadline, attempts, attempt, ex);
-                } catch (LottoApiClientException ex) {
-                    handleClientException(round, deadline, attempts, attempt, ex);
-                }
-            }
+            return ApiCallExecutor.executeWithRetry(
+                    retrySupport,
+                    maxRetries,
+                    circuitBreaker,
+                    timeoutMessage(round),
+                    "dhlottery circuit breaker open (round=" + round + ")",
+                    deadline -> executeAttempt(round, deadline),
+                    (attempt, attempts, deadline, ex) -> handleRestClientException(round, deadline, attempts, attempt, ex),
+                    (attempt, attempts, deadline, ex) -> handleClientException(round, deadline, attempts, attempt, ex),
+                    () -> count("kraft.api.dhlottery.call.failure", "reason", "circuit_open")
+            );
         } finally {
             if (meterRegistry != null) {
                 meterRegistry.timer("kraft.api.dhlottery.latency")
