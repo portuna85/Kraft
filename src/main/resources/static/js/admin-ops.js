@@ -66,10 +66,10 @@
   function bindMessageToggle() {
     document.querySelectorAll('.ops-msg-toggle').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var cell = btn.closest('td');
-        if (!cell) return;
-        var shortEl = cell.querySelector('.ops-msg-short');
-        var fullEl = cell.querySelector('.ops-msg-full');
+        var fullId = btn.getAttribute('aria-controls');
+        var fullEl = fullId ? document.getElementById(fullId) : null;
+        var container = btn.closest('td, .ops-mobile-value');
+        var shortEl = container ? container.querySelector('.ops-msg-short') : null;
         if (!shortEl || !fullEl) return;
 
         var expanded = btn.getAttribute('aria-expanded') === 'true';

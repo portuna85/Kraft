@@ -6,6 +6,7 @@ import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
 import com.kraft.lotto.feature.recommend.web.dto.RuleDto;
 import com.kraft.lotto.support.BusinessException;
 import com.kraft.lotto.support.ErrorCode;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +21,7 @@ public class RecommendService {
     static final int MAX_COUNT = 10;
 
     private final List<ExclusionRule> rules;
+    private final List<RuleDto> ruleDtos;
     private final LottoRecommender recommender;
     private final MeterRegistry meterRegistry;
 
@@ -32,6 +34,9 @@ public class RecommendService {
 
     RecommendService(List<ExclusionRule> rules, LottoRecommender recommender, MeterRegistry meterRegistry) {
         this.rules = List.copyOf(rules);
+        this.ruleDtos = this.rules.stream()
+                .map(r -> new RuleDto(r.name(), r.reason()))
+                .toList();
         this.recommender = recommender;
         this.meterRegistry = meterRegistry;
     }
@@ -53,10 +58,10 @@ public class RecommendService {
         }
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "ruleDtos is built once as an unmodifiable stream result and RuleDto is immutable")
     public List<RuleDto> rules() {
-        return rules.stream()
-                .map(r -> new RuleDto(r.name(), r.reason()))
-                .toList();
+        return ruleDtos;
     }
 
     private static int normalizeCount(int count) {

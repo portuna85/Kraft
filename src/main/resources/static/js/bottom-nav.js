@@ -28,8 +28,7 @@
     if (!navItems.length) return;
 
     var sectionIds = ['latest', 'recommend', 'round-search', 'frequency', 'rounds'];
-    var sectionElements = [];
-    var observedIds = {};
+    var observedSections = Object.create(null);
     var ticking = false;
 
     function viewportCenterY() {
@@ -42,6 +41,11 @@
     }
 
     function updateActiveItem() {
+      var sectionElements = sectionIds.map(function (id) {
+        return observedSections[id];
+      }).filter(function (section) {
+        return section && section.isConnected;
+      });
       if (!sectionElements.length) {
         return;
       }
@@ -72,14 +76,23 @@
       threshold: [0, 0.25, 0.5, 0.75, 1]
     });
 
-    function observeSection(el) {
-      if (!el || observedIds[el.id]) return;
-      sectionElements.push(el);
-      observer.observe(el);
-      observedIds[el.id] = true;
+    function observeSections() {
+      sectionIds.forEach(function (id) {
+        var current = document.getElementById(id);
+        var previous = observedSections[id];
+        if (previous === current) return;
+        if (previous) {
+          observer.unobserve(previous);
+          delete observedSections[id];
+        }
+        if (current) {
+          observedSections[id] = current;
+          observer.observe(current);
+        }
+      });
     }
 
-    sectionIds.forEach(function (id) { observeSection(document.getElementById(id)); });
+    observeSections();
 
     Array.prototype.forEach.call(navItems, function (item) {
       item.addEventListener('click', function () {
@@ -92,6 +105,7 @@
       if (ticking) return;
       ticking = true;
       window.requestAnimationFrame(function () {
+        observeSections();
         updateActiveItem();
         ticking = false;
       });

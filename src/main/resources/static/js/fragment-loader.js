@@ -78,6 +78,22 @@
     return target.id || target.getAttribute('hx-get') || null;
   }
 
+  function resolveHtmxTarget(event) {
+    var detail = event && event.detail;
+    if (detail && detail.target && detail.target.nodeType === 1) {
+      return detail.target;
+    }
+    var source = detail && detail.elt && detail.elt.nodeType === 1 ? detail.elt : event.target;
+    if (!source || source.nodeType !== 1) {
+      return null;
+    }
+    var selector = source.getAttribute('hx-target');
+    if (selector) {
+      return document.querySelector(selector);
+    }
+    return source;
+  }
+
   function clearInFlight(target) {
     var key = targetKey(target);
     if (!key) return;
@@ -133,7 +149,7 @@
 
   if (window.htmx) {
     document.body.addEventListener('htmx:beforeRequest', function (event) {
-      var target = event.target;
+      var target = resolveHtmxTarget(event);
       var key = targetKey(target);
       if (!key) return;
       if (inFlightByTarget[key]) {
@@ -145,7 +161,8 @@
     });
 
     document.body.addEventListener('htmx:afterSwap', function (event) {
-      var target = event.target;
+      var target = resolveHtmxTarget(event);
+      if (!target) return;
       setUiState(target, 'success', stateMessage(target.id));
       resetRetryState(target);
       if (shouldFocusOnSwap(event)) {
@@ -156,7 +173,8 @@
     });
 
     document.body.addEventListener('htmx:responseError', function (event) {
-      var target = event.detail && event.detail.elt ? event.detail.elt : event.target;
+      var target = resolveHtmxTarget(event);
+      if (!target) return;
       var statusCode = event && event.detail && event.detail.xhr ? event.detail.xhr.status : null;
       var backoffMs = calcBackoffMs(target);
       setUiState(target, 'error', errorMessage(statusCode, backoffMs));
