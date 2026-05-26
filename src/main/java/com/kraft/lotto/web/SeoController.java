@@ -39,6 +39,8 @@ public class SeoController {
                 lineSeparator,
                 "User-agent: *",
                 "Allow: /",
+                "Disallow: /admin",
+                "Disallow: /ops",
                 "",
                 "Sitemap: " + publicBaseUrl() + "/sitemap.xml"
         ) + lineSeparator;
