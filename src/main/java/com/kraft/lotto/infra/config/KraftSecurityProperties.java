@@ -145,7 +145,6 @@ public class KraftSecurityProperties {
 
     public static class Actuator {
         private boolean enabled = true;
-        private boolean trustForwardedFor = false;
         private List<String> allowedIps = new ArrayList<>(List.of(
                 "127.0.0.1",
                 "::1",
@@ -162,14 +161,6 @@ public class KraftSecurityProperties {
             this.enabled = enabled;
         }
 
-        public boolean isTrustForwardedFor() {
-            return trustForwardedFor;
-        }
-
-        public void setTrustForwardedFor(boolean trustForwardedFor) {
-            this.trustForwardedFor = trustForwardedFor;
-        }
-
         public List<String> getAllowedIps() {
             return List.copyOf(allowedIps);
         }
@@ -181,7 +172,6 @@ public class KraftSecurityProperties {
 
     public static class RateLimit {
         private boolean enabled = true;
-        private boolean trustForwardedFor = false;
 
         @Min(1)
         private int maxRequests = 120;
@@ -198,14 +188,6 @@ public class KraftSecurityProperties {
 
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
-        }
-
-        public boolean isTrustForwardedFor() {
-            return trustForwardedFor;
-        }
-
-        public void setTrustForwardedFor(boolean trustForwardedFor) {
-            this.trustForwardedFor = trustForwardedFor;
         }
 
         public int getMaxRequests() {
@@ -235,7 +217,6 @@ public class KraftSecurityProperties {
 
     public static class Ops {
         private boolean enabled = true;
-        private boolean trustForwardedFor = false;
         private String requiredToken = "";
         private List<String> allowedIps = new ArrayList<>(List.of(
                 "127.0.0.1",
@@ -251,14 +232,6 @@ public class KraftSecurityProperties {
 
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
-        }
-
-        public boolean isTrustForwardedFor() {
-            return trustForwardedFor;
-        }
-
-        public void setTrustForwardedFor(boolean trustForwardedFor) {
-            this.trustForwardedFor = trustForwardedFor;
         }
 
         public String getRequiredToken() {

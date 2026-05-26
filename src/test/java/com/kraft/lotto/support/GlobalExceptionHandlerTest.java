@@ -20,7 +20,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("BusinessException은 에러 뷰로 렌더링한다")
     void handlesBusinessExceptionAsErrorView() {
-        var ex = new BusinessException(ErrorCode.LOTTO_INVALID_COUNT, "count 오류");
+        var ex = new BusinessException(ErrorCode.REQUEST_VALIDATION_ERROR, "count 오류");
         ModelAndView mav = handler.handleBusiness(ex);
         assertThat(mav.getViewName()).isEqualTo("error");
         assertThat(mav.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -85,10 +85,10 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("5xx BusinessException은 내부 메시지 대신 defaultMessage를 반환한다")
     void hidesInternalMessageFor5xxBusinessException() {
-        var ex = new BusinessException(ErrorCode.COLLECT_FAILED, "내부 상세 메시지");
+        var ex = new BusinessException(ErrorCode.EXTERNAL_API_FAILURE, "내부 상세 메시지");
         ModelAndView mav = handler.handleBusiness(ex);
-        assertThat(mav.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-        assertThat(mav.getModel().get("errorMessage")).isEqualTo(ErrorCode.COLLECT_FAILED.getDefaultMessage());
+        assertThat(mav.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY);
+        assertThat(mav.getModel().get("errorMessage")).isEqualTo(ErrorCode.EXTERNAL_API_FAILURE.getDefaultMessage());
         assertThat((String) mav.getModel().get("errorMessage")).doesNotContain("내부 상세 메시지");
     }
 }

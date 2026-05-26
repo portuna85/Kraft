@@ -79,17 +79,14 @@ kraft:
       hsts-include-sub-domains: ${KRAFT_SECURITY_HSTS_INCLUDE_SUB_DOMAINS:true}
     actuator:
       enabled: ${KRAFT_SECURITY_ACTUATOR_ENABLED:true}
-      trust-forwarded-for: ${KRAFT_SECURITY_ACTUATOR_TRUST_FORWARDED_FOR:false}
       allowed-ips: ${KRAFT_SECURITY_ACTUATOR_ALLOWED_IPS:127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
     rate-limit:
       enabled: ${KRAFT_SECURITY_RATE_LIMIT_ENABLED:true}
-      trust-forwarded-for: ${KRAFT_SECURITY_RATE_LIMIT_TRUST_FORWARDED_FOR:false}
       max-requests: ${KRAFT_SECURITY_RATE_LIMIT_MAX_REQUESTS:120}
       window-seconds: ${KRAFT_SECURITY_RATE_LIMIT_WINDOW_SECONDS:60}
       max-keys: ${KRAFT_SECURITY_RATE_LIMIT_MAX_KEYS:10000}
     ops:
       enabled: ${KRAFT_SECURITY_OPS_ENABLED:true}
-      trust-forwarded-for: ${KRAFT_SECURITY_OPS_TRUST_FORWARDED_FOR:false}
       required-token: ${KRAFT_SECURITY_OPS_REQUIRED_TOKEN:}
       allowed-ips: ${KRAFT_SECURITY_OPS_ALLOWED_IPS:127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
     trusted-proxies: ${KRAFT_SECURITY_TRUSTED_PROXIES:}

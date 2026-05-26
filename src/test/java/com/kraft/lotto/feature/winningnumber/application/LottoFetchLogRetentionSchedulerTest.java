@@ -43,7 +43,6 @@ class LottoFetchLogRetentionSchedulerTest {
 
         verify(fetchLogRepository).deleteAllByIdInBatch(List.of(1L, 2L));
         verify(fetchLogRepository).deleteAllByIdInBatch(List.of(3L));
-        verify(fetchLogRepository, never()).deleteByFetchedAtBefore(any());
     }
 
     @Test
@@ -71,7 +70,6 @@ class LottoFetchLogRetentionSchedulerTest {
         scheduler.purgeExpiredLogs();
 
         verify(fetchLogRepository, never()).deleteAllByIdInBatch(any());
-        verify(fetchLogRepository, never()).deleteByFetchedAtBefore(any());
     }
 
     private static KraftCollectProperties collectProperties(int days, int deleteBatchSize) {

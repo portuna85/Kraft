@@ -4,19 +4,14 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
 
-    LOTTO_INVALID_COUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 추천 개수입니다.", false),
     LOTTO_INVALID_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 로또 번호입니다.", false),
     LOTTO_INVALID_TARGET_ROUND(HttpStatus.BAD_REQUEST, "targetRound는 1 이상이어야 합니다.", false),
-    LOTTO_INVALID_PAGE_REQUEST(HttpStatus.BAD_REQUEST, "페이지 파라미터가 유효하지 않습니다.", false),
     REQUEST_VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "요청 값이 유효하지 않습니다.", false),
-    UNAUTHORIZED_ADMIN_API(HttpStatus.UNAUTHORIZED, "관리자 API 토큰이 유효하지 않습니다.", false),
     LOTTO_GENERATION_TIMEOUT(HttpStatus.SERVICE_UNAVAILABLE, "추천 조합 생성 시도를 초과했습니다.", true),
     WINNING_NUMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "요청하신 회차의 당첨번호를 찾을 수 없습니다.", false),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청하신 리소스를 찾을 수 없습니다.", false),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "허용되지 않은 HTTP 메서드입니다.", false),
     EXTERNAL_API_FAILURE(HttpStatus.BAD_GATEWAY, "외부 API 호출에 실패했습니다.", true),
-    COLLECT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "당첨번호 수집에 실패했습니다.", true),
-    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.", true),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "내부 서버 오류가 발생했습니다.", true);
 
     private final HttpStatus httpStatus;

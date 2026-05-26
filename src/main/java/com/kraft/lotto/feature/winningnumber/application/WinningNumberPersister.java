@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -43,21 +44,6 @@ public class WinningNumberPersister {
         this.repository = repository;
         this.clock = clock;
         this.meterRegistry = meterRegistry;
-    }
-
-    @Transactional
-    public boolean saveIfAbsent(int round, WinningNumber winningNumber) {
-        long started = System.nanoTime();
-        if (repository.existsByRound(round)) {
-            return false;
-        }
-        try {
-            repository.save(WinningNumberMapper.toEntity(winningNumber, LocalDateTime.now(clock)));
-        } catch (DataIntegrityViolationException ex) {
-            return false;
-        }
-        recordDbSaveLatency(started, "save_if_absent");
-        return true;
     }
 
     @Transactional

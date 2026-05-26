@@ -54,6 +54,9 @@ public class WinningNumberEntity {
     @Column(name = "first_accum_amount", nullable = false)
     private Long firstAccumAmount;
 
+    // Raw API response stored for auditability; capped to avoid storing arbitrarily large payloads.
+    private static final int RAW_JSON_MAX_LENGTH = 4000;
+
     @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(name = "raw_json")
     private String rawJson;
@@ -113,7 +116,7 @@ public class WinningNumberEntity {
         this.firstWinners = firstWinners;
         this.totalSales = totalSales;
         this.firstAccumAmount = firstAccumAmount;
-        this.rawJson = truncate(rawJson, 4000);
+        this.rawJson = truncate(rawJson, RAW_JSON_MAX_LENGTH);
         this.fetchedAt = fetchedAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;

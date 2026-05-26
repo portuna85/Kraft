@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import static com.kraft.lotto.support.fixtures.LottoTestFixtures.winningNumber;
 
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
@@ -34,40 +35,6 @@ class WinningNumberPersisterTest {
     private final Clock clock = Clock.fixed(Instant.parse("2026-05-14T00:00:00Z"), ZoneOffset.UTC);
     private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
     private final WinningNumberPersister persister = new WinningNumberPersister(repository, clock, meterRegistry);
-
-    @Test
-    @DisplayName("saveIfAbsent는 회차가 없으면 저장하고 true를 반환한다")
-    void saveIfAbsentStoresWhenMissing() {
-        WinningNumber winningNumber = sample(1200);
-        when(repository.existsByRound(1200)).thenReturn(false);
-
-        boolean result = persister.saveIfAbsent(1200, winningNumber);
-
-        assertThat(result).isTrue();
-        verify(repository).save(any(WinningNumberEntity.class));
-    }
-
-    @Test
-    @DisplayName("saveIfAbsent는 이미 회차가 있으면 저장하지 않고 false를 반환한다")
-    void saveIfAbsentSkipsWhenExists() {
-        when(repository.existsByRound(1200)).thenReturn(true);
-
-        boolean result = persister.saveIfAbsent(1200, sample(1200));
-
-        assertThat(result).isFalse();
-        verify(repository, never()).save(any(WinningNumberEntity.class));
-    }
-
-    @Test
-    @DisplayName("saveIfAbsent는 저장 충돌 시 false를 반환한다")
-    void saveIfAbsentReturnsFalseOnConflict() {
-        when(repository.existsByRound(1200)).thenReturn(false);
-        doThrow(new DataIntegrityViolationException("dup")).when(repository).save(any(WinningNumberEntity.class));
-
-        boolean result = persister.saveIfAbsent(1200, sample(1200));
-
-        assertThat(result).isFalse();
-    }
 
     @Test
     @DisplayName("upsert는 동일 데이터면 UNCHANGED를 반환한다")

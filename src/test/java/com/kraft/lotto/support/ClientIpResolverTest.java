@@ -2,6 +2,7 @@ package com.kraft.lotto.support;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -10,61 +11,49 @@ import org.springframework.mock.web.MockHttpServletRequest;
 class ClientIpResolverTest {
 
     @Test
-    @DisplayName("trustForwardedFor=true 이면 X-Forwarded-For 첫 번째 유효 IP를 사용한다")
-    void resolvesFromForwardedForWhenTrusted() {
+    @DisplayName("remoteAddr가 신뢰 프록시 CIDR에 속하면 X-Forwarded-For 첫 번째 유효 IP를 사용한다")
+    void resolvesFromForwardedForWhenRemoteIsTrustedProxy() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
-        request.setRemoteAddr("203.0.113.10");
+        request.setRemoteAddr("10.0.0.1");
         request.addHeader("X-Forwarded-For", " 198.51.100.1 , 198.51.100.2 ");
 
-        String resolved = ClientIpResolver.resolve(request, true);
+        String resolved = ClientIpResolver.resolve(request, List.of("10.0.0.0/8"));
 
         assertThat(resolved).isEqualTo("198.51.100.1");
     }
 
     @Test
-    @DisplayName("trustForwardedFor=false 이면 remoteAddr를 사용한다")
-    void resolvesFromRemoteAddrWhenNotTrusted() {
+    @DisplayName("remoteAddr가 신뢰 프록시 CIDR에 속하지 않으면 remoteAddr를 사용한다")
+    void resolvesFromRemoteAddrWhenNotTrustedProxy() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
         request.setRemoteAddr("203.0.113.10");
         request.addHeader("X-Forwarded-For", "198.51.100.1");
 
-        String resolved = ClientIpResolver.resolve(request, false);
+        String resolved = ClientIpResolver.resolve(request, List.of("10.0.0.0/8"));
 
         assertThat(resolved).isEqualTo("203.0.113.10");
     }
 
     @Test
-    @DisplayName("trustForwardedFor=true 이지만 X-Forwarded-For 헤더가 없으면 remoteAddr를 사용한다")
+    @DisplayName("신뢰 프록시 목록이 비어 있으면 remoteAddr를 사용한다")
+    void resolvesFromRemoteAddrWhenTrustedProxyListIsEmpty() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        request.setRemoteAddr("203.0.113.10");
+        request.addHeader("X-Forwarded-For", "198.51.100.1");
+
+        String resolved = ClientIpResolver.resolve(request, List.of());
+
+        assertThat(resolved).isEqualTo("203.0.113.10");
+    }
+
+    @Test
+    @DisplayName("신뢰 프록시 경유이지만 X-Forwarded-For 헤더가 없으면 remoteAddr를 사용한다")
     void fallsBackToRemoteAddrWhenForwardedForHeaderAbsent() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
-        request.setRemoteAddr("203.0.113.10");
+        request.setRemoteAddr("10.0.0.1");
 
-        String resolved = ClientIpResolver.resolve(request, true);
+        String resolved = ClientIpResolver.resolve(request, List.of("10.0.0.0/8"));
 
-        assertThat(resolved).isEqualTo("203.0.113.10");
-    }
-
-    @Test
-    @DisplayName("trustForwardedFor=true 이지만 X-Forwarded-For 헤더가 공백이면 remoteAddr를 사용한다")
-    void fallsBackToRemoteAddrWhenForwardedForHeaderIsBlank() {
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
-        request.setRemoteAddr("203.0.113.10");
-        request.addHeader("X-Forwarded-For", "   ");
-
-        String resolved = ClientIpResolver.resolve(request, true);
-
-        assertThat(resolved).isEqualTo("203.0.113.10");
-    }
-
-    @Test
-    @DisplayName("X-Forwarded-For 값이 모두 공백 항목이면 remoteAddr를 사용한다")
-    void fallsBackToRemoteAddrWhenAllCandidatesAreBlank() {
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
-        request.setRemoteAddr("203.0.113.10");
-        request.addHeader("X-Forwarded-For", " , , ");
-
-        String resolved = ClientIpResolver.resolve(request, true);
-
-        assertThat(resolved).isEqualTo("203.0.113.10");
+        assertThat(resolved).isEqualTo("10.0.0.1");
     }
 }
