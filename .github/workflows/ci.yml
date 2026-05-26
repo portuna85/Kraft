@@ -3,6 +3,9 @@ name: CI
 on:
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
   push:
     branches: [ main ]
   workflow_dispatch:
@@ -70,6 +73,7 @@ jobs:
           retention-days: 1
 
       - name: Scan JAR for vulnerabilities (Trivy)
+        if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
@@ -80,6 +84,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Generate SBOM (Syft)
+        if: github.event_name != 'pull_request'
         uses: anchore/sbom-action@v0
         with:
           path: build/libs/
@@ -141,14 +146,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
       - name: Install E2E dependencies
         run: |
-          npm ci
-          npx playwright install chromium
+          npm ci --prefer-offline --no-audit
 
       - name: Run Playwright smoke tests
         run: npm run test:e2e
