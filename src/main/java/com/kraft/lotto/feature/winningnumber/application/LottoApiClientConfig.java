@@ -6,10 +6,12 @@ import com.kraft.lotto.infra.config.KraftApiProperties;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.net.http.HttpClient;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Set;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -30,10 +32,16 @@ public class LottoApiClientConfig {
 
     private static final Set<String> DHLOTTERY_TOKENS = Set.of("dhlottery", "real");
     private static final Set<String> SMOK_TOKENS = Set.of("smok");
+    private final Clock clock;
+
+    @Autowired
+    public LottoApiClientConfig(Clock clock) {
+        this.clock = clock;
+    }
 
     /** mock latest round를 계산할 수 없는 경우 날짜 기반으로 산출한 예상 회차를 사용한다. */
-    static int mockDefaultLatestRound() {
-        return LottoDrawSchedule.expectedRound(LocalDate.now());
+    int mockDefaultLatestRound() {
+        return LottoDrawSchedule.expectedRound(LocalDate.now(clock));
     }
 
     @Bean
@@ -109,7 +117,7 @@ public class LottoApiClientConfig {
         );
     }
 
-    private static int resolveMockLatestRound(KraftApiProperties properties, WinningNumberRepository repository) {
+    private int resolveMockLatestRound(KraftApiProperties properties, WinningNumberRepository repository) {
         if (properties.mockLatestRound() > 0) {
             return properties.mockLatestRound();
         }

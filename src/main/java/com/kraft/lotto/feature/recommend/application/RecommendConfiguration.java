@@ -7,6 +7,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -39,7 +40,7 @@ public class RecommendConfiguration {
     }
 
     @Bean
-    LottoRecommender lottoRecommender(List<ExclusionRule> rules,
+    LottoRecommender lottoRecommender(@Qualifier("exclusionRules") List<ExclusionRule> rules,
                                       LottoNumberGenerator numberGenerator,
                                       KraftRecommendProperties properties,
                                       ObjectProvider<MeterRegistry> meterRegistryProvider) {

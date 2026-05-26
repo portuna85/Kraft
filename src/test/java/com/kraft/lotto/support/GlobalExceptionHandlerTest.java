@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -42,6 +43,16 @@ class GlobalExceptionHandlerTest {
         ModelAndView mav = handler.handleNoResource(ex);
         assertThat(mav.getViewName()).isEqualTo("error");
         assertThat(mav.getStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("허용되지 않은 HTTP 메서드는 405 에러 뷰로 처리한다")
+    void handlesMethodNotAllowedAs405() {
+        var ex = new HttpRequestMethodNotSupportedException("POST");
+        ModelAndView mav = handler.handleMethodNotAllowed(ex);
+        assertThat(mav.getViewName()).isEqualTo("error");
+        assertThat(mav.getStatus()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+        assertThat(mav.getModel().get("errorMessage")).isEqualTo(ErrorCode.METHOD_NOT_ALLOWED.getDefaultMessage());
     }
 
     @Test

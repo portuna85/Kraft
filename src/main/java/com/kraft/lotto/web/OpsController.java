@@ -16,6 +16,7 @@ import com.kraft.lotto.infra.config.KraftCollectProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -45,6 +46,7 @@ public class OpsController {
     private final int logRetentionDeleteBatchSize;
     private final String logRetentionCron;
     private final String collectZone;
+    private final Clock clock;
 
     @Autowired
     public OpsController(LottoFetchLogQueryService fetchLogQueryService,
@@ -52,7 +54,8 @@ public class OpsController {
                          RecommendMetricsQueryService recommendMetricsQueryService,
                          ApiCircuitBreakerRegistry circuitBreakerRegistry,
                          LockingTaskExecutor lockingTaskExecutor,
-                         KraftCollectProperties collectProperties) {
+                         KraftCollectProperties collectProperties,
+                         Clock clock) {
         this.fetchLogQueryService = fetchLogQueryService;
         this.collectionCommandService = collectionCommandService;
         this.recommendMetricsQueryService = recommendMetricsQueryService;
@@ -63,6 +66,7 @@ public class OpsController {
         this.logRetentionDeleteBatchSize = collectProperties.logRetention().deleteBatchSize();
         this.logRetentionCron = collectProperties.logRetention().cron();
         this.collectZone = collectProperties.auto().zone();
+        this.clock = clock;
     }
 
     private record NormalizedQuery(int limit, String reason, Integer from, Integer to) {
@@ -169,14 +173,14 @@ public class OpsController {
                         (a, b) -> a,
                         java.util.TreeMap::new
                 ));
-        return new OpsCircuitBreakerStatusDto(LocalDateTime.now(), clients);
+        return new OpsCircuitBreakerStatusDto(LocalDateTime.now(clock), clients);
     }
 
     private CollectResponse withLock(String lockName, java.util.function.Supplier<CollectResponse> action) {
         try {
             var result = lockingTaskExecutor.executeWithLock(
                     action::get,
-                    new LockConfiguration(Instant.now(), lockName, MANUAL_LOCK_MAX, Duration.ZERO));
+                    new LockConfiguration(Instant.now(clock), lockName, MANUAL_LOCK_MAX, Duration.ZERO));
             return result.wasExecuted() ? result.getResult() : CollectResponse.ofOverlapSkipped(0);
         } catch (RuntimeException e) {
             throw e;

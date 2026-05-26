@@ -33,8 +33,10 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
     PublicRateLimitFilter(KraftSecurityProperties securityProperties) {
         this.securityProperties = securityProperties;
         long windowSeconds = Math.max(1L, securityProperties.getRateLimit().getWindowSeconds());
+        long maxKeys = Math.max(1L, securityProperties.getRateLimit().getMaxKeys());
         this.counters = Caffeine.newBuilder()
                 .expireAfterAccess(Duration.ofSeconds(windowSeconds * 2L))
+                .maximumSize(maxKeys)
                 .build();
     }
 
@@ -103,5 +105,13 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
 
         record Result(boolean allowed, long retryAfterSeconds, int remainingRequests, long resetAfterSeconds) {
         }
+    }
+
+    long estimatedCounterSize() {
+        return counters.estimatedSize();
+    }
+
+    void cleanUpCounters() {
+        counters.cleanUp();
     }
 }

@@ -13,6 +13,8 @@ import com.kraft.lotto.infra.config.KraftRecommendProperties;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("추천 규칙 설정")
 class RecommendRuleConfigTest {
@@ -53,5 +55,30 @@ class RecommendRuleConfigTest {
                         pastWinningRule
                 );
     }
-}
 
+    @Test
+    @DisplayName("스프링 주입 시 LottoRecommender의 규칙 순서는 PastWinningRule이 마지막이다")
+    void keepsPastWinningRuleAsLastInSpringInjection() {
+        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+            context.registerBean(KraftRecommendProperties.class, () -> PROPERTIES);
+            context.register(RecommendRuleConfig.class, RecommendConfiguration.class);
+            context.refresh();
+
+            LottoRecommender recommender = context.getBean(LottoRecommender.class);
+            @SuppressWarnings("unchecked")
+            List<ExclusionRule> injectedRules =
+                    (List<ExclusionRule>) ReflectionTestUtils.getField(recommender, "rules");
+
+            assertThat(injectedRules)
+                    .isNotNull()
+                    .extracting(rule -> rule.getClass().getName())
+                    .containsExactly(
+                            BirthdayBiasRule.class.getName(),
+                            ArithmeticSequenceRule.class.getName(),
+                            LongRunRule.class.getName(),
+                            SingleDecadeRule.class.getName(),
+                            PastWinningRule.class.getName()
+                    );
+        }
+    }
+}

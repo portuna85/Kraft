@@ -86,6 +86,7 @@ kraft:
       trust-forwarded-for: ${KRAFT_SECURITY_RATE_LIMIT_TRUST_FORWARDED_FOR:false}
       max-requests: ${KRAFT_SECURITY_RATE_LIMIT_MAX_REQUESTS:120}
       window-seconds: ${KRAFT_SECURITY_RATE_LIMIT_WINDOW_SECONDS:60}
+      max-keys: ${KRAFT_SECURITY_RATE_LIMIT_MAX_KEYS:10000}
     ops:
       enabled: ${KRAFT_SECURITY_OPS_ENABLED:true}
       trust-forwarded-for: ${KRAFT_SECURITY_OPS_TRUST_FORWARDED_FOR:false}

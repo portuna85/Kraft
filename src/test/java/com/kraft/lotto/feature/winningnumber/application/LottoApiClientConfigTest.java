@@ -7,6 +7,9 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import com.kraft.lotto.infra.config.KraftApiProperties;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +22,8 @@ class LottoApiClientConfigTest {
     @Test
     @DisplayName("mock-latest-round이 0이면 DB max round + 1을 mock latest round로 사용한다")
     void usesDbMaxRoundPlusOneWhenMockLatestRoundIsZero() {
-        LottoApiClientConfig config = new LottoApiClientConfig();
+        LottoApiClientConfig config = new LottoApiClientConfig(
+                Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul")));
         KraftApiProperties properties = new KraftApiProperties(
                 "mock",
                 "http://localhost",

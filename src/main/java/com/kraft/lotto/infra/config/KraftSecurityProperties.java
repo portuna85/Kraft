@@ -189,6 +189,9 @@ public class KraftSecurityProperties {
         @Min(1)
         private int windowSeconds = 60;
 
+        @Min(1)
+        private long maxKeys = 10_000L;
+
         public boolean isEnabled() {
             return enabled;
         }
@@ -219,6 +222,14 @@ public class KraftSecurityProperties {
 
         public void setWindowSeconds(int windowSeconds) {
             this.windowSeconds = windowSeconds;
+        }
+
+        public long getMaxKeys() {
+            return maxKeys;
+        }
+
+        public void setMaxKeys(long maxKeys) {
+            this.maxKeys = maxKeys;
         }
     }
 

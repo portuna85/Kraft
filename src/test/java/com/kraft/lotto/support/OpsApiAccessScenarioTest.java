@@ -15,8 +15,10 @@ import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import com.kraft.lotto.infra.config.KraftCollectProperties;
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
 import com.kraft.lotto.web.OpsController;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +58,8 @@ class OpsApiAccessScenarioTest {
                 recommendMetricsQueryService,
                 circuitBreakerRegistry,
                 lockingTaskExecutor,
-                collectProperties()
+                collectProperties(),
+                Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul"))
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .addFilters(new OpsAccessFilter(securityProperties()))

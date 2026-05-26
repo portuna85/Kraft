@@ -33,6 +33,7 @@ public class DhLotteryApiClient implements LottoApiClient {
     private final ApiRetrySupport retrySupport;
     private final MeterRegistry meterRegistry;
     private final ApiCircuitBreaker circuitBreaker;
+    private final Clock clock;
 
     private static final Set<String> ALLOWED_FAILURE_REASONS = Set.of(
             "http_error", "blank_body", "non_json", "html_upstream_blocked", "network", "timeout",
@@ -122,6 +123,7 @@ public class DhLotteryApiClient implements LottoApiClient {
         this.retrySupport = retrySupport;
         this.meterRegistry = meterRegistry;
         this.circuitBreaker = circuitBreaker == null ? ApiCircuitBreaker.disabled() : circuitBreaker;
+        this.clock = clock;
     }
 
     @Override
@@ -197,7 +199,7 @@ public class DhLotteryApiClient implements LottoApiClient {
     }
 
     private Optional<WinningNumber> handleHtmlResponse(int round, ApiRawResponse response) {
-        if (round <= expectedRoundAsOf(LocalDate.now())) {
+        if (round <= expectedRoundAsOf(LocalDate.now(clock))) {
             count("kraft.api.dhlottery.call.failure", "reason", "html_upstream_blocked");
             throw new LottoApiClientException(
                     "HTML response for expected round=" + round + " (server may be blocking)",

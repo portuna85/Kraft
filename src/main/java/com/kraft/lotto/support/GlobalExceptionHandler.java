@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -43,6 +44,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ModelAndView handleNoResource(NoResourceFoundException ex) {
         return errorView(HttpStatus.NOT_FOUND, "페이지를 찾을 수 없습니다", "요청하신 주소를 확인해 주세요.");
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ModelAndView handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+        return errorView(ErrorCode.METHOD_NOT_ALLOWED.getHttpStatus(), "잘못된 요청", ErrorCode.METHOD_NOT_ALLOWED.getDefaultMessage());
     }
 
     @ExceptionHandler(Exception.class)

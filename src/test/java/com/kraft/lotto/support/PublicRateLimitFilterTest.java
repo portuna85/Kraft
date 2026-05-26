@@ -52,6 +52,24 @@ class PublicRateLimitFilterTest {
         assertThat(second.getHeader("X-RateLimit-Limit")).isNull();
     }
 
+    @Test
+    @DisplayName("카운터 캐시 키 수는 설정된 상한을 넘지 않는다")
+    void boundsCounterCacheSize() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getRateLimit().setEnabled(true);
+        properties.getRateLimit().setMaxRequests(1);
+        properties.getRateLimit().setWindowSeconds(60);
+        properties.getRateLimit().setMaxKeys(32);
+        PublicRateLimitFilter filter = new PublicRateLimitFilter(properties);
+
+        for (int i = 0; i < 2_000; i++) {
+            execute(filter, "/fragments/recommend", "198.51.100." + i);
+        }
+
+        filter.cleanUpCounters();
+        assertThat(filter.estimatedCounterSize()).isLessThanOrEqualTo(32);
+    }
+
     private static MockHttpServletResponse execute(PublicRateLimitFilter filter,
                                                    String path,
                                                    String remoteAddr) throws Exception {

@@ -2,6 +2,7 @@
   'use strict';
 
   var bottomNavInited = false;
+  var refreshBottomNavActive = function () {};
 
   function setBottomNavActive(navItems, activeId) {
     Array.prototype.forEach.call(navItems, function (item) {
@@ -16,6 +17,10 @@
   }
 
   function initBottomNav() {
+    if (bottomNavInited) {
+      refreshBottomNavActive();
+      return;
+    }
     var nav = document.querySelector('.kraft-bottom-nav');
     if (!nav || !window.IntersectionObserver) return;
 
@@ -76,28 +81,38 @@
 
     sectionIds.forEach(function (id) { observeSection(document.getElementById(id)); });
 
-    if (!bottomNavInited) {
-      Array.prototype.forEach.call(navItems, function (item) {
-        item.addEventListener('click', function () {
-          setBottomNavActive(navItems, item.getAttribute('href').replace('#', ''));
-        });
+    Array.prototype.forEach.call(navItems, function (item) {
+      item.addEventListener('click', function () {
+        setBottomNavActive(navItems, item.getAttribute('href').replace('#', ''));
       });
-      bottomNavInited = true;
-    }
+    });
+    bottomNavInited = true;
 
-    window.addEventListener('scroll', function () {
+    refreshBottomNavActive = function () {
       if (ticking) return;
       ticking = true;
       window.requestAnimationFrame(function () {
         updateActiveItem();
         ticking = false;
       });
+    };
+
+    window.addEventListener('scroll', function () {
+      refreshBottomNavActive();
     }, { passive: true });
 
-    window.addEventListener('resize', updateActiveItem);
-    updateActiveItem();
+    window.addEventListener('resize', function () {
+      refreshBottomNavActive();
+    });
+    refreshBottomNavActive();
   }
 
   initBottomNav();
-  document.addEventListener('kraft:fragmentLoaded', initBottomNav);
+  document.addEventListener('kraft:fragmentLoaded', function () {
+    if (!bottomNavInited) {
+      initBottomNav();
+      return;
+    }
+    refreshBottomNavActive();
+  });
 }());

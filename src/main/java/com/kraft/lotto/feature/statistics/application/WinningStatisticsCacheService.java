@@ -9,12 +9,15 @@ import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
 import com.kraft.lotto.support.BusinessException;
 import com.kraft.lotto.support.ErrorCode;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -30,19 +33,35 @@ public class WinningStatisticsCacheService {
     private final WinningNumberRepository repository;
     private final WinningNumberFrequencySummaryRepository summaryRepository;
     private final MeterRegistry meterRegistry;
+    private final Clock clock;
 
     @Autowired
     public WinningStatisticsCacheService(WinningNumberRepository repository,
-                                         WinningNumberFrequencySummaryRepository summaryRepository) {
-        this(repository, summaryRepository, null);
+                                         WinningNumberFrequencySummaryRepository summaryRepository,
+                                         ObjectProvider<MeterRegistry> meterRegistryProvider,
+                                         Clock clock) {
+        this(repository, summaryRepository, meterRegistryProvider.getIfAvailable(), clock);
+    }
+
+    WinningStatisticsCacheService(WinningNumberRepository repository,
+                                  WinningNumberFrequencySummaryRepository summaryRepository) {
+        this(repository, summaryRepository, (MeterRegistry) null, Clock.systemDefaultZone());
     }
 
     WinningStatisticsCacheService(WinningNumberRepository repository,
                                    WinningNumberFrequencySummaryRepository summaryRepository,
                                    MeterRegistry meterRegistry) {
+        this(repository, summaryRepository, meterRegistry, Clock.systemDefaultZone());
+    }
+
+    WinningStatisticsCacheService(WinningNumberRepository repository,
+                                   WinningNumberFrequencySummaryRepository summaryRepository,
+                                   MeterRegistry meterRegistry,
+                                   Clock clock) {
         this.repository = repository;
         this.summaryRepository = summaryRepository;
         this.meterRegistry = meterRegistry;
+        this.clock = clock;
     }
 
     @Cacheable(cacheNames = "winningNumberFrequency", sync = true)
@@ -158,8 +177,9 @@ public class WinningStatisticsCacheService {
     }
 
     private void saveSummary(List<NumberFrequencyDto> frequencies, int latestRound) {
+        LocalDateTime now = LocalDateTime.now(clock);
         List<WinningNumberFrequencySummaryEntity> rows = frequencies.stream()
-                .map(dto -> new WinningNumberFrequencySummaryEntity(dto.number(), dto.count(), latestRound))
+                .map(dto -> new WinningNumberFrequencySummaryEntity(dto.number(), dto.count(), latestRound, now))
                 .toList();
         summaryRepository.saveAll(rows); // summaryRepository != null: caller already guards
         if (meterRegistry != null) {
