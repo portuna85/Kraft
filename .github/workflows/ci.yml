@@ -94,7 +94,7 @@ jobs:
             sleep $((i * 2))
           done
           [ "$installed" -eq 1 ] || { echo "::error::trivy install failed for ${TRIVY_VERSION}"; exit 1; }
-          trivy --version
+          "$RUNNER_TEMP/bin/trivy" --version
 
       - name: Scan JAR for vulnerabilities (Trivy CLI)
         if: github.event_name != 'pull_request'
@@ -126,7 +126,7 @@ jobs:
             sleep $((i * 2))
           done
           [ "$installed" -eq 1 ] || { echo "::error::syft install failed for ${SYFT_VERSION}"; exit 1; }
-          syft version
+          "$RUNNER_TEMP/bin/syft" version
 
       - name: Generate SBOM (Syft CLI)
         if: github.event_name != 'pull_request'
