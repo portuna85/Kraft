@@ -21,7 +21,7 @@ env:
   JAVA_VERSION: '25'
   JAVA_DISTRIBUTION: 'temurin'
   GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true'
-  TRIVY_VERSION: 'v0.64.1'
+  TRIVY_VERSION: 'v0.70.0'
   SYFT_VERSION: 'v1.24.0'
 
 jobs:
@@ -81,14 +81,19 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/bin"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          installed=0
           for i in 1 2 3; do
-            version="${TRIVY_VERSION#v}"
-            pkg="trivy_${version}_Linux-64bit.tar.gz"
-            url="https://github.com/aquasecurity/trivy/releases/download/${TRIVY_VERSION}/${pkg}"
-            curl -fsSLo "$RUNNER_TEMP/$pkg" "$url"
-            tar -xzf "$RUNNER_TEMP/$pkg" -C "$RUNNER_TEMP/bin" trivy && break
+            url="$(curl -fsSL "https://api.github.com/repos/aquasecurity/trivy/releases/tags/${TRIVY_VERSION}" \
+              | jq -r '.assets[] | .browser_download_url | select(test("/trivy_.*_Linux-64bit\\.tar\\.gz$"))' \
+              | head -n1)" || url=""
+            pkg="$RUNNER_TEMP/trivy.tar.gz"
+            if [ -n "$url" ] && curl -fsSLo "$pkg" "$url" && tar -xzf "$pkg" -C "$RUNNER_TEMP/bin" trivy; then
+              installed=1
+              break
+            fi
             sleep $((i * 2))
           done
+          [ "$installed" -eq 1 ] || { echo "::error::trivy install failed for ${TRIVY_VERSION}"; exit 1; }
           trivy --version
 
       - name: Scan JAR for vulnerabilities (Trivy CLI)
@@ -108,14 +113,19 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/bin"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          installed=0
           for i in 1 2 3; do
-            version="${SYFT_VERSION#v}"
-            pkg="syft_${version}_linux_amd64.tar.gz"
-            url="https://github.com/anchore/syft/releases/download/${SYFT_VERSION}/${pkg}"
-            curl -fsSLo "$RUNNER_TEMP/$pkg" "$url"
-            tar -xzf "$RUNNER_TEMP/$pkg" -C "$RUNNER_TEMP/bin" syft && break
+            url="$(curl -fsSL "https://api.github.com/repos/anchore/syft/releases/tags/${SYFT_VERSION}" \
+              | jq -r '.assets[] | .browser_download_url | select(test("/syft_.*_linux_amd64\\.tar\\.gz$"))' \
+              | head -n1)" || url=""
+            pkg="$RUNNER_TEMP/syft.tar.gz"
+            if [ -n "$url" ] && curl -fsSLo "$pkg" "$url" && tar -xzf "$pkg" -C "$RUNNER_TEMP/bin" syft; then
+              installed=1
+              break
+            fi
             sleep $((i * 2))
           done
+          [ "$installed" -eq 1 ] || { echo "::error::syft install failed for ${SYFT_VERSION}"; exit 1; }
           syft version
 
       - name: Generate SBOM (Syft CLI)
