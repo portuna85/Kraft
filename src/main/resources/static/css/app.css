@@ -582,7 +582,16 @@ body {
 }
 
 .kraft-bottom-nav-item.active {
-  color: var(--kraft-nav-brand);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.btn-outline-secondary.disabled,
+.btn-outline-secondary:disabled {
+  color: #475569;
+  border-color: #64748b;
+  background-color: #f1f5f9;
+  opacity: 1;
 }
 
 .kraft-bottom-nav-item svg {
