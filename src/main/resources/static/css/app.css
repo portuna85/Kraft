@@ -734,6 +734,17 @@ body {
   color: var(--kraft-muted);
 }
 
+/* htmx indicator styles are static to keep strict CSP (no inline style injection). */
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}
+
 /* === Frequency List === */
 .kraft-freq-list {
   display: grid;

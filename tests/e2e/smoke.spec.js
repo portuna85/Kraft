@@ -41,6 +41,13 @@ test.describe('home smoke', () => {
     expect(violations, `CSP violations: ${violations.join('\n')}`).toHaveLength(0);
   });
 
+  test('does not inject htmx indicator inline style into head', async ({ page }) => {
+    await page.goto('/');
+    const headStyles = await page.locator('head style').allTextContents();
+    const hasHtmxInlineIndicator = headStyles.some((text) => text.includes('htmx-indicator'));
+    expect(hasHtmxInlineIndicator).toBeFalsy();
+  });
+
   test('valid round query renders round search block', async ({ page }) => {
     await page.goto('/?round=1');
     await expect(page.locator('#round-search')).toBeVisible();
