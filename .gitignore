@@ -53,9 +53,7 @@ logs/
 *.md
 !README.md
 !complement.md
-!docs/
-docs/*
-!docs/improvement.md
+docs/
 
 # Local agent instruction files
 AGENTS.md
