@@ -26,6 +26,7 @@ public class LottoCollectionCommandService {
     private final BackfillDelaySupport backfillDelay;
     private final int maxCollectPerRun;
     private final int maxHistoryCollect;
+    private final boolean stopOnFailure;
 
     LottoCollectionCommandService(WinningNumberRepository winningNumberRepository,
                                   LottoSingleDrawCollector singleDrawCollector,
@@ -33,7 +34,8 @@ public class LottoCollectionCommandService {
                                   ApplicationEventPublisher eventPublisher,
                                   long backfillDelayMs,
                                   int maxCollectPerRun,
-                                  int maxHistoryCollect) {
+                                  int maxHistoryCollect,
+                                  boolean stopOnFailure) {
         this.winningNumberRepository = winningNumberRepository;
         this.singleDrawCollector = singleDrawCollector;
         this.rangeCollector = rangeCollector;
@@ -42,6 +44,7 @@ public class LottoCollectionCommandService {
         this.backfillDelay = new BackfillDelaySupport(backfillDelayMs);
         this.maxCollectPerRun = maxCollectPerRun;
         this.maxHistoryCollect = maxHistoryCollect;
+        this.stopOnFailure = stopOnFailure;
     }
 
     public CollectResponse collectNextIfNeeded() {
@@ -62,17 +65,27 @@ public class LottoCollectionCommandService {
             boolean truncated = true;
 
             for (int i = 0; i < maxCollectPerRun; i++) {
-                CollectResponse one = singleDrawCollector.collectOne(nextRound, false);
+                int targetRound = nextRound;
+                CollectResponse one = singleDrawCollector.collectOne(targetRound, false);
                 totalCollected += one.collected();
                 totalUpdated += one.updated();
                 totalSkipped += one.skipped();
                 latestRound = Math.max(latestRound, one.latestRound());
-                nextRound = latestRound + 1;
                 allFailedRounds.addAll(one.failedRounds());
-                if (one.notDrawn() || one.failed() > 0) {
+                if (one.notDrawn()) {
                     truncated = false;
                     break;
                 }
+                if (one.failed() > 0) {
+                    if (stopOnFailure) {
+                        truncated = false;
+                        break;
+                    }
+                    log.warn("collect-all: continuing after failure at round {} (stopOnFailure=false)", targetRound);
+                    nextRound = targetRound + 1;
+                    continue;
+                }
+                nextRound = latestRound + 1;
             }
             if (truncated) {
                 log.warn("collect-all: MAX_COLLECT_PER_RUN({}) reached, collection stopped", maxCollectPerRun);

@@ -43,6 +43,7 @@ class OpsPageControllerTest {
             return new KraftCollectProperties(
                     52,
                     2000,
+                    true,
                     new KraftCollectProperties.Auto(true, "Asia/Seoul"),
                     new KraftCollectProperties.LogRetention(true, 90, 1000, "0 30 3 * * *")
             );

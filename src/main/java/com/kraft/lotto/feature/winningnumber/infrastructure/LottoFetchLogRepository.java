@@ -40,13 +40,17 @@ public interface LottoFetchLogRepository extends JpaRepository<LottoFetchLogEnti
             where l.status = com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchStatus.FAILED
               and (:drwNoFrom is null or l.drwNo >= :drwNoFrom)
               and (:drwNoTo is null or l.drwNo <= :drwNoTo)
-              and (:reasonPattern is null or lower(l.message) like :reasonPattern)
+              and (
+                    :reason is null
+                    or lower(l.failureReason) = :reason
+                    or (l.failureReason is null and lower(l.message) like concat('reason=', :reason, ';%'))
+              )
             order by l.fetchedAt desc
             """)
     List<LottoFetchLogEntity> findRecentFailedFilteredByReason(
             @Param("drwNoFrom") Integer drwNoFrom,
             @Param("drwNoTo") Integer drwNoTo,
-            @Param("reasonPattern") String reasonPattern,
+            @Param("reason") String reason,
             Pageable pageable
     );
 
@@ -86,11 +90,11 @@ public interface LottoFetchLogRepository extends JpaRepository<LottoFetchLogEnti
     default List<LottoFetchLogEntity> findRecentFailedFilteredByReason(int limit,
                                                                         Integer drwNoFrom,
                                                                         Integer drwNoTo,
-                                                                        String reasonPattern) {
+                                                                        String reason) {
         return findRecentFailedFilteredByReason(
                 drwNoFrom,
                 drwNoTo,
-                reasonPattern,
+                reason,
                 PageRequest.of(0, Math.max(1, limit))
         );
     }

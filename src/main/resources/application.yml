@@ -97,6 +97,7 @@ kraft:
   collect:
     max-per-run: ${KRAFT_COLLECT_MAX_PER_RUN:52}
     max-history-collect: ${KRAFT_COLLECT_MAX_HISTORY_COLLECT:2000}
+    stop-on-failure: ${KRAFT_COLLECT_STOP_ON_FAILURE:true}
     auto:
       enabled: ${KRAFT_COLLECT_AUTO_ENABLED:true}
       zone: ${KRAFT_COLLECT_AUTO_ZONE:Asia/Seoul}

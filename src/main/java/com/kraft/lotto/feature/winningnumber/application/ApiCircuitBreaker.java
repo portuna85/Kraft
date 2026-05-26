@@ -15,6 +15,7 @@ final class ApiCircuitBreaker {
     private int consecutiveFailures = 0;
     private int halfOpenCalls = 0;
     private long openedAtNanos = 0L;
+    private StateTransitionListener stateTransitionListener;
 
     ApiCircuitBreaker(boolean enabled,
                       int failureThreshold,
@@ -49,7 +50,7 @@ final class ApiCircuitBreaker {
             if (elapsed < openDurationNanos) {
                 return false;
             }
-            state = State.HALF_OPEN;
+            transitionTo(State.HALF_OPEN);
             halfOpenCalls = 0;
         }
 
@@ -68,7 +69,7 @@ final class ApiCircuitBreaker {
         if (!enabled) {
             return;
         }
-        state = State.CLOSED;
+        transitionTo(State.CLOSED);
         consecutiveFailures = 0;
         halfOpenCalls = 0;
     }
@@ -97,11 +98,42 @@ final class ApiCircuitBreaker {
         return state.name().toLowerCase();
     }
 
+    synchronized int stateCode() {
+        return switch (state) {
+            case CLOSED -> 0;
+            case HALF_OPEN -> 1;
+            case OPEN -> 2;
+        };
+    }
+
+    synchronized boolean enabled() {
+        return enabled;
+    }
+
+    synchronized void setStateTransitionListener(StateTransitionListener listener) {
+        this.stateTransitionListener = listener;
+    }
+
     private void open() {
-        state = State.OPEN;
+        transitionTo(State.OPEN);
         openedAtNanos = nanoTime.getAsLong();
         consecutiveFailures = 0;
         halfOpenCalls = 0;
+    }
+
+    private void transitionTo(State next) {
+        if (state == next) {
+            return;
+        }
+        State prev = state;
+        state = next;
+        if (stateTransitionListener != null) {
+            stateTransitionListener.onTransition(prev.name().toLowerCase(), next.name().toLowerCase());
+        }
+    }
+
+    interface StateTransitionListener {
+        void onTransition(String previousState, String nextState);
     }
 
     private enum State {

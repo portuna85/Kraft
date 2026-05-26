@@ -55,7 +55,8 @@ class LottoCollectionConfiguration {
                 eventPublisher,
                 properties.backfillDelayMs(),
                 collectProperties.maxPerRun(),
-                collectProperties.maxHistoryCollect()
+                collectProperties.maxHistoryCollect(),
+                collectProperties.stopOnFailure()
         );
     }
 }

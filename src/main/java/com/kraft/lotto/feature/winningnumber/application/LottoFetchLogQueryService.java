@@ -128,7 +128,7 @@ public class LottoFetchLogQueryService {
         int safeSize = Math.max(1, Math.min(pageSize, 200));
         int fetchSize = safeSize + 1;
         PageRequest pageable = PageRequest.of(safePage, fetchSize);
-        String reasonPattern = toReasonPrefixLikePattern(reason);
+        String reasonPattern = toReasonFilter(reason);
         List<LottoFetchLogEntity> fetched = fetchLogRepository.findRecentFailedFilteredByReason(
                 drwNoFrom,
                 drwNoTo,
@@ -150,15 +150,15 @@ public class LottoFetchLogQueryService {
                 limit,
                 drwNoFrom,
                 drwNoTo,
-                toReasonPrefixLikePattern(reason)
+                toReasonFilter(reason)
         );
     }
 
-    private String toReasonPrefixLikePattern(String reason) {
+    private String toReasonFilter(String reason) {
         if (reason == null || reason.isBlank()) {
             return null;
         }
-        return "reason=" + reason.trim().toLowerCase(Locale.ROOT) + ";%";
+        return reason.trim().toLowerCase(Locale.ROOT);
     }
 
     private static FetchFailureLogDto toFetchFailureLogDto(LottoFetchLogEntity log) {

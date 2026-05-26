@@ -23,34 +23,53 @@
     if (!navItems.length) return;
 
     var sectionIds = ['latest', 'recommend', 'round-search', 'frequency', 'rounds'];
-    var visibleSections = {};
+    var sectionElements = [];
     var observedIds = {};
+    var ticking = false;
+
+    function viewportCenterY() {
+      var header = document.querySelector('.navbar.sticky-top');
+      var headerHeight = header ? header.offsetHeight : 0;
+      var bottomHeight = nav.offsetHeight || 0;
+      var top = headerHeight;
+      var bottom = window.innerHeight - bottomHeight;
+      return top + Math.max((bottom - top) / 2, 0);
+    }
 
     function updateActiveItem() {
-      for (var i = 0; i < sectionIds.length; i++) {
-        if (visibleSections[sectionIds[i]]) {
-          setBottomNavActive(navItems, sectionIds[i]);
-          return;
+      if (!sectionElements.length) {
+        return;
+      }
+      var centerY = viewportCenterY();
+      var closest = null;
+      var closestDistance = Number.POSITIVE_INFINITY;
+      for (var i = 0; i < sectionElements.length; i++) {
+        var section = sectionElements[i];
+        var rect = section.getBoundingClientRect();
+        if (rect.height <= 0) {
+          continue;
         }
+        var sectionCenter = rect.top + rect.height / 2;
+        var distance = Math.abs(sectionCenter - centerY);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closest = section;
+        }
+      }
+      if (closest && closest.id) {
+        setBottomNavActive(navItems, closest.id);
       }
     }
 
-    var header = document.querySelector('.navbar.sticky-top');
-    var headerHeight = header ? header.offsetHeight : 0;
-    var bottomNavHeight = nav.offsetHeight || 0;
-
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        visibleSections[entry.target.id] = entry.isIntersecting;
-      });
+    var observer = new IntersectionObserver(function () {
       updateActiveItem();
     }, {
-      threshold: 0.25,
-      rootMargin: -(headerHeight + 12) + 'px 0px ' + -(bottomNavHeight + 12) + 'px 0px'
+      threshold: [0, 0.25, 0.5, 0.75, 1]
     });
 
     function observeSection(el) {
       if (!el || observedIds[el.id]) return;
+      sectionElements.push(el);
       observer.observe(el);
       observedIds[el.id] = true;
     }
@@ -65,6 +84,18 @@
       });
       bottomNavInited = true;
     }
+
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(function () {
+        updateActiveItem();
+        ticking = false;
+      });
+    }, { passive: true });
+
+    window.addEventListener('resize', updateActiveItem);
+    updateActiveItem();
   }
 
   initBottomNav();

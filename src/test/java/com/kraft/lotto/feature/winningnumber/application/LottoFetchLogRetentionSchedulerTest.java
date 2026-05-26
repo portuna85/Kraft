@@ -78,6 +78,7 @@ class LottoFetchLogRetentionSchedulerTest {
         return new KraftCollectProperties(
                 52,
                 2000,
+                true,
                 new KraftCollectProperties.Auto(true, "Asia/Seoul"),
                 new KraftCollectProperties.LogRetention(true, days, deleteBatchSize, "0 30 3 * * *")
         );

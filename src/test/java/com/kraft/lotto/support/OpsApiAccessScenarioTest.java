@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.kraft.lotto.feature.recommend.application.RecommendMetricsQueryService;
+import com.kraft.lotto.feature.winningnumber.application.ApiCircuitBreakerRegistry;
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
@@ -16,6 +17,7 @@ import com.kraft.lotto.infra.config.KraftSecurityProperties;
 import com.kraft.lotto.web.OpsController;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Map;
 import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +43,8 @@ class OpsApiAccessScenarioTest {
 
     @Mock
     LockingTaskExecutor lockingTaskExecutor;
+    @Mock
+    ApiCircuitBreakerRegistry circuitBreakerRegistry;
 
     MockMvc mockMvc;
 
@@ -50,6 +54,7 @@ class OpsApiAccessScenarioTest {
                 fetchLogQueryService,
                 collectionCommandService,
                 recommendMetricsQueryService,
+                circuitBreakerRegistry,
                 lockingTaskExecutor,
                 collectProperties()
         );
@@ -144,6 +149,24 @@ class OpsApiAccessScenarioTest {
         verify(fetchLogQueryService).retentionStatus(true, 90, 1000, "0 30 3 * * *", "Asia/Seoul");
     }
 
+    @Test
+    @DisplayName("GET /ops/circuit-breakers: 정상 토큰/허용 IP면 200")
+    void circuitBreakersWithValidTokenAndAllowedIpReturnsOk() throws Exception {
+        when(circuitBreakerRegistry.snapshots()).thenReturn(Map.of(
+                "smok", new ApiCircuitBreakerRegistry.Snapshot(true, "closed")
+        ));
+
+        mockMvc.perform(get("/ops/circuit-breakers")
+                        .header("X-Ops-Token", "expected-token")
+                        .with(request -> {
+                            request.setRemoteAddr("127.0.0.1");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.clients.smok.enabled").value(true))
+                .andExpect(jsonPath("$.clients.smok.state").value("closed"));
+    }
+
     private static KraftSecurityProperties securityProperties() {
         KraftSecurityProperties props = new KraftSecurityProperties();
         props.getOps().setEnabled(true);
@@ -156,6 +179,7 @@ class OpsApiAccessScenarioTest {
         return new KraftCollectProperties(
                 52,
                 2000,
+                true,
                 new KraftCollectProperties.Auto(true, "Asia/Seoul"),
                 new KraftCollectProperties.LogRetention(true, 90, 1000, "0 30 3 * * *")
         );

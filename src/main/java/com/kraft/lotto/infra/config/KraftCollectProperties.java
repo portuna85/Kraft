@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 public record KraftCollectProperties(
         @Min(1) @Max(10_000) int maxPerRun,
         @Min(1) @Max(100_000) int maxHistoryCollect,
+        boolean stopOnFailure,
         @Valid Auto auto,
         @Valid LogRetention logRetention
 ) {

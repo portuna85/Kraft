@@ -2,6 +2,8 @@
   'use strict';
 
   var inFlightByTarget = Object.create(null);
+  var retryAttemptByTarget = Object.create(null);
+  var retryBlockedUntilByTarget = Object.create(null);
 
   function announce(message) {
     var region = document.getElementById('fragment-live-region');
@@ -17,6 +19,39 @@
       el.hidden = el.getAttribute('data-state') !== state;
     });
     if (message) announce(message);
+  }
+
+  function retryKey(target) {
+    return targetKey(target) || '';
+  }
+
+  function resetRetryState(target) {
+    var key = retryKey(target);
+    if (!key) return;
+    retryAttemptByTarget[key] = 0;
+    retryBlockedUntilByTarget[key] = 0;
+  }
+
+  function calcBackoffMs(target) {
+    var key = retryKey(target);
+    if (!key) return 0;
+    var attempt = (retryAttemptByTarget[key] || 0) + 1;
+    retryAttemptByTarget[key] = attempt;
+    var delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+    retryBlockedUntilByTarget[key] = Date.now() + delay;
+    return delay;
+  }
+
+  function isRetryBlocked(target) {
+    var key = retryKey(target);
+    if (!key) return false;
+    return Date.now() < (retryBlockedUntilByTarget[key] || 0);
+  }
+
+  function errorMessage(statusCode, backoffMs) {
+    var statusText = statusCode ? ('HTTP ' + statusCode) : '네트워크 오류';
+    var retryText = backoffMs > 0 ? (' 약 ' + Math.ceil(backoffMs / 1000) + '초 후 재시도해 주세요.') : '';
+    return '콘텐츠를 불러오지 못했습니다. (' + statusText + ').' + retryText;
   }
 
   function stateMessage(id) {
@@ -61,20 +96,26 @@
     setUiState(target, 'loading');
     inFlightByTarget[key] = fetch(url, { headers: { 'HX-Request': 'true' } })
       .then(function (response) {
-        if (!response.ok) throw new Error('fragment load failed');
+        if (!response.ok) {
+          var httpError = new Error('fragment load failed');
+          httpError.statusCode = response.status;
+          throw httpError;
+        }
         return response.text();
       })
       .then(function (fragmentHtml) {
         target.outerHTML = fragmentHtml;
         var updated = document.getElementById(target.id);
+        resetRetryState(updated || target);
         if (focusAfterLoad) {
           focusLoadedSection(updated);
         }
         announce('콘텐츠를 불러왔습니다.');
         notifyLoaded();
       })
-      .catch(function () {
-        setUiState(target, 'error', '콘텐츠를 불러오지 못했습니다.');
+      .catch(function (error) {
+        var backoffMs = calcBackoffMs(target);
+        setUiState(target, 'error', errorMessage(error && error.statusCode, backoffMs));
       })
       .finally(function () {
         clearInFlight(target);
@@ -106,6 +147,7 @@
     document.body.addEventListener('htmx:afterSwap', function (event) {
       var target = event.target;
       setUiState(target, 'success', stateMessage(target.id));
+      resetRetryState(target);
       if (shouldFocusOnSwap(event)) {
         focusLoadedSection(target);
       }
@@ -115,7 +157,9 @@
 
     document.body.addEventListener('htmx:responseError', function (event) {
       var target = event.detail && event.detail.elt ? event.detail.elt : event.target;
-      setUiState(target, 'error', '콘텐츠를 불러오지 못했습니다.');
+      var statusCode = event && event.detail && event.detail.xhr ? event.detail.xhr.status : null;
+      var backoffMs = calcBackoffMs(target);
+      setUiState(target, 'error', errorMessage(statusCode, backoffMs));
       clearInFlight(target);
     });
   } else {
@@ -129,6 +173,7 @@
     if (!retryBtn) return;
     var target = document.getElementById(retryBtn.getAttribute('data-target'));
     if (!target) return;
+    if (isRetryBlocked(target)) return;
     if (window.htmx) {
       var key = targetKey(target);
       if (key && inFlightByTarget[key]) return;

@@ -124,7 +124,8 @@ class LottoCollectionCommandServiceTest {
                 eventPublisher,
                 0,
                 1,
-                2000
+                2000,
+                true
         );
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(10));
         when(singleDrawCollector.collectOne(11, false)).thenReturn(CollectResponse.ofInserted(1, 11));
@@ -133,6 +134,33 @@ class LottoCollectionCommandServiceTest {
 
         assertThat(response.collected()).isEqualTo(1);
         verify(singleDrawCollector, times(1)).collectOne(11, false);
+    }
+
+    @Test
+    @DisplayName("stopOnFailure=false면 실패 회차를 기록하고 다음 회차 수집을 계속한다")
+    void collectAllUntilLatestContinuesWhenStopOnFailureDisabled() {
+        LottoCollectionCommandService service = new LottoCollectionCommandService(
+                winningNumberRepository,
+                singleDrawCollector,
+                rangeCollector,
+                eventPublisher,
+                0,
+                3,
+                2000,
+                false
+        );
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(10));
+        when(singleDrawCollector.collectOne(11, false)).thenReturn(CollectResponse.ofFailed(List.of(11), 10, false));
+        when(singleDrawCollector.collectOne(12, false)).thenReturn(CollectResponse.ofInserted(1, 12));
+        when(singleDrawCollector.collectOne(13, false)).thenReturn(CollectResponse.ofNotDrawn(12));
+
+        CollectResponse response = service.collectAllUntilLatest();
+
+        assertThat(response.failedRounds()).contains(11);
+        assertThat(response.collected()).isEqualTo(1);
+        verify(singleDrawCollector).collectOne(11, false);
+        verify(singleDrawCollector).collectOne(12, false);
+        verify(singleDrawCollector).collectOne(13, false);
     }
 
     @Test
@@ -145,7 +173,8 @@ class LottoCollectionCommandServiceTest {
                 eventPublisher,
                 0,
                 1,
-                2000
+                2000,
+                true
         );
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(10));
         CountDownLatch started = new CountDownLatch(1);
@@ -187,7 +216,8 @@ class LottoCollectionCommandServiceTest {
                 eventPublisher,
                 0,
                 1,
-                2000
+                2000,
+                true
         );
         when(winningNumberRepository.findMaxRound())
                 .thenReturn(Optional.of(10))
@@ -228,7 +258,8 @@ class LottoCollectionCommandServiceTest {
                 eventPublisher,
                 0,
                 52,
-                2000
+                2000,
+                true
         );
     }
 

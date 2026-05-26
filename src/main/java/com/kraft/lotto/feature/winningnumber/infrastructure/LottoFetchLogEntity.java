@@ -31,6 +31,9 @@ public class LottoFetchLogEntity {
     @Column(name = "message", length = 500)
     private String message;
 
+    @Column(name = "failure_reason", length = 64)
+    private String failureReason;
+
     @Column(name = "response_code")
     private Integer responseCode;
 
@@ -54,6 +57,7 @@ public class LottoFetchLogEntity {
         this.winningRound = winningRound;
         this.status = status;
         this.message = truncate(message, 500);
+        this.failureReason = resolveFailureReason(status, this.message);
         this.responseCode = responseCode;
         this.rawResponse = truncate(rawResponse, 4000);
         this.fetchedAt = fetchedAt;
@@ -71,7 +75,22 @@ public class LottoFetchLogEntity {
     public Integer getWinningRound() { return winningRound; }
     public LottoFetchStatus getStatus() { return status; }
     public String getMessage() { return message; }
+    public String getFailureReason() { return failureReason; }
     public Integer getResponseCode() { return responseCode; }
     public String getRawResponse() { return rawResponse; }
     public LocalDateTime getFetchedAt() { return fetchedAt; }
+
+    private static String resolveFailureReason(LottoFetchStatus status, String message) {
+        if (status != LottoFetchStatus.FAILED || message == null || message.isBlank()) {
+            return null;
+        }
+        if (!message.startsWith("reason=")) {
+            return null;
+        }
+        int sep = message.indexOf(';');
+        if (sep <= "reason=".length()) {
+            return null;
+        }
+        return truncate(message.substring("reason=".length(), sep).trim().toLowerCase(), 64);
+    }
 }

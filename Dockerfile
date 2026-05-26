@@ -7,7 +7,7 @@ COPY gradle ./gradle
 RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
 
 RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew --no-daemon dependencies -q || true
+    ./gradlew --no-daemon dependencies -q
 
 COPY src ./src
 RUN --mount=type=cache,target=/root/.gradle \

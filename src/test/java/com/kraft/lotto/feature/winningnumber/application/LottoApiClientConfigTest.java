@@ -46,7 +46,8 @@ class LottoApiClientConfigTest {
                 RestClient.create(),
                 fixedProvider(new ObjectMapper()),
                 emptyProvider(),
-                fixedProvider(repository)
+                fixedProvider(repository),
+                new ApiCircuitBreakerRegistry(emptyProvider())
         );
 
         assertThat(client.fetch(1224)).isPresent();

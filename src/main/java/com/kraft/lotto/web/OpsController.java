@@ -1,6 +1,7 @@
 package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.recommend.application.RecommendMetricsQueryService;
+import com.kraft.lotto.feature.winningnumber.application.ApiCircuitBreakerRegistry;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendStatsDto;
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
@@ -10,12 +11,15 @@ import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogsResponseDto
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonsResponseDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.OpsCircuitBreakerStatusDto;
 import com.kraft.lotto.infra.config.KraftCollectProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Map;
 import net.javacrumbs.shedlock.core.LockConfiguration;
 import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +38,7 @@ public class OpsController {
     private final LottoFetchLogQueryService fetchLogQueryService;
     private final LottoCollectionCommandService collectionCommandService;
     private final RecommendMetricsQueryService recommendMetricsQueryService;
+    private final ApiCircuitBreakerRegistry circuitBreakerRegistry;
     private final LockingTaskExecutor lockingTaskExecutor;
     private final boolean logRetentionEnabled;
     private final int logRetentionDays;
@@ -45,11 +50,13 @@ public class OpsController {
     public OpsController(LottoFetchLogQueryService fetchLogQueryService,
                          LottoCollectionCommandService collectionCommandService,
                          RecommendMetricsQueryService recommendMetricsQueryService,
+                         ApiCircuitBreakerRegistry circuitBreakerRegistry,
                          LockingTaskExecutor lockingTaskExecutor,
                          KraftCollectProperties collectProperties) {
         this.fetchLogQueryService = fetchLogQueryService;
         this.collectionCommandService = collectionCommandService;
         this.recommendMetricsQueryService = recommendMetricsQueryService;
+        this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.lockingTaskExecutor = lockingTaskExecutor;
         this.logRetentionEnabled = collectProperties.logRetention().enabled();
         this.logRetentionDays = collectProperties.logRetention().days();
@@ -145,6 +152,24 @@ public class OpsController {
     public RecommendStatsDto recommendStats(HttpServletResponse response) {
         applyNoStore(response);
         return recommendMetricsQueryService.getSnapshot();
+    }
+
+    @GetMapping("/ops/circuit-breakers")
+    @Operation(summary = "Get external API circuit breaker states")
+    public OpsCircuitBreakerStatusDto circuitBreakers(HttpServletResponse response) {
+        applyNoStore(response);
+        Map<String, OpsCircuitBreakerStatusDto.CircuitBreakerState> clients = circuitBreakerRegistry.snapshots().entrySet()
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> new OpsCircuitBreakerStatusDto.CircuitBreakerState(
+                                entry.getValue().enabled(),
+                                entry.getValue().state()
+                        ),
+                        (a, b) -> a,
+                        java.util.TreeMap::new
+                ));
+        return new OpsCircuitBreakerStatusDto(LocalDateTime.now(), clients);
     }
 
     private CollectResponse withLock(String lockName, java.util.function.Supplier<CollectResponse> action) {

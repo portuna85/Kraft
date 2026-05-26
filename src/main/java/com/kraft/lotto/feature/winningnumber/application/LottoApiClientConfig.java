@@ -66,12 +66,13 @@ public class LottoApiClientConfig {
                                          RestClient lottoRestClient,
                                          ObjectProvider<ObjectMapper> objectMapperProvider,
                                          ObjectProvider<MeterRegistry> meterRegistryProvider,
-                                         ObjectProvider<WinningNumberRepository> winningNumberRepositoryProvider) {
+                                         ObjectProvider<WinningNumberRepository> winningNumberRepositoryProvider,
+                                         ApiCircuitBreakerRegistry circuitBreakerRegistry) {
         ObjectMapper objectMapper = objectMapperProvider.getIfAvailable(ObjectMapper::new);
         String client = properties.client() == null ? "" : properties.client().trim().toLowerCase();
         int resolvedMockLatestRound = resolveMockLatestRound(properties, winningNumberRepositoryProvider.getIfAvailable());
         if (DHLOTTERY_TOKENS.contains(client)) {
-            ApiCircuitBreaker circuitBreaker = apiCircuitBreaker(properties);
+            ApiCircuitBreaker circuitBreaker = circuitBreakerRegistry.register("dhlottery", apiCircuitBreaker(properties));
             return new DhLotteryApiClient(
                     lottoRestClient,
                     objectMapper,
@@ -84,7 +85,7 @@ public class LottoApiClientConfig {
             );
         }
         if (SMOK_TOKENS.contains(client)) {
-            ApiCircuitBreaker circuitBreaker = apiCircuitBreaker(properties);
+            ApiCircuitBreaker circuitBreaker = circuitBreakerRegistry.register("smok", apiCircuitBreaker(properties));
             return new SmokLottoApiClient(
                     lottoRestClient,
                     objectMapper,
