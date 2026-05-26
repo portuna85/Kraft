@@ -15,7 +15,7 @@
 
   --kraft-bg: #ffffff;
   --kraft-surface: #eaf6ff;
-  --kraft-muted: #64748b;
+  --kraft-muted: #475569;
   --kraft-body-bg: #cfe8ff;
 
   --kraft-nav-bg: #0b3a66;
@@ -23,11 +23,11 @@
   --kraft-nav-text: rgba(255, 255, 255, 0.88);
   --kraft-nav-text-hover: #ffffff;
   --kraft-nav-hover-bg: rgba(255, 255, 255, 0.12);
-  --kraft-nav-brand: #ffd54a;
+  --kraft-nav-brand: #d97706;
   --kraft-nav-active-bg: #ef4444;
 
   --kraft-surface-muted: #f1f5f9;
-  --kraft-primary: #ef4444;
+  --kraft-primary: #dc2626;
   --kraft-accent: #fb923c;
   --kraft-success-bg: #ecfdf3;
   --kraft-success-fg: #166534;
@@ -183,23 +183,23 @@ body {
 
 /* === Bootstrap Overrides === */
 .btn-primary {
-  --bs-btn-bg: #ef4444;
-  --bs-btn-border-color: #ef4444;
-  --bs-btn-hover-bg: #dc2626;
-  --bs-btn-hover-border-color: #dc2626;
+  --bs-btn-bg: #b91c1c;
+  --bs-btn-border-color: #b91c1c;
+  --bs-btn-hover-bg: #991b1b;
+  --bs-btn-hover-border-color: #991b1b;
   --bs-btn-active-bg: #b91c1c;
   --bs-btn-active-border-color: #b91c1c;
-  --bs-btn-focus-shadow-rgb: 239, 68, 68;
+  --bs-btn-focus-shadow-rgb: 185, 28, 28;
 }
 
 .btn-outline-primary {
-  --bs-btn-color: #ef4444;
-  --bs-btn-border-color: #ef4444;
-  --bs-btn-hover-bg: #ef4444;
-  --bs-btn-hover-border-color: #ef4444;
-  --bs-btn-active-bg: #dc2626;
-  --bs-btn-active-border-color: #dc2626;
-  --bs-btn-focus-shadow-rgb: 239, 68, 68;
+  --bs-btn-color: #b91c1c;
+  --bs-btn-border-color: #b91c1c;
+  --bs-btn-hover-bg: #b91c1c;
+  --bs-btn-hover-border-color: #b91c1c;
+  --bs-btn-active-bg: #991b1b;
+  --bs-btn-active-border-color: #991b1b;
+  --bs-btn-focus-shadow-rgb: 185, 28, 28;
 }
 
 [data-bs-theme="dark"] .btn-primary {
@@ -332,6 +332,7 @@ body {
 
 .kraft-ball.b3 {
   background: #ff7272;
+  color: #3f0b0b;
 }
 
 .kraft-ball.b4 {
@@ -673,7 +674,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--kraft-nav-brand);
+  color: #7c2d12;
 }
 
 .kraft-hero h1 {
