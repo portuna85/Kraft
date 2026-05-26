@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogRepository;
+import com.kraft.lotto.infra.config.KraftCollectProperties;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,7 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Component
@@ -26,19 +26,17 @@ public class LottoFetchLogRetentionScheduler {
 
     @Autowired
     public LottoFetchLogRetentionScheduler(LottoFetchLogRepository fetchLogRepository,
-                                           @Value("${kraft.collect.log-retention.days:90}") int retentionDays,
-                                           @Value("${kraft.collect.log-retention.delete-batch-size:1000}") int deleteBatchSize) {
-        this(fetchLogRepository, Clock.systemDefaultZone(), retentionDays, deleteBatchSize);
+                                           KraftCollectProperties collectProperties) {
+        this(fetchLogRepository, Clock.systemDefaultZone(), collectProperties);
     }
 
     LottoFetchLogRetentionScheduler(LottoFetchLogRepository fetchLogRepository,
                                     Clock clock,
-                                    int retentionDays,
-                                    int deleteBatchSize) {
+                                    KraftCollectProperties collectProperties) {
         this.fetchLogRepository = fetchLogRepository;
         this.clock = clock;
-        this.retentionDays = Math.max(1, retentionDays);
-        this.deleteBatchSize = Math.max(100, deleteBatchSize);
+        this.retentionDays = Math.max(1, collectProperties.logRetention().days());
+        this.deleteBatchSize = Math.max(100, collectProperties.logRetention().deleteBatchSize());
     }
 
     @Scheduled(

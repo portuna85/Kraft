@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const AxeBuilder = require('@axe-core/playwright').default;
 
 test.describe('home smoke', () => {
   test('renders home page', async ({ page }) => {
@@ -73,5 +74,26 @@ test.describe('responsive smoke', () => {
     await expect(page.getByRole('button', { name: 'Apply' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Reset' })).toBeVisible();
     await expect(page.locator('.ops-reason-quick')).toHaveCount(3);
+  });
+});
+
+test.describe('accessibility smoke', () => {
+  test('home has no critical accessibility violations', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#latest')).toBeVisible();
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze();
+    expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+  });
+
+  test('ops page has no critical accessibility violations on mobile', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.includes('mobile'));
+    await page.goto('/admin/ops');
+    await expect(page.locator('form[action="/admin/ops"]')).toBeVisible();
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze();
+    expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
   });
 });

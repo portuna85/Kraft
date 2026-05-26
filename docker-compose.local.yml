@@ -1,0 +1,37 @@
+name: kraft-lotto-local
+
+services:
+  mariadb:
+    image: mariadb:11.7
+    pull_policy: missing
+    container_name: kraft-lotto-local-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${KRAFT_DB_NAME:?KRAFT_DB_NAME is required}
+      MARIADB_USER: ${KRAFT_DB_USER:?KRAFT_DB_USER is required}
+      MARIADB_PASSWORD: ${KRAFT_DB_PASSWORD:?KRAFT_DB_PASSWORD is required}
+      MARIADB_ROOT_PASSWORD: ${KRAFT_DB_ROOT_PASSWORD:?KRAFT_DB_ROOT_PASSWORD is required}
+      TZ: Asia/Seoul
+    ports:
+      - "127.0.0.1:${KRAFT_DB_PORT:-3306}:3306"
+    volumes:
+      - kraft-lotto-local-db:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD
+        - healthcheck.sh
+        - --connect
+        - --innodb_initialized
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "5"
+
+volumes:
+  kraft-lotto-local-db:
+    name: kraft-lotto-local-db

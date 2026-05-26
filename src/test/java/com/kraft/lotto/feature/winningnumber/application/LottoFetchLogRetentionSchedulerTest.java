@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogRepository;
+import com.kraft.lotto.infra.config.KraftCollectProperties;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -32,7 +33,7 @@ class LottoFetchLogRetentionSchedulerTest {
     void purgesInBatches() {
         Clock fixedClock = Clock.fixed(Instant.parse("2026-05-15T00:00:00Z"), ZoneOffset.UTC);
         LottoFetchLogRetentionScheduler scheduler =
-                new LottoFetchLogRetentionScheduler(fetchLogRepository, fixedClock, 90, 2);
+                new LottoFetchLogRetentionScheduler(fetchLogRepository, fixedClock, collectProperties(90, 2));
         when(fetchLogRepository.findIdsByFetchedAtBefore(any(), any(Pageable.class)))
                 .thenReturn(List.of(1L, 2L))
                 .thenReturn(List.of(3L))
@@ -53,7 +54,7 @@ class LottoFetchLogRetentionSchedulerTest {
         when(fetchLogRepository.findIdsByFetchedAtBefore(captor.capture(), any(Pageable.class)))
                 .thenReturn(List.of());
 
-        new LottoFetchLogRetentionScheduler(fetchLogRepository, fixedClock, 90, 1000).purgeExpiredLogs();
+        new LottoFetchLogRetentionScheduler(fetchLogRepository, fixedClock, collectProperties(90, 1000)).purgeExpiredLogs();
 
         assertThat(captor.getValue()).isEqualTo(LocalDateTime.of(2026, 3, 3, 3, 30, 0));
     }
@@ -63,7 +64,7 @@ class LottoFetchLogRetentionSchedulerTest {
     void noOpWhenNothingToDelete() {
         Clock fixedClock = Clock.fixed(Instant.parse("2026-05-15T00:00:00Z"), ZoneOffset.UTC);
         LottoFetchLogRetentionScheduler scheduler =
-                new LottoFetchLogRetentionScheduler(fetchLogRepository, fixedClock, 90, 1000);
+                new LottoFetchLogRetentionScheduler(fetchLogRepository, fixedClock, collectProperties(90, 1000));
         when(fetchLogRepository.findIdsByFetchedAtBefore(any(), any(Pageable.class)))
                 .thenReturn(List.of());
 
@@ -71,5 +72,14 @@ class LottoFetchLogRetentionSchedulerTest {
 
         verify(fetchLogRepository, never()).deleteAllByIdInBatch(any());
         verify(fetchLogRepository, never()).deleteByFetchedAtBefore(any());
+    }
+
+    private static KraftCollectProperties collectProperties(int days, int deleteBatchSize) {
+        return new KraftCollectProperties(
+                52,
+                2000,
+                new KraftCollectProperties.Auto(true, "Asia/Seoul"),
+                new KraftCollectProperties.LogRetention(true, days, deleteBatchSize, "0 30 3 * * *")
+        );
     }
 }

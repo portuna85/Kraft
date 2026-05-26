@@ -2,7 +2,7 @@ package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
-import org.springframework.beans.factory.annotation.Value;
+import com.kraft.lotto.infra.config.KraftCollectProperties;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -18,16 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class OpsPageController {
 
     private final LottoFetchLogQueryService fetchLogQueryService;
-    @Value("${kraft.collect.log-retention.enabled:true}")
-    boolean logRetentionEnabled;
-    @Value("${kraft.collect.log-retention.days:90}")
-    int logRetentionDays;
-    @Value("${kraft.collect.log-retention.delete-batch-size:1000}")
-    int logRetentionDeleteBatchSize;
-    @Value("${kraft.collect.log-retention.cron:0 30 3 * * *}")
-    String logRetentionCron;
-    @Value("${kraft.collect.auto.zone:Asia/Seoul}")
-    String collectZone;
+    private final KraftCollectProperties collectProperties;
 
     @GetMapping("/admin/ops")
     public String opsDashboard(
@@ -73,11 +64,11 @@ public class OpsPageController {
         model.addAttribute("pageSize", pagedFailures.pageSize());
         model.addAttribute("hasNext", pagedFailures.hasNext());
         model.addAttribute("retentionStatus", fetchLogQueryService.retentionStatus(
-                logRetentionEnabled,
-                logRetentionDays,
-                logRetentionDeleteBatchSize,
-                logRetentionCron,
-                collectZone
+                collectProperties.logRetention().enabled(),
+                collectProperties.logRetention().days(),
+                collectProperties.logRetention().deleteBatchSize(),
+                collectProperties.logRetention().cron(),
+                collectProperties.auto().zone()
         ));
         return "admin-ops";
     }

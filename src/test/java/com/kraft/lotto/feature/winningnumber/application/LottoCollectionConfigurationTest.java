@@ -69,7 +69,12 @@ class LottoCollectionConfigurationTest {
 
         @Bean
         KraftCollectProperties kraftCollectProperties() {
-            return new KraftCollectProperties(52, 2000);
+            return new KraftCollectProperties(
+                    52,
+                    2000,
+                    new KraftCollectProperties.Auto(true, "Asia/Seoul"),
+                    new KraftCollectProperties.LogRetention(true, 90, 1000, "0 30 3 * * *")
+            );
         }
 
         @Bean

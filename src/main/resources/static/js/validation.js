@@ -17,12 +17,12 @@
   function validateBoundInput(input, feedback, min, max, label) {
     var raw = input.value.trim();
     if (!raw) {
-      setFeedbackState(input, feedback, true, label + ' is required.');
+      setFeedbackState(input, feedback, true, label + ' 값을 입력해 주세요.');
       return false;
     }
     var parsed = Number(raw);
     if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
-      setFeedbackState(input, feedback, true, label + ' must be an integer between ' + min + ' and ' + max + '.');
+      setFeedbackState(input, feedback, true, label + '은(는) ' + min + '부터 ' + max + ' 사이의 정수여야 합니다.');
       return false;
     }
     setFeedbackState(input, feedback, false, '');
@@ -76,8 +76,8 @@
   }
 
   function bindDynamicValidation() {
-    bindNumberInputValidation('countInput', 1, 10, 'Set count');
-    bindNumberInputValidation('roundInput', 1, 3000, 'Round');
+    bindNumberInputValidation('countInput', 1, 10, '세트 수');
+    bindNumberInputValidation('roundInput', 1, 3000, '회차');
   }
 
   bindDynamicValidation();

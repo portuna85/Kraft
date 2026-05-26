@@ -179,7 +179,7 @@ public class RequiredConfigValidator implements EnvironmentPostProcessor, Ordere
         requireIntInRange(env, problems, "kraft.recommend.rules.long-run-threshold",
                 "Recommend long-run threshold (env: KRAFT_RECOMMEND_RULE_LONG_RUN_THRESHOLD)", 2, 6);
         requireIntInRange(env, problems, "kraft.recommend.rules.decade-threshold",
-                "Recommend decade threshold (env: KRAFT_RECOMMEND_RULE_DECADE_THRESHOLD)", 2, 6);
+                "Recommend decade threshold (env: KRAFT_RECOMMEND_RULE_DECADE_THRESHOLD)", 3, 6);
 
         String apiClient = safeGet(env, "kraft.api.client");
         Set<String> allowedProdClients = Set.of("real", "dhlottery", "smok");

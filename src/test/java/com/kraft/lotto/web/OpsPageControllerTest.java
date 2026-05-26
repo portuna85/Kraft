@@ -12,18 +12,21 @@ import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
+import com.kraft.lotto.infra.config.KraftCollectProperties;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(OpsPageController.class)
-@Import(TestCacheConfig.class)
+@Import({TestCacheConfig.class, OpsPageControllerTest.CollectPropertiesConfig.class})
 @DisplayName("운영 페이지 컨트롤러 테스트")
 class OpsPageControllerTest {
 
@@ -32,6 +35,19 @@ class OpsPageControllerTest {
 
     @MockitoBean
     LottoFetchLogQueryService fetchLogQueryService;
+
+    @TestConfiguration
+    static class CollectPropertiesConfig {
+        @Bean
+        KraftCollectProperties kraftCollectProperties() {
+            return new KraftCollectProperties(
+                    52,
+                    2000,
+                    new KraftCollectProperties.Auto(true, "Asia/Seoul"),
+                    new KraftCollectProperties.LogRetention(true, 90, 1000, "0 30 3 * * *")
+            );
+        }
+    }
 
     @Test
     @DisplayName("유효한 요청은 모델을 정상 바인딩한다")

@@ -49,7 +49,7 @@
     delete inFlightByTarget[key];
   }
 
-  function loadFragmentFallback(target) {
+  function loadFragmentFallback(target, focusAfterLoad) {
     if (!target) return Promise.resolve();
     var key = targetKey(target);
     if (!key) return Promise.resolve();
@@ -67,7 +67,9 @@
       .then(function (fragmentHtml) {
         target.outerHTML = fragmentHtml;
         var updated = document.getElementById(target.id);
-        focusLoadedSection(updated);
+        if (focusAfterLoad) {
+          focusLoadedSection(updated);
+        }
         announce('콘텐츠를 불러왔습니다.');
         notifyLoaded();
       })
@@ -79,6 +81,13 @@
       });
 
     return inFlightByTarget[key];
+  }
+
+  function shouldFocusOnSwap(event) {
+    var detail = event && event.detail;
+    var requestConfig = detail && detail.requestConfig;
+    var triggeringEvent = requestConfig && requestConfig.triggeringEvent;
+    return !!triggeringEvent;
   }
 
   if (window.htmx) {
@@ -97,7 +106,9 @@
     document.body.addEventListener('htmx:afterSwap', function (event) {
       var target = event.target;
       setUiState(target, 'success', stateMessage(target.id));
-      focusLoadedSection(target);
+      if (shouldFocusOnSwap(event)) {
+        focusLoadedSection(target);
+      }
       clearInFlight(target);
       notifyLoaded();
     });
@@ -109,7 +120,7 @@
     });
   } else {
     Array.prototype.forEach.call(document.querySelectorAll('[hx-trigger="load"][hx-get]'), function (target) {
-      loadFragmentFallback(target);
+      loadFragmentFallback(target, false);
     });
   }
 
@@ -125,6 +136,6 @@
       window.htmx.trigger(target, 'load');
       return;
     }
-    loadFragmentFallback(target);
+    loadFragmentFallback(target, true);
   });
 }());

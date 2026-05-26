@@ -41,8 +41,8 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-    validate-on-migrate: false
-    ignore-missing-migrations: true
+    validate-on-migrate: true
+    ignore-missing-migrations: false
 
 server:
   port: 8080
@@ -103,6 +103,11 @@ kraft:
       cron:
         saturday-22-30: ${KRAFT_COLLECT_AUTO_CRON_SATURDAY_22_30:0 30 22 ? * SAT}
         sunday-07-00: ${KRAFT_COLLECT_AUTO_CRON_SUNDAY_07_00:0 0 7 ? * SUN}
+    log-retention:
+      enabled: ${KRAFT_COLLECT_LOG_RETENTION_ENABLED:true}
+      days: ${KRAFT_COLLECT_LOG_RETENTION_DAYS:90}
+      delete-batch-size: ${KRAFT_COLLECT_LOG_RETENTION_DELETE_BATCH_SIZE:1000}
+      cron: ${KRAFT_COLLECT_LOG_RETENTION_CRON:0 30 3 * * *}
   api:
     client: ${KRAFT_API_CLIENT:mock}
     url: ${KRAFT_API_URL:https://www.dhlottery.co.kr/common.do}

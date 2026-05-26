@@ -23,7 +23,8 @@ Spring Boot 4 based Lotto 6/45 web service.
 
 1. Start a local MariaDB instance.
    - Default local connection: `localhost:3306`
-   - With this repository's Compose setup: `docker compose up -d mariadb`
+   - DB-only local compose: `docker compose -f docker-compose.local.yml up -d`
+   - Existing full compose service target: `docker compose up -d mariadb`
    - Use `.env.local.example` as the starting template, or export values directly in your shell or IntelliJ Run Configuration.
 
 2. Run the application from IntelliJ using `KraftLottoApplication`
@@ -80,6 +81,14 @@ npm run test:e2e
 ```
 
 ## Docker Compose
+
+Local DB-only:
+
+```bash
+docker compose -f docker-compose.local.yml up -d
+```
+
+Full stack:
 
 ```bash
 docker compose up -d --build

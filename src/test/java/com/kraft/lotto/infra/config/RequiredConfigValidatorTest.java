@@ -96,6 +96,7 @@ class RequiredConfigValidatorTest {
         env.setProperty("kraft.api.client", "smok");
         env.setProperty("kraft.recommend.rules.birthday-threshold", "45");
         env.setProperty("kraft.recommend.rules.long-run-threshold", "1");
+        env.setProperty("kraft.recommend.rules.decade-threshold", "2");
         env.setProperty("kraft.recommend.max-attempts", "0");
         List<String> problems = new ArrayList<>();
 
@@ -103,6 +104,7 @@ class RequiredConfigValidatorTest {
 
         assertThat(problems).anyMatch(p -> p.contains("kraft.recommend.rules.birthday-threshold"));
         assertThat(problems).anyMatch(p -> p.contains("kraft.recommend.rules.long-run-threshold"));
+        assertThat(problems).anyMatch(p -> p.contains("kraft.recommend.rules.decade-threshold"));
         assertThat(problems).anyMatch(p -> p.contains("kraft.recommend.max-attempts"));
     }
 

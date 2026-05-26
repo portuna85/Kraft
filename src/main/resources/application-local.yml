@@ -16,6 +16,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    validate-on-migrate: false
+    ignore-missing-migrations: true
 
 management:
   endpoint:

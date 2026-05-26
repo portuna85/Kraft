@@ -11,6 +11,7 @@ import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandS
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
+import com.kraft.lotto.infra.config.KraftCollectProperties;
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
 import com.kraft.lotto.web.OpsController;
 import java.time.Instant;
@@ -50,11 +51,7 @@ class OpsApiAccessScenarioTest {
                 collectionCommandService,
                 recommendMetricsQueryService,
                 lockingTaskExecutor,
-                true,
-                90,
-                1000,
-                "0 30 3 * * *",
-                "Asia/Seoul"
+                collectProperties()
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .addFilters(new OpsAccessFilter(securityProperties()))
@@ -153,5 +150,14 @@ class OpsApiAccessScenarioTest {
         props.getOps().setRequiredToken("expected-token");
         props.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
         return props;
+    }
+
+    private static KraftCollectProperties collectProperties() {
+        return new KraftCollectProperties(
+                52,
+                2000,
+                new KraftCollectProperties.Auto(true, "Asia/Seoul"),
+                new KraftCollectProperties.LogRetention(true, 90, 1000, "0 30 3 * * *")
+        );
     }
 }

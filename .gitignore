@@ -46,9 +46,9 @@ logs/
 .env
 !.env.example
 
-# Docs policy: only keep README and completed log tracked
+# Docs policy: only keep README tracked
 *.md
 !README.md
 
-# Local docs workspace
+# Local docs workspace (not tracked)
 docs/

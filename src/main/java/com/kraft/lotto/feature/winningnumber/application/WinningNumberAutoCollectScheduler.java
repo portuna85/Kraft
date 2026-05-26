@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class WinningNumberAutoCollectScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(WinningNumberAutoCollectScheduler.class);
+    private static final String COLLECT_ALL_LOCK_NAME = "collect-all";
 
     private final LottoCollectionCommandService collectionService;
     private final MeterRegistry meterRegistry;
@@ -36,7 +37,7 @@ public class WinningNumberAutoCollectScheduler {
             cron = "${kraft.collect.auto.cron.saturday-22-30:0 30 22 ? * SAT}",
             zone = "${kraft.collect.auto.zone:Asia/Seoul}"
     )
-    @SchedulerLock(name = "collect-all-sat-22-30", lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
+    @SchedulerLock(name = COLLECT_ALL_LOCK_NAME, lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
     public void collectSaturday2230() {
         runCollectAll("sat-22-30");
     }
@@ -45,7 +46,7 @@ public class WinningNumberAutoCollectScheduler {
             cron = "${kraft.collect.auto.cron.sunday-07-00:0 0 7 ? * SUN}",
             zone = "${kraft.collect.auto.zone:Asia/Seoul}"
     )
-    @SchedulerLock(name = "collect-all-sun-07-00", lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
+    @SchedulerLock(name = COLLECT_ALL_LOCK_NAME, lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
     public void collectSunday0700() {
         runCollectAll("sun-07-00");
     }
