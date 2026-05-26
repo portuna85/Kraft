@@ -40,7 +40,8 @@ public class DhLotteryApiClient implements LottoApiClient {
     );
 
     public DhLotteryApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl) {
-        this(restClient, objectMapper, baseUrl, 0, null, Clock.systemDefaultZone(), new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
+        this(restClient, objectMapper, baseUrl, 0, null, Clock.systemDefaultZone(),
+                new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
     }
 
     public DhLotteryApiClient(RestClient restClient,
