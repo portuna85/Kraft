@@ -1,23 +1,29 @@
-﻿# Node
+# Dependencies
 node_modules/
 
 # Build outputs
 .gradle/
 build/
+out/
+bin/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+!**/src/main/**/out/
+!**/src/test/**/out/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
 
-# IDE
+# Test artifacts
+test-results/
+playwright-report/
+
+# IDE/editor
 .idea/
 *.iws
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-# Eclipse
+.vscode/
 .apt_generated
 .classpath
 .factorypath
@@ -25,35 +31,26 @@ out/
 .settings
 .springBeans
 .sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
 
-# VS Code
-.vscode/
-
-# Local tool settings
+# Local tool/runtime
+.agents/
+.codex/
 .claude/
-
-# JQwik property-based test cache
 .jqwik-database
 
-# OS
+# OS/logs
 .DS_Store
-
-# Logs
 *.log
 logs/
 
 # Local secrets
 .env
 !.env.example
+!.env.local.example
+!.env.prod.example
 
-# Docs policy: only keep README tracked
-*.md
-!README.md
-
-# Local docs workspace (not tracked)
+# Local docs workspace
 docs/
 
-CLAUDE.md
+# Local agent instruction file
+AGENTS.md
