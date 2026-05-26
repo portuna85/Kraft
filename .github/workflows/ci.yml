@@ -129,6 +129,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: build-test
+    container:
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
 
     steps:
       - name: Checkout
@@ -157,7 +159,7 @@ jobs:
       - name: Install E2E dependencies
         run: |
           npm ci
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
 
       - name: Run Playwright smoke tests
         run: npm run test:e2e

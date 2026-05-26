@@ -61,7 +61,7 @@ Local mode defaults to the `local` profile, uses MariaDB on `localhost`, and kee
 
 ## Test
 
-- Unit/Integration:
+- Local (Ubuntu 26.04): run only Gradle unit/integration tests.
 
 ```bash
 ./gradlew test
@@ -76,8 +76,8 @@ Local mode defaults to the `local` profile, uses MariaDB on `localhost`, and kee
 - E2E smoke:
 
 ```bash
-npm ci
-npm run test:e2e
+# Run only in CI or Docker based on the official Playwright Ubuntu 24.04 image.
+docker run --rm -it -v "$PWD:/work" -w /work mcr.microsoft.com/playwright:v1.60.0-noble bash -lc "npm ci && npx playwright install chromium && npm run test:e2e"
 ```
 
 ## Docker Compose
