@@ -1,10 +1,13 @@
 package com.kraft.lotto.feature.winningnumber.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+// numbers() returns the result of .stream().sorted().toList() which is unmodifiable per Java spec.
+@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Stream.toList() returns an unmodifiable list")
 public record LottoCombination(List<Integer> numbers) {
 
     public static final int SIZE = 6;
