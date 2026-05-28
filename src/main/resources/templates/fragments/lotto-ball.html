@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<body>
 <span th:fragment="ball(num, extra)"
       th:class="|kraft-ball ${extra}b${@lottoBallHelper.colorGroup(num)}|"
       th:attr="role='img',aria-label=${(#strings.contains(extra, 'bonus') ? 'Bonus number ' : 'Number ') + num}"
       th:text="${num}">1</span>
-</body>
-</html>

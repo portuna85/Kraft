@@ -68,7 +68,7 @@
   --kraft-grid-gap: 10px;
 }
 
-/* === Layout === */
+/* === Base and Layout === */
 body {
   background-color: var(--kraft-body-bg);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
@@ -181,7 +181,7 @@ body {
   }
 }
 
-/* === Bootstrap Overrides === */
+/* === Shared Components === */
 .btn-primary {
   --bs-btn-bg: #b91c1c;
   --bs-btn-border-color: #b91c1c;
@@ -220,7 +220,7 @@ body {
   --bs-btn-focus-shadow-rgb: 248, 113, 113;
 }
 
-/* === Forms === */
+/* === Shared Components: Forms === */
 .kraft-inline-form {
   display: flex;
   align-items: center;
@@ -287,7 +287,7 @@ body {
   }
 }
 
-/* === Lotto Ball === */
+/* === Shared Components: Lotto Ball === */
 .kraft-balls {
   display: flex;
   flex-wrap: wrap;
@@ -393,7 +393,7 @@ body {
   }
 }
 
-/* === Recommend === */
+/* === Public Page Sections: Recommend === */
 .kraft-combo {
   display: flex;
   align-items: center;
@@ -427,7 +427,7 @@ body {
   }
 }
 
-/* === Frequency Grid === */
+/* === Public Page Sections: Frequency Grid === */
 .kraft-freq-grid {
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
@@ -490,7 +490,7 @@ body {
   }
 }
 
-/* === Rounds List === */
+/* === Public Page Sections: Rounds List === */
 .kraft-list-row {
   display: grid;
   grid-template-columns: 198px 1fr;
@@ -540,7 +540,7 @@ body {
   align-items: center;
 }
 
-/* === Bottom Navigation (Mobile) === */
+/* === Navigation: Bottom Navigation (Mobile) === */
 .kraft-bottom-nav {
   position: fixed;
   bottom: 0;
@@ -617,7 +617,7 @@ body {
   }
 }
 
-/* === Touch Feedback === */
+/* === Utilities and Accessibility Helpers === */
 @media (hover: none) and (pointer: coarse) {
   .btn:active {
     transform: scale(0.96);
@@ -633,7 +633,7 @@ body {
   }
 }
 
-/* === Toast === */
+/* === Utilities and Accessibility Helpers: Toast === */
 .kraft-toast {
   position: fixed;
   left: 50%;
@@ -672,7 +672,7 @@ body {
   }
 }
 
-/* === Hero === */
+/* === Public Page Sections: Hero === */
 .kraft-hero {
   padding: 28px 0 20px;
 }
@@ -701,7 +701,7 @@ body {
   line-height: 1.65;
 }
 
-/* === State Containers === */
+/* === Shared Components: State Containers === */
 .kraft-state {
   padding: 20px 16px;
   border-radius: var(--kraft-radius);
@@ -745,7 +745,7 @@ body {
   opacity: 1;
 }
 
-/* === Frequency List === */
+/* === Public Page Sections: Frequency List === */
 .kraft-freq-list {
   display: grid;
   gap: 6px;
@@ -784,7 +784,7 @@ body {
   font-weight: 600;
 }
 
-/* === Ops Mobile === */
+/* === Ops Dashboard Sections === */
 .ops-mobile-list {
   display: grid;
   gap: 10px;
@@ -823,7 +823,7 @@ body {
   }
 }
 
-/* === Latest Draw Meta Tiles === */
+/* === Public Page Sections: Latest Draw Meta Tiles === */
 .kraft-draw-meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

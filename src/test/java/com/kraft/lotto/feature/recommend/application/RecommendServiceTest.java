@@ -11,7 +11,6 @@ import com.kraft.lotto.feature.recommend.domain.SingleDecadeRule;
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import com.kraft.lotto.support.BusinessException;
 import com.kraft.lotto.support.ErrorCode;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import java.util.Random;
@@ -24,7 +23,11 @@ class RecommendServiceTest {
     private static final long FIXED_SEED = 1L;
 
     private RecommendService service(List<ExclusionRule> rules) {
-        return new RecommendService(rules, new LottoRecommender(rules, new Random(FIXED_SEED), 100_000), (MeterRegistry) null);
+        return new RecommendService(
+                rules,
+                new LottoRecommender(rules, new Random(FIXED_SEED), 100_000),
+                new RecommendMetricsRecorder((io.micrometer.core.instrument.MeterRegistry) null)
+        );
     }
 
     private static ExclusionRule excludeAll() {
@@ -88,7 +91,11 @@ class RecommendServiceTest {
     @DisplayName("모든 조합이 제외되면 생성 타임아웃 예외가 발생한다")
     void throwsGenerationTimeoutWhenAllExcluded() {
         List<ExclusionRule> rules = List.of(excludeAll());
-        var service = new RecommendService(rules, new LottoRecommender(rules, new Random(FIXED_SEED), 50), (MeterRegistry) null);
+        var service = new RecommendService(
+                rules,
+                new LottoRecommender(rules, new Random(FIXED_SEED), 50),
+                new RecommendMetricsRecorder((io.micrometer.core.instrument.MeterRegistry) null)
+        );
 
         assertThatExceptionOfType(BusinessException.class)
                 .isThrownBy(() -> service.recommend(1))
@@ -136,7 +143,7 @@ class RecommendServiceTest {
         var service = new RecommendService(
                 rules,
                 new LottoRecommender(rules, new RandomLottoNumberGenerator(new Random(FIXED_SEED)), 100_000, registry),
-                registry
+                new RecommendMetricsRecorder(registry)
         );
 
         service.recommend(3);
@@ -152,7 +159,7 @@ class RecommendServiceTest {
         var service = new RecommendService(
                 rules,
                 new LottoRecommender(rules, new RandomLottoNumberGenerator(new Random(FIXED_SEED)), 5, registry),
-                registry
+                new RecommendMetricsRecorder(registry)
         );
 
         assertThatExceptionOfType(BusinessException.class)
@@ -179,7 +186,7 @@ class RecommendServiceTest {
                 );
             }
         };
-        var service = new RecommendService(List.of(), failingRecommender, registry);
+        var service = new RecommendService(List.of(), failingRecommender, new RecommendMetricsRecorder(registry));
 
         assertThatExceptionOfType(BusinessException.class)
                 .isThrownBy(() -> service.recommend(1))
@@ -205,7 +212,7 @@ class RecommendServiceTest {
                 );
             }
         };
-        var service = new RecommendService(List.of(), failingRecommender, registry);
+        var service = new RecommendService(List.of(), failingRecommender, new RecommendMetricsRecorder(registry));
 
         assertThatExceptionOfType(BusinessException.class)
                 .isThrownBy(() -> service.recommend(1))

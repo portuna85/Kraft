@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Do not commit or push any documentation files (except README.md and complement.md).
 - Do not commit or push until explicitly requested.
-- Do not modify `docs/improvement.md`. Use `complement.md` only to mark items complete or incomplete.
+- Do not modify `docs/improvement.md`. Use `docs/complement.md` only to mark items complete or incomplete.
 
 ## Commands
 

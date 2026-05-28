@@ -3,6 +3,7 @@ package com.kraft.lotto.support;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -14,13 +15,13 @@ import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import com.kraft.lotto.infra.config.KraftCollectProperties;
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
+import com.kraft.lotto.web.OpsCollectionFacade;
 import com.kraft.lotto.web.OpsController;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
-import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,9 +45,9 @@ class OpsApiAccessScenarioTest {
     RecommendMetricsQueryService recommendMetricsQueryService;
 
     @Mock
-    LockingTaskExecutor lockingTaskExecutor;
-    @Mock
     ApiCircuitBreakerRegistry circuitBreakerRegistry;
+    @Mock
+    OpsCollectionFacade opsCollectionFacade;
 
     MockMvc mockMvc;
 
@@ -55,9 +56,9 @@ class OpsApiAccessScenarioTest {
         OpsController controller = new OpsController(
                 fetchLogQueryService,
                 collectionCommandService,
+                opsCollectionFacade,
                 recommendMetricsQueryService,
                 circuitBreakerRegistry,
-                lockingTaskExecutor,
                 collectProperties(),
                 Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul"))
         );
@@ -168,6 +169,27 @@ class OpsApiAccessScenarioTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.clients.smok.enabled").value(true))
                 .andExpect(jsonPath("$.clients.smok.state").value("closed"));
+    }
+
+    @Test
+    @DisplayName("POST /ops/collect: 정상 토큰/허용 IP면 facade 위임 후 200")
+    void collectWithValidTokenAndAllowedIpReturnsOk() throws Exception {
+        when(opsCollectionFacade.collectLatest()).thenReturn(
+                com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse.of(
+                        1, 0, 0, 1200, java.util.List.of(), false, null, false
+                ));
+
+        mockMvc.perform(post("/ops/collect")
+                        .header("X-Ops-Token", "expected-token")
+                        .with(request -> {
+                            request.setRemoteAddr("127.0.0.1");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.collected").value(1))
+                .andExpect(jsonPath("$.latestRound").value(1200));
+
+        verify(opsCollectionFacade).collectLatest();
     }
 
     private static KraftSecurityProperties securityProperties() {

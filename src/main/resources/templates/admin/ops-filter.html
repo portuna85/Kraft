@@ -1,0 +1,65 @@
+<div xmlns:th="http://www.thymeleaf.org" class="card mb-4" th:fragment="ops-filter">
+  <div class="card-body">
+    <form method="get" action="/admin/ops" class="row g-2 align-items-end">
+      <div class="col-12 col-md-2">
+        <label class="form-label mb-1" for="reason">Reason</label>
+        <input id="reason" name="reason" class="form-control" th:value="${reason}" placeholder="timeout">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1" for="drwNoFrom">From Round</label>
+        <input id="drwNoFrom" name="drwNoFrom" type="number" min="1" class="form-control" th:value="${drwNoFrom}">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1" for="drwNoTo">To Round</label>
+        <input id="drwNoTo" name="drwNoTo" type="number" min="1" class="form-control" th:value="${drwNoTo}">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1" for="reasonLimit">Reason Limit</label>
+        <input id="reasonLimit" name="reasonLimit" type="number" min="1" max="2000" class="form-control" th:value="${reasonLimit}">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1" for="logLimit">Log Limit</label>
+        <input id="logLimit" name="logLimit" type="number" min="1" max="2000" class="form-control" th:value="${logLimit}">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1" for="pageSize">Page Size</label>
+        <input id="pageSize" name="pageSize" type="number" min="5" max="100" class="form-control" th:value="${pageSize}">
+      </div>
+      <div class="col-12 col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary">Apply</button>
+      </div>
+      <div class="col-12 col-md-2 d-grid">
+        <a class="btn btn-outline-secondary" href="/admin/ops">Reset</a>
+      </div>
+    </form>
+    <div class="mt-3 d-flex flex-wrap gap-2" aria-label="Quick reason filters">
+      <button type="button" class="btn btn-sm btn-outline-secondary ops-reason-quick" data-reason="timeout">timeout</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary ops-reason-quick" data-reason="http">http</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary ops-reason-quick" data-reason="network">network</button>
+    </div>
+
+    <hr>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-sm btn-outline-primary"
+         th:href="@{/ops/fetch-logs/failure-overview(reasonLimit=${reasonLimit},logLimit=${logLimit},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo})}">
+        Open Overview JSON
+      </a>
+      <a class="btn btn-sm btn-outline-primary"
+         th:href="@{/ops/fetch-logs/failure-reasons(limit=${reasonLimit},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo})}">
+        Open Reasons JSON
+      </a>
+      <a class="btn btn-sm btn-outline-primary"
+         th:href="@{/ops/fetch-logs/failures(limit=${logLimit},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo})}">
+        Open Failures JSON
+      </a>
+      <a class="btn btn-sm btn-outline-primary"
+         th:href="@{/ops/fetch-logs/retention-status}">
+        Open Retention JSON
+      </a>
+      <a class="btn btn-sm btn-outline-primary"
+         th:href="@{/ops/circuit-breakers}">
+        Open Circuit Breakers JSON
+      </a>
+    </div>
+  </div>
+</div>

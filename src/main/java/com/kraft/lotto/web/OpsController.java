@@ -17,12 +17,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Map;
-import net.javacrumbs.shedlock.core.LockConfiguration;
-import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,14 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Ops", description = "Operational endpoints for collection and failure logs")
 public class OpsController {
 
-    private static final Duration MANUAL_LOCK_MAX = Duration.ofMinutes(10);
-    private static final String COLLECT_ALL_LOCK_NAME = "collect-all";
-
     private final LottoFetchLogQueryService fetchLogQueryService;
     private final LottoCollectionCommandService collectionCommandService;
+    private final OpsCollectionFacade opsCollectionFacade;
     private final RecommendMetricsQueryService recommendMetricsQueryService;
     private final ApiCircuitBreakerRegistry circuitBreakerRegistry;
-    private final LockingTaskExecutor lockingTaskExecutor;
     private final boolean logRetentionEnabled;
     private final int logRetentionDays;
     private final int logRetentionDeleteBatchSize;
@@ -51,16 +44,16 @@ public class OpsController {
     @Autowired
     public OpsController(LottoFetchLogQueryService fetchLogQueryService,
                          LottoCollectionCommandService collectionCommandService,
+                         OpsCollectionFacade opsCollectionFacade,
                          RecommendMetricsQueryService recommendMetricsQueryService,
                          ApiCircuitBreakerRegistry circuitBreakerRegistry,
-                         LockingTaskExecutor lockingTaskExecutor,
                          KraftCollectProperties collectProperties,
                          Clock clock) {
         this.fetchLogQueryService = fetchLogQueryService;
         this.collectionCommandService = collectionCommandService;
+        this.opsCollectionFacade = opsCollectionFacade;
         this.recommendMetricsQueryService = recommendMetricsQueryService;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
-        this.lockingTaskExecutor = lockingTaskExecutor;
         this.logRetentionEnabled = collectProperties.logRetention().enabled();
         this.logRetentionDays = collectProperties.logRetention().days();
         this.logRetentionDeleteBatchSize = collectProperties.logRetention().deleteBatchSize();
@@ -141,14 +134,14 @@ public class OpsController {
     @Operation(summary = "Collect winning numbers up to latest round")
     public CollectResponse collectLatest(HttpServletResponse response) {
         applyNoStore(response);
-        return withLock(COLLECT_ALL_LOCK_NAME, collectionCommandService::collectAllUntilLatest);
+        return opsCollectionFacade.collectLatest();
     }
 
     @PostMapping("/ops/collect/missing")
     @Operation(summary = "Collect only missing rounds once")
     public CollectResponse collectMissing(HttpServletResponse response) {
         applyNoStore(response);
-        return withLock("ops-collect-missing", collectionCommandService::collectMissingOnce);
+        return opsCollectionFacade.collectMissing();
     }
 
     @GetMapping("/ops/recommend/stats")
@@ -174,19 +167,6 @@ public class OpsController {
                         java.util.TreeMap::new
                 ));
         return new OpsCircuitBreakerStatusDto(LocalDateTime.now(clock), clients);
-    }
-
-    private CollectResponse withLock(String lockName, java.util.function.Supplier<CollectResponse> action) {
-        try {
-            var result = lockingTaskExecutor.executeWithLock(
-                    action::get,
-                    new LockConfiguration(Instant.now(clock), lockName, MANUAL_LOCK_MAX, Duration.ZERO));
-            return result.wasExecuted() ? result.getResult() : CollectResponse.ofOverlapSkipped(0);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new RuntimeException("collection lock failed", e);
-        }
     }
 
     private void applyNoStore(HttpServletResponse response) {

@@ -50,10 +50,7 @@ logs/
 !.env.prod.example
 
 # Documentation policy
-*.md
-!README.md
-!complement.md
-docs/
+
 
 # Local agent instruction files
 AGENTS.md
