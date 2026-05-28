@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 import com.kraft.lotto.feature.recommend.application.RecommendMetricsQueryService;
 import com.kraft.lotto.feature.winningnumber.application.ApiCircuitBreakerRegistry;
@@ -115,8 +116,29 @@ class OpsApiAccessScenarioTest {
                             return request;
                         }))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0"))
+                .andExpect(header().string("Pragma", "no-cache"))
                 .andExpect(jsonPath("$.running").value(true))
                 .andExpect(jsonPath("$.operation").value("collect-all"));
+
+        verify(collectionCommandService).getStatus();
+    }
+
+    @Test
+    @DisplayName("GET /ops/collect/status: Authorization Bearer 토큰도 허용")
+    void statusWithValidBearerTokenReturnsOk() throws Exception {
+        when(collectionCommandService.getStatus())
+                .thenReturn(new CollectStatusResponse(false, null, null, 0));
+
+        mockMvc.perform(get("/ops/collect/status")
+                        .header("Authorization", "Bearer expected-token")
+                        .with(request -> {
+                            request.setRemoteAddr("127.0.0.1");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0"))
+                .andExpect(jsonPath("$.running").value(false));
 
         verify(collectionCommandService).getStatus();
     }

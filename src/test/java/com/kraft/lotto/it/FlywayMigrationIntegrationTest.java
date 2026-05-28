@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -13,6 +14,8 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @ActiveProfiles("it")
 @Import(MariaDbContainerConfig.class)
+@EnabledIf(value = "com.kraft.lotto.it.TestcontainersAvailability#isDockerAvailable",
+        disabledReason = "Docker is not available for Testcontainers")
 @DisplayName("Flyway 마이그레이션 MariaDB 통합 테스트")
 class FlywayMigrationIntegrationTest {
 

@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,11 +35,7 @@ public class OpsController {
     private final OpsCollectionFacade opsCollectionFacade;
     private final RecommendMetricsQueryService recommendMetricsQueryService;
     private final ApiCircuitBreakerRegistry circuitBreakerRegistry;
-    private final boolean logRetentionEnabled;
-    private final int logRetentionDays;
-    private final int logRetentionDeleteBatchSize;
-    private final String logRetentionCron;
-    private final String collectZone;
+    private final KraftCollectProperties collectProperties;
     private final Clock clock;
 
     @Autowired
@@ -54,15 +51,18 @@ public class OpsController {
         this.opsCollectionFacade = opsCollectionFacade;
         this.recommendMetricsQueryService = recommendMetricsQueryService;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
-        this.logRetentionEnabled = collectProperties.logRetention().enabled();
-        this.logRetentionDays = collectProperties.logRetention().days();
-        this.logRetentionDeleteBatchSize = collectProperties.logRetention().deleteBatchSize();
-        this.logRetentionCron = collectProperties.logRetention().cron();
-        this.collectZone = collectProperties.auto().zone();
+        this.collectProperties = collectProperties;
         this.clock = clock;
     }
 
     private record NormalizedQuery(int limit, String reason, Integer from, Integer to) {
+    }
+
+    @ModelAttribute
+    void applyNoStoreHeaders(HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
     }
 
     @GetMapping("/ops/fetch-logs/failure-reasons")
@@ -71,10 +71,8 @@ public class OpsController {
             @RequestParam(defaultValue = "200") int limit,
             @RequestParam(required = false) String reason,
             @RequestParam(required = false) Integer drwNoFrom,
-            @RequestParam(required = false) Integer drwNoTo,
-            HttpServletResponse response
+            @RequestParam(required = false) Integer drwNoTo
     ) {
-        applyNoStore(response);
         NormalizedQuery query = normalize(limit, reason, drwNoFrom, drwNoTo);
         return fetchLogQueryService.failureReasonsResponse(query.limit(), query.reason(), query.from(), query.to());
     }
@@ -85,10 +83,8 @@ public class OpsController {
             @RequestParam(defaultValue = "100") int limit,
             @RequestParam(required = false) String reason,
             @RequestParam(required = false) Integer drwNoFrom,
-            @RequestParam(required = false) Integer drwNoTo,
-            HttpServletResponse response
+            @RequestParam(required = false) Integer drwNoTo
     ) {
-        applyNoStore(response);
         NormalizedQuery query = normalize(limit, reason, drwNoFrom, drwNoTo);
         return fetchLogQueryService.failuresResponse(query.limit(), query.reason(), query.from(), query.to());
     }
@@ -100,10 +96,8 @@ public class OpsController {
             @RequestParam(defaultValue = "100") int logLimit,
             @RequestParam(required = false) String reason,
             @RequestParam(required = false) Integer drwNoFrom,
-            @RequestParam(required = false) Integer drwNoTo,
-            HttpServletResponse response
+            @RequestParam(required = false) Integer drwNoTo
     ) {
-        applyNoStore(response);
         NormalizedQuery reasonQuery = normalize(reasonLimit, reason, drwNoFrom, drwNoTo);
         int safeLogLimit = OpsQueryParams.normalizeLogLimit(logLimit);
         return fetchLogQueryService.failureOverview(
@@ -112,67 +106,38 @@ public class OpsController {
 
     @GetMapping("/ops/fetch-logs/retention-status")
     @Operation(summary = "Get fetch log retention configuration and purge eligibility")
-    public FetchLogRetentionStatusDto fetchLogRetentionStatus(HttpServletResponse response) {
-        applyNoStore(response);
-        return fetchLogQueryService.retentionStatus(
-                logRetentionEnabled,
-                logRetentionDays,
-                logRetentionDeleteBatchSize,
-                logRetentionCron,
-                collectZone
-        );
+    public FetchLogRetentionStatusDto fetchLogRetentionStatus() {
+        return OpsRetentionStatusSupport.resolve(fetchLogQueryService, collectProperties);
     }
 
     @GetMapping("/ops/collect/status")
     @Operation(summary = "Get current collection job status")
-    public CollectStatusResponse collectStatus(HttpServletResponse response) {
-        applyNoStore(response);
+    public CollectStatusResponse collectStatus() {
         return collectionCommandService.getStatus();
     }
 
     @PostMapping("/ops/collect")
     @Operation(summary = "Collect winning numbers up to latest round")
-    public CollectResponse collectLatest(HttpServletResponse response) {
-        applyNoStore(response);
+    public CollectResponse collectLatest() {
         return opsCollectionFacade.collectLatest();
     }
 
     @PostMapping("/ops/collect/missing")
     @Operation(summary = "Collect only missing rounds once")
-    public CollectResponse collectMissing(HttpServletResponse response) {
-        applyNoStore(response);
+    public CollectResponse collectMissing() {
         return opsCollectionFacade.collectMissing();
     }
 
     @GetMapping("/ops/recommend/stats")
     @Operation(summary = "Get recommendation generation metrics snapshot")
-    public RecommendStatsDto recommendStats(HttpServletResponse response) {
-        applyNoStore(response);
+    public RecommendStatsDto recommendStats() {
         return recommendMetricsQueryService.getSnapshot();
     }
 
     @GetMapping("/ops/circuit-breakers")
     @Operation(summary = "Get external API circuit breaker states")
-    public OpsCircuitBreakerStatusDto circuitBreakers(HttpServletResponse response) {
-        applyNoStore(response);
-        Map<String, OpsCircuitBreakerStatusDto.CircuitBreakerState> clients = circuitBreakerRegistry.snapshots().entrySet()
-                .stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> new OpsCircuitBreakerStatusDto.CircuitBreakerState(
-                                entry.getValue().enabled(),
-                                entry.getValue().state()
-                        ),
-                        (a, b) -> a,
-                        java.util.TreeMap::new
-                ));
-        return new OpsCircuitBreakerStatusDto(LocalDateTime.now(clock), clients);
-    }
-
-    private void applyNoStore(HttpServletResponse response) {
-        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-        response.setHeader("Pragma", "no-cache");
-        response.setDateHeader("Expires", 0);
+    public OpsCircuitBreakerStatusDto circuitBreakers() {
+        return new OpsCircuitBreakerStatusDto(LocalDateTime.now(clock), mapCircuitBreakerStates());
     }
 
     private static NormalizedQuery normalize(int limit, String reason, Integer drwNoFrom, Integer drwNoTo) {
@@ -183,5 +148,19 @@ public class OpsController {
                 range.from(),
                 range.to()
         );
+    }
+
+    private Map<String, OpsCircuitBreakerStatusDto.CircuitBreakerState> mapCircuitBreakerStates() {
+        return circuitBreakerRegistry.snapshots().entrySet()
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> new OpsCircuitBreakerStatusDto.CircuitBreakerState(
+                                entry.getValue().enabled(),
+                                entry.getValue().state()
+                        ),
+                        (a, b) -> a,
+                        java.util.TreeMap::new
+                ));
     }
 }

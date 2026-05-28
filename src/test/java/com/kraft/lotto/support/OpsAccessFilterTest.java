@@ -97,6 +97,27 @@ class OpsAccessFilterTest {
     }
 
     @Test
+    @DisplayName("Authorization Bearer 토큰이 유효하면 인증에 성공한다")
+    void bearerTokenIsAccepted() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
+        properties.getOps().setRequiredToken("expected-token");
+        OpsAccessFilter filter = new OpsAccessFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/ops/fetch-logs/failures");
+        request.setRemoteAddr("127.0.0.1");
+        request.addHeader("Authorization", "Bearer expected-token");
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(chain.getRequest()).isNotNull();
+    }
+
+    @Test
     @DisplayName("인증 성공 시 필터 체인을 계속 진행한다")
     void successfulAccessProceedsToFilterChain() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
@@ -160,6 +181,46 @@ class OpsAccessFilterTest {
         filter.doFilter(request, response, chain);
 
         assertThat(response.getStatus()).isEqualTo(403);
+        assertThat(chain.getRequest()).isNull();
+    }
+
+    @Test
+    @DisplayName("admin/ops 접두사만 포함한 경로는 필터 대상이 아니다")
+    void nonOpsAdminPrefixPathIsNotFiltered() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
+        properties.getOps().setRequiredToken("expected-token");
+        OpsAccessFilter filter = new OpsAccessFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/admin/ops-panel");
+        request.setRemoteAddr("127.0.0.1");
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(chain.getRequest()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("admin/ops 하위 경로는 필터 대상이다")
+    void adminOpsSubPathIsFiltered() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
+        properties.getOps().setRequiredToken("expected-token");
+        OpsAccessFilter filter = new OpsAccessFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/admin/ops/history");
+        request.setRemoteAddr("127.0.0.1");
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
         assertThat(chain.getRequest()).isNull();
     }
 }

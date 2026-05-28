@@ -5,7 +5,6 @@ final class OpsQueryParams {
     private static final int MIN_LIMIT = 1;
     private static final int MAX_LIMIT = 2000;
     private static final int MAX_REASON_LENGTH = 100;
-    private static final int MAX_TOKEN_LENGTH = 200;
 
     private OpsQueryParams() {
     }
@@ -54,17 +53,6 @@ final class OpsQueryParams {
         }
         if (trimmed.length() > MAX_REASON_LENGTH) {
             return trimmed.substring(0, MAX_REASON_LENGTH);
-        }
-        return trimmed;
-    }
-
-    static String normalizeToken(String token) {
-        if (token == null) {
-            return "";
-        }
-        String trimmed = token.trim();
-        if (trimmed.length() > MAX_TOKEN_LENGTH) {
-            return trimmed.substring(0, MAX_TOKEN_LENGTH);
         }
         return trimmed;
     }

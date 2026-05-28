@@ -63,13 +63,7 @@ public class OpsPageController {
         model.addAttribute("page", pagedFailures.page());
         model.addAttribute("pageSize", pagedFailures.pageSize());
         model.addAttribute("hasNext", pagedFailures.hasNext());
-        model.addAttribute("retentionStatus", fetchLogQueryService.retentionStatus(
-                collectProperties.logRetention().enabled(),
-                collectProperties.logRetention().days(),
-                collectProperties.logRetention().deleteBatchSize(),
-                collectProperties.logRetention().cron(),
-                collectProperties.auto().zone()
-        ));
+        model.addAttribute("retentionStatus", OpsRetentionStatusSupport.resolve(fetchLogQueryService, collectProperties));
         return "admin-ops";
     }
 }

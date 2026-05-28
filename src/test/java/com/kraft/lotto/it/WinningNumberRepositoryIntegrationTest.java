@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -21,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 @ActiveProfiles("it")
 @Import(MariaDbContainerConfig.class)
 @Transactional
+@EnabledIf(value = "com.kraft.lotto.it.TestcontainersAvailability#isDockerAvailable",
+        disabledReason = "Docker is not available for Testcontainers")
 @DisplayName("WinningNumberRepository 통합 테스트")
 class WinningNumberRepositoryIntegrationTest {
 
@@ -78,7 +81,6 @@ class WinningNumberRepositoryIntegrationTest {
     @Test
     @DisplayName("findPrizeHitsByNumbers는 5개 + 보너스 일치 회차를 2등으로 반환한다")
     void findPrizeHitsByNumbersReturnsSecondPrizeHit() {
-        // n1=1,n2=2,n3=3,n4=4,n5=5,n6=45, bonus=6 → 5개 + 보너스(6) 일치
         WinningNumberEntity secondPrize = new WinningNumberEntity(
                 600, LocalDate.of(2021, 6, 1),
                 1, 2, 3, 4, 5, 45, 6,

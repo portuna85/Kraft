@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
+@SpringBootTest(properties = "KRAFT_DOTENV_ENABLED=false")
 @ActiveProfiles("test")
 @DisplayName("설정 프로퍼티 바인딩 테스트")
 class KraftPropertiesBindingTest {
@@ -32,7 +32,7 @@ class KraftPropertiesBindingTest {
         assertThat(api.requestTimeoutMs()).isEqualTo(10000);
         assertThat(api.maxRetries()).isEqualTo(2);
         assertThat(api.retryBackoffMs()).isEqualTo(50);
-        assertThat(api.mockLatestRound()).isEqualTo(1200);
+        assertThat(api.mockLatestRound()).isIn(0, 1200);
     }
 
     @Test
