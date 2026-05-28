@@ -1,12 +1,10 @@
 (function () {
   'use strict';
 
-  // 1. State variables
   var inFlightByTarget = Object.create(null);
   var retryAttemptByTarget = Object.create(null);
   var retryBlockedUntilByTarget = Object.create(null);
 
-  // 2. Accessibility helpers
   function announce(message) {
     var region = document.getElementById('fragment-live-region');
     if (!region) return;
@@ -26,7 +24,11 @@
     document.dispatchEvent(new CustomEvent('kraft:fragmentLoaded'));
   }
 
-  // 3. Retry/backoff helpers
+  function targetKey(target) {
+    if (!target) return null;
+    return target.id || target.getAttribute('hx-get') || null;
+  }
+
   function retryKey(target) {
     return targetKey(target) || '';
   }
@@ -54,7 +56,6 @@
     return Date.now() < (retryBlockedUntilByTarget[key] || 0);
   }
 
-  // 4. UI state helpers
   function setUiState(target, state, message) {
     if (!target) return;
     target.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
@@ -65,22 +66,16 @@
   }
 
   function errorMessage(statusCode, backoffMs) {
-    var statusText = statusCode ? ('HTTP ' + statusCode) : '?ㅽ듃?뚰겕 ?ㅻ쪟';
-    var retryText = backoffMs > 0 ? (' ??' + Math.ceil(backoffMs / 1000) + '珥????ъ떆?꾪빐 二쇱꽭??') : '';
-    return '肄섑뀗痢좊? 遺덈윭?ㅼ? 紐삵뻽?듬땲?? (' + statusText + ').' + retryText;
+    var statusText = statusCode ? ('HTTP ' + statusCode) : '네트워크 오류';
+    var retryText = backoffMs > 0 ? (' ' + Math.ceil(backoffMs / 1000) + '초 후 다시 시도해 주세요.') : '';
+    return '콘텐츠를 불러오지 못했습니다 (' + statusText + ').' + retryText;
   }
 
   function stateMessage(id) {
-    if (id === 'frequency') return '踰덊샇 異쒗쁽 鍮덈룄瑜?遺덈윭?붿뒿?덈떎.';
-    if (id === 'rounds') return '?뚯감 紐⑸줉??遺덈윭?붿뒿?덈떎.';
-    if (id === 'recommend') return '異붿쿇 寃곌낵瑜?媛깆떊?덉뒿?덈떎.';
-    return '肄섑뀗痢좊? 遺덈윭?붿뒿?덈떎.';
-  }
-
-  // 5. Target resolution helpers
-  function targetKey(target) {
-    if (!target) return null;
-    return target.id || target.getAttribute('hx-get') || null;
+    if (id === 'frequency') return '번호 출현 빈도를 불러왔습니다.';
+    if (id === 'rounds') return '회차 목록을 불러왔습니다.';
+    if (id === 'recommend') return '추천 결과를 갱신했습니다.';
+    return '콘텐츠를 불러왔습니다.';
   }
 
   function resolveHtmxTarget(event) {
@@ -112,7 +107,6 @@
     return !!triggeringEvent;
   }
 
-  // 6. Fallback fetch loader
   function loadFragmentFallback(target, focusAfterLoad) {
     if (!target) return Promise.resolve();
     var key = targetKey(target);
@@ -139,7 +133,7 @@
         if (focusAfterLoad) {
           focusLoadedSection(updated);
         }
-        announce('肄섑뀗痢좊? 遺덈윭?붿뒿?덈떎.');
+        announce('콘텐츠를 불러왔습니다.');
         notifyLoaded();
       })
       .catch(function (error) {
@@ -153,7 +147,6 @@
     return inFlightByTarget[key];
   }
 
-  // 7. HTMX event bindings
   if (window.htmx) {
     document.body.addEventListener('htmx:beforeRequest', function (event) {
       var target = resolveHtmxTarget(event);
@@ -193,7 +186,6 @@
     });
   }
 
-  // 8. Retry button binding
   document.body.addEventListener('click', function (event) {
     var retryBtn = event.target.closest('.kraft-retry-btn');
     if (!retryBtn) return;
