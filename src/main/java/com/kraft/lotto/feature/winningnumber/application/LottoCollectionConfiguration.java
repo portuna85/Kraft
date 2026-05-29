@@ -5,6 +5,7 @@ import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberReposit
 import com.kraft.lotto.infra.config.KraftApiProperties;
 import com.kraft.lotto.infra.config.KraftCollectProperties;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
@@ -13,6 +14,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 class LottoCollectionConfiguration {
+
+    @Bean
+    WinningNumberUpsertExecutor winningNumberUpsertExecutor(WinningNumberRepository winningNumberRepository) {
+        return new WinningNumberUpsertExecutor(winningNumberRepository, Clock.systemDefaultZone());
+    }
 
     @Bean
     LottoSingleDrawCollector lottoSingleDrawCollector(LottoApiClient lottoApiClient,
@@ -37,7 +43,7 @@ class LottoCollectionConfiguration {
                 singleDrawCollector,
                 winningNumberRepository,
                 properties.backfillDelayMs(),
-                meterRegistryProvider.getIfAvailable()
+                meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new)
         );
     }
 

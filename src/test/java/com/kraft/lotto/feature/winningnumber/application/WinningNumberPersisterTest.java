@@ -4,98 +4,67 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import static com.kraft.lotto.support.fixtures.LottoTestFixtures.winningNumber;
 
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
-import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberEntity;
-import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 @DisplayName("당첨번호 저장기 테스트")
 class WinningNumberPersisterTest {
 
-    private final WinningNumberRepository repository = mock(WinningNumberRepository.class);
+    private final WinningNumberUpsertExecutor executor = mock(WinningNumberUpsertExecutor.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-05-14T00:00:00Z"), ZoneOffset.UTC);
     private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
-    private final WinningNumberPersister persister = new WinningNumberPersister(repository, clock, meterRegistry);
+    private final WinningNumberPersister persister = new WinningNumberPersister(executor, meterRegistry);
 
     @Test
     @DisplayName("upsert는 동일 데이터면 UNCHANGED를 반환한다")
     void upsertReturnsUnchangedForSameData() {
-        WinningNumber winningNumber = sample(1200);
-        when(repository.findById(1200)).thenReturn(Optional.of(entityFrom(winningNumber)));
+        when(executor.upsertOnce(any())).thenReturn(UpsertOutcome.UNCHANGED);
 
-        UpsertOutcome outcome = persister.upsert(winningNumber);
+        UpsertOutcome outcome = persister.upsert(sample(1200));
 
         assertThat(outcome).isEqualTo(UpsertOutcome.UNCHANGED);
-        verify(repository, never()).save(any(WinningNumberEntity.class));
     }
 
     @Test
-    @DisplayName("upsert는 기존 데이터가 다르면 UPDATED를 반환하고 엔티티를 갱신한다")
+    @DisplayName("upsert는 기존 데이터가 다르면 UPDATED를 반환한다")
     void upsertReturnsUpdatedWhenDataChanged() {
-        WinningNumber existing = sample(1200);
-        WinningNumber incoming = new WinningNumber(
-                1200,
-                LocalDate.of(2026, 5, 10),
-                new LottoCombination(List.of(1, 2, 3, 4, 5, 6)),
-                7,
-                3_000_000_000L,
-                9,
-                80_000_000_000L,
-                30_000_000_000L,
-                "{\"returnValue\":\"success\"}",
-                null
-        );
-        WinningNumberEntity existingEntity = entityFrom(existing);
-        when(repository.findById(1200)).thenReturn(Optional.of(existingEntity));
+        when(executor.upsertOnce(any())).thenReturn(UpsertOutcome.UPDATED);
 
-        UpsertOutcome outcome = persister.upsert(incoming);
+        UpsertOutcome outcome = persister.upsert(changedSample(1200));
 
         assertThat(outcome).isEqualTo(UpsertOutcome.UPDATED);
-        assertThat(existingEntity.getN1()).isEqualTo(1);
-        assertThat(existingEntity.getBonusNumber()).isEqualTo(7);
     }
 
     @Test
     @DisplayName("upsert는 신규 데이터면 INSERTED를 반환한다")
     void upsertReturnsInsertedWhenMissing() {
-        WinningNumber winningNumber = sample(1201);
-        when(repository.findById(1201)).thenReturn(Optional.empty());
+        when(executor.upsertOnce(any())).thenReturn(UpsertOutcome.INSERTED);
 
-        UpsertOutcome outcome = persister.upsert(winningNumber);
+        UpsertOutcome outcome = persister.upsert(sample(1201));
 
         assertThat(outcome).isEqualTo(UpsertOutcome.INSERTED);
-        ArgumentCaptor<WinningNumberEntity> captor = ArgumentCaptor.forClass(WinningNumberEntity.class);
-        verify(repository).save(captor.capture());
-        assertThat(captor.getValue().getRound()).isEqualTo(1201);
     }
 
     @Test
     @DisplayName("upsert는 신규 저장 충돌 시 UNCHANGED를 반환한다")
     void upsertReturnsUnchangedOnInsertConflict() {
-        WinningNumber winningNumber = sample(1202);
-        when(repository.findById(1202)).thenReturn(Optional.empty());
-        doThrow(new DataIntegrityViolationException("dup")).when(repository).save(any(WinningNumberEntity.class));
+        doThrow(new DataIntegrityViolationException("dup")).when(executor).upsertOnce(any());
 
-        UpsertOutcome outcome = persister.upsert(winningNumber);
+        UpsertOutcome outcome = persister.upsert(sample(1202));
 
         assertThat(outcome).isEqualTo(UpsertOutcome.UNCHANGED);
     }
@@ -103,24 +72,11 @@ class WinningNumberPersisterTest {
     @Test
     @DisplayName("upsert는 낙관적 락 충돌 시 재시도 후 성공하면 UPDATED를 반환한다")
     void upsertRetriesOnOptimisticLockAndSucceeds() {
-        WinningNumber incoming = new WinningNumber(
-                1200,
-                LocalDate.of(2026, 5, 10),
-                new LottoCombination(List.of(1, 2, 3, 4, 5, 6)),
-                7,
-                3_000_000_000L,
-                9,
-                80_000_000_000L,
-                30_000_000_000L,
-                "{\"returnValue\":\"success\"}",
-                null
-        );
-        WinningNumberEntity existingEntity = entityFrom(sample(1200));
-        when(repository.findById(1200))
+        when(executor.upsertOnce(any()))
                 .thenThrow(new OptimisticLockingFailureException("conflict"))
-                .thenReturn(Optional.of(existingEntity));
+                .thenReturn(UpsertOutcome.UPDATED);
 
-        UpsertOutcome outcome = persister.upsert(incoming);
+        UpsertOutcome outcome = persister.upsert(changedSample(1200));
 
         assertThat(outcome).isEqualTo(UpsertOutcome.UPDATED);
     }
@@ -128,12 +84,11 @@ class WinningNumberPersisterTest {
     @Test
     @DisplayName("upsert는 낙관적 락 충돌이 재시도 한도를 넘으면 FAILED를 반환한다")
     void upsertReturnsFailedWhenOptimisticLockRetriesExhausted() {
-        WinningNumber incoming = sample(1200);
-        when(repository.findById(1200))
+        when(executor.upsertOnce(any()))
                 .thenThrow(new OptimisticLockingFailureException("conflict-1"))
                 .thenThrow(new OptimisticLockingFailureException("conflict-2"));
 
-        UpsertOutcome outcome = persister.upsert(incoming);
+        UpsertOutcome outcome = persister.upsert(sample(1200));
 
         assertThat(outcome).isEqualTo(UpsertOutcome.FAILED);
         assertThat(meterRegistry.get("kraft.winningnumber.optimistic_lock.failure").counter().count()).isEqualTo(1.0);
@@ -143,26 +98,18 @@ class WinningNumberPersisterTest {
         return winningNumber(round, LocalDate.of(2026, 5, 3), new LottoCombination(List.of(6, 13, 23, 24, 28, 33)), 38);
     }
 
-    private WinningNumberEntity entityFrom(WinningNumber winningNumber) {
-        LocalDateTime now = LocalDateTime.ofInstant(clock.instant(), clock.getZone());
-        return new WinningNumberEntity(
-                winningNumber.round(),
-                winningNumber.drawDate(),
-                winningNumber.combination().numbers().get(0),
-                winningNumber.combination().numbers().get(1),
-                winningNumber.combination().numbers().get(2),
-                winningNumber.combination().numbers().get(3),
-                winningNumber.combination().numbers().get(4),
-                winningNumber.combination().numbers().get(5),
-                winningNumber.bonusNumber(),
-                winningNumber.firstPrize(),
-                winningNumber.firstWinners(),
-                winningNumber.totalSales(),
-                winningNumber.firstAccumAmount(),
-                winningNumber.rawJson(),
-                now,
-                now,
-                now
+    private WinningNumber changedSample(int round) {
+        return new WinningNumber(
+                round,
+                LocalDate.of(2026, 5, 10),
+                new LottoCombination(List.of(1, 2, 3, 4, 5, 6)),
+                7,
+                3_000_000_000L,
+                9,
+                80_000_000_000L,
+                30_000_000_000L,
+                "{\"returnValue\":\"success\"}",
+                null
         );
     }
 }
