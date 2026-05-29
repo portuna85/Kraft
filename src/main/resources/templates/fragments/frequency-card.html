@@ -4,8 +4,8 @@
     <div class="kraft-freq-grid">
       <div class="kraft-freq-cell" th:each="f : ${frequency}">
         <span th:replace="~{fragments/lotto-ball :: ball(${f.number}, '')}">1</span>
-        <progress class="bar" th:attr="max=${maxFreq},value=${f.count},aria-label=|${f.number}번 출현 빈도|"></progress>
         <small th:text="${f.count}" th:attr="aria-label=|${f.number}번 ${f.count}회 출현|">0</small>
+        <progress class="bar" th:attr="max=${maxFreq},value=${f.count},aria-label=|${f.number}번 출현 빈도|"></progress>
       </div>
     </div>
   </div>
