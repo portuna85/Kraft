@@ -3,19 +3,18 @@
 
     <springProperty scope="context" name="LOG_PATH" source="logging.file.path" defaultValue="./logs"/>
 
-    <!-- ══ 패턴 ══════════════════════════════════════════════════════════════
-         requestId:-  → MDC 값 없을 때 빈 문자열 (리터럴 "null" 출력 방지)
-         %-5level     → 레벨 5자 고정폭 좌측 정렬
-         %logger{40}  → 패키지 최대 40자 축약 (가독성·성능 균형)
-    ══════════════════════════════════════════════════════════════════════════ -->
+    <!--
+        requestId:-  → MDC 값 없을 때 빈 문자열 (리터럴 "null" 출력 방지)
+        %-5level     → 레벨 5자 고정폭 좌측 정렬
+        %logger{40}  → 패키지 최대 40자 축약
+    -->
     <property name="FILE_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{requestId:-}] %logger{40} - %msg%n"/>
     <property name="CONSOLE_PATTERN"
               value="%d{HH:mm:ss.SSS} %-5level [%15.15thread] [%X{requestId:-}] %logger{36} - %msg%n"/>
 
-    <!-- ══ Appender 정의 ═════════════════════════════════════════════════════ -->
+    <!-- ══ 공통 Appenders ═══════════════════════════════════════════════════════ -->
 
-    <!-- 콘솔: 로컬 개발 메인 출력, 운영 환경에서는 컨테이너 로그 드라이버가 수집 -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${CONSOLE_PATTERN}</pattern>
@@ -23,7 +22,7 @@
         </encoder>
     </appender>
 
-    <!-- kraft.log — 전체 INFO 이상 통합 로그 (운영 모니터링 메인) -->
+    <!-- kraft.log — INFO+ 통합 (운영 모니터링 메인) -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/kraft.log</file>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -41,10 +40,7 @@
         </rollingPolicy>
     </appender>
 
-    <!--
-        kraft-collect.log — 수집 레이어 전용 (com.kraft.lotto.feature.winningnumber)
-        배치 수집 흐름만 격리하여 추적 (kraft.log 와 병행 기록, additivity=true)
-    -->
+    <!-- kraft-collect.log — 수집 레이어 전용 (additivity=true 로 kraft.log 에도 전파) -->
     <appender name="COLLECT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/kraft-collect.log</file>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -63,10 +59,9 @@
     </appender>
 
     <!--
-        kraft-api.log — 외부 API 클라이언트 전용 (DhLottery · Smok)
-        - local : DEBUG 이상 기록 (재시도 상세·응답 파싱 포함)
-        - prod  : com.kraft 레벨이 INFO이므로 WARN 이상만 자동 기록
-        ThresholdFilter 미설정 → 로거 레벨이 자연스럽게 기록 범위를 결정
+        kraft-api.log — 외부 API 클라이언트 전용
+        ThresholdFilter 미설정 → 로거 레벨이 기록 범위를 결정
+        local: DEBUG 이상 / prod: INFO 이상(→ 실질적으로 WARN 이상)
     -->
     <appender name="API_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/kraft-api.log</file>
@@ -82,10 +77,7 @@
         </rollingPolicy>
     </appender>
 
-    <!--
-        kraft-error.log — ERROR 이상 전용 (장애 초동 대응용)
-        보존 60일: 장애 사후 원인 추적에 충분한 기간 확보
-    -->
+    <!-- kraft-error.log — ERROR+ 전용 (장애 초동 대응, 60일 보존) -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/kraft-error.log</file>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -103,10 +95,9 @@
         </rollingPolicy>
     </appender>
 
-    <!-- ══ 비동기 래퍼 ══════════════════════════════════════════════════════════
+    <!-- ══ 공통 비동기 래퍼 ══════════════════════════════════════════════════════
          파일 I/O를 별도 스레드에 위임 → 요청 스레드 지연 최소화
-         discardingThreshold=0: 큐 포화 시에도 로그 이벤트를 버리지 않음
-         (기본값 20%에서 INFO 이하를 자동 폐기하는 동작 비활성화)
+         discardingThreshold=0: 큐 포화 시에도 로그 이벤트 유실 방지
     ══════════════════════════════════════════════════════════════════════════ -->
 
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
@@ -133,26 +124,21 @@
         <appender-ref ref="ERROR_FILE"/>
     </appender>
 
-    <!-- ══ 프레임워크 노이즈 억제 ══════════════════════════════════════════════ -->
+    <!-- ══ 프레임워크 노이즈 억제 ════════════════════════════════════════════════ -->
 
-    <!-- Hibernate 기동 시 DB 연결 상세 14줄 덤프·버전 알림 억제 -->
-    <logger name="org.hibernate.orm" level="WARN"/>
-    <!-- HikariCP 커넥션 풀 초기화 메시지 억제 -->
-    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.hibernate.orm"   level="WARN"/>
+    <logger name="com.zaxxer.hikari"   level="WARN"/>
 
-    <!-- ══ 수집 레이어 로거 ════════════════════════════════════════════════════
-         additivity=true: kraft-collect.log 기록 + root 경유로 kraft.log에도 전파
-         → kraft.log는 항상 전체 맥락을 포함하는 통합 뷰를 유지
+    <!-- ══ 수집 레이어 로거 ══════════════════════════════════════════════════════
+         additivity=true: kraft-collect.log + root 경유로 kraft.log에도 전파
     ══════════════════════════════════════════════════════════════════════════ -->
 
     <logger name="com.kraft.lotto.feature.winningnumber" additivity="true">
         <appender-ref ref="ASYNC_COLLECT"/>
     </logger>
 
-    <!-- ══ 외부 API 클라이언트 로거 ══════════════════════════════════════════
+    <!-- ══ 외부 API 클라이언트 로거 ═════════════════════════════════════════════
          additivity=true: kraft-api.log + kraft-collect.log + kraft.log 동시 기록
-         prod  환경: com.kraft INFO 레벨 → WARN 이상만 생성되어 kraft-api.log에 기록
-         local 환경: com.kraft DEBUG 레벨 → DEBUG 상세도 kraft-api.log에서 확인 가능
     ══════════════════════════════════════════════════════════════════════════ -->
 
     <logger name="com.kraft.lotto.feature.winningnumber.application.DhLotteryApiClient" additivity="true">
@@ -162,27 +148,90 @@
         <appender-ref ref="ASYNC_API"/>
     </logger>
 
-    <!-- ══ 환경별 애플리케이션 로그 레벨 ═════════════════════════════════════ -->
-
-    <springProfile name="local">
-        <!-- 로컬: DEBUG 전체 허용 → 콘솔·kraft-api.log에서 재시도 상세 추적 가능 -->
-        <logger name="com.kraft" level="DEBUG"/>
-    </springProfile>
-    <springProfile name="prod">
-        <!-- 운영: INFO 이상만 → 노이즈 최소화, API 클라이언트는 WARN 이상만 kraft-api.log에 기록 -->
-        <logger name="com.kraft" level="INFO"/>
-    </springProfile>
-
-    <!-- ══ Root 로거 ═══════════════════════════════════════════════════════════
-         CONSOLE : 로컬은 DEBUG 이벤트 통과, 운영은 com.kraft INFO 설정으로 자연 억제
-         ASYNC_FILE  : INFO 이상 전체 통합 뷰 (kraft.log)
-         ASYNC_ERROR : ERROR 이상 장애 감지 전용 (kraft-error.log)
+    <!-- ══ 로컬 프로파일 ═════════════════════════════════════════════════════════
+         kraft-warn.log : WARN 단독 → 경고 패턴 파악용 (7일 보존)
+         kraft-debug.log: DEBUG 단독 → 디버깅 상세 추적용 (3일 보존)
+         두 파일 모두 LevelFilter(ACCEPT/DENY)로 해당 레벨만 정확히 기록
     ══════════════════════════════════════════════════════════════════════════ -->
 
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="ASYNC_FILE"/>
-        <appender-ref ref="ASYNC_ERROR"/>
-    </root>
+    <springProfile name="local">
+
+        <appender name="WARN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/kraft-warn.log</file>
+            <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                <level>WARN</level>
+                <onMatch>ACCEPT</onMatch>
+                <onMismatch>DENY</onMismatch>
+            </filter>
+            <encoder>
+                <pattern>${FILE_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/archived/kraft-warn.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>10MB</maxFileSize>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>100MB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <appender name="DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/kraft-debug.log</file>
+            <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                <level>DEBUG</level>
+                <onMatch>ACCEPT</onMatch>
+                <onMismatch>DENY</onMismatch>
+            </filter>
+            <encoder>
+                <pattern>${FILE_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/archived/kraft-debug.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>20MB</maxFileSize>
+                <maxHistory>3</maxHistory>
+                <totalSizeCap>100MB</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <appender name="ASYNC_WARN" class="ch.qos.logback.classic.AsyncAppender">
+            <queueSize>128</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <appender-ref ref="WARN_FILE"/>
+        </appender>
+
+        <appender name="ASYNC_DEBUG" class="ch.qos.logback.classic.AsyncAppender">
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <appender-ref ref="DEBUG_FILE"/>
+        </appender>
+
+        <logger name="com.kraft" level="DEBUG"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+            <appender-ref ref="ASYNC_ERROR"/>
+            <appender-ref ref="ASYNC_WARN"/>
+            <appender-ref ref="ASYNC_DEBUG"/>
+        </root>
+
+    </springProfile>
+
+    <!-- ══ 운영 프로파일 ═════════════════════════════════════════════════════════
+         INFO 이상만 기록, API 클라이언트는 WARN 이상만 kraft-api.log에 기록
+    ══════════════════════════════════════════════════════════════════════════ -->
+
+    <springProfile name="prod">
+
+        <logger name="com.kraft" level="INFO"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+            <appender-ref ref="ASYNC_ERROR"/>
+        </root>
+
+    </springProfile>
 
 </configuration>
