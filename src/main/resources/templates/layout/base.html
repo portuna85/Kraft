@@ -4,7 +4,7 @@
   req=${#httpServletRequest},
   reqPath=${(req != null and req.requestURI != null) ? req.requestURI : '/'},
   isAdmin=${#strings.startsWith(reqPath, '/admin')},
-  baseUrl=${@environment.getProperty('kraft.public-base-url', 'https://kraft.io.kr')},
+  baseUrl=${@environment.getProperty('kraft.public-base-url', 'https://www.kraft.io.kr')},
   canonicalUrl=${baseUrl + reqPath}">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

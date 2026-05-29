@@ -67,7 +67,7 @@ management:
       enabled: true
 
 kraft:
-  public-base-url: ${KRAFT_PUBLIC_BASE_URL:https://kraft.io.kr}
+  public-base-url: ${KRAFT_PUBLIC_BASE_URL:https://www.kraft.io.kr}
   security:
     headers:
       enabled: ${KRAFT_SECURITY_HEADERS_ENABLED:true}

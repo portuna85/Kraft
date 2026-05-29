@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SeoController {
 
-    private static final String DEFAULT_BASE_URL = "https://kraft.io.kr";
+    private static final String DEFAULT_BASE_URL = "https://www.kraft.io.kr";
 
     private final Environment environment;
 
