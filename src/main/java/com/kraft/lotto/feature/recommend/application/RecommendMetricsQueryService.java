@@ -4,6 +4,7 @@ import com.kraft.lotto.feature.recommend.web.dto.RecommendStatsDto;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.util.Map;
 import java.util.TreeMap;
@@ -23,13 +24,10 @@ public class RecommendMetricsQueryService {
             justification = "Spring ObjectProvider lookup may throw; failing fast during bean construction is intentional."
     )
     public RecommendMetricsQueryService(ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        this.meterRegistry = meterRegistryProvider.getIfAvailable();
+        this.meterRegistry = meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new);
     }
 
     public RecommendStatsDto getSnapshot() {
-        if (meterRegistry == null) {
-            return empty();
-        }
         Timer latencyTimer = meterRegistry.find("kraft.recommend.generation.latency").timer();
         long generationCount = latencyTimer == null ? 0L : latencyTimer.count();
         double generationMeanMs = latencyTimer == null ? 0.0 : latencyTimer.mean(TimeUnit.MILLISECONDS);

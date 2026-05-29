@@ -3,6 +3,7 @@ package com.kraft.lotto.feature.recommend.application;
 import com.kraft.lotto.feature.recommend.domain.ExclusionRule;
 import com.kraft.lotto.infra.config.KraftRecommendProperties;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,7 @@ public class RecommendConfiguration {
                 rules,
                 numberGenerator,
                 properties.maxAttempts(),
-                meterRegistryProvider.getIfAvailable()
+                meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new)
         );
     }
 }

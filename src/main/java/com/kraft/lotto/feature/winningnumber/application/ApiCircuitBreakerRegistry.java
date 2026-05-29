@@ -2,6 +2,7 @@ package com.kraft.lotto.feature.winningnumber.application;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,10 +47,7 @@ public class ApiCircuitBreakerRegistry {
         if (gaugeRegistered.putIfAbsent(client, Boolean.TRUE) != null) {
             return;
         }
-        MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
-        if (meterRegistry == null) {
-            return;
-        }
+        MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new);
         Gauge.builder("kraft.api.circuit_breaker.state", breaker, ApiCircuitBreaker::stateCode)
                 .description("Circuit breaker state by client (closed=0, half_open=1, open=2)")
                 .tag("client", client)

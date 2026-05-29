@@ -9,6 +9,7 @@ import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
 import com.kraft.lotto.support.BusinessException;
 import com.kraft.lotto.support.ErrorCode;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -40,12 +41,12 @@ public class WinningStatisticsCacheService {
                                          WinningNumberFrequencySummaryRepository summaryRepository,
                                          ObjectProvider<MeterRegistry> meterRegistryProvider,
                                          Clock clock) {
-        this(repository, summaryRepository, meterRegistryProvider.getIfAvailable(), clock);
+        this(repository, summaryRepository, meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new), clock);
     }
 
     WinningStatisticsCacheService(WinningNumberRepository repository,
                                   WinningNumberFrequencySummaryRepository summaryRepository) {
-        this(repository, summaryRepository, (MeterRegistry) null, Clock.systemDefaultZone());
+        this(repository, summaryRepository, new SimpleMeterRegistry(), Clock.systemDefaultZone());
     }
 
     WinningStatisticsCacheService(WinningNumberRepository repository,
@@ -182,31 +183,20 @@ public class WinningStatisticsCacheService {
                 .map(dto -> new WinningNumberFrequencySummaryEntity(dto.number(), dto.count(), latestRound, now))
                 .toList();
         summaryRepository.saveAll(rows); // summaryRepository != null: caller already guards
-        if (meterRegistry != null) {
-            meterRegistry.counter("kraft.statistics.frequency.summary.refresh").increment();
-        }
+        meterRegistry.counter("kraft.statistics.frequency.summary.refresh").increment();
     }
 
     private void recordFrequencyLatency(long startedAtNano, String source) {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.timer("kraft.statistics.frequency.latency", "source", source)
                 .record(Duration.ofNanos(System.nanoTime() - startedAtNano));
     }
 
     private void recordRefreshLatency(long startedAtNano) {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.timer("kraft.statistics.frequency.summary.refresh.latency")
                 .record(Duration.ofNanos(System.nanoTime() - startedAtNano));
     }
 
     private void countFrequencyCacheMiss(String source) {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.counter("kraft.statistics.frequency.cache.miss", "source", source).increment();
     }
 

@@ -5,6 +5,7 @@ import com.kraft.lotto.feature.winningnumber.domain.LottoDrawSchedule;
 import com.kraft.lotto.infra.config.KraftApiProperties;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.http.HttpClient;
 import java.time.Clock;
 import java.time.Duration;
@@ -95,7 +96,7 @@ public class LottoApiClientConfig {
                     properties.maxRetries(),
                     properties.retryBackoffMs(),
                     properties.requestTimeoutMs(),
-                    meterRegistryProvider.getIfAvailable(),
+                    meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new),
                     circuitBreaker
             );
         }
@@ -108,7 +109,7 @@ public class LottoApiClientConfig {
                     properties.maxRetries(),
                     properties.retryBackoffMs(),
                     properties.requestTimeoutMs(),
-                    meterRegistryProvider.getIfAvailable(),
+                    meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new),
                     circuitBreaker
             );
         }

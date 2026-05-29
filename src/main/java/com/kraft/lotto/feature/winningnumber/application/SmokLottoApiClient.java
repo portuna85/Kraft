@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -49,7 +50,7 @@ public class SmokLottoApiClient implements LottoApiClient {
     }
 
     SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl, Clock clock) {
-        this(restClient, objectMapper, baseUrl, 0, null, clock, new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
+        this(restClient, objectMapper, baseUrl, 0, new SimpleMeterRegistry(), clock, new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
     }
 
     SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl,
@@ -82,10 +83,8 @@ public class SmokLottoApiClient implements LottoApiClient {
                     () -> count("kraft.api.smok.call.failure", "reason", "circuit_open")
             );
         } finally {
-            if (meterRegistry != null) {
-                meterRegistry.timer("kraft.api.smok.latency")
-                        .record(System.nanoTime() - started, TimeUnit.NANOSECONDS);
-            }
+            meterRegistry.timer("kraft.api.smok.latency")
+                    .record(System.nanoTime() - started, TimeUnit.NANOSECONDS);
         }
     }
 
@@ -243,9 +242,6 @@ public class SmokLottoApiClient implements LottoApiClient {
     }
 
     private void count(String metricName, String... tags) {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.counter(metricName, tags).increment();
     }
 

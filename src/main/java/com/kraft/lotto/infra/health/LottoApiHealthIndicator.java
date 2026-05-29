@@ -5,6 +5,7 @@ import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -31,7 +32,7 @@ public class LottoApiHealthIndicator implements HealthIndicator {
                                    ObjectProvider<MeterRegistry> meterRegistryProvider) {
         this.winningNumberRepository = winningNumberRepository;
         this.clock = clock;
-        this.meterRegistry = meterRegistryProvider.getIfAvailable();
+        this.meterRegistry = meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new);
     }
 
     @Override
@@ -63,17 +64,11 @@ public class LottoApiHealthIndicator implements HealthIndicator {
     }
 
     private void recordLatency(long startedAt, String status) {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.timer("kraft.health.winning-number-db.latency", "status", status)
                 .record(Duration.ofNanos(System.nanoTime() - startedAt));
     }
 
     private void recordFailure() {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.counter("kraft.health.winning-number-db.failure").increment();
     }
 }

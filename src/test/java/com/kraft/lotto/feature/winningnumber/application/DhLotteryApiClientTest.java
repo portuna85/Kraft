@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -227,7 +228,7 @@ class DhLotteryApiClientTest {
                     new ObjectMapper(),
                     "http://localhost",
                     maxRetries,
-                    null,
+                    new SimpleMeterRegistry(),
                     Clock.systemDefaultZone(),
                     new ApiRetrySupport(0, 0),
                     ApiCircuitBreaker.disabled()
@@ -241,7 +242,7 @@ class DhLotteryApiClientTest {
                     new ObjectMapper(),
                     "http://localhost",
                     maxRetries,
-                    null,
+                    new SimpleMeterRegistry(),
                     Clock.systemDefaultZone(),
                     retrySupport,
                     ApiCircuitBreaker.disabled()
@@ -255,7 +256,7 @@ class DhLotteryApiClientTest {
                     new ObjectMapper(),
                     "http://localhost",
                     maxRetries,
-                    null,
+                    new SimpleMeterRegistry(),
                     Clock.systemDefaultZone(),
                     new ApiRetrySupport(0, 0),
                     circuitBreaker

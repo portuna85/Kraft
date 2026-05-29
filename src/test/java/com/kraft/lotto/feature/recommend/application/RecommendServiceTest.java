@@ -26,7 +26,7 @@ class RecommendServiceTest {
         return new RecommendService(
                 rules,
                 new LottoRecommender(rules, new Random(FIXED_SEED), 100_000),
-                new RecommendMetricsRecorder((io.micrometer.core.instrument.MeterRegistry) null)
+                new RecommendMetricsRecorder(new SimpleMeterRegistry())
         );
     }
 
@@ -94,7 +94,7 @@ class RecommendServiceTest {
         var service = new RecommendService(
                 rules,
                 new LottoRecommender(rules, new Random(FIXED_SEED), 50),
-                new RecommendMetricsRecorder((io.micrometer.core.instrument.MeterRegistry) null)
+                new RecommendMetricsRecorder(new SimpleMeterRegistry())
         );
 
         assertThatExceptionOfType(BusinessException.class)

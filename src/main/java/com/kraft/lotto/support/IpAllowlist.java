@@ -21,9 +21,7 @@ final class IpAllowlist {
                 rules.add(IpRange.parse(trimmed));
             } catch (Exception ex) {
                 log.warn("Ignoring invalid {} allowlist entry: {}", filterName, LogSanitizer.sanitizeLogValue(trimmed));
-                if (meterRegistry != null) {
-                    meterRegistry.counter("kraft.security.allowlist.invalid.entry", "filter", filterName).increment();
-                }
+                meterRegistry.counter("kraft.security.allowlist.invalid.entry", "filter", filterName).increment();
             }
         }
         return new IpAllowlist(rules);

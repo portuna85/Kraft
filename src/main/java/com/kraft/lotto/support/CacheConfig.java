@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.kraft.lotto.infra.config.KraftCacheProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
@@ -18,7 +19,7 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager(KraftCacheProperties cacheProperties,
                                      ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
+        MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new);
         CaffeineCacheManager manager = new CaffeineCacheManager();
         manager.registerCustomCache("winningNumberFrequency", monitored(
                 "winningNumberFrequency",
@@ -46,9 +47,6 @@ public class CacheConfig {
     private static Cache<Object, Object> monitored(String cacheName,
                                                    Cache<Object, Object> cache,
                                                    MeterRegistry meterRegistry) {
-        if (meterRegistry == null) {
-            return cache;
-        }
         return CaffeineCacheMetrics.monitor(meterRegistry, cache, cacheName);
     }
 }

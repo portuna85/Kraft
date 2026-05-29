@@ -4,6 +4,7 @@ import com.kraft.lotto.feature.recommend.domain.ExclusionRule;
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,7 +22,7 @@ public class LottoRecommender {
     private final MeterRegistry meterRegistry;
 
     public LottoRecommender(List<ExclusionRule> rules, LottoNumberGenerator numberGenerator, int maxAttempts) {
-        this(rules, numberGenerator, maxAttempts, null);
+        this(rules, numberGenerator, maxAttempts, new SimpleMeterRegistry());
     }
 
     public LottoRecommender(List<ExclusionRule> rules,
@@ -44,7 +45,7 @@ public class LottoRecommender {
     }
 
     public LottoRecommender(List<ExclusionRule> rules, Random random, int maxAttempts) {
-        this(rules, new RandomLottoNumberGenerator(random), maxAttempts, null);
+        this(rules, new RandomLottoNumberGenerator(random), maxAttempts, new SimpleMeterRegistry());
     }
 
     public List<LottoCombination> recommend(int count) {
@@ -94,7 +95,7 @@ public class LottoRecommender {
     }
 
     private void recordRejectionRate(int attempts, int rejected) {
-        if (meterRegistry == null || attempts <= 0) {
+        if (attempts <= 0) {
             return;
         }
         meterRegistry.summary("kraft.recommend.rejection.rate")
@@ -104,24 +105,15 @@ public class LottoRecommender {
     }
 
     private void recordDuplicateRejection() {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.counter("kraft.recommend.rejection.by.type", "type", "duplicate").increment();
     }
 
     private void recordRuleRejection(String ruleName) {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.counter("kraft.recommend.rejection.by.type", "type", "rule").increment();
         meterRegistry.counter("kraft.recommend.rejection.by.rule", "rule", ruleName).increment();
     }
 
     private void recordTimeout() {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.counter("kraft.recommend.timeout.count").increment();
     }
 }

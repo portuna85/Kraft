@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.recommend.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +52,7 @@ class RecommendConfigurationTest {
         MeterRegistry meterRegistry = new SimpleMeterRegistry();
         @SuppressWarnings("unchecked")
         ObjectProvider<MeterRegistry> meterRegistryProvider = mock(ObjectProvider.class);
-        when(meterRegistryProvider.getIfAvailable()).thenReturn(meterRegistry);
+        when(meterRegistryProvider.getIfAvailable(any())).thenReturn(meterRegistry);
 
         LottoRecommender recommender = config.lottoRecommender(
                 List.of(noOpRule),

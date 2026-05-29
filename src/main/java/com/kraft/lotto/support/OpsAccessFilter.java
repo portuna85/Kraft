@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class OpsAccessFilter extends OncePerRequestFilter {
     @Autowired
     public OpsAccessFilter(ObjectProvider<KraftSecurityProperties> securityPropertiesProvider,
                            ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new), meterRegistryProvider.getIfAvailable());
+        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new), meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new));
     }
 
     OpsAccessFilter(KraftSecurityProperties securityProperties) {

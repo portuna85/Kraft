@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.domain.LottoDrawSchedule;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -40,7 +41,7 @@ public class DhLotteryApiClient implements LottoApiClient {
     );
 
     public DhLotteryApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl) {
-        this(restClient, objectMapper, baseUrl, 0, null, Clock.systemDefaultZone(),
+        this(restClient, objectMapper, baseUrl, 0, new SimpleMeterRegistry(), Clock.systemDefaultZone(),
                 new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
     }
 
@@ -91,10 +92,8 @@ public class DhLotteryApiClient implements LottoApiClient {
                     () -> count("kraft.api.dhlottery.call.failure", "reason", "circuit_open")
             );
         } finally {
-            if (meterRegistry != null) {
-                meterRegistry.timer("kraft.api.dhlottery.latency")
-                        .record(System.nanoTime() - started, TimeUnit.NANOSECONDS);
-            }
+            meterRegistry.timer("kraft.api.dhlottery.latency")
+                    .record(System.nanoTime() - started, TimeUnit.NANOSECONDS);
         }
     }
 
@@ -272,13 +271,13 @@ public class DhLotteryApiClient implements LottoApiClient {
     }
 
     private void count(String metricName, String... tags) {
-        if (meterRegistry == null) {
-            return;
-        }
         if ("kraft.api.dhlottery.call.failure".equals(metricName) && tags.length >= 2 && "reason".equals(tags[0])) {
             String reason = tags[1];
             if (!ALLOWED_FAILURE_REASONS.contains(reason)) {
-                tags[1] = "other";
+                String[] t = tags.clone();
+                t[1] = "other";
+                meterRegistry.counter(metricName, t).increment();
+                return;
             }
         }
         meterRegistry.counter(metricName, tags).increment();

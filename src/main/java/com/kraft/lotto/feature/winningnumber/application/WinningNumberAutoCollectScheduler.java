@@ -3,6 +3,7 @@ package com.kraft.lotto.feature.winningnumber.application;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.beans.factory.ObjectProvider;
@@ -30,7 +31,7 @@ public class WinningNumberAutoCollectScheduler {
     public WinningNumberAutoCollectScheduler(LottoCollectionCommandService collectionService,
                                              ObjectProvider<MeterRegistry> meterRegistryProvider) {
         this.collectionService = collectionService;
-        this.meterRegistry = meterRegistryProvider.getIfAvailable();
+        this.meterRegistry = meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new);
     }
 
     @Scheduled(
@@ -80,25 +81,19 @@ public class WinningNumberAutoCollectScheduler {
     }
 
     private void recordRun(String trigger, String status, long startedAt) {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.counter("kraft.collect.auto.run", "trigger", trigger, "status", status).increment();
         meterRegistry.timer("kraft.collect.auto.latency", "trigger", trigger, "status", status)
                 .record(Duration.ofNanos(System.nanoTime() - startedAt));
     }
 
     private void recordRoundFailures(String trigger, int failedRounds) {
-        if (meterRegistry == null || failedRounds <= 0) {
+        if (failedRounds <= 0) {
             return;
         }
         meterRegistry.counter("kraft.collect.auto.round.failure", "trigger", trigger).increment(failedRounds);
     }
 
     private void recordFailure(String trigger, Exception ex) {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.counter(
                 "kraft.collect.auto.error",
                 "trigger", trigger,
@@ -107,9 +102,6 @@ public class WinningNumberAutoCollectScheduler {
     }
 
     private void recordOverlapSkip(String trigger) {
-        if (meterRegistry == null) {
-            return;
-        }
         meterRegistry.counter("kraft.collect.auto.run", "trigger", trigger, "status", "skipped_overlap").increment();
     }
 

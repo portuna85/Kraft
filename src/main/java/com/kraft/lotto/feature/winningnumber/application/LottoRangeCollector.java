@@ -42,10 +42,8 @@ class LottoRangeCollector {
             failedRounds.addAll(one.failedRounds());
         }
         int latestRound = winningNumberRepository.findMaxRound().orElse(0);
-        if (meterRegistry != null) {
-            meterRegistry.summary("kraft.collect.range.rounds").record(rounds.size());
-            meterRegistry.summary("kraft.collect.range.failed").record(failedRounds.size());
-        }
+        meterRegistry.summary("kraft.collect.range.rounds").record(rounds.size());
+        meterRegistry.summary("kraft.collect.range.failed").record(failedRounds.size());
         return CollectResponse.of(inserted, updated, skipped, latestRound, failedRounds, false, null, false);
     }
 

@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ public class ActuatorAccessFilter extends OncePerRequestFilter {
     @Autowired
     public ActuatorAccessFilter(ObjectProvider<KraftSecurityProperties> securityPropertiesProvider,
                                 ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new), meterRegistryProvider.getIfAvailable());
+        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new), meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new));
     }
 
     ActuatorAccessFilter(KraftSecurityProperties securityProperties) {

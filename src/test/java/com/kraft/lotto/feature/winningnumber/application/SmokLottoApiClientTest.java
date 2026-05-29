@@ -190,7 +190,7 @@ class SmokLottoApiClientTest {
         private int fetchCalls;
 
         ScriptedSmokLottoApiClient(int maxRetries, Object... scripted) {
-            this(maxRetries, null, null, scripted);
+            this(maxRetries, null, new SimpleMeterRegistry(), scripted);
         }
 
         ScriptedSmokLottoApiClient(int maxRetries, SimpleMeterRegistry meterRegistry, Object... scripted) {
@@ -198,11 +198,11 @@ class SmokLottoApiClientTest {
         }
 
         ScriptedSmokLottoApiClient(int maxRetries, ApiRetrySupport retrySupport, Object... scripted) {
-            this(maxRetries, retrySupport, null, scripted);
+            this(maxRetries, retrySupport, new SimpleMeterRegistry(), scripted);
         }
 
         ScriptedSmokLottoApiClient(int maxRetries, ApiCircuitBreaker circuitBreaker, Object... scripted) {
-            this(maxRetries, null, null, circuitBreaker, scripted);
+            this(maxRetries, null, new SimpleMeterRegistry(), circuitBreaker, scripted);
         }
 
         private ScriptedSmokLottoApiClient(int maxRetries,

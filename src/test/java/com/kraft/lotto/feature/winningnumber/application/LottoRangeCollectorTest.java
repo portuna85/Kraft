@@ -52,7 +52,7 @@ class LottoRangeCollectorTest {
     @Test
     @DisplayName("대기 시간 인터럽트 발생 시 비즈니스 예외로 변환한다")
     void interruptedBackfillDelayThrowsBusinessException() {
-        LottoRangeCollector collector = new LottoRangeCollector(singleDrawCollector, winningNumberRepository, 60_000, null);
+        LottoRangeCollector collector = new LottoRangeCollector(singleDrawCollector, winningNumberRepository, 60_000, new SimpleMeterRegistry());
         when(singleDrawCollector.collectOne(1, false)).thenReturn(CollectResponse.ofSkipped(1, 1));
 
         Thread.currentThread().interrupt();
