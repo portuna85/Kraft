@@ -19,6 +19,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -153,14 +155,14 @@ public class OpsController {
     private Map<String, OpsCircuitBreakerStatusDto.CircuitBreakerState> mapCircuitBreakerStates() {
         return circuitBreakerRegistry.snapshots().entrySet()
                 .stream()
-                .collect(java.util.stream.Collectors.toMap(
+                .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> new OpsCircuitBreakerStatusDto.CircuitBreakerState(
                                 entry.getValue().enabled(),
                                 entry.getValue().state()
                         ),
                         (a, b) -> a,
-                        java.util.TreeMap::new
+                        TreeMap::new
                 ));
     }
 }
