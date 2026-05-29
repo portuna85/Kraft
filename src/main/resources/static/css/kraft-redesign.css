@@ -661,18 +661,24 @@ footer a:hover,
     margin-bottom: 0.85rem !important;
   }
 
-  /* ── 빈도: 세로 배치 유지, 컬럼 수 조정 ── */
+  /* ── 빈도: 구슬 + 숫자 세로 배치 ── */
   .kraft-freq-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
     gap: 0.4rem !important;
   }
 
   .kraft-freq-cell {
+    display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 0.3rem !important;
-    padding: 0.4rem 0.2rem !important;
+    gap: 0.25rem !important;
+    padding: 0.45rem 0.15rem !important;
     border-radius: 0.85rem !important;
+  }
+
+  /* 진행 바 숨김 — 좁은 셀에서 불필요 */
+  .kraft-freq-cell .bar {
+    display: none !important;
   }
 
   .kraft-freq-cell .kraft-ball {
@@ -681,15 +687,12 @@ footer a:hover,
     font-size: 0.8rem !important;
   }
 
-  .kraft-freq-cell .bar {
-    width: 100% !important;
-    height: 0.35rem !important;
-  }
-
   .kraft-freq-cell small {
-    font-size: 0.72rem !important;
-    font-weight: 800 !important;
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    color: var(--kraft-muted);
     text-align: center;
+    line-height: 1;
   }
 
   /* ── 회차 목록: 카드형 행 ── */
@@ -924,7 +927,9 @@ footer a:hover,
   }
 
   .kraft-freq-cell {
-    padding: 0.35rem 0.15rem !important;
+    display: flex !important;
+    padding: 0.35rem 0.1rem !important;
+    gap: 0.2rem !important;
   }
 
   .kraft-freq-cell .kraft-ball {
@@ -934,7 +939,7 @@ footer a:hover,
   }
 
   .kraft-freq-cell small {
-    font-size: 0.68rem !important;
+    font-size: 0.6rem !important;
   }
 
   /* 페이지네이션 간격 */
