@@ -553,74 +553,399 @@ main section:first-of-type > *,
 }
 
 footer,
-.fixed-bottom,
-.kraft-bottom-nav {
+.fixed-bottom {
   border-top: 1px solid var(--kraft-border);
   background: color-mix(in srgb, var(--kraft-surface-solid) 86%, transparent) !important;
   backdrop-filter: blur(18px) saturate(140%);
 }
 
 footer a,
-.fixed-bottom a,
-.kraft-bottom-nav a {
+.fixed-bottom a {
   color: var(--kraft-muted);
   font-weight: 800;
   text-decoration: none;
 }
 
 footer a:hover,
-.fixed-bottom a:hover,
-.kraft-bottom-nav a:hover {
+.fixed-bottom a:hover {
   color: var(--kraft-primary);
 }
 
+/* === Bottom Nav (Mobile) === */
+.kraft-bottom-nav {
+  background: color-mix(in srgb, var(--kraft-surface-solid) 90%, transparent) !important;
+  backdrop-filter: blur(24px) saturate(160%);
+  border-top: 1px solid var(--kraft-border);
+  box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.10);
+}
+
+.kraft-bottom-nav-item {
+  color: var(--kraft-muted) !important;
+  font-size: 0.62rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease, transform 0.15s ease !important;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.kraft-bottom-nav-item svg {
+  transition: transform 0.15s ease;
+}
+
+.kraft-bottom-nav-item:active svg {
+  transform: scale(0.88);
+}
+
+.kraft-bottom-nav-item.active,
+.kraft-bottom-nav-item:hover {
+  color: var(--kraft-primary) !important;
+}
+
+/* 활성 인디케이터 점 */
+.kraft-bottom-nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--kraft-primary);
+}
+
+/* === Tablet (≤991px) === */
 @media (max-width: 991.98px) {
   main section:first-of-type::after,
   .kraft-hero::after,
   .hero::after {
     right: -4rem;
-    opacity: .38;
+    opacity: .28;
   }
 
   .kraft-kv {
     grid-template-columns: 1fr;
   }
+}
 
+/* === Mobile (≤767px) === */
+@media (max-width: 767.98px) {
+  /* 유동형 타이포그래피 */
+  h1, .display-4 {
+    font-size: clamp(1.75rem, 7vw, 2.8rem) !important;
+    letter-spacing: -0.055em;
+  }
+
+  h2, .h2, .card-title {
+    font-size: clamp(1rem, 4vw, 1.25rem) !important;
+  }
+
+  /* 터치 타겟 */
+  .btn {
+    min-height: 44px;
+    padding-inline: 1.1rem;
+  }
+
+  .btn-sm {
+    min-height: 40px;
+  }
+
+  .form-control,
+  .form-select {
+    min-height: 44px !important;
+    font-size: 1rem;
+  }
+
+  .card {
+    margin-bottom: 0.85rem !important;
+  }
+
+  /* ── 빈도: 세로 배치 유지, 컬럼 수 조정 ── */
+  .kraft-freq-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 0.4rem !important;
+  }
+
+  .kraft-freq-cell {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+    padding: 0.4rem 0.2rem !important;
+    border-radius: 0.85rem !important;
+  }
+
+  .kraft-freq-cell .kraft-ball {
+    width: 2rem !important;
+    height: 2rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .kraft-freq-cell .bar {
+    width: 100% !important;
+    height: 0.35rem !important;
+  }
+
+  .kraft-freq-cell small {
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    text-align: center;
+  }
+
+  /* ── 회차 목록: 카드형 행 ── */
   .kraft-list-row {
-    grid-template-columns: 1fr;
-    gap: 0.35rem;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    padding: 0.72rem 0.85rem !important;
+    border: 1px solid var(--kraft-border) !important;
+    border-radius: 1rem !important;
+    background: color-mix(in srgb, var(--kraft-surface-solid) 72%, transparent) !important;
+    border-bottom: none !important;
+  }
+
+  .kraft-list-meta {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 0 !important;
+  }
+
+  .kraft-list-row .round {
+    font-size: 0.9rem;
+    color: var(--kraft-primary);
+  }
+
+  .kraft-list-row .date {
+    font-size: 0.78rem;
+    text-align: right;
+  }
+
+  /* 볼 행 wrap 허용, 간격 축소 */
+  .kraft-list-row .kraft-balls {
+    gap: 4px !important;
+  }
+
+  /* 페이지네이션 터치 타겟 */
+  .kraft-pagination .page-link {
+    min-height: 40px;
+    min-width: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── 회차 목록 헤더 컨트롤 ── */
+  .kraft-section-rounds .card-body > .d-flex {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .kraft-section-rounds .card-body > .d-flex form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .kraft-section-rounds .card-body > .d-flex form .form-select {
+    flex: 1;
+    min-height: 40px !important;
+  }
+
+  /* ── 최신 회차: 메타 타일 2컬럼 ── */
+  .kraft-draw-meta {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  .kraft-draw-meta .kraft-meta-item:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .kraft-meta-label {
+    font-size: 0.72rem;
+  }
+
+  .kraft-meta-value {
+    font-size: 0.92rem;
+    font-weight: 800;
+  }
+
+  .kraft-meta-item {
+    border-radius: 0.85rem !important;
+    padding: 0.65rem 0.75rem !important;
+  }
+
+  /* ── 폼 공통: 라벨 위 / 입력+버튼 한 행 (그리드) ── */
+  .kraft-inline-form {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 0.45rem 0.5rem !important;
+  }
+
+  .kraft-inline-form .kraft-inline-label {
+    grid-column: 1 / -1;
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 0;
+  }
+
+  .kraft-inline-form .form-control {
+    grid-column: 1;
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: 1rem;
+  }
+
+  .kraft-inline-form .btn {
+    grid-column: 2;
+    min-height: 44px !important;
+    align-self: stretch;
+    white-space: nowrap;
+    padding-inline: 1.1rem;
+  }
+
+  /* 피드백 메시지 전체 너비 */
+  .kraft-input-feedback {
+    grid-column: 1 / -1;
+  }
+
+  /* ── 번호 추천: 조합 행 ── */
+  .kraft-combo {
+    flex-wrap: wrap;
+  }
+
+  .kraft-combo .idx {
+    font-size: 0.82rem;
+    min-width: 2rem;
+    height: 2rem;
+  }
+
+  /* ── 회차 검색: 결과 DL ── */
+  .kraft-section-round-search .row.g-2 dt,
+  .kraft-section-round-search .row.g-2 dd {
+    font-size: 0.9rem;
+  }
+
+  /* ── details/summary 터치 타겟 ── */
+  details summary {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  /* ── 로딩/에러 상태 ── */
+  .kraft-state {
+    padding: 1.2rem 1rem;
+    font-size: 0.88rem;
   }
 }
 
+/* === Small Mobile (≤575px) === */
 @media (max-width: 575.98px) {
   main {
-    padding-block: 1.2rem 5.5rem;
+    padding-block: 1rem calc(4.5rem + env(safe-area-inset-bottom));
   }
 
-  main section:first-of-type,
+  /* Hero 섹션 */
   .kraft-hero,
   .hero {
-    border-radius: 1.45rem;
-    padding: 1.45rem;
+    border-radius: 1.25rem;
+    padding: 1.35rem 1.2rem;
   }
 
+  .kraft-hero .eyebrow {
+    font-size: 0.7rem;
+  }
+
+  /* 장식 orb 완전 숨김 */
+  main section:first-of-type::after,
+  .kraft-hero::after,
+  .hero::after {
+    display: none;
+  }
+
+  /* 카드 패딩 */
   .card-body {
-    padding: 1rem;
+    padding: 0.85rem !important;
   }
 
-  .kraft-ball,
+  /* 구슬 크기 */
+  .kraft-ball {
+    width: 2.05rem !important;
+    height: 2.05rem !important;
+    font-size: 0.8rem !important;
+  }
+
   .kraft-ball-plus {
-    width: 2.18rem;
-    height: 2.18rem;
-    font-size: 0.86rem;
+    width: 0.85rem !important;
+    height: 2.05rem !important;
   }
 
-  .kraft-ball-plus {
-    width: 1rem;
+  /* 볼 간격 */
+  .kraft-balls {
+    gap: 4px !important;
   }
 
+  /* 추천 조합 세로 배치 */
   .kraft-combo {
     align-items: flex-start;
     flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* 최신 회차 볼 행 마진 */
+  .kraft-section-latest .kraft-balls {
+    margin-bottom: 0.75rem !important;
+  }
+
+  /* 텍스트 크기 최소 보장 */
+  .small, small {
+    font-size: 0.8rem !important;
+  }
+
+  /* 탭 피드백 */
+  .btn:active,
+  .kraft-bottom-nav-item:active {
+    transform: scale(0.96);
+  }
+
+  /* KV 그리드 1단 */
+  .kraft-kv {
+    grid-template-columns: 1fr;
+  }
+
+  /* 빈도: 소형 화면 5컬럼 */
+  .kraft-freq-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 0.3rem !important;
+  }
+
+  .kraft-freq-cell {
+    padding: 0.35rem 0.15rem !important;
+  }
+
+  .kraft-freq-cell .kraft-ball {
+    width: 1.85rem !important;
+    height: 1.85rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .kraft-freq-cell small {
+    font-size: 0.68rem !important;
+  }
+
+  /* 페이지네이션 간격 */
+  .kraft-pagination {
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* 회차 검색 결과 볼 행 */
+  .kraft-section-round-search .kraft-balls {
+    gap: 4px !important;
   }
 }
