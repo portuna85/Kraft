@@ -30,7 +30,7 @@ class RequiredConfigValidatorTest {
         env.setActiveProfiles("prod");
         List<String> problems = new ArrayList<>();
 
-        RequiredConfigValidator.addProdOperationalConfigProblems(env, problems);
+        ProdConfigValidator.validate(env, problems);
 
         assertThat(problems).hasSize(9);
         assertThat(problems.get(0)).contains("kraft.api.url");
@@ -54,7 +54,7 @@ class RequiredConfigValidatorTest {
         env.setActiveProfiles("local");
         List<String> problems = new ArrayList<>();
 
-        RequiredConfigValidator.addProdOperationalConfigProblems(env, problems);
+        ProdConfigValidator.validate(env, problems);
 
         assertThat(problems).isEmpty();
     }
@@ -68,7 +68,7 @@ class RequiredConfigValidatorTest {
         env.setProperty("kraft.api.client", "mock");
         List<String> problems = new ArrayList<>();
 
-        RequiredConfigValidator.addProdOperationalConfigProblems(env, problems);
+        ProdConfigValidator.validate(env, problems);
 
         assertThat(problems).anyMatch(it -> it.contains("kraft.api.client"));
     }
@@ -82,7 +82,7 @@ class RequiredConfigValidatorTest {
         env.setProperty("kraft.api.client", "smok");
         List<String> problems = new ArrayList<>();
 
-        RequiredConfigValidator.addProdOperationalConfigProblems(env, problems);
+        ProdConfigValidator.validate(env, problems);
 
         assertThat(problems).noneMatch(it -> it.contains("kraft.api.client"));
     }
@@ -100,7 +100,7 @@ class RequiredConfigValidatorTest {
         env.setProperty("kraft.recommend.max-attempts", "0");
         List<String> problems = new ArrayList<>();
 
-        RequiredConfigValidator.addProdOperationalConfigProblems(env, problems);
+        ProdConfigValidator.validate(env, problems);
 
         assertThat(problems).anyMatch(p -> p.contains("kraft.recommend.rules.birthday-threshold"));
         assertThat(problems).anyMatch(p -> p.contains("kraft.recommend.rules.long-run-threshold"));
@@ -116,7 +116,7 @@ class RequiredConfigValidatorTest {
         env.setProperty("KRAFT_IN_CONTAINER", "true");
         List<String> problems = new ArrayList<>();
 
-        RequiredConfigValidator.addProfilePolicyProblems(env, problems);
+        ProfilePolicyValidator.validate(env, problems);
 
         assertThat(problems).anyMatch(p -> p.contains("requires prod profile"));
     }
@@ -129,7 +129,7 @@ class RequiredConfigValidatorTest {
         env.setProperty("KRAFT_IN_CONTAINER", "false");
         List<String> problems = new ArrayList<>();
 
-        RequiredConfigValidator.addProfilePolicyProblems(env, problems);
+        ProfilePolicyValidator.validate(env, problems);
 
         assertThat(problems).anyMatch(p -> p.contains("requires local profile"));
     }
@@ -142,7 +142,7 @@ class RequiredConfigValidatorTest {
         env.setProperty("KRAFT_IN_CONTAINER", "false");
         List<String> problems = new ArrayList<>();
 
-        RequiredConfigValidator.addProfilePolicyProblems(env, problems);
+        ProfilePolicyValidator.validate(env, problems);
 
         assertThat(problems).noneMatch(p -> p.contains("KRAFT_ENV"));
     }
