@@ -488,7 +488,7 @@ main section:first-of-type > *,
 
 .kraft-list-row {
   display: grid;
-  grid-template-columns: 5rem 7rem minmax(0, 1fr);
+  grid-template-columns: 13rem minmax(0, 1fr);
   gap: 0.8rem;
   align-items: center;
   padding: 0.78rem 0;
@@ -499,7 +499,14 @@ main section:first-of-type > *,
   border-bottom: 0;
 }
 
+.kraft-list-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .kraft-list-row .round {
+  flex: 0 0 5rem;
   color: var(--kraft-primary);
   font-weight: 900;
 }
@@ -781,6 +788,7 @@ footer a:hover,
   }
 
   .kraft-list-row .round {
+    flex: none;
     font-size: 0.9rem;
     color: var(--kraft-primary);
   }

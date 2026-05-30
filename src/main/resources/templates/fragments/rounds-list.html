@@ -21,17 +21,11 @@
         <div class="kraft-list-meta"><span class="round" th:text="${r.round + '회'}">0회</span><span class="date" th:text="${r.drawDate}">-</span></div>
         <div class="kraft-balls">
           <th:block th:each="n : ${r.numbers}">
-            <span class="kraft-ball-cell">
-              <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
-              <small th:text="${n}">1</small>
-            </span>
+            <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
           </th:block>
           <span class="kraft-bonus-group">
             <span class="kraft-ball-plus" aria-hidden="true">+</span>
-            <span class="kraft-ball-cell">
-              <span th:replace="~{fragments/lotto-ball :: ball(${r.bonusNumber}, 'bonus ')}">0</span>
-              <small th:text="${r.bonusNumber}">0</small>
-            </span>
+            <span th:replace="~{fragments/lotto-ball :: ball(${r.bonusNumber}, 'bonus ')}">0</span>
           </span>
         </div>
       </div>
