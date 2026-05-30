@@ -189,7 +189,7 @@ jobs:
   e2e-smoke:
     name: E2E Smoke (Playwright)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     needs: build-test
     container:
       image: mcr.microsoft.com/playwright:v1.60.0-noble
@@ -203,21 +203,25 @@ jobs:
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
-          cache: gradle
 
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: 'npm'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+      - name: Download app jar
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar-${{ github.run_id }}
+          path: build/libs/
 
       - name: Install E2E dependencies
-        run: |
-          npm ci --prefer-offline --no-audit
+        run: npm ci --prefer-offline --no-audit
 
       - name: Run Playwright smoke tests
+        env:
+          KRAFT_E2E_JAR_PATH: build/libs/app.jar
         run: npm run test:e2e
 
       - name: Upload E2E artifacts
@@ -229,7 +233,7 @@ jobs:
             test-results/
             playwright-report/
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 7
 
   performance-smoke:
     name: Performance Smoke
