@@ -31,19 +31,17 @@ public class HomeController {
     @GetMapping("/")
     public String home(
             @RequestParam(required = false) @Min(LottoRoundPolicy.MIN_ROUND) @Max(LottoRoundPolicy.MAX_ROUND) Integer round,
+            @RequestParam(defaultValue = "5") @Min(PublicQueryParams.MIN_COUNT) @Max(PublicQueryParams.MAX_COUNT) int count,
             Model model
     ) {
         addHomeModel(PublicQueryParams.normalizeRound(round), model);
+        addRecommendModel(PublicQueryParams.normalizeCount(count), model);
         return "home";
     }
 
     @GetMapping("/recommend")
-    public String recommendPage(
-            @RequestParam(defaultValue = "5") @Min(PublicQueryParams.MIN_COUNT) @Max(PublicQueryParams.MAX_COUNT) int count,
-            Model model
-    ) {
-        addRecommendModel(PublicQueryParams.normalizeCount(count), null, model);
-        return "recommend";
+    public String recommendRedirect() {
+        return "redirect:/";
     }
 
     @GetMapping("/frequency")
@@ -72,10 +70,9 @@ public class HomeController {
     @GetMapping("/fragments/recommend")
     public String recommend(
             @RequestParam(defaultValue = "5") @Min(PublicQueryParams.MIN_COUNT) @Max(PublicQueryParams.MAX_COUNT) int count,
-            @RequestParam(required = false) @Min(LottoRoundPolicy.MIN_ROUND) @Max(LottoRoundPolicy.MAX_ROUND) Integer round,
             Model model
     ) {
-        addRecommendModel(PublicQueryParams.normalizeCount(count), PublicQueryParams.normalizeRound(round), model);
+        addRecommendModel(PublicQueryParams.normalizeCount(count), model);
         return RECOMMEND_FRAGMENT;
     }
 
@@ -109,12 +106,11 @@ public class HomeController {
         model.addAttribute("maxRound", LottoRoundPolicy.MAX_ROUND);
     }
 
-    private void addRecommendModel(int count, Integer round, Model model) {
+    private void addRecommendModel(int count, Model model) {
         var recommendation = recommendService.recommend(count);
         model.addAttribute("count", count);
         model.addAttribute("combinations", recommendation.combinations());
         model.addAttribute("rules", recommendService.rules());
-        model.addAttribute("round", round);
         model.addAttribute("maxCount", PublicQueryParams.MAX_COUNT);
     }
 

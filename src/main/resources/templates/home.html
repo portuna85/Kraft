@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('최고의 번호', '최신 로또 당첨번호 확인 및 회차별 검색 서비스. 가장 빠르게 최신 당첨번호를 조회하세요.', ~{::section})}">
+      th:replace="~{layout/base :: layout('최고의 번호', '과거 당첨 데이터 분석 기반 로또 번호 추천과 최신 당첨번호 확인 서비스.', ~{::section})}">
 <section class="kraft-page">
   <header class="kraft-hero">
     <p class="eyebrow">로또 번호 추천</p>
@@ -8,6 +8,7 @@
     <p class="kraft-hero-description">과거 당첨 데이터를 분석해 규칙 기반 추천 조합을 제공합니다.</p>
   </header>
 
+  <th:block th:replace="~{fragments/recommend-card :: recommend-card}"></th:block>
   <th:block th:replace="~{fragments/home-static-cards :: latest-card}"></th:block>
   <th:block th:replace="~{fragments/home-static-cards :: round-search-card}"></th:block>
 </section>
