@@ -30,7 +30,8 @@ function buildServerCommand() {
 module.exports = defineConfig({
   testDir: './tests/e2e',
   timeout: 30000,
-  retries: 1,
+  retries: 0,
+  fullyParallel: true,
   reporter: 'list',
   webServer: externalServer ? undefined : {
     command: buildServerCommand(),
@@ -40,10 +41,18 @@ module.exports = defineConfig({
   },
   use: {
     baseURL,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      grepInvert: /\bmobile\b/i,
+    },
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 7'] },
+      grep: /\bmobile\b/i,
+    },
   ],
 });

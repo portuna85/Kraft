@@ -189,7 +189,7 @@ jobs:
   e2e-smoke:
     name: E2E Smoke (Playwright)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 8
     needs: build-test
     container:
       image: mcr.microsoft.com/playwright:v1.60.0-noble
@@ -204,11 +204,12 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
+      - name: Restore npm cache
+        uses: actions/cache@v4
         with:
-          node-version: 22
-          cache: 'npm'
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
 
       - name: Download app jar
         uses: actions/download-artifact@v4
@@ -225,7 +226,7 @@ jobs:
         run: npm run test:e2e
 
       - name: Upload E2E artifacts
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: e2e-artifacts-${{ github.run_id }}

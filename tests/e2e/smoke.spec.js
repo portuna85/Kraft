@@ -41,7 +41,7 @@ test.describe('home smoke', () => {
     });
 
     await page.goto('/');
-    await page.waitForTimeout(1000);
+    await expect(page.locator('#latest')).toBeVisible();
 
     expect(violations, `CSP violations: ${violations.join('\n')}`).toHaveLength(0);
   });
