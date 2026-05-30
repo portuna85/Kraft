@@ -8,9 +8,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.recommend.application.RecommendService;
+import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
 import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import com.kraft.lotto.support.GlobalExceptionHandler;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,8 @@ class HomeControllerWebMvcTest {
     void rendersHomeView() throws Exception {
         when(queryService.expectedCurrentRound()).thenReturn(1200);
         when(queryService.findLatest()).thenReturn(Optional.empty());
+        when(recommendService.recommend(5)).thenReturn(new RecommendResponse(List.of()));
+        when(recommendService.rules()).thenReturn(List.of());
 
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())

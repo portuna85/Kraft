@@ -83,11 +83,10 @@ class HomeControllerTest {
     void recommendFragmentRendersView() throws Exception {
         stubRecommend(3, 3);
 
-        mockMvc.perform(get("/fragments/recommend").param("count", "3").param("round", "500"))
+        mockMvc.perform(get("/fragments/recommend").param("count", "3"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments/recommend-card :: recommend-card"))
                 .andExpect(model().attribute("count", 3))
-                .andExpect(model().attribute("round", 500))
                 .andExpect(model().attribute("combinations", is(combinationDtos(3))));
     }
 
@@ -182,6 +181,7 @@ class HomeControllerTest {
     private void stubHomeFrame() {
         when(queryService.expectedCurrentRound()).thenReturn(1200);
         when(queryService.findLatest()).thenReturn(Optional.empty());
+        stubRecommend(5, 5);
     }
 
     private static WinningNumberDto winningNumber(int round) {
