@@ -124,6 +124,12 @@ header .navbar {
   transform: translateY(-1px);
 }
 
+.navbar .nav-link.active,
+.navbar .nav-link[aria-current="page"] {
+  color: var(--kraft-primary) !important;
+  background: var(--kraft-primary-soft) !important;
+}
+
 #themeToggle,
 button[aria-label*='다크'],
 button[aria-label*='theme'] {
