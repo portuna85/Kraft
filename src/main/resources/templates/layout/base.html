@@ -39,10 +39,6 @@
 <nav class="navbar navbar-expand-md border-bottom sticky-top">
   <div class="container kraft-container">
     <a class="navbar-brand fw-bold" href="/">최고의 번호</a>
-    <button id="navToggleBtn" class="navbar-toggler border-0 shadow-none" type="button"
-            aria-controls="navMain" aria-expanded="false" aria-label="메뉴 열기">
-      <span class="navbar-toggler-icon"></span>
-    </button>
     <div class="collapse navbar-collapse" id="navMain">
       <ul class="navbar-nav me-auto ms-2 gap-1">
         <li class="nav-item">
@@ -58,9 +54,9 @@
              th:attr="aria-current=${reqPath == '/rounds' ? 'page' : null}">회차 목록</a>
         </li>
       </ul>
-      <button id="theme-btn" class="btn btn-sm btn-outline-secondary ms-auto mt-2 mt-md-0" type="button"
-              aria-label="테마 전환" aria-pressed="false">다크</button>
     </div>
+    <button id="theme-btn" class="btn btn-sm btn-outline-secondary ms-auto" type="button"
+            aria-label="테마 전환" aria-pressed="false">다크</button>
   </div>
 </nav>
 <main class="kraft-main" th:insert="${content}"></main>
