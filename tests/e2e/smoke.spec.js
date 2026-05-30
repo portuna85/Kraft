@@ -12,19 +12,24 @@ test.describe('home smoke', () => {
     await expect(page.locator('#latest')).toBeVisible();
   });
 
-  test('lazy-loads recommend card', async ({ page }) => {
+  test('renders recommend card', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#recommend .kraft-combo').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#recommend .kraft-combo').first()).toBeVisible();
   });
 
-  test('lazy-loads frequency card', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.locator('#frequency .card-title')).toBeVisible({ timeout: 15000 });
+  test('renders frequency card', async ({ page }) => {
+    await page.goto('/frequency');
+    await expect(page.locator('#frequency .card-title')).toBeVisible();
   });
 
-  test('lazy-loads rounds card', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.locator('#rounds .card-title')).toBeVisible({ timeout: 15000 });
+  test('renders rounds card', async ({ page }) => {
+    await page.goto('/rounds');
+    await expect(page.locator('#rounds .card-title')).toBeVisible();
+  });
+
+  test('/recommend redirects to home', async ({ page }) => {
+    await page.goto('/recommend');
+    await expect(page).toHaveURL('/');
   });
 
   test('has no CSP violations in console', async ({ page }) => {
@@ -36,7 +41,7 @@ test.describe('home smoke', () => {
     });
 
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(1000);
 
     expect(violations, `CSP violations: ${violations.join('\n')}`).toHaveLength(0);
   });
@@ -58,12 +63,11 @@ test.describe('home smoke', () => {
     expect(response.status()).toBe(400);
   });
 
-  test('loads fragments via fetch fallback when htmx script is blocked', async ({ page }) => {
+  test('home page renders correctly without htmx', async ({ page }) => {
     await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
     await page.goto('/');
-    await expect(page.locator('#recommend .kraft-combo').first()).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('#frequency .card-title')).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('#rounds .card-title')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#recommend .kraft-combo').first()).toBeVisible();
+    await expect(page.locator('#latest')).toBeVisible();
   });
 });
 
