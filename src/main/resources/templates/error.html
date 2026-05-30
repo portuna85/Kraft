@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(${(errorTitle != null ? errorTitle : 'Error') + ' - Top Lotto'}, ~{::section})}">
+      th:replace="~{layout/base :: layout(${(errorTitle != null ? errorTitle : 'Error') + ' - Top Lotto'}, '로또 6/45 당첨번호 조회, 분석, 추천 서비스', ~{::section})}">
 <head>
   <title th:text="${errorTitle != null ? errorTitle : 'Error'} + ' - Top Lotto'">Error - Top Lotto</title>
 </head>
