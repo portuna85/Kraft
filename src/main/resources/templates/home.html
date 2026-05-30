@@ -9,50 +9,6 @@
   </header>
 
   <th:block th:replace="~{fragments/home-static-cards :: latest-card}"></th:block>
-
-  <div id="recommend" class="card mb-4 kraft-section kraft-section-recommend"
-       hx-get="/fragments/recommend" hx-trigger="load" hx-swap="outerHTML"
-       aria-busy="true" aria-live="polite">
-    <div class="card-body">
-      <div class="kraft-state kraft-state-loading" data-state="loading">추천 번호를 불러오는 중입니다...</div>
-      <div class="kraft-state kraft-state-error" data-state="error" hidden>
-        데이터를 불러오지 못했습니다.
-        <div class="mt-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary kraft-retry-btn" data-target="recommend">다시 시도</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <th:block th:replace="~{fragments/home-static-cards :: round-search-card}"></th:block>
-  <div id="fragment-live-region" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
-
-  <div id="frequency" class="card mb-4 kraft-section kraft-section-frequency"
-       hx-get="/fragments/frequency" hx-trigger="load" hx-swap="outerHTML"
-       aria-busy="true" aria-live="polite">
-    <div class="card-body">
-      <div class="kraft-state kraft-state-loading" data-state="loading">번호 빈도를 불러오는 중입니다...</div>
-      <div class="kraft-state kraft-state-error" data-state="error" hidden>
-        데이터를 불러오지 못했습니다.
-        <div class="mt-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary kraft-retry-btn" data-target="frequency">다시 시도</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="rounds" class="card kraft-section kraft-section-rounds"
-       hx-get="/fragments/rounds" hx-trigger="load" hx-swap="outerHTML"
-       aria-busy="true" aria-live="polite">
-    <div class="card-body">
-      <div class="kraft-state kraft-state-loading" data-state="loading">회차 목록을 불러오는 중입니다...</div>
-      <div class="kraft-state kraft-state-error" data-state="error" hidden>
-        데이터를 불러오지 못했습니다.
-        <div class="mt-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary kraft-retry-btn" data-target="rounds">다시 시도</button>
-        </div>
-      </div>
-    </div>
-  </div>
 </section>
 </html>

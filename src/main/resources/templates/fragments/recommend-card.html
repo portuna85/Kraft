@@ -1,8 +1,7 @@
 <div class="card mb-4 kraft-section kraft-section-recommend" id="recommend" th:fragment="recommend-card">
   <div class="card-body">
     <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">번호 추천</h2>
-    <form class="kraft-inline-form kraft-inline-form-count mb-3" id="recommendForm" method="get" th:action="@{/}" hx-get="/fragments/recommend" hx-target="#recommend" hx-swap="outerHTML">
-      <input name="round" th:if="${round != null}" th:value="${round}" type="hidden">
+    <form class="kraft-inline-form kraft-inline-form-count mb-3" id="recommendForm" method="get" th:action="@{/recommend}" hx-get="/fragments/recommend" hx-target="#recommend" hx-swap="outerHTML">
       <label class="kraft-inline-label" for="countInput" th:text="|세트 수 (1~${maxCount})|">세트 수 (1~10)</label>
       <input id="countInput" class="form-control form-control-sm kraft-number-input" th:attr="max=${maxCount}" min="1" name="count" required aria-required="true" aria-describedby="countInputFeedback" th:value="${count}" type="number" inputmode="numeric" pattern="[0-9]*">
       <button class="btn btn-sm btn-primary kraft-submit-btn" type="submit">생성</button>

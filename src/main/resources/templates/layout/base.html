@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title,content)">
-<head th:with="
-  req=${#httpServletRequest},
-  reqPath=${(req != null and req.requestURI != null) ? req.requestURI : '/'},
-  isAdmin=${#strings.startsWith(reqPath, '/admin')},
-  baseUrl=${@environment.getProperty('kraft.public-base-url', 'https://www.kraft.io.kr')},
-  canonicalUrl=${baseUrl + reqPath}">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title,content)"
+      th:with="req=${#httpServletRequest},
+               reqPath=${(req != null and req.requestURI != null) ? req.requestURI : '/'},
+               isAdmin=${#strings.startsWith(reqPath, '/admin')},
+               baseUrl=${@environment.getProperty('kraft.public-base-url', 'https://www.kraft.io.kr')},
+               canonicalUrl=${baseUrl + reqPath}">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="로또 6/45 당첨번호 조회, 분석, 추천 서비스">
@@ -44,10 +44,22 @@
     </button>
     <div class="collapse navbar-collapse" id="navMain">
       <ul class="navbar-nav me-auto ms-2 gap-1">
-        <li class="nav-item"><a class="nav-link" href="/#recommend">번호 추천</a></li>
-        <li class="nav-item"><a class="nav-link" href="/#round-search">회차 검색</a></li>
-        <li class="nav-item"><a class="nav-link" href="/#frequency">빈도</a></li>
-        <li class="nav-item"><a class="nav-link" href="/#rounds">회차 목록</a></li>
+        <li class="nav-item">
+          <a class="nav-link" th:classappend="${reqPath == '/'} ? 'active'" href="/"
+             th:attr="aria-current=${reqPath == '/' ? 'page' : null}">홈</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:classappend="${reqPath == '/recommend'} ? 'active'" href="/recommend"
+             th:attr="aria-current=${reqPath == '/recommend' ? 'page' : null}">번호 추천</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:classappend="${reqPath == '/frequency'} ? 'active'" href="/frequency"
+             th:attr="aria-current=${reqPath == '/frequency' ? 'page' : null}">빈도</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" th:classappend="${reqPath == '/rounds'} ? 'active'" href="/rounds"
+             th:attr="aria-current=${reqPath == '/rounds' ? 'page' : null}">회차 목록</a>
+        </li>
       </ul>
       <button id="theme-btn" class="btn btn-sm btn-outline-secondary ms-auto mt-2 mt-md-0" type="button"
               aria-label="테마 전환" aria-pressed="false">다크</button>
@@ -55,26 +67,29 @@
   </div>
 </nav>
 <main class="kraft-main" th:insert="${content}"></main>
-<nav class="kraft-bottom-nav d-md-none"
-     aria-label="섹션 바로가기"
-     th:if="${#httpServletRequest == null or #httpServletRequest.requestURI == null or !#strings.startsWith(#httpServletRequest.requestURI, '/admin')}">
-  <a href="#latest" class="kraft-bottom-nav-item">
+<div id="fragment-live-region" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+<nav class="kraft-bottom-nav d-md-none" aria-label="메뉴" th:if="${!isAdmin}">
+  <a href="/" class="kraft-bottom-nav-item"
+     th:classappend="${reqPath == '/'} ? ' active'"
+     th:attr="aria-current=${reqPath == '/' ? 'page' : null}">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 3"/></svg>
-    <span>최신</span>
+    <span>홈</span>
   </a>
-  <a href="#recommend" class="kraft-bottom-nav-item">
+  <a href="/recommend" class="kraft-bottom-nav-item"
+     th:classappend="${reqPath == '/recommend'} ? ' active'"
+     th:attr="aria-current=${reqPath == '/recommend' ? 'page' : null}">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
     <span>추천</span>
   </a>
-  <a href="#round-search" class="kraft-bottom-nav-item">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
-    <span>검색</span>
-  </a>
-  <a href="#frequency" class="kraft-bottom-nav-item">
+  <a href="/frequency" class="kraft-bottom-nav-item"
+     th:classappend="${reqPath == '/frequency'} ? ' active'"
+     th:attr="aria-current=${reqPath == '/frequency' ? 'page' : null}">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5V19h4.5v-5.5M9.75 9V19h4.5V9M16.5 4.5V19H21V4.5"/></svg>
     <span>빈도</span>
   </a>
-  <a href="#rounds" class="kraft-bottom-nav-item">
+  <a href="/rounds" class="kraft-bottom-nav-item"
+     th:classappend="${reqPath == '/rounds'} ? ' active'"
+     th:attr="aria-current=${reqPath == '/rounds' ? 'page' : null}">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" d="M8.25 6.75h11.5M8.25 12h11.5M8.25 17.25h11.5M3.75 6.75h.008M3.75 12h.008M3.75 17.25h.008"/></svg>
     <span>회차</span>
   </a>
@@ -82,7 +97,6 @@
 <script th:src="@{/vendor/htmx/htmx.min.js}"></script>
 <script th:src="@{/js/theme.js}"></script>
 <script th:src="@{/js/validation.js}"></script>
-<script th:src="@{/js/bottom-nav.js}"></script>
 <script th:src="@{/js/fragment-loader.js}"></script>
 <script th:src="@{/js/main.js}"></script>
 </body>

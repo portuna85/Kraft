@@ -37,6 +37,38 @@ public class HomeController {
         return "home";
     }
 
+    @GetMapping("/recommend")
+    public String recommendPage(
+            @RequestParam(defaultValue = "5") @Min(PublicQueryParams.MIN_COUNT) @Max(PublicQueryParams.MAX_COUNT) int count,
+            Model model
+    ) {
+        addRecommendModel(PublicQueryParams.normalizeCount(count), null, model);
+        return "recommend";
+    }
+
+    @GetMapping("/frequency")
+    public String frequencyPage(Model model) {
+        List<NumberFrequencyDto> frequencies = statisticsService.frequency();
+        model.addAttribute("frequency", frequencies);
+        model.addAttribute("maxFreq", maxFrequency(frequencies));
+        return "frequency";
+    }
+
+    @GetMapping("/rounds")
+    public String roundsPage(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            Model model
+    ) {
+        int safePage = PublicQueryParams.normalizePage(page);
+        int safeSize = PublicQueryParams.normalizeSize(size);
+        var rounds = queryService.list(safePage, safeSize);
+        model.addAttribute("rounds", rounds);
+        model.addAttribute("page", rounds.page());
+        model.addAttribute("size", rounds.size());
+        return "rounds";
+    }
+
     @GetMapping("/fragments/recommend")
     public String recommend(
             @RequestParam(defaultValue = "5") @Min(PublicQueryParams.MIN_COUNT) @Max(PublicQueryParams.MAX_COUNT) int count,

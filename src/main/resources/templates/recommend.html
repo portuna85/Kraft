@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('번호 추천', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">번호 추천</p>
+    <h1>번호 추천</h1>
+    <p class="kraft-hero-description">과거 당첨 데이터를 분석해 규칙 기반 추천 조합을 제공합니다.</p>
+  </header>
+  <th:block th:replace="~{fragments/recommend-card :: recommend-card}"></th:block>
+</section>
+</html>

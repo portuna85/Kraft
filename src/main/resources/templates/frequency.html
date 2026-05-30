@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('번호 빈도', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">번호 빈도</p>
+    <h1>번호 빈도</h1>
+    <p class="kraft-hero-description">1회부터 최신 회차까지의 번호별 출현 빈도를 보여줍니다.</p>
+  </header>
+  <th:block th:replace="~{fragments/frequency-card :: frequency-card}"></th:block>
+</section>
+</html>

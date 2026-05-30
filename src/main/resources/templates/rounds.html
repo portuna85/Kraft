@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('회차 목록', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">회차 목록</p>
+    <h1>회차 목록</h1>
+    <p class="kraft-hero-description">역대 모든 로또 회차 당첨번호를 확인하세요.</p>
+  </header>
+  <th:block th:replace="~{fragments/rounds-list :: rounds-list}"></th:block>
+</section>
+</html>
