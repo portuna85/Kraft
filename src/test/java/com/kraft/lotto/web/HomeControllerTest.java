@@ -4,6 +4,7 @@ import static com.kraft.lotto.support.fixtures.LottoTestFixtures.combinationDtos
 import static com.kraft.lotto.support.fixtures.LottoTestFixtures.winningNumberDto;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,6 +17,8 @@ import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
 import com.kraft.lotto.feature.recommend.web.dto.RuleDto;
 import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
+import com.kraft.lotto.feature.winningnumber.web.dto.CombinationPrizeHistoryDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.FrequencySummaryDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberPageDto;
@@ -68,10 +71,15 @@ class HomeControllerTest {
     @Test
     @DisplayName("빈도 프래그먼트는 FrequencyViewModel 리스트를 모델에 담아 렌더링한다")
     void frequencyFragmentRendersView() throws Exception {
-        when(statisticsService.frequency()).thenReturn(List.of(
+        List<NumberFrequencyDto> freqs = List.of(
                 new NumberFrequencyDto(1, 3, 0.1),
                 new NumberFrequencyDto(2, 7, 0.2)
-        ));
+        );
+        CombinationPrizeHistoryDto emptyHistory =
+                new CombinationPrizeHistoryDto(List.of(), 0, 0, List.of(), List.of());
+        when(statisticsService.frequencySummary())
+                .thenReturn(new FrequencySummaryDto(freqs, emptyHistory));
+        when(statisticsService.combinationPrizeHistory(anyList())).thenReturn(emptyHistory);
 
         mockMvc.perform(get("/fragments/frequency"))
                 .andExpect(status().isOk())
