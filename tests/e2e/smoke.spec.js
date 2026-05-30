@@ -14,7 +14,7 @@ test.describe('home smoke', () => {
 
   test('renders recommend card', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#recommend .kraft-combo').first()).toBeVisible();
+    await expect(page.locator('#recommend .set-card').first()).toBeVisible();
   });
 
   test('renders frequency card', async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe('home smoke', () => {
   test('home page renders correctly without htmx', async ({ page }) => {
     await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
     await page.goto('/');
-    await expect(page.locator('#recommend .kraft-combo').first()).toBeVisible();
+    await expect(page.locator('#recommend .set-card').first()).toBeVisible();
     await expect(page.locator('#latest')).toBeVisible();
   });
 });
