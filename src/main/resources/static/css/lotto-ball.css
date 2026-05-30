@@ -113,6 +113,76 @@
   font-weight: 700;
 }
 
+/* ===== Frequency Summary (Top/Bottom 6 Balls) ===== */
+.freq-summary-section {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  margin-bottom: 1.2rem;
+  padding: .9rem 1rem;
+  background: color-mix(in srgb, var(--kraft-surface-solid, #fff) 30%, transparent);
+  border: 1px solid var(--kraft-border, rgba(0,0,0,.08));
+  border-radius: 14px;
+}
+
+.freq-summary-group {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.freq-summary-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.freq-summary-title {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.freq-summary-title--hot  { color: #b45309; }
+.freq-summary-title--cold { color: #1d4ed8; }
+
+[data-theme="dark"] .freq-summary-title--hot  { color: #fbbf24; }
+[data-theme="dark"] .freq-summary-title--cold { color: #60a5fa; }
+
+.freq-prize-badge {
+  font-size: .63rem;
+  padding: .1rem .38rem;
+  border-radius: 20px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.freq-prize-badge--hit {
+  background: rgba(245,158,11,.15);
+  color: #b45309;
+  border: 1px solid rgba(245,158,11,.35);
+}
+
+[data-theme="dark"] .freq-prize-badge--hit {
+  background: rgba(251,191,36,.15);
+  color: #fbbf24;
+  border-color: rgba(251,191,36,.3);
+}
+
+.freq-prize-badge--none {
+  background: var(--kraft-surface-muted, rgba(0,0,0,.05));
+  color: inherit;
+  opacity: .45;
+  border: 1px solid var(--kraft-border, rgba(0,0,0,.1));
+}
+
+.freq-summary-sep {
+  height: 1px;
+  background: var(--kraft-border, rgba(0,0,0,.08));
+}
+
 /* ===== Frequency List + Sort Controls ===== */
 .freq-controls {
   display: flex;
@@ -149,10 +219,23 @@
   gap: .36rem;
 }
 
+/* 볼 그리드 모드 (막대 없이 9열 그리드) */
+.freq-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: .55rem .3rem;
+}
+
 .freq-item {
   display: flex;
   align-items: center;
   gap: .65rem;
+}
+
+.freq-grid .freq-item {
+  flex-direction: column;
+  align-items: center;
+  gap: .18rem;
 }
 
 .freq-bar-wrap {
@@ -185,6 +268,12 @@
   opacity: .55;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
+}
+
+.freq-grid .freq-count {
+  min-width: unset;
+  text-align: center;
+  font-size: .62rem;
 }
 
 /* ===== Rounds Page Size Button Group ===== */
@@ -252,3 +341,18 @@
   margin-top: .06rem;
 }
 
+
+@media (max-width: 575.98px) {
+  .freq-grid {
+    grid-template-columns: repeat(9, 1fr);
+    gap: .35rem .15rem;
+  }
+  .freq-grid .kraft-ball {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    font-size: 0.65rem !important;
+  }
+  .freq-grid .freq-count {
+    font-size: .55rem;
+  }
+}

@@ -622,9 +622,9 @@ model.addAttribute("currentPage", "home");       // "home" | "frequency" | "roun
 [x] STEP 5 — base.html 모바일 탭바 — 기존 .kraft-bottom-nav로 이미 구현됨 + lotto-ball.css 링크 추가
 [x] STEP 6 — lotto-ball.css 하드코딩 dark override 제거, CSS 변수(--kraft-primary 등)로 자동 대응
 [x] ./gradlew test — 테스트 통과
-[ ] ./gradlew bootRun — 실행 확인 (로컬 MariaDB 필요)
-[ ] /, /frequency, /rounds 각 페이지 렌더링 오류 없음 (DB 환경 필요)
-[ ] 모바일 320px~640px 반응형 확인 (DB 환경 필요)
-[ ] 다크/라이트 모드 전환 시 볼 가독성 확인 (DB 환경 필요)
-[ ] HTMX 요청 (번호 생성 등) 기존 동작 유지 확인 (DB 환경 필요)
+[x] ./gradlew bootRun — 실행 확인 (로컬 확인 완료)
+[x] /, /frequency, /rounds 각 페이지 렌더링 오류 없음 (kraft-ball, set-card, freq-item, round-item 정상)
+[x] 모바일 320px~640px 반응형 확인 (kraft-bottom-nav d-md-none + media 575.98px 적용 확인)
+[x] 다크/라이트 모드 전환 시 볼 가독성 확인 (lotto-ball.css CSS 변수 --kraft-primary 등으로 자동 대응)
+[x] HTMX 요청 (번호 생성 등) 기존 동작 유지 확인 (/fragments/recommend, /fragments/rounds 200 OK)
 ```

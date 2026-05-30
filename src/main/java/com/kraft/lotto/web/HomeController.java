@@ -6,6 +6,7 @@ import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
 import java.util.ArrayList;
+import java.util.Comparator;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
@@ -47,7 +48,7 @@ public class HomeController {
 
     @GetMapping("/frequency")
     public String frequencyPage(Model model) {
-        model.addAttribute("frequency", toFrequencyViewModels(statisticsService.frequency()));
+        addFrequencyModel(model);
         return "frequency";
     }
 
@@ -79,7 +80,7 @@ public class HomeController {
 
     @GetMapping("/fragments/frequency")
     public String frequency(Model model) {
-        model.addAttribute("frequency", toFrequencyViewModels(statisticsService.frequency()));
+        addFrequencyModel(model);
         return FREQUENCY_FRAGMENT;
     }
 
@@ -98,6 +99,29 @@ public class HomeController {
         model.addAttribute("pageSizes", List.of(20, 50, 100));
         model.addAttribute("currentSize", safeSize);
         return ROUNDS_FRAGMENT;
+    }
+
+    private void addFrequencyModel(Model model) {
+        var summary = statisticsService.frequencySummary();
+        List<FrequencyViewModel> freqVMs = toFrequencyViewModels(summary.frequencies());
+
+        List<Integer> top6 = freqVMs.stream()
+                .filter(f -> f.rank() <= 6)
+                .sorted(Comparator.comparingInt(FrequencyViewModel::rank))
+                .map(FrequencyViewModel::number)
+                .toList();
+
+        List<Integer> bottom6 = freqVMs.stream()
+                .filter(f -> f.rank() >= 40)
+                .sorted(Comparator.comparingInt(FrequencyViewModel::number))
+                .map(FrequencyViewModel::number)
+                .toList();
+
+        model.addAttribute("frequency", freqVMs);
+        model.addAttribute("top6", top6);
+        model.addAttribute("bottom6", bottom6);
+        model.addAttribute("top6History", statisticsService.combinationPrizeHistory(top6.stream().sorted().toList()));
+        model.addAttribute("bottom6History", summary.lowSixCombinationHistory());
     }
 
     private void addHomeModel(Integer round, Model model) {

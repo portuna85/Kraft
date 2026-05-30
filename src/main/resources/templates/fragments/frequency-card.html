@@ -1,24 +1,54 @@
 <div class="card mb-4 kraft-section kraft-section-frequency" id="frequency" th:fragment="frequency-card">
   <div class="card-body">
     <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">번호 출현 빈도</h2>
+
+    <!-- 상위/하위 6개 볼 요약 -->
+    <div class="freq-summary-section">
+      <div class="freq-summary-group">
+        <div class="freq-summary-header">
+          <span class="freq-summary-title freq-summary-title--hot">자주 나온 번호</span>
+          <span th:if="${top6History != null and top6History.firstPrizeCount > 0}"
+                class="freq-prize-badge freq-prize-badge--hit"
+                th:text="${top6History.firstPrizeCount} + '회 1등'">1회 1등</span>
+          <span th:if="${top6History == null or top6History.firstPrizeCount == 0}"
+                class="freq-prize-badge freq-prize-badge--none">1등 없음</span>
+        </div>
+        <div class="ball-row">
+          <th:block th:each="n : ${top6}">
+            <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
+          </th:block>
+        </div>
+      </div>
+      <div class="freq-summary-sep"></div>
+      <div class="freq-summary-group">
+        <div class="freq-summary-header">
+          <span class="freq-summary-title freq-summary-title--cold">드물게 나온 번호</span>
+          <span th:if="${bottom6History != null and bottom6History.firstPrizeCount > 0}"
+                class="freq-prize-badge freq-prize-badge--hit"
+                th:text="${bottom6History.firstPrizeCount} + '회 1등'">1회 1등</span>
+          <span th:if="${bottom6History == null or bottom6History.firstPrizeCount == 0}"
+                class="freq-prize-badge freq-prize-badge--none">1등 없음</span>
+        </div>
+        <div class="ball-row">
+          <th:block th:each="n : ${bottom6}">
+            <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
+          </th:block>
+        </div>
+      </div>
+    </div>
+
     <div class="freq-controls">
       <button class="btn-sort active" data-sort="number" type="button">번호순</button>
       <button class="btn-sort" data-sort="count-desc" type="button">많은 순</button>
       <button class="btn-sort" data-sort="count-asc" type="button">적은 순</button>
     </div>
-    <ul class="freq-list" id="freq-list">
+    <ul class="freq-list freq-grid" id="freq-list">
       <li th:each="f : ${frequency}"
           class="freq-item"
           th:attr="data-number=${f.number}, data-count=${f.count}">
         <span th:replace="~{fragments/lotto-ball :: ball(${f.number}, '')}">1</span>
-        <div class="freq-bar-wrap">
-          <div class="freq-bar"
-               th:style="'width:' + ${f.percent} + '%'"
-               th:classappend="${f.rank <= 5 ? ' freq-bar--top' : (f.rank >= 41 ? ' freq-bar--low' : '')}">
-          </div>
-        </div>
         <span class="freq-count"
-              th:text="${f.count} + '회'"
+              th:text="${f.count}"
               th:attr="aria-label=|${f.number}번 ${f.count}회 출현|"></span>
       </li>
     </ul>

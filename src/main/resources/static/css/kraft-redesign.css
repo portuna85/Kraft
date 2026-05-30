@@ -187,7 +187,7 @@ main section:first-of-type,
     linear-gradient(225deg, var(--kraft-accent-soft), transparent 42%),
     var(--kraft-surface);
   box-shadow: var(--kraft-shadow);
-  padding: clamp(2rem, 5vw, 4.8rem);
+  padding: clamp(.75rem, 2.2vw, 1.6rem);
 }
 
 main section:first-of-type::after,
@@ -195,9 +195,9 @@ main section:first-of-type::after,
 .hero::after {
   content: '';
   position: absolute;
-  right: clamp(1rem, 6vw, 5rem);
+  right: clamp(.75rem, 4vw, 3.5rem);
   top: 50%;
-  width: clamp(10rem, 25vw, 20rem);
+  width: clamp(6rem, 14vw, 11rem);
   aspect-ratio: 1;
   transform: translateY(-50%);
   border-radius: 50%;
