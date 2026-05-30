@@ -13,9 +13,8 @@
         <span th:replace="~{fragments/lotto-ball :: ball(${f.number}, '')}">1</span>
         <div class="freq-bar-wrap">
           <div class="freq-bar"
-               th:with="pct=${f.count * 100.0 / maxFreq}"
-               th:style="'width:' + ${pct} + '%'"
-               th:classappend="${pct >= 88 ? ' freq-bar--top' : (pct <= 62 ? ' freq-bar--low' : '')}">
+               th:style="'width:' + ${f.percent} + '%'"
+               th:classappend="${f.rank <= 5 ? ' freq-bar--top' : (f.rank >= 41 ? ' freq-bar--low' : '')}">
           </div>
         </div>
         <span class="freq-count"

@@ -609,21 +609,22 @@ model.addAttribute("currentPage", "home");       // "home" | "frequency" | "roun
 ## 작업 완료 체크리스트
 
 ```
-[ ] STEP 0 — 모든 대상 파일 읽기 완료 (작업 전 필수)
-[ ] STEP 1 — fragments/ball.html 생성, ball() / bonus() fragment 정상 동작
-[ ] STEP 1 — 볼 CSS (.ball, .ball-1-10 ~ .ball-41-45, .ball-bonus) 추가
-[ ] STEP 2 — index.html 추천 세트 set-card 레이아웃 적용
-[ ] STEP 2 — index.html 최신 회차 latest-card 적용
-[ ] STEP 3 — FrequencyController에 percent/rank 계산 추가
-[ ] STEP 3 — frequency.html 막대 시각화 + 정렬 버튼 적용
-[ ] STEP 4 — RoundsController에 pageSizes, currentSize 추가
-[ ] STEP 4 — rounds.html 카드형 목록 + 페이지 크기 버튼 그룹 적용
-[ ] STEP 5 — 전체 Controller에 currentPage attribute 추가
-[ ] STEP 5 — base.html 모바일 탭바 추가 + CSS 적용
-[ ] ./gradlew test — 테스트 통과
-[ ] ./gradlew bootRun — 실행 확인
-[ ] /, /frequency, /rounds 각 페이지 렌더링 오류 없음
-[ ] 모바일 320px~640px 반응형 확인
-[ ] 다크/라이트 모드 전환 시 볼 가독성 확인
-[ ] HTMX 요청 (번호 생성 등) 기존 동작 유지 확인
+[x] STEP 0 — 모든 대상 파일 읽기 완료 (작업 전 필수)
+[x] STEP 1 — fragments/lotto-ball.html 생성, ball(num,extra) fragment 정상 동작 (kraft-ball 기반)
+[x] STEP 1 — 볼 CSS — lotto-ball.css 생성 (레이아웃), 볼 색상은 기존 app.css kraft-ball 체계 유지
+[x] STEP 2 — index.html 추천 세트 set-card 레이아웃 적용 (recommend-card.html)
+[x] STEP 2 — index.html 최신 회차 latest-card 적용 (home-static-cards.html)
+[x] STEP 3 — FrequencyViewModel(number, count, percent, rank) 생성, HomeController에서 rank 기반 계산
+[x] STEP 3 — frequency.html 막대 시각화 + 정렬 버튼 적용 (rank<=5 금색, rank>=41 빨간색)
+[x] STEP 4 — HomeController에 pageSizes, currentSize 추가 (rounds / fragments/rounds 양쪽)
+[x] STEP 4 — rounds.html 카드형 목록 + 페이지 크기 버튼 그룹 적용 (HTMX 유지)
+[x] STEP 5 — 전체 Controller에 currentPage 불필요 — base.html이 reqPath로 active 처리
+[x] STEP 5 — base.html 모바일 탭바 — 기존 .kraft-bottom-nav로 이미 구현됨 + lotto-ball.css 링크 추가
+[x] STEP 6 — lotto-ball.css 하드코딩 dark override 제거, CSS 변수(--kraft-primary 등)로 자동 대응
+[x] ./gradlew test — 테스트 통과
+[ ] ./gradlew bootRun — 실행 확인 (로컬 MariaDB 필요)
+[ ] /, /frequency, /rounds 각 페이지 렌더링 오류 없음 (DB 환경 필요)
+[ ] 모바일 320px~640px 반응형 확인 (DB 환경 필요)
+[ ] 다크/라이트 모드 전환 시 볼 가독성 확인 (DB 환경 필요)
+[ ] HTMX 요청 (번호 생성 등) 기존 동작 유지 확인 (DB 환경 필요)
 ```

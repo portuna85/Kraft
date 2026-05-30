@@ -5,6 +5,7 @@ import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
 import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
+import java.util.ArrayList;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
@@ -46,9 +47,7 @@ public class HomeController {
 
     @GetMapping("/frequency")
     public String frequencyPage(Model model) {
-        List<NumberFrequencyDto> frequencies = statisticsService.frequency();
-        model.addAttribute("frequency", frequencies);
-        model.addAttribute("maxFreq", maxFrequency(frequencies));
+        model.addAttribute("frequency", toFrequencyViewModels(statisticsService.frequency()));
         return "frequency";
     }
 
@@ -80,9 +79,7 @@ public class HomeController {
 
     @GetMapping("/fragments/frequency")
     public String frequency(Model model) {
-        List<NumberFrequencyDto> frequencies = statisticsService.frequency();
-        model.addAttribute("frequency", frequencies);
-        model.addAttribute("maxFreq", maxFrequency(frequencies));
+        model.addAttribute("frequency", toFrequencyViewModels(statisticsService.frequency()));
         return FREQUENCY_FRAGMENT;
     }
 
@@ -118,10 +115,17 @@ public class HomeController {
         model.addAttribute("maxCount", PublicQueryParams.MAX_COUNT);
     }
 
-    private static long maxFrequency(List<NumberFrequencyDto> frequencies) {
-        return Math.max(1L, frequencies.stream()
-                .mapToLong(NumberFrequencyDto::count)
-                .max()
-                .orElse(1L));
+    private static List<FrequencyViewModel> toFrequencyViewModels(List<NumberFrequencyDto> frequencies) {
+        long max = Math.max(1L, frequencies.stream().mapToLong(NumberFrequencyDto::count).max().orElse(1L));
+        List<NumberFrequencyDto> byCount = frequencies.stream()
+                .sorted(java.util.Comparator.comparingLong(NumberFrequencyDto::count).reversed())
+                .toList();
+        List<FrequencyViewModel> result = new ArrayList<>(frequencies.size());
+        for (NumberFrequencyDto f : frequencies) {
+            double percent = f.count() * 100.0 / max;
+            int rank = byCount.indexOf(f) + 1;
+            result.add(new FrequencyViewModel(f.number(), f.count(), percent, rank));
+        }
+        return result;
     }
 }

@@ -140,13 +140,6 @@
   color: var(--kraft-primary, #174ea6);
 }
 
-[data-bs-theme="dark"] .btn-sort.active,
-[data-bs-theme="dark"] .btn-sort:hover {
-  color: #7eb8ff;
-  border-color: #7eb8ff;
-  background: rgba(126,184,255,.12);
-}
-
 .freq-list {
   list-style: none;
   padding: 0;
@@ -221,13 +214,6 @@
   color: var(--kraft-primary, #174ea6);
 }
 
-[data-bs-theme="dark"] .page-size-btn.active,
-[data-bs-theme="dark"] .page-size-btn:hover {
-  color: #7eb8ff;
-  border-color: #7eb8ff;
-  background: rgba(126,184,255,.12);
-}
-
 /* ===== Rounds Card List ===== */
 .round-list {
   display: flex;
@@ -266,6 +252,3 @@
   margin-top: .06rem;
 }
 
-[data-bs-theme="dark"] .round-no {
-  color: #7eb8ff;
-}

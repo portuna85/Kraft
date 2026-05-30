@@ -2,6 +2,7 @@ package com.kraft.lotto.web;
 
 import static com.kraft.lotto.support.fixtures.LottoTestFixtures.combinationDtos;
 import static com.kraft.lotto.support.fixtures.LottoTestFixtures.winningNumberDto;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -65,7 +66,7 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("최대 빈도값과 함께 번호 빈도 프래그먼트를 렌더링한다")
+    @DisplayName("빈도 프래그먼트는 FrequencyViewModel 리스트를 모델에 담아 렌더링한다")
     void frequencyFragmentRendersView() throws Exception {
         when(statisticsService.frequency()).thenReturn(List.of(
                 new NumberFrequencyDto(1, 3, 0.1),
@@ -75,7 +76,7 @@ class HomeControllerTest {
         mockMvc.perform(get("/fragments/frequency"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments/frequency-card :: frequency-card"))
-                .andExpect(model().attribute("maxFreq", 7L));
+                .andExpect(model().attribute("frequency", hasSize(2)));
     }
 
     @Test
