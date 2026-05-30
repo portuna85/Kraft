@@ -1,10 +1,18 @@
 /* ===== Theme Toggle Button ===== */
+
+/* 모바일 포함 전 뷰포트: navbar 줄바꿈 방지 */
+.navbar .kraft-container {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
 .theme-toggle-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2rem;
   height: 2rem;
+  min-width: 2rem;  /* 축소 방지 */
   padding: 0;
   border: 1px solid var(--kraft-border, rgba(0,0,0,.18));
   border-radius: 50%;
@@ -23,6 +31,8 @@
 .theme-icon {
   width: 1rem;
   height: 1rem;
+  display: block;
+  flex-shrink: 0;
 }
 
 .theme-icon--hidden {
