@@ -1,3 +1,34 @@
+/* ===== Theme Toggle Button ===== */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--kraft-border, rgba(0,0,0,.18));
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--kraft-primary-soft, rgba(23,78,166,.1));
+  border-color: var(--kraft-primary, #174ea6);
+}
+
+.theme-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.theme-icon--hidden {
+  display: none;
+}
+
 /* ===== Ball Row Layout ===== */
 .ball-row {
   display: flex;
