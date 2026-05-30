@@ -64,6 +64,8 @@ public class HomeController {
         model.addAttribute("rounds", rounds);
         model.addAttribute("page", rounds.page());
         model.addAttribute("size", rounds.size());
+        model.addAttribute("pageSizes", List.of(20, 50, 100));
+        model.addAttribute("currentSize", safeSize);
         return "rounds";
     }
 
@@ -96,6 +98,8 @@ public class HomeController {
         model.addAttribute("rounds", rounds);
         model.addAttribute("page", rounds.page());
         model.addAttribute("size", rounds.size());
+        model.addAttribute("pageSizes", List.of(20, 50, 100));
+        model.addAttribute("currentSize", safeSize);
         return ROUNDS_FRAGMENT;
     }
 

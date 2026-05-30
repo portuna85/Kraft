@@ -1,0 +1,271 @@
+/* ===== Ball Row Layout ===== */
+.ball-row {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+
+.bonus-sep {
+  opacity: .35;
+  font-size: .85rem;
+  margin: 0 .1rem;
+  user-select: none;
+}
+
+/* ===== Recommendation Sets Grid ===== */
+.sets-grid {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-top: .65rem;
+}
+
+.set-card {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  background: color-mix(in srgb, var(--kraft-surface-solid, #fff) 50%, transparent);
+  border: 1px solid var(--kraft-border, rgba(0,0,0,.1));
+  border-radius: 12px;
+  padding: .6rem 1rem;
+  transition: background .18s;
+}
+
+.set-card:hover {
+  background: color-mix(in srgb, var(--kraft-primary-soft, rgba(23,78,166,.08)) 70%, transparent);
+}
+
+.set-index {
+  min-width: 1.8rem;
+  font-size: .72rem;
+  opacity: .4;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ===== Latest Draw Hero Card ===== */
+.latest-card {
+  background: linear-gradient(135deg, #0d3060 0%, #1a5096 100%);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 16px;
+  padding: 1.3rem 1.5rem;
+  margin-bottom: 1.25rem;
+  color: #fff;
+}
+
+.latest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: .35rem;
+}
+
+.latest-title-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.latest-round {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.latest-date {
+  font-size: .78rem;
+  opacity: .5;
+}
+
+.latest-badge {
+  font-size: .63rem;
+  padding: .12rem .4rem;
+  background: rgba(245,166,35,.2);
+  color: #f5c842;
+  border: 1px solid rgba(245,166,35,.35);
+  border-radius: 20px;
+}
+
+.latest-meta {
+  display: flex;
+  gap: 2rem;
+  margin-top: .85rem;
+  padding-top: .85rem;
+  border-top: 1px solid rgba(255,255,255,.12);
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: .12rem;
+}
+
+.meta-label {
+  font-size: .66rem;
+  opacity: .45;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.meta-value {
+  font-size: .92rem;
+  font-weight: 700;
+}
+
+/* ===== Frequency List + Sort Controls ===== */
+.freq-controls {
+  display: flex;
+  gap: .35rem;
+  margin-bottom: .8rem;
+  flex-wrap: wrap;
+}
+
+.btn-sort {
+  padding: .27rem .78rem;
+  border-radius: 20px;
+  border: 1px solid var(--kraft-border, rgba(0,0,0,.15));
+  background: transparent;
+  color: inherit;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: all .15s;
+  line-height: 1.4;
+}
+
+.btn-sort.active,
+.btn-sort:hover {
+  background: var(--kraft-primary-soft, rgba(23,78,166,.1));
+  border-color: var(--kraft-primary, #174ea6);
+  color: var(--kraft-primary, #174ea6);
+}
+
+[data-bs-theme="dark"] .btn-sort.active,
+[data-bs-theme="dark"] .btn-sort:hover {
+  color: #7eb8ff;
+  border-color: #7eb8ff;
+  background: rgba(126,184,255,.12);
+}
+
+.freq-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .36rem;
+}
+
+.freq-item {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+}
+
+.freq-bar-wrap {
+  flex: 1;
+  height: 9px;
+  background: var(--kraft-surface-muted, rgba(0,0,0,.06));
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.freq-bar {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--kraft-primary, #174ea6);
+  transition: width .45s cubic-bezier(.4,0,.2,1);
+}
+
+.freq-bar--top {
+  background: linear-gradient(90deg, #e4a90d, #ffd84d);
+}
+
+.freq-bar--low {
+  background: linear-gradient(90deg, #b91c1c, #ef4444);
+}
+
+.freq-count {
+  min-width: 3.4rem;
+  text-align: right;
+  font-size: .76rem;
+  opacity: .55;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ===== Rounds Page Size Button Group ===== */
+.page-size-group {
+  display: flex;
+  gap: .35rem;
+}
+
+.page-size-btn {
+  padding: .27rem .78rem;
+  border-radius: 20px;
+  border: 1px solid var(--kraft-border, rgba(0,0,0,.15));
+  background: transparent;
+  color: inherit;
+  font-size: .8rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .15s;
+  line-height: 1.4;
+  display: inline-block;
+}
+
+.page-size-btn.active,
+.page-size-btn:hover {
+  background: var(--kraft-primary-soft, rgba(23,78,166,.1));
+  border-color: var(--kraft-primary, #174ea6);
+  color: var(--kraft-primary, #174ea6);
+}
+
+[data-bs-theme="dark"] .page-size-btn.active,
+[data-bs-theme="dark"] .page-size-btn:hover {
+  color: #7eb8ff;
+  border-color: #7eb8ff;
+  background: rgba(126,184,255,.12);
+}
+
+/* ===== Rounds Card List ===== */
+.round-list {
+  display: flex;
+  flex-direction: column;
+  gap: .38rem;
+}
+
+.round-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .58rem .9rem;
+  background: color-mix(in srgb, var(--kraft-surface-solid, #fff) 30%, transparent);
+  border: 1px solid var(--kraft-border, rgba(0,0,0,.07));
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.round-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 5rem;
+  flex-shrink: 0;
+}
+
+.round-no {
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--kraft-primary, #174ea6);
+}
+
+.round-date {
+  font-size: .7rem;
+  opacity: .45;
+  margin-top: .06rem;
+}
+
+[data-bs-theme="dark"] .round-no {
+  color: #7eb8ff;
+}

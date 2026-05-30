@@ -1,12 +1,50 @@
 <div class="card mb-4 kraft-section kraft-section-frequency" id="frequency" th:fragment="frequency-card">
   <div class="card-body">
     <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">번호 출현 빈도</h2>
-    <div class="kraft-freq-grid">
-      <div class="kraft-freq-cell" th:each="f : ${frequency}">
-        <span th:replace="~{fragments/lotto-ball :: ball(${f.number}, '')}">1</span>
-        <small th:text="${f.count}" th:attr="aria-label=|${f.number}번 ${f.count}회 출현|">0</small>
-        <progress class="bar" th:attr="max=${maxFreq},value=${f.count},aria-label=|${f.number}번 출현 빈도|"></progress>
-      </div>
+    <div class="freq-controls">
+      <button class="btn-sort active" data-sort="number" type="button">번호순</button>
+      <button class="btn-sort" data-sort="count-desc" type="button">많은 순</button>
+      <button class="btn-sort" data-sort="count-asc" type="button">적은 순</button>
     </div>
+    <ul class="freq-list" id="freq-list">
+      <li th:each="f : ${frequency}"
+          class="freq-item"
+          th:attr="data-number=${f.number}, data-count=${f.count}">
+        <span th:replace="~{fragments/lotto-ball :: ball(${f.number}, '')}">1</span>
+        <div class="freq-bar-wrap">
+          <div class="freq-bar"
+               th:with="pct=${f.count * 100.0 / maxFreq}"
+               th:style="'width:' + ${pct} + '%'"
+               th:classappend="${pct >= 88 ? ' freq-bar--top' : (pct <= 62 ? ' freq-bar--low' : '')}">
+          </div>
+        </div>
+        <span class="freq-count"
+              th:text="${f.count} + '회'"
+              th:attr="aria-label=|${f.number}번 ${f.count}회 출현|"></span>
+      </li>
+    </ul>
   </div>
+  <script>
+    (function () {
+      var list = document.getElementById('freq-list');
+      if (!list) return;
+      list.closest('.kraft-section-frequency').querySelectorAll('.btn-sort').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          list.closest('.kraft-section-frequency').querySelectorAll('.btn-sort').forEach(function (b) {
+            b.classList.remove('active');
+          });
+          btn.classList.add('active');
+          var items = Array.from(list.querySelectorAll('.freq-item'));
+          var sort = btn.dataset.sort;
+          items.sort(function (a, b) {
+            if (sort === 'number')     return +a.dataset.number - +b.dataset.number;
+            if (sort === 'count-desc') return +b.dataset.count  - +a.dataset.count;
+            if (sort === 'count-asc')  return +a.dataset.count  - +b.dataset.count;
+            return 0;
+          });
+          items.forEach(function (item) { list.appendChild(item); });
+        });
+      });
+    })();
+  </script>
 </div>
