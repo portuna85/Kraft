@@ -7,7 +7,7 @@
       </div>
       <span class="latest-date" th:text="${#temporals.format(latest.drawDate, 'yyyy.MM.dd')}">-</span>
     </div>
-    <div class="ball-row" style="margin:.6rem 0;">
+    <div class="ball-row latest-ball-row">
       <th:block th:each="n : ${latest.numbers}">
         <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
       </th:block>
