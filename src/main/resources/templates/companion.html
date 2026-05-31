@@ -24,23 +24,6 @@
     </div>
   </div>
 
-  <script>
-    (function () {
-      var current = null;
-      var picker = document.getElementById('companion-picker');
-
-      picker.querySelectorAll('.ball-picker-item').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          if (current !== null) {
-            var prev = picker.querySelector('[data-number="' + current + '"]');
-            if (prev) prev.classList.remove('selected');
-          }
-          current = +this.dataset.number;
-          this.classList.add('selected');
-          htmx.ajax('GET', '/fragments/companion?target=' + current, {target: '#companion-result', swap: 'innerHTML'});
-        });
-      });
-    })();
-  </script>
+  <script th:src="@{/js/companion.js}" defer></script>
 </section>
 </html>

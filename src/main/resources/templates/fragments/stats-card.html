@@ -11,17 +11,13 @@
           <span class="stats-tag stats-tag--hot" th:text="${s.oddCount} + '홀'">3홀</span>
           <span class="stats-tag stats-tag--cold" th:text="${s.evenCount} + '짝'">3짝</span>
         </div>
-        <div class="stats-oddeven-balls">
+        <div class="stats-ball-row">
           <th:block th:each="i : ${#numbers.sequence(1, s.oddCount)}">
-            <span class="stats-mini-ball stats-mini-ball--odd"></span>
+            <span class="stats-ball stats-ball--odd" aria-hidden="true"></span>
           </th:block>
           <th:block th:each="i : ${#numbers.sequence(1, s.evenCount)}">
-            <span class="stats-mini-ball stats-mini-ball--even"></span>
+            <span class="stats-ball stats-ball--even" aria-hidden="true"></span>
           </th:block>
-        </div>
-        <div class="stats-bar-wrap">
-          <div class="stats-bar"
-               th:style="|width:${s.maxDrawCount > 0 ? (s.drawCount * 100 / s.maxDrawCount) : 0}%|"></div>
         </div>
         <span class="stats-count" th:text="${s.drawCount} + '회'">100회</span>
         <span class="stats-pct" th:text="${#numbers.formatDecimal(s.percent,1,1)} + '%'">10.0%</span>
@@ -35,12 +31,15 @@
     <p class="stats-desc text-secondary small mb-3">당첨 번호 6개의 합산 범위별 출현 빈도</p>
 
     <div class="stats-sum-list">
-      <div th:each="s : ${stats.sumRangeStats}" class="stats-sum-row">
+      <div th:each="s : ${stats.sumRangeStats}" class="stats-sum-row"
+           th:with="rawDots=${s.maxDrawCount > 0 ? (s.drawCount * 10 / s.maxDrawCount) : 0},
+                    filledDots=${rawDots > 0 ? rawDots : (s.drawCount > 0 ? 1 : 0)}">
         <span class="stats-sum-range font-monospace"
               th:text="${s.rangeStart} + '~' + ${s.rangeEnd}">100~109</span>
-        <div class="stats-bar-wrap">
-          <div class="stats-bar stats-bar--sum"
-               th:style="|width:${s.maxDrawCount > 0 ? (s.drawCount * 100 / s.maxDrawCount) : 0}%|"></div>
+        <div class="stats-dot-row" aria-hidden="true">
+          <th:block th:each="i : ${#numbers.sequence(1, 10)}">
+            <span class="stat-dot" th:classappend="${i <= filledDots} ? ' stat-dot--filled'"></span>
+          </th:block>
         </div>
         <span class="stats-count" th:text="${s.drawCount} + '회'">100회</span>
         <span class="stats-pct" th:text="${#numbers.formatDecimal(s.percent,1,1)} + '%'">10.0%</span>

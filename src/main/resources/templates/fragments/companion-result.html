@@ -8,10 +8,8 @@
   </div>
 
   <div class="companion-grid">
-    <div th:each="c : ${companions}" class="freq-summary-ball-wrap companion-ball-wrap">
-      <div class="companion-heat-bar"
-           th:style="|height:${c.percent}%|"
-           th:attr="aria-label=|${c.number}번 동반 출현 ${c.count}회|"></div>
+    <div th:each="c : ${companions}" class="freq-summary-ball-wrap companion-ball-wrap"
+         th:attr="aria-label=|${c.number}번 동반 출현 ${c.count}회|">
       <span th:replace="~{fragments/lotto-ball :: ball(${c.number}, '')}">1</span>
       <span class="freq-summary-count" th:text="${c.count} + '회'">100회</span>
     </div>
