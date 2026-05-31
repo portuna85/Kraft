@@ -6,4 +6,9 @@ public record PatternStatDto(
         List<OddEvenStatDto> oddEvenStats,
         List<SumRangeStatDto> sumRangeStats,
         long totalDraws
-) {}
+) {
+    public PatternStatDto {
+        oddEvenStats = List.copyOf(oddEvenStats);
+        sumRangeStats = List.copyOf(sumRangeStats);
+    }
+}

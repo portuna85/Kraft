@@ -30,7 +30,8 @@ public class ActuatorAccessFilter extends OncePerRequestFilter {
     @Autowired
     public ActuatorAccessFilter(ObjectProvider<KraftSecurityProperties> securityPropertiesProvider,
                                 ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new), meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new));
+        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new),
+                meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new));
     }
 
     ActuatorAccessFilter(KraftSecurityProperties securityProperties) {

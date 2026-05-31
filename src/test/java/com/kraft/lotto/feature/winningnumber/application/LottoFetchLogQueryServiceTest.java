@@ -6,9 +6,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
-import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogRepository;
-import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchStatus;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import java.time.Clock;
 import java.time.Instant;

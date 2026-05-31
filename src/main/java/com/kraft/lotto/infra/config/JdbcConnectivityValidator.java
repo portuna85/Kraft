@@ -48,7 +48,8 @@ class JdbcConnectivityValidator {
             return;
         }
         problems.add(
-                "  - [spring.datasource.url] DB endpoint is not reachable: " + endpoint.host() + ":" + endpoint.port() + System.lineSeparator()
+                "  - [spring.datasource.url] DB endpoint is not reachable: "
+                        + endpoint.host() + ":" + endpoint.port() + System.lineSeparator()
                         + "      - Ensure DB is running and reachable from this host" + System.lineSeparator()
                         + "      - For local docker-compose, start DB first: docker compose up -d" + System.lineSeparator()
                         + "      - To skip this precheck, set kraft.db.connectivity-check.enabled=false"

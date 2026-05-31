@@ -3,7 +3,6 @@ package com.kraft.lotto.feature.winningnumber.application;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;

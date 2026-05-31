@@ -50,7 +50,8 @@ public class SmokLottoApiClient implements LottoApiClient {
     }
 
     SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl, Clock clock) {
-        this(restClient, objectMapper, baseUrl, 0, new SimpleMeterRegistry(), clock, new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
+        this(restClient, objectMapper, baseUrl, 0, new SimpleMeterRegistry(), clock,
+                new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
     }
 
     SmokLottoApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl,

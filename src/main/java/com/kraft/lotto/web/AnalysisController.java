@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -43,7 +42,7 @@ public class AnalysisController {
             Model model
     ) {
         List<Integer> numbers = List.of(n1, n2, n3, n4, n5, n6).stream().sorted().toList();
-        if (Set.of(n1, n2, n3, n4, n5, n6).size() < 6) {
+        if (new java.util.HashSet<>(numbers).size() < 6) {
             model.addAttribute("error", "중복된 번호가 있습니다.");
             return ANALYSIS_RESULT_FRAGMENT;
         }

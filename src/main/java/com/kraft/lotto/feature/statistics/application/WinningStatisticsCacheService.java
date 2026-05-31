@@ -135,7 +135,9 @@ public class WinningStatisticsCacheService {
     @Transactional(readOnly = true)
     public List<NumberFrequencyDto> frequencyForPeriod(int rounds) {
         int maxRound = repository.findMaxRound().orElse(0);
-        if (maxRound == 0) return List.of();
+        if (maxRound == 0) {
+            return List.of();
+        }
         int minRound = Math.max(1, maxRound - rounds + 1);
         long totalDraws = repository.countDrawsFromRound(minRound);
         long[] counts = new long[LOTTO_NUMBER_MAX + 1];

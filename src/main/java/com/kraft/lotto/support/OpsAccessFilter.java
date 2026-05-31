@@ -35,7 +35,8 @@ public class OpsAccessFilter extends OncePerRequestFilter {
     @Autowired
     public OpsAccessFilter(ObjectProvider<KraftSecurityProperties> securityPropertiesProvider,
                            ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new), meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new));
+        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new),
+                meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new));
     }
 
     OpsAccessFilter(KraftSecurityProperties securityProperties) {
