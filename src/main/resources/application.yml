@@ -65,6 +65,17 @@ management:
   info:
     build:
       enabled: true
+  tracing:
+    sampling:
+      probability: ${KRAFT_TRACING_SAMPLE_RATE:0.0}
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${KRAFT_OTEL_ENDPOINT:http://localhost:4318}
+  resource:
+    attributes:
+      service.name: kraft-lotto
 
 kraft:
   public-base-url: ${KRAFT_PUBLIC_BASE_URL:https://www.kraft.io.kr}

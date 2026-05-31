@@ -6,10 +6,13 @@ import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogReposit
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchStatus;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 class LottoSingleDrawCollector {
@@ -21,27 +24,46 @@ class LottoSingleDrawCollector {
     private final WinningNumberPersister persister;
     private final LottoFetchLogRepository fetchLogRepository;
     private final Clock clock;
+    private final MeterRegistry meterRegistry;
 
     LottoSingleDrawCollector(LottoApiClient lottoApiClient,
                              WinningNumberRepository winningNumberRepository,
                              WinningNumberPersister persister,
                              LottoFetchLogRepository fetchLogRepository,
                              Clock clock) {
+        this(lottoApiClient, winningNumberRepository, persister, fetchLogRepository, clock,
+                new SimpleMeterRegistry());
+    }
+
+    LottoSingleDrawCollector(LottoApiClient lottoApiClient,
+                             WinningNumberRepository winningNumberRepository,
+                             WinningNumberPersister persister,
+                             LottoFetchLogRepository fetchLogRepository,
+                             Clock clock,
+                             MeterRegistry meterRegistry) {
         this.lottoApiClient = lottoApiClient;
         this.winningNumberRepository = winningNumberRepository;
         this.persister = persister;
         this.fetchLogRepository = fetchLogRepository;
         this.clock = clock;
+        this.meterRegistry = meterRegistry;
     }
 
     CollectResponse collectOne(int drwNo, boolean refresh) {
         if (!refresh && winningNumberRepository.existsByRound(drwNo)) {
             saveLog(drwNo, LottoFetchStatus.SKIPPED, "already collected round", null, null);
+            recordOutcome("skipped");
             return CollectResponse.ofSkipped(1, winningNumberRepository.findMaxRound().orElse(0));
         }
+        long startedNanos = System.nanoTime();
         try {
-            return collectFetchedRound(drwNo);
+            CollectResponse response = collectFetchedRound(drwNo);
+            meterRegistry.timer("kraft.collect.fetch.latency")
+                    .record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS);
+            return response;
         } catch (LottoApiClientException ex) {
+            meterRegistry.timer("kraft.collect.fetch.latency")
+                    .record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS);
             log.warn("lotto draw collect failed: drwNo={}", drwNo, ex);
             saveLog(
                     drwNo,
@@ -50,8 +72,11 @@ class LottoSingleDrawCollector {
                     ex.getResponseCode(),
                     ex.getRawResponse()
             );
+            recordOutcome("failed");
             return CollectResponse.ofFailed(List.of(drwNo), winningNumberRepository.findMaxRound().orElse(0), false);
         } catch (RuntimeException ex) {
+            meterRegistry.timer("kraft.collect.fetch.latency")
+                    .record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS);
             log.warn("lotto draw collect failed: drwNo={}", drwNo, ex);
             saveLog(
                     drwNo,
@@ -60,6 +85,7 @@ class LottoSingleDrawCollector {
                     null,
                     null
             );
+            recordOutcome("failed");
             return CollectResponse.ofFailed(List.of(drwNo), winningNumberRepository.findMaxRound().orElse(0), false);
         }
     }
@@ -68,13 +94,19 @@ class LottoSingleDrawCollector {
         Optional<WinningNumber> fetched = lottoApiClient.fetch(drwNo);
         if (fetched.isEmpty()) {
             saveLog(drwNo, LottoFetchStatus.NOT_DRAWN, "round not drawn yet", null, null);
+            recordOutcome("not_drawn");
             return CollectResponse.ofNotDrawn(winningNumberRepository.findMaxRound().orElse(0));
         }
 
         WinningNumber winningNumber = fetched.get();
         UpsertOutcome outcome = persister.upsert(winningNumber);
         saveOutcomeLog(drwNo, outcome, winningNumber.rawJson());
+        recordOutcome(outcome.name().toLowerCase());
         return toCollectResponse(drwNo, outcome);
+    }
+
+    private void recordOutcome(String result) {
+        meterRegistry.counter("kraft.collect.outcome", "result", result).increment();
     }
 
     private void saveOutcomeLog(int drwNo, UpsertOutcome outcome, String rawJson) {

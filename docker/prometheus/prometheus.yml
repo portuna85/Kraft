@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: kraft-lotto
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "app:8080" ]
+    # actuator allowlist에 prometheus 컨테이너 IP를 추가해야 합니다.
+    # KRAFT_SECURITY_ACTUATOR_ALLOWED_IPS에 prometheus 컨테이너 네트워크 대역 포함 필요.

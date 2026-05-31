@@ -1,630 +1,228 @@
-# kraft-lotto 웹 디자인 개선 태스크
+# improvement.md — 백엔드·운영 성숙도 개선 계획 (2026-05 라운드)
 
-> **스택:** Spring Boot + Thymeleaf + CSS + JS (HTMX)  
-> **서비스:** https://www.kraft.io.kr  
-> **실행 환경:** Claude Code (CLI) — IntelliJ Terminal
-
----
-
-## STEP 0 — 작업 전 필수 파악 (건너뛰지 말 것)
-
-아래 파일들을 **반드시 먼저 읽은 뒤** 작업을 시작한다.  
-필드명·클래스명·fragment 경로를 임의로 가정하지 않는다.
-
-```
-읽어야 할 파일 목록:
-
-1. src/main/resources/templates/layout/base.html
-   → <link> CSS 로드 목록, nav 구조, th:fragment 이름, HTMX 설정 확인
-
-2. src/main/resources/templates/fragments/ (디렉터리 전체)
-   → 기존 fragment 파일명/이름 확인
-
-3. src/main/resources/templates/index.html
-   → 추천 세트 루프 변수명, 최신 회차 변수명 확인
-
-4. src/main/resources/templates/frequency.html
-   → 빈도 데이터 루프 변수명 확인
-
-5. src/main/resources/templates/rounds.html
-   → 회차 루프 변수명, 페이지 변수명 확인
-
-6. src/main/resources/static/css/ (디렉터리 전체)
-   → 기존 CSS 파일 목록 및 공통 변수(CSS custom properties) 확인
-
-7. src/main/java/**/controller/ (Controller 파일 전체)
-   → 각 페이지에서 Model로 넘기는 attribute명, DTO 클래스명 확인
-
-8. 확인한 DTO/ViewModel 클래스의 실제 필드명 확인
-   → numbers, bonus, round, drawDate, firstPrize, winnerCount 등 
-      실제 필드명이 다를 수 있으므로 getter/field 기준으로 확인
-```
-
-> ⚠️ 위 파일들을 읽기 전에는 어떤 코드도 작성하지 않는다.
+> **평가 기준일:** 2026-05-31
+> **스택:** Java 25 · Spring Boot 4.0.x · MariaDB · Thymeleaf/HTMX
+> **이전 라운드:** 웹 디자인 개선(STEP 0–6) 및 백엔드 B1–B8 완료 → 본 문서로 재작성
+> **추적:** 이행 현황은 `docs/complement.md` 에 기록
 
 ---
 
-## STEP 1 — 번호 볼 Fragment 생성
+## 0. 범위
 
-### 1-1. 파일 위치 결정
+### 0-A. 본 계획에서 제외 (오너 결정 — 의도된 선택)
 
-- `src/main/resources/templates/fragments/` 안에 이미 `ball.html` 또는 유사 파일이 있으면 해당 파일에 추가한다.
-- 없으면 `fragments/ball.html` 을 새로 생성한다.
+| 제외 항목 | 사유 |
+|---|---|
+| Java 25 / Spring Boot 4 마이그레이션 | 의도된 스택 선택. 변경 대상 아님 |
+| 문서화 정책 (README 단순화 등) | 의도된 문서 전략. 변경 대상 아님 |
 
-### 1-2. Fragment 코드
+### 0-B. 철회된 지적 (검증 결과 결함 아님)
 
-```html
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<body>
+| 항목 | 검증 결과 |
+|---|---|
+| `SmokLottoApiClient` 오타 의심 | **철회.** Javadoc상 `kraft.api.client=smok` 스모크 테스트 클라이언트로 의도된 식별자(mock/smok/real 4글자 토큰 정합). 클래스명이 설정 토큰을 의도적으로 미러링 |
 
-<!-- 일반 번호 볼 -->
-<span th:fragment="ball(num)"
-      th:class="${num <= 10 ? 'ball ball-1-10'
-               : num <= 20 ? 'ball ball-11-20'
-               : num <= 30 ? 'ball ball-21-30'
-               : num <= 40 ? 'ball ball-31-40'
-               : 'ball ball-41-45'}"
-      th:text="${num}">0</span>
+### 0-C. 본 계획의 대상 (냉정 평가에서 도출된 실제 개선점)
 
-<!-- 보너스 번호 볼 (outline 강조) -->
-<span th:fragment="bonus(num)"
-      th:class="${num <= 10 ? 'ball ball-bonus ball-1-10'
-               : num <= 20 ? 'ball ball-bonus ball-11-20'
-               : num <= 30 ? 'ball ball-bonus ball-21-30'
-               : num <= 40 ? 'ball ball-bonus ball-31-40'
-               : 'ball ball-bonus ball-41-45'}"
-      th:text="${num}">0</span>
-
-</body>
-</html>
-```
-
-> **주의:** `th:classappend` 는 사용하지 않는다. `th:class` 에 전체 클래스를 한 번에 작성한다.  
-> Thymeleaf 조건식은 반드시 `${...}` 하나의 표현식 안에서 삼항 연산자로 처리한다.
-
-### 1-3. 볼 CSS 추가
-
-기존 공통 CSS 파일(STEP 0에서 확인한 파일)에 아래를 추가한다.  
-별도 파일로 분리할 경우 파일명은 `lotto-ball.css` 로 하고, `base.html` `<head>` 의 기존 CSS 링크 바로 아래에 로드한다.
-
-```css
-/* =====================
-   로또 번호 볼
-   ===================== */
-.ball {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 50%;
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,.45);
-  flex-shrink: 0;
-  user-select: none;
-  line-height: 1;
-}
-
-/* 범위별 색상 (공식 로또 색상 기준) */
-.ball-1-10  { background: radial-gradient(circle at 38% 38%, #ffe066, #f5a623); }
-.ball-11-20 { background: radial-gradient(circle at 38% 38%, #7dd8ff, #1a7fc1); }
-.ball-21-30 { background: radial-gradient(circle at 38% 38%, #ff9b9b, #e03030); }
-.ball-31-40 { background: radial-gradient(circle at 38% 38%, #d0d0d0, #7a7a7a); }
-.ball-41-45 { background: radial-gradient(circle at 38% 38%, #d4f07a, #7db300); }
-
-/* 보너스 볼 강조 */
-.ball-bonus {
-  box-shadow: 0 0 0 2.5px rgba(255,255,255,.55);
-}
-
-/* 볼 행 컨테이너 */
-.ball-row {
-  display: flex;
-  align-items: center;
-  gap: .4rem;
-  flex-wrap: wrap;
-}
-
-.bonus-sep {
-  opacity: .35;
-  font-size: .85rem;
-  margin: 0 .1rem;
-}
-```
-
-### 1-4. 검증
-
-볼 fragment 작성 후, 아래 테스트 스니펫을 `index.html` 에 임시 추가해 렌더링을 확인하고 제거한다.
-
-```html
-<!-- 임시 볼 테스트 (확인 후 반드시 제거) -->
-<div style="display:flex;gap:.5rem;padding:1rem;">
-  <th:block th:each="n : ${#numbers.sequence(1,45)}">
-    <th:block th:replace="~{fragments/ball :: ball(${n})}" />
-  </th:block>
-</div>
-```
+| 우선순위 | 영역 | 핵심 | 가치 | 규모 |
+|:--:|---|---|:--:|:--:|
+| **P1** | 관찰 가능성(Observability) | 메트릭이 수집만 되고 외부로 노출 안 됨 | 높음 | 중 |
+| **P2** | Ops 감사 추적(Audit trail) | 상태 변경 액션의 감사 기록 부재 | 높음 | 중 |
+| **P3** | 품질 게이트 강제 + 커버리지 | 정적분석·커버리지 게이트가 opt-in이라 미강제 | 높음 | 소~중 |
+| **P4** | 복원력 컴포넌트 빌드 vs 도입 | 자체 구현 서킷브레이커/레이트리미터의 유지 방침 미정 | 중 | 소 |
+| **P5** | 가치 명제 투명성 | 추천 로직의 수학적 한계가 UI에 미반영 | 낮음 | 소 |
 
 ---
 
-## STEP 2 — index.html 개선
+## P1 — 관찰 가능성 (Observability)
 
-### 2-1. 추천 번호 세트 카드 UI
+> **문제 요약:** `RecommendMetricsRecorder` 가 Micrometer 메트릭을 수집하지만, Prometheus 레지스트리 의존성도 없고 `/actuator/prometheus` 도 노출되지 않아 **메트릭이 어디로도 나가지 않는다.** 수집 파이프라인·서킷브레이커는 메트릭 자체가 없다.
 
-STEP 0에서 확인한 **실제 루프 변수명**으로 아래 구조를 적용한다.  
-(아래 `set`, `set.numbers`, `set.bonus` 는 예시이며, 실제 필드명이 다르면 수정한다.)
+### O1. Prometheus 레지스트리 추가 + 엔드포인트 노출 (보호)
 
-```html
-<div class="sets-grid" id="sets-result">
-  <div th:each="set, stat : ${sets}" class="set-card">
-    <span class="set-index" th:text="'#' + ${stat.count}"></span>
-    <div class="ball-row">
-      <th:block th:each="n : ${set.numbers}">
-        <th:block th:replace="~{fragments/ball :: ball(${n})}" />
-      </th:block>
-      <span class="bonus-sep">+</span>
-      <th:block th:if="${set.bonus != null}"
-                th:replace="~{fragments/ball :: bonus(${set.bonus})}" />
-    </div>
-  </div>
-</div>
-```
+- **현황**
+  - `build.gradle.kts` 에 `micrometer-registry-prometheus` 없음 (actuator의 micrometer-core만 존재)
+  - `application.yml` → `management.endpoints.web.exposure.include: health,info` (prometheus 미포함)
+- **변경**
+  - `build.gradle.kts`: `implementation("io.micrometer:micrometer-registry-prometheus")` 추가
+  - `application-prod.yml`: `management.endpoints.web.exposure.include` 에 `prometheus` 추가
+  - **보안**: `/actuator/**` 는 기존 `ActuatorAccessFilter`(IP allowlist)로 이미 보호됨 → `/actuator/prometheus` 가 allowlist 적용 범위에 포함되는지 확인하고, 누락 시 경로 추가
+- **완료 기준**
+  - allowlist 내부에서 `GET /actuator/prometheus` → `kraft_recommend_*` 메트릭 노출
+  - allowlist 외부에서 403/404
+  - 노출 변경에 대한 `ActuatorAccessFilterTest` 시나리오 추가
 
-```css
-/* 추천 번호 세트 */
-.sets-grid { display: flex; flex-direction: column; gap: .65rem; margin-top: 1rem; }
+### O2. `/ops/recommend/stats` 메트릭 정합성 (검증 중 발견)
 
-.set-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 12px;
-  padding: .75rem 1.1rem;
-  transition: background .2s;
-}
-.set-card:hover { background: rgba(255,255,255,.08); }
+- **현황** — 기록측 `RecommendMetricsRecorder` 와 조회측 `RecommendMetricsQueryService` 의 메트릭 이름이 어긋나 있어, `/ops/recommend/stats` 의 여러 필드가 **항상 0** 으로 보고된다
+  - 조회측이 찾지만 **기록측이 전혀 적재하지 않는** 메트릭: `kraft.recommend.timeout.count`, `kraft.recommend.attempt.count`, `kraft.recommend.rejection.count`, `kraft.recommend.rejection.by.rule`
+    → `RecommendStatsDto.timeoutCount / attemptCount / rejectionCount / rejectionsByRule` 가 항상 0 (허위 지표)
+  - 기록측이 적재하지만 **조회측이 노출하지 않는** 메트릭: `kraft.recommend.request.count`
+  - 정상: `kraft.recommend.generation.latency`(count/mean/max), `kraft.recommend.generation.failure{reason}` — `recordFailure` 가 이미 사유 태깅함
+  - 부수: `RecommendMetricsQueryService.empty()` 는 호출되지 않는 죽은 메서드
+- **변경**
+  - 메트릭 이름을 기록/조회가 공유하는 단일 상수로 통일
+  - 추천 경로(`LottoRecommender` / `ConstraintAwareLottoNumberGenerator`)에서 시도 횟수·규칙별 제외(rejection) 카운트를 **실제로 기록**하거나, 측정이 어려운 필드는 DTO/스냅샷에서 **제거**해 "0 고정" 허위 지표를 없앤다
+  - 타임아웃은 `generation.failure{reason}` 로 이미 구분되므로 `timeout.count` 중복 여부 검토 후 정리
+  - 사용하지 않는 `empty()` 제거
+- **완료 기준**
+  - `/ops/recommend/stats` 모든 필드가 실제 활동을 반영(테스트로 검증), 또는 측정 불가 필드 제거
+  - 기록측·조회측 메트릭 이름 불일치 0건
 
-.set-index {
-  min-width: 2rem;
-  font-size: .75rem;
-  opacity: .4;
-  font-weight: 600;
-}
-```
+### O3. 수집 파이프라인·서킷브레이커 도메인 메트릭
 
-### 2-2. 최신 회차 히어로 카드
+- **현황**
+  - `ApiCircuitBreaker` 상태는 `/ops/circuit-breakers`(`OpsCircuitBreakerStatusDto`)로만 조회 가능 → 시계열 추세 불가
+  - `LottoSingleDrawCollector` / `LottoRangeCollector` / `WinningNumberPersister` 의 성공·실패·지연 메트릭 없음
+- **변경**
+  - 서킷브레이커 상태를 Micrometer **Gauge** 로 노출 (`kraft.api.circuit.state` — 0=CLOSED,1=HALF_OPEN,2=OPEN), 상태 전이 카운터(`kraft.api.circuit.transitions{from,to}`)
+    - `ApiCircuitBreaker.StateTransitionListener` 가 이미 존재 → 이 훅에 메트릭 기록을 연결
+  - 수집 결과 카운터(`kraft.collect.outcome{result=inserted|updated|skipped|failed}`), fetch 지연 타이머
+- **완료 기준**
+  - 서킷브레이커 강제 open 시 gauge/transition 메트릭이 변화 (단위 테스트)
+  - 수집 1회 실행 시 outcome 카운터 증가
 
-STEP 0에서 확인한 **실제 Model attribute명 및 DTO 필드명**으로 수정한다.  
-필드가 없으면 Controller에서 ViewModel로 가공 후 사용한다 (STEP 4 참고).
+### O4. (선택) 분산 추적
 
-```html
-<section class="latest-card" th:if="${latest != null}">
-  <div class="latest-header">
-    <div class="latest-title-row">
-      <span class="latest-round" th:text="${latest.round} + '회'"></span>
-      <!-- uncollected 필드가 실제로 없으면 이 badge 블록 전체를 제거한다 -->
-      <span class="latest-badge" th:if="${latest.uncollected}">미수집</span>
-    </div>
-    <span class="latest-date"
-          th:text="${#temporals.format(latest.drawDate, 'yyyy.MM.dd')}"></span>
-  </div>
+- 단일 서비스라 우선순위 낮음. 도입 시 `micrometer-tracing-bridge-otel` + OTLP exporter, `RequestIdFilter` 의 request-id 를 trace baggage 로 전파
+- **선검증 필수**: Spring Boot 4.0.x 와 micrometer-tracing 버전 호환성
 
-  <div class="ball-row" style="margin:.75rem 0;">
-    <th:block th:each="n : ${latest.numbers}">
-      <th:block th:replace="~{fragments/ball :: ball(${n})}" />
-    </th:block>
-    <span class="bonus-sep">+</span>
-    <th:block th:replace="~{fragments/ball :: bonus(${latest.bonus})}" />
-  </div>
+### O5. (선택) Grafana 대시보드 + 알림
 
-  <div class="latest-meta">
-    <div class="meta-item">
-      <span class="meta-label">1등 당첨금</span>
-      <!-- firstPrize 필드가 Number 타입이면 아래 사용, String이면 th:text="${latest.firstPrize} + '원'" -->
-      <span class="meta-value"
-            th:text="${#numbers.formatDecimal(latest.firstPrize, 0, 'COMMA', 0, 'POINT')} + '원'">
-      </span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-label">당첨자</span>
-      <span class="meta-value" th:text="${latest.winnerCount} + '명'"></span>
-    </div>
-  </div>
-</section>
-```
-
-```css
-/* 최신 회차 히어로 카드 */
-.latest-card {
-  background: linear-gradient(135deg, #0d3060 0%, #1a5096 100%);
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
-.latest-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: .5rem;
-}
-.latest-title-row { display: flex; align-items: center; gap: .5rem; }
-.latest-round  { font-size: 1.1rem; font-weight: 700; }
-.latest-date   { font-size: .8rem; opacity: .5; }
-.latest-badge  {
-  font-size: .65rem; padding: .15rem .45rem;
-  background: rgba(245,166,35,.2); color: #f5a623;
-  border: 1px solid rgba(245,166,35,.4); border-radius: 20px;
-}
-.latest-meta {
-  display: flex;
-  gap: 2.5rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255,255,255,.1);
-}
-.meta-item  { display: flex; flex-direction: column; gap: .2rem; }
-.meta-label { font-size: .68rem; opacity: .45; text-transform: uppercase; letter-spacing: .04em; }
-.meta-value { font-size: .95rem; font-weight: 600; }
-```
+- 프로비저닝 JSON(대시보드) + alert rule (서킷브레이커 OPEN 지속, 추천 타임아웃 급증, 수집 실패 연속) 저장소 포함
+- P1 핵심(O1–O3) 완료 후 진행
 
 ---
 
-## STEP 3 — frequency.html 개선
+## P2 — Ops 감사 추적 (Audit Trail)
 
-### 3-1. Controller 수정 (FrequencyController)
+> **문제 요약:** `/ops/collect` 등 상태 변경 액션에 IP allowlist + Bearer 토큰 접근 제어는 있으나, **누가·언제·무엇을·결과를** 남기는 감사 기록이 없다. Flyway V1–V14 에 audit 테이블 부재(확정).
 
-기존 Controller에서 각 `FrequencyItem` (실제 클래스명 확인)에 `percent` 와 `rank` 를 추가 계산해서 넘긴다.  
-**기존 DTO 클래스는 수정하지 않는다.** 대신 Controller에서 별도 가공한다.
+### A1. 상태 변경 Ops 액션 DB 감사 기록
 
-```java
-// Controller 내 빈도 조회 처리 예시
-// (실제 변수명/메서드명은 기존 코드에 맞춰 수정할 것)
-List<FrequencyItem> frequencies = frequencyService.getAll();
+- **변경**
+  - Flyway `V15__create_ops_audit_log.sql`: `ops_audit_log(id, occurred_at, request_id, client_ip, action, target, outcome, detail)` (+ `occurred_at` 인덱스)
+  - `OpsAuditLogEntity` / `OpsAuditLogRepository` / `OpsAuditService`
+  - `OpsController` / `OpsCollectionFacade` 의 상태 변경 핸들러에서 감사 기록 1건 적재
+    - `request_id`: 기존 `RequestIdFilter` 와 상관
+    - `client_ip`: 기존 `ClientIpResolver` 재사용
+    - 토큰 식별자(주체)는 토큰 원문 금지 → 해시/라벨만
+  - 모든 기록 값은 `LogSanitizer` 통과 (CR/LF·민감정보 제거)
+- **완료 기준**
+  - `POST /ops/collect` 성공·실패 각각 감사 레코드 1건 생성 (통합 테스트)
+  - 토큰 원문이 DB·로그 어디에도 남지 않음
 
-int max = frequencies.stream()
-    .mapToInt(FrequencyItem::getCount)  // 실제 getter명 확인
-    .max()
-    .orElse(1);
+### A2. 구조화 감사 로그 라인
 
-// 정렬(번호 오름차순 기준 rank 계산용 복사본)
-List<FrequencyItem> sortedByCount = frequencies.stream()
-    .sorted(Comparator.comparingInt(FrequencyItem::getCount).reversed())
-    .collect(Collectors.toList());
-
-// FrequencyViewModel(또는 Map)으로 가공해서 넘기기
-List<Map<String, Object>> viewItems = new ArrayList<>();
-for (FrequencyItem item : frequencies) {
-    Map<String, Object> vm = new LinkedHashMap<>();
-    vm.put("number",  item.getNumber());   // 실제 getter 확인
-    vm.put("count",   item.getCount());
-    vm.put("percent", (item.getCount() * 100.0) / max);
-    vm.put("rank",    sortedByCount.indexOf(item) + 1);
-    viewItems.add(vm);
-}
-
-model.addAttribute("frequencies", viewItems);
-model.addAttribute("currentPage", "frequency");
-```
-
-> **대안:** `FrequencyViewModel` 레코드/클래스를 따로 만드는 것이 더 깔끔하다.  
-> `record FrequencyViewModel(int number, int count, double percent, int rank) {}`
-
-### 3-2. 템플릿 구조
-
-```html
-<section>
-  <h2>번호 출현 빈도</h2>
-
-  <!-- 정렬 버튼 (JS 제어) -->
-  <div class="freq-controls">
-    <button class="btn-sort active" data-sort="number">번호순</button>
-    <button class="btn-sort" data-sort="count-desc">많은 순</button>
-    <button class="btn-sort" data-sort="count-asc">적은 순</button>
-  </div>
-
-  <ul class="freq-list" id="freq-list">
-    <li th:each="item : ${frequencies}"
-        class="freq-item"
-        th:attr="data-number=${item.number}, data-count=${item.count}">
-      <th:block th:replace="~{fragments/ball :: ball(${item.number})}" />
-      <div class="freq-bar-wrap">
-        <div class="freq-bar"
-             th:style="'width:' + ${item.percent} + '%'"
-             th:classappend="${item.rank <= 5 ? 'freq-bar--top' : (item.rank >= 41 ? 'freq-bar--low' : '')}">
-        </div>
-      </div>
-      <span class="freq-count" th:text="${item.count} + '회'"></span>
-    </li>
-  </ul>
-</section>
-```
-
-```css
-/* 빈도 막대 */
-.freq-controls { display: flex; gap: .4rem; margin-bottom: 1rem; }
-.btn-sort {
-  padding: .3rem .85rem; border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.2);
-  background: transparent; color: inherit;
-  font-size: .8rem; cursor: pointer; transition: all .15s;
-}
-.btn-sort.active,
-.btn-sort:hover { background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.4); }
-
-.freq-list  { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
-.freq-item  { display: flex; align-items: center; gap: .75rem; }
-
-.freq-bar-wrap {
-  flex: 1; height: 10px;
-  background: rgba(255,255,255,.08);
-  border-radius: 4px; overflow: hidden;
-}
-.freq-bar {
-  height: 100%; border-radius: 4px;
-  background: #5bc8f5;
-  transition: width .5s cubic-bezier(.4,0,.2,1);
-}
-.freq-bar--top  { background: linear-gradient(90deg, #f5a623, #ffd84d); }
-.freq-bar--low  { background: linear-gradient(90deg, #c0392b, #e74c3c); }
-
-.freq-count {
-  min-width: 3.8rem; text-align: right;
-  font-size: .78rem; opacity: .6;
-  font-variant-numeric: tabular-nums;
-}
-```
-
-```javascript
-// 빈도 정렬 (바닐라 JS — 외부 라이브러리 사용 금지)
-document.querySelectorAll('.btn-sort').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.btn-sort').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const list = document.getElementById('freq-list');
-    const items = [...list.querySelectorAll('.freq-item')];
-    const sort = btn.dataset.sort;
-
-    items.sort((a, b) => {
-      if (sort === 'number')     return +a.dataset.number - +b.dataset.number;
-      if (sort === 'count-desc') return +b.dataset.count  - +a.dataset.count;
-      if (sort === 'count-asc')  return +a.dataset.count  - +b.dataset.count;
-      return 0;
-    });
-
-    items.forEach(item => list.appendChild(item));
-  });
-});
-```
+- **변경**: DB와 별개로 `logback-spring.xml` 에 audit 전용 로거(JSON 또는 key=value) — 외부 로그 수집기 연동 대비
+- **결정 포인트**: 보존/조회 요건이 가벼우면 **로그 전용**으로 축소해 A1의 DB 테이블을 생략하는 선택지도 검토 (over-engineering 회피)
 
 ---
 
-## STEP 4 — rounds.html 개선
+## P3 — 품질 게이트 강제 + 커버리지
 
-### 4-1. Controller 수정 (RoundsController)
+> **문제 요약:** Checkstyle·SpotBugs·JaCoCo가 **구성은 되어 있으나 전부 opt-in** 이다. `strictStatic`/`strictCoverage` 기본값이 `false` 라, 플래그 없이 실행하면 정적분석은 `ignoreFailures=true`, 커버리지 검증은 `check` 의존성에서 제외된다 → **CI가 이 플래그를 넘기지 않으면 게이트가 사실상 장식.**
 
-```java
-model.addAttribute("currentPage", "rounds");
-model.addAttribute("pageSizes", List.of(20, 50, 100));  // 템플릿에서 배열 직접 생성 금지
-model.addAttribute("currentSize", size);                // 현재 선택된 페이지 크기
-```
+### G1. CI에서 게이트 강제 (최우선 — 고가치/저비용)
 
-### 4-2. 페이지 크기 버튼 그룹
+- **현황** (`build.gradle.kts`)
+  - `ignoreFailures = !strictStatic` (Checkstyle/SpotBugs)
+  - `if (strictCoverage) dependsOn("jacocoTestCoverageVerification")`
+  - 두 플래그 모두 기본 `false`
+- **변경**
+  - `ci.yml` 의 검증 단계가 `./gradlew check -PstrictStatic=true -PstrictCoverage=true` 를 호출하는지 **확인**하고, 누락 시 추가
+  - (CI 워크플로 수정은 오너 승인 영역 → 변경 전 합의)
+- **완료 기준**: 정적분석 위반·커버리지 미달 시 CI 빌드 실패
 
-```html
-<!-- 기존 <select> 또는 드롭다운을 아래로 교체 -->
-<div class="page-size-group">
-  <th:block th:each="s : ${pageSizes}">
-    <a th:href="@{/rounds(size=${s}, page=1)}"
-       th:text="${s}"
-       th:classappend="${currentSize == s ? ' active' : ''}"
-       class="page-size-btn">
-    </a>
-  </th:block>
-</div>
-```
+### T1. 고위험 분기 테스트 보강
 
-### 4-3. 회차 카드 목록
+- **대상 (분기 커버리지 BRANCH 0.59 기준 가장 취약한 경로)**
+  - `ApiCircuitBreaker`: `CLOSED→OPEN→HALF_OPEN→CLOSED` 전이, half-open 호출 상한, open 지속시간 경계
+  - `PublicRateLimitFilter$FixedWindowCounter`: 윈도우 롤오버 경계, 한도 초과 직후 reset
+  - `WinningNumberUpsertExecutor`: 재시도 분기별 outcome
+- **완료 기준**: 위 클래스 분기 커버리지가 목표치 이상
 
-```html
-<div class="round-list">
-  <div th:each="round : ${rounds}" class="round-item">
-    <div class="round-info">
-      <span class="round-no" th:text="${round.round} + '회'"></span>
-      <!-- drawDate 타입이 LocalDate면 temporals, String이면 th:text="${round.drawDate}" -->
-      <span class="round-date"
-            th:text="${#temporals.format(round.drawDate, 'yyyy-MM-dd')}"></span>
-    </div>
-    <div class="ball-row">
-      <th:block th:each="n : ${round.numbers}">
-        <th:block th:replace="~{fragments/ball :: ball(${n})}" />
-      </th:block>
-      <span class="bonus-sep">+</span>
-      <th:block th:replace="~{fragments/ball :: bonus(${round.bonus})}" />
-    </div>
-  </div>
-</div>
-```
+### T2. 동시성 테스트 (자체 구현 `synchronized` 경로)
 
-```css
-/* 페이지 크기 버튼 */
-.page-size-group { display: flex; gap: .4rem; margin-bottom: 1rem; }
-.page-size-btn {
-  padding: .3rem .9rem; border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.2);
-  font-size: .82rem; cursor: pointer;
-  text-decoration: none; color: inherit;
-  transition: all .15s;
-}
-.page-size-btn.active,
-.page-size-btn:hover { background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.4); }
+- **현황**: `ApiCircuitBreaker`, `FixedWindowCounter` 모두 `synchronized` 기반인데 다중 스레드 시나리오 테스트 부재
+- **변경**: 멀티스레드 부하에서 상태 일관성·한도 정확성 검증 테스트 추가
+- **완료 기준**: N-스레드 동시 호출에서 카운트/상태가 결정적 불변식 유지
 
-/* 회차 목록 */
-.round-list { display: flex; flex-direction: column; gap: .5rem; }
-.round-item {
-  display: flex; align-items: center;
-  justify-content: space-between; gap: 1rem;
-  padding: .7rem 1rem;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 10px;
-}
-.round-info { display: flex; flex-direction: column; min-width: 5rem; }
-.round-no   { font-size: .88rem; font-weight: 600; }
-.round-date { font-size: .72rem; opacity: .4; margin-top: .1rem; }
-```
+### T3. 커버리지 임계값 단계적 상향
+
+- **현황** (`build.gradle.kts`): LINE 0.76 · BRANCH **0.59** · METHOD 0.80 · CLASS 0.90
+- **변경**: T1–T2 반영 후 BRANCH 0.59 → 0.68(1차) → 0.75(목표), LINE 0.76 → 0.80
+- **완료 기준**: 상향된 임계값으로 `check -PstrictCoverage=true` 통과
 
 ---
 
-## STEP 5 — base.html 모바일 탭바
+## P4 — 복원력 컴포넌트: 빌드 vs 도입 (ADR)
 
-### 5-1. Controller 공통 처리
+> **문제 요약:** 서킷브레이커·레이트리미터를 검증된 라이브러리(Resilience4j/Bucket4j) 대신 직접 구현했다. 작고 테스트 가능하지만 edge case(half-open 동시성 등) 책임을 자체 부담한다. **유지 방침을 명문화**한다.
 
-모든 Controller (Home, Frequency, Rounds)에 아래를 추가한다.
+### R1. 결정 기록(ADR) 작성
 
-```java
-// 각 Controller @GetMapping 메서드 내
-model.addAttribute("currentPage", "home");       // "home" | "frequency" | "rounds"
-```
-
-### 5-2. 탭바 HTML
-
-`base.html` (또는 공통 레이아웃 파일) `</body>` 직전에 삽입한다.
-
-```html
-<!-- 모바일 하단 탭바 -->
-<nav class="tab-bar" aria-label="하단 탭 내비게이션">
-  <a th:href="@{/}"
-     th:classappend="${currentPage == 'home' ? ' active' : ''}"
-     class="tab-item" aria-label="번호 추천">
-    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-      <line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
-    </svg>
-    <span class="tab-label">추천</span>
-  </a>
-  <a th:href="@{/frequency}"
-     th:classappend="${currentPage == 'frequency' ? ' active' : ''}"
-     class="tab-item" aria-label="번호 빈도">
-    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-      <line x1="6" y1="20" x2="6" y2="14"/>
-    </svg>
-    <span class="tab-label">빈도</span>
-  </a>
-  <a th:href="@{/rounds}"
-     th:classappend="${currentPage == 'rounds' ? ' active' : ''}"
-     class="tab-item" aria-label="회차 목록">
-    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
-      <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-    </svg>
-    <span class="tab-label">회차</span>
-  </a>
-</nav>
-```
-
-### 5-3. 탭바 CSS
-
-```css
-/* 모바일 하단 탭바 */
-.tab-bar {
-  display: none;
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: 60px;
-  background: rgba(6, 29, 58, 0.96);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(255,255,255,.1);
-  z-index: 999;
-  padding-bottom: env(safe-area-inset-bottom); /* iPhone 노치 대응 */
-}
-.tab-item {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  flex: 1; gap: .2rem;
-  text-decoration: none;
-  color: rgba(255,255,255,.4);
-  transition: color .15s;
-  height: 100%;
-}
-.tab-item.active,
-.tab-item:hover { color: #fff; }
-.tab-icon  { width: 1.35rem; height: 1.35rem; }
-.tab-label { font-size: .62rem; }
-
-@media (max-width: 640px) {
-  .tab-bar { display: flex; }
-  body { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
-  /* 상단 nav가 모바일에서 불필요하면 숨김 (기존 nav selector 확인 후 수정) */
-  /* .top-nav { display: none; } */
-}
-```
-
-> `base.html` 에서 기존 nav의 CSS 클래스명을 확인한 뒤 모바일 숨김 여부를 결정한다.
+- **변경**: `docs/adr/0001-resilience-build-vs-adopt.md` 신설
+- **권고 (초안)**: **현행 자체 구현 유지** + P3-T2 동시성 테스트로 보강
+  - 근거: (1) 코드가 작고 의존성 0, (2) 이미 `LongSupplier nanoTime` 주입으로 테스트 가능, (3) Spring Boot 4.0.x + Java 25 는 최신 스택이라 Resilience4j/Bucket4j **호환성 선검증 비용**이 큼
+  - 재검토 트리거: 정책 복잡도 증가(슬라이딩 윈도우, 분산 레이트리밋 등) 시 라이브러리 채택 재평가
+- **완료 기준**: ADR 머지, README/CLAUDE의 복원력 서술과 정합
 
 ---
 
-## STEP 6 — 다크/라이트 모드 대응
+## P5 — 가치 명제 투명성 (낮은 우선순위)
 
-기존 CSS에 다크/라이트 모드 토글이 구현되어 있다면 볼 CSS 가독성을 확인한다.
+> **문제 요약:** 로또는 독립 시행이라 과거 패턴 필터링은 당첨 확률을 올리지 못한다. `ExclusionRule` 주석은 이를 정직하게 명시("당첨 확률을 높이기 위한 것이 아니라 편향된 조합을 회피")하지만, **이 정직함이 UI에는 드러나지 않는다.**
 
-```css
-/* 라이트 모드에서 볼 텍스트 그림자 강화 (필요한 경우) */
-@media (prefers-color-scheme: light) {
-  .ball { text-shadow: 0 1px 3px rgba(0,0,0,.6); }
-}
+### V1. UI 면책 + 재프레이밍
 
-/* JS 토글 방식이면 (예: data-theme="light" on <html>) */
-[data-theme="light"] .ball { text-shadow: 0 1px 3px rgba(0,0,0,.6); }
-```
+- **변경**
+  - 추천 카드 인근에 짧은 안내: "확률 예측이 아니라, 많은 사람이 고르는 편향된 조합(생일·연속수·등차 등)을 피해 **당첨 시 분할 가능성을 낮추는** 도구"
+  - 실제 방어 가능한 가치(인기 조합 회피 → 공동 당첨 시 분배 인원 감소)로 메시지 정렬
+- **완료 기준**: 과장 없는 안내 문구 노출, 접근성(WCAG) 위반 없음
 
 ---
 
-## 금지 사항
+## 검증 메모 (신뢰도 표기)
 
-| 금지 | 이유 |
-|------|------|
-| CI/CD 파일 수정 | 배포 파이프라인 영향 |
-| `README.md` 수정 | 문서 정책 |
-| 외부 JS/CSS 라이브러리 추가 | 번들 크기 / 보안 |
-| 기존 API DTO 필드 변경 | 하위 호환성 |
-| HTMX `hx-swap`, `hx-target` 속성 제거 | 기존 동작 파괴 |
-| 템플릿에서 `${#arrays.toArray(...)}` 배열 직접 생성 | Controller에서 넘길 것 |
-| `th:classappend` + `th:class` 동시 사용 | Thymeleaf 충돌 |
+| 항목 | 상태 |
+|---|---|
+| Prometheus 의존성/노출 부재 | **확정** (`build.gradle.kts`, `application.yml` 직접 확인) |
+| 추천 stats 기록/조회 메트릭 불일치 | **확정** (`RecommendMetricsRecorder` ↔ `RecommendMetricsQueryService` 대조) |
+| `smok` 의도된 식별자 | **확정** (`SmokLottoApiClient` Javadoc: smok95.github.io 미러 + `LottoApiClientConfig.SMOK_TOKENS`) |
+| Ops 감사 **DB 테이블** 부재 | **확정** (Flyway V1–V14 목록에 audit 테이블 없음) |
+| Ops 감사 **로그 라인** 부재 | **확정** (`OpsController`·`OpsCollectionFacade` 에 `log.` 호출 없음 — 수동 트리거 흔적 0) |
+| 정적분석·커버리지 게이트 opt-in | **확정** (`build.gradle.kts` 분석) |
+| `ApiCircuitBreakerTest` 깊이 | **확정** — `@Test` 단 1개(`opensAndRecovers`). 경계·동시성 케이스 없음(T1–T2 근거) |
+| CI가 strict 플래그 전달 여부 | **미확인** — `ci.yml` 확인 후 G1 확정 |
 
 ---
 
-## 작업 완료 체크리스트
+## 권장 진행 순서
+
+1. **G1** (게이트 강제) — 가장 저비용·고효과, 이후 모든 변경의 안전망
+2. **O1 + O2** (메트릭 노출 + 죽은 메트릭 수정) — 관찰 가능성 즉시 개선
+3. **A1/A2** (감사 추적) — 운영 신뢰성
+4. **O3 + T1/T2** (도메인 메트릭 + 위험 분기/동시성 테스트)
+5. **R1** (ADR), **T3** (임계값 상향)
+6. **P5 / O4 / O5** (선택·여유 시)
+
+---
+
+## 이행 체크리스트
 
 ```
-[x] STEP 0 — 모든 대상 파일 읽기 완료 (작업 전 필수)
-[x] STEP 1 — fragments/lotto-ball.html 생성, ball(num,extra) fragment 정상 동작 (kraft-ball 기반)
-[x] STEP 1 — 볼 CSS — lotto-ball.css 생성 (레이아웃), 볼 색상은 기존 app.css kraft-ball 체계 유지
-[x] STEP 2 — index.html 추천 세트 set-card 레이아웃 적용 (recommend-card.html)
-[x] STEP 2 — index.html 최신 회차 latest-card 적용 (home-static-cards.html)
-[x] STEP 3 — FrequencyViewModel(number, count, percent, rank) 생성, HomeController에서 rank 기반 계산
-[x] STEP 3 — frequency.html 막대 시각화 + 정렬 버튼 적용 (rank<=5 금색, rank>=41 빨간색)
-[x] STEP 4 — HomeController에 pageSizes, currentSize 추가 (rounds / fragments/rounds 양쪽)
-[x] STEP 4 — rounds.html 카드형 목록 + 페이지 크기 버튼 그룹 적용 (HTMX 유지)
-[x] STEP 5 — 전체 Controller에 currentPage 불필요 — base.html이 reqPath로 active 처리
-[x] STEP 5 — base.html 모바일 탭바 — 기존 .kraft-bottom-nav로 이미 구현됨 + lotto-ball.css 링크 추가
-[x] STEP 6 — lotto-ball.css 하드코딩 dark override 제거, CSS 변수(--kraft-primary 등)로 자동 대응
-[x] ./gradlew test — 테스트 통과
-[x] ./gradlew bootRun — 실행 확인 (로컬 확인 완료)
-[x] /, /frequency, /rounds 각 페이지 렌더링 오류 없음 (kraft-ball, set-card, freq-item, round-item 정상)
-[x] 모바일 320px~640px 반응형 확인 (kraft-bottom-nav d-md-none + media 575.98px 적용 확인)
-[x] 다크/라이트 모드 전환 시 볼 가독성 확인 (lotto-ball.css CSS 변수 --kraft-primary 등으로 자동 대응)
-[x] HTMX 요청 (번호 생성 등) 기존 동작 유지 확인 (/fragments/recommend, /fragments/rounds 200 OK)
+[x] G1  CI에서 strictStatic/strictCoverage 강제 — ci.yml:58 사전 완료 확인
+[x] O1  micrometer-registry-prometheus + /actuator/prometheus 노출(allowlist 보호)
+[x] O2  /ops/recommend/stats 기록/조회 메트릭 정합성 정리(허위 0 지표 제거)
+[x] O3  서킷브레이커 전이 카운터(kraft.api.circuit_breaker.transitions) + 수집 outcome/fetch 지연 메트릭
+[x] A1  (결정) DB 테이블 생략 — A2 로그 전용으로 충분
+[x] A2  OpsCollectionFacade: kraft.audit 로거로 구조화 감사 로그 기록
+[x] T1  ApiCircuitBreakerTest: 1개→9개 (경계 + disabled + half-open 분기)
+[x] T2  ApiCircuitBreakerTest 동시성 + FixedWindowCounter 경계/동시성 테스트
+[x] T3  임계값 최대 상향 — LINE 0.76→0.82 · BRANCH 0.59→0.67 · METHOD 0.80→0.88 · CLASS 0.90→0.97
+[x] R1  복원력 빌드 vs 도입 ADR — docs/adr/0001-resilience-build-vs-adopt.md
+[x] V1  추천 카드 면책 문구 추가 (편향 회피 + 공동 당첨 분배 설명)
+[x] O4  micrometer-tracing-bridge-otel + OTLP exporter, RequestIdFilter → span tag 전파
+[x] O5  Grafana/Prometheus docker-compose observability 프로파일 + 대시보드 프로비저닝
 ```

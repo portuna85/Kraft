@@ -3,6 +3,7 @@ package com.kraft.lotto.feature.winningnumber.application;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.core.instrument.Counter;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,8 +32,17 @@ public class ApiCircuitBreakerRegistry {
         }
         String key = client.trim().toLowerCase();
         breakers.put(key, breaker);
-        breaker.setStateTransitionListener((before, after) ->
-                log.info("api circuit breaker state changed: client={}, {} -> {}", key, before, after));
+        breaker.setStateTransitionListener((before, after) -> {
+            log.info("api circuit breaker state changed: client={}, {} -> {}", key, before, after);
+            MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new);
+            Counter.builder("kraft.api.circuit_breaker.transitions")
+                    .description("Circuit breaker state transitions")
+                    .tag("client", key)
+                    .tag("from", before)
+                    .tag("to", after)
+                    .register(meterRegistry)
+                    .increment();
+        });
         registerGaugeIfNeeded(key, breaker);
         return breaker;
     }

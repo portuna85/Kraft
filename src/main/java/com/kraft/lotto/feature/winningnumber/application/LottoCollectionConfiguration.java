@@ -24,13 +24,15 @@ class LottoCollectionConfiguration {
     LottoSingleDrawCollector lottoSingleDrawCollector(LottoApiClient lottoApiClient,
                                                       WinningNumberRepository winningNumberRepository,
                                                       WinningNumberPersister persister,
-                                                      LottoFetchLogRepository fetchLogRepository) {
+                                                      LottoFetchLogRepository fetchLogRepository,
+                                                      ObjectProvider<MeterRegistry> meterRegistryProvider) {
         return new LottoSingleDrawCollector(
                 lottoApiClient,
                 winningNumberRepository,
                 persister,
                 fetchLogRepository,
-                Clock.systemDefaultZone()
+                Clock.systemDefaultZone(),
+                meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new)
         );
     }
 

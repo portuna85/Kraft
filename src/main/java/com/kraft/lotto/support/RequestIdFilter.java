@@ -1,5 +1,6 @@
 package com.kraft.lotto.support;
 
+import io.micrometer.tracing.Tracer;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.UUID;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -22,6 +25,17 @@ public class RequestIdFilter extends OncePerRequestFilter {
     static final String MDC_PATH = "path";
     private static final int MAX_REQUEST_ID_LENGTH = 128;
 
+    private final ObjectProvider<Tracer> tracerProvider;
+
+    RequestIdFilter() {
+        this.tracerProvider = null;
+    }
+
+    @Autowired
+    public RequestIdFilter(ObjectProvider<Tracer> tracerProvider) {
+        this.tracerProvider = tracerProvider;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -31,6 +45,7 @@ public class RequestIdFilter extends OncePerRequestFilter {
         MDC.put(MDC_REQUEST_ID, requestId);
         MDC.put(MDC_METHOD, LogSanitizer.sanitizeLogValue(request.getMethod()));
         MDC.put(MDC_PATH, LogSanitizer.maskSensitivePath(request.getRequestURI()));
+        propagateRequestIdToBaggage(requestId);
         try {
             filterChain.doFilter(request, response);
         } finally {
@@ -38,6 +53,17 @@ public class RequestIdFilter extends OncePerRequestFilter {
             MDC.remove(MDC_METHOD);
             MDC.remove(MDC_REQUEST_ID);
         }
+    }
+
+    private void propagateRequestIdToBaggage(String requestId) {
+        if (tracerProvider == null) {
+            return;
+        }
+        Tracer tracer = tracerProvider.getIfAvailable();
+        if (tracer == null || tracer.currentSpan() == null) {
+            return;
+        }
+        tracer.currentSpan().tag("requestId", requestId);
     }
 
     private static String resolveRequestId(String headerValue) {

@@ -1,5 +1,6 @@
 package com.kraft.lotto.support;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -61,6 +62,7 @@ class OpsApiAccessScenarioTest {
                 recommendMetricsQueryService,
                 circuitBreakerRegistry,
                 collectProperties(),
+                securityProperties(),
                 Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul"))
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
@@ -196,7 +198,7 @@ class OpsApiAccessScenarioTest {
     @Test
     @DisplayName("POST /ops/collect: 정상 토큰/허용 IP면 facade 위임 후 200")
     void collectWithValidTokenAndAllowedIpReturnsOk() throws Exception {
-        when(opsCollectionFacade.collectLatest()).thenReturn(
+        when(opsCollectionFacade.collectLatest(any(), any())).thenReturn(
                 com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse.of(
                         1, 0, 0, 1200, java.util.List.of(), false, null, false
                 ));
@@ -211,7 +213,7 @@ class OpsApiAccessScenarioTest {
                 .andExpect(jsonPath("$.collected").value(1))
                 .andExpect(jsonPath("$.latestRound").value(1200));
 
-        verify(opsCollectionFacade).collectLatest();
+        verify(opsCollectionFacade).collectLatest(any(), any());
     }
 
     private static KraftSecurityProperties securityProperties() {
