@@ -7,6 +7,38 @@
     <h1>회차 목록</h1>
     <p class="kraft-hero-description">역대 모든 로또 회차 당첨번호를 확인하세요.</p>
   </header>
+  <div class="card mb-4 kraft-section kraft-section-round-search" id="round-search">
+    <div class="card-body">
+      <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">회차 검색</h2>
+      <form class="kraft-inline-form kraft-inline-form-round mb-3" id="roundSearchForm" method="get" th:action="@{/rounds}">
+        <label class="kraft-inline-label" for="roundInput">회차</label>
+        <input id="roundInput" class="form-control form-control-sm kraft-round-input" th:attr="max=${maxRound}" min="1" name="round" required aria-required="true" aria-describedby="roundInputFeedback" th:value="${round}" type="number" inputmode="numeric" pattern="[0-9]*">
+        <button class="btn btn-sm btn-outline-primary kraft-submit-btn" type="submit">검색</button>
+      </form>
+      <div id="roundInputFeedback" class="invalid-feedback d-block kraft-input-feedback visually-hidden" aria-live="polite" th:text="|1 ~ ${maxRound} 사이의 정수를 입력해 주세요.|">1 ~ 3000 사이의 정수를 입력해 주세요.</div>
+      <div th:if="${result != null}">
+        <dl class="row g-2 mb-3">
+          <dt class="col-5 col-sm-3 fw-normal text-secondary">회차</dt>
+          <dd class="col-7 col-sm-9 mb-0 fw-semibold" th:text="${result.round + '회'}">0회</dd>
+          <dt class="col-5 col-sm-3 fw-normal text-secondary">추첨일</dt>
+          <dd class="col-7 col-sm-9 mb-0" th:text="${#temporals.format(result.drawDate,'yyyy.MM.dd')}">-</dd>
+          <dt class="col-5 col-sm-3 fw-normal text-secondary">1등 당첨금</dt>
+          <dd class="col-7 col-sm-9 mb-0 font-monospace" th:text="${#numbers.formatInteger(result.firstPrize,1,'COMMA') + ' 원'}">0 원</dd>
+          <dt class="col-5 col-sm-3 fw-normal text-secondary">당첨자 수</dt>
+          <dd class="col-7 col-sm-9 mb-0" th:text="${result.firstWinners + '명'}">0명</dd>
+        </dl>
+        <div class="kraft-balls">
+          <th:block th:each="n : ${result.numbers}">
+            <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
+          </th:block>
+          <span class="kraft-bonus-group">
+            <span class="kraft-ball-plus" aria-hidden="true">+</span>
+            <span th:replace="~{fragments/lotto-ball :: ball(${result.bonusNumber}, 'bonus ')}">0</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
   <th:block th:replace="~{fragments/rounds-list :: rounds-list}"></th:block>
 </section>
 </html>

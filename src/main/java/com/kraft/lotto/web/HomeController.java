@@ -56,6 +56,7 @@ public class HomeController {
     public String roundsPage(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(required = false) @Min(LottoRoundPolicy.MIN_ROUND) @Max(LottoRoundPolicy.MAX_ROUND) Integer round,
             Model model
     ) {
         int safePage = PublicQueryParams.normalizePage(page);
@@ -66,6 +67,9 @@ public class HomeController {
         model.addAttribute("size", rounds.size());
         model.addAttribute("pageSizes", List.of(20, 50, 100));
         model.addAttribute("currentSize", safeSize);
+        model.addAttribute("maxRound", LottoRoundPolicy.MAX_ROUND);
+        model.addAttribute("round", round);
+        model.addAttribute("result", round == null ? null : queryService.findByRound(round).orElse(null));
         return "rounds";
     }
 

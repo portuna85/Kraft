@@ -1,5 +1,5 @@
 <div xmlns:th="http://www.thymeleaf.org" id="latest" th:fragment="latest-card">
-  <section class="latest-card" th:if="${latest != null}">
+  <div class="latest-card" th:if="${latest != null}">
     <div class="latest-header">
       <div class="latest-title-row">
         <span class="latest-round" th:text="${latest.round} + '회'">0회</span>
@@ -23,8 +23,12 @@
         <span class="meta-label">당첨자 수</span>
         <span class="meta-value" th:text="${latest.firstWinners + '명'}">0명</span>
       </div>
+      <div class="meta-item">
+        <span class="meta-label">추첨일</span>
+        <span class="meta-value font-monospace" th:text="${#temporals.format(latest.drawDate, 'yyyy.MM.dd')}">-</span>
+      </div>
     </div>
-  </section>
+  </div>
   <p class="text-secondary mb-0 small" th:if="${latest == null}">수집된 회차 데이터가 없습니다.</p>
 </div>
 
