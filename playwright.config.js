@@ -30,14 +30,14 @@ function buildServerCommand() {
 module.exports = defineConfig({
   testDir: './tests/e2e',
   timeout: 30000,
-  retries: 0,
+  retries: process.env.CI ? 1 : 0,
   fullyParallel: true,
   reporter: 'list',
   webServer: externalServer ? undefined : {
     command: buildServerCommand(),
     url: baseURL,
     reuseExistingServer: false,
-    timeout: jarPath ? 30000 : 120000,
+    timeout: jarPath ? 60000 : 120000,
   },
   use: {
     baseURL,

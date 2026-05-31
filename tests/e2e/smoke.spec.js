@@ -54,7 +54,7 @@ test.describe('home smoke', () => {
   });
 
   test('valid round query renders round search block', async ({ page }) => {
-    await page.goto('/?round=1');
+    await page.goto('/rounds?round=1');
     await expect(page.locator('#round-search')).toBeVisible();
   });
 
