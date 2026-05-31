@@ -3,9 +3,10 @@ package com.kraft.lotto.feature.recommend.application;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendStatsDto;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -33,31 +34,19 @@ public class RecommendMetricsQueryService {
         double generationMeanMs = latencyTimer == null ? 0.0 : latencyTimer.mean(TimeUnit.MILLISECONDS);
         double generationMaxMs = latencyTimer == null ? 0.0 : latencyTimer.max(TimeUnit.MILLISECONDS);
 
-        Counter timeoutCounter = meterRegistry.find("kraft.recommend.timeout.count").counter();
-        long timeoutCount = timeoutCounter == null ? 0L : (long) timeoutCounter.count();
-
-        Counter attemptCounter = meterRegistry.find("kraft.recommend.attempt.count").counter();
-        long attemptCount = attemptCounter == null ? 0L : (long) attemptCounter.count();
-
-        Counter rejectionCounter = meterRegistry.find("kraft.recommend.rejection.count").counter();
-        long rejectionCount = rejectionCounter == null ? 0L : (long) rejectionCounter.count();
+        DistributionSummary requestSummary = meterRegistry.find("kraft.recommend.request.count").summary();
+        long requestedSetCount = requestSummary == null ? 0L : (long) requestSummary.totalAmount();
 
         Map<String, Long> failuresByReason = new TreeMap<>();
         meterRegistry.find("kraft.recommend.generation.failure").counters()
-                .forEach(c -> failuresByReason.put(c.getId().getTag("reason"), (long) c.count()));
-
-        Map<String, Long> rejectionsByRule = new TreeMap<>();
-        meterRegistry.find("kraft.recommend.rejection.by.rule").counters()
-                .forEach(c -> rejectionsByRule.put(c.getId().getTag("rule"), (long) c.count()));
+                .forEach(c -> {
+                    Counter counter = (Counter) c;
+                    failuresByReason.put(counter.getId().getTag("reason"), (long) counter.count());
+                });
 
         return new RecommendStatsDto(
                 generationCount, generationMeanMs, generationMaxMs,
-                timeoutCount, failuresByReason,
-                attemptCount, rejectionCount, rejectionsByRule
+                requestedSetCount, failuresByReason
         );
-    }
-
-    private static RecommendStatsDto empty() {
-        return new RecommendStatsDto(0, 0.0, 0.0, 0, Map.of(), 0, 0, Map.of());
     }
 }

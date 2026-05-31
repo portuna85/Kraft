@@ -6,14 +6,10 @@ public record RecommendStatsDto(
         long generationCount,
         double generationMeanMs,
         double generationMaxMs,
-        long timeoutCount,
-        Map<String, Long> failuresByReason,
-        long attemptCount,
-        long rejectionCount,
-        Map<String, Long> rejectionsByRule
+        long requestedSetCount,
+        Map<String, Long> failuresByReason
 ) {
     public RecommendStatsDto {
         failuresByReason = Map.copyOf(failuresByReason);
-        rejectionsByRule = Map.copyOf(rejectionsByRule);
     }
 }

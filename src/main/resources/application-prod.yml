@@ -12,10 +12,17 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
     health:
       show-details: never
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${KRAFT_TRACING_SAMPLE_RATE:0.1}
 
 kraft:
   history-init:

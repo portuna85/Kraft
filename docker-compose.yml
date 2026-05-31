@@ -84,6 +84,67 @@ services:
         max-size: 100m
         max-file: "5"
 
+  prometheus:
+    image: prom/prometheus:v3.4.0
+    pull_policy: missing
+    container_name: kraft-lotto-prometheus
+    restart: unless-stopped
+    profiles: [ "observability" ]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - kraft-lotto-prometheus:/prometheus
+    ports:
+      - "127.0.0.1:${KRAFT_PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - kraft-net
+    depends_on:
+      app:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  grafana:
+    image: grafana/grafana:12.0.1
+    pull_policy: missing
+    container_name: kraft-lotto-grafana
+    restart: unless-stopped
+    profiles: [ "observability" ]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${KRAFT_GRAFANA_ADMIN_PASSWORD:?KRAFT_GRAFANA_ADMIN_PASSWORD is required when observability profile is active}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${KRAFT_GRAFANA_ROOT_URL:-http://localhost:3000}
+    volumes:
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/grafana/dashboards:/etc/grafana/dashboards:ro
+      - kraft-lotto-grafana:/var/lib/grafana
+    ports:
+      - "127.0.0.1:${KRAFT_GRAFANA_PORT:-3000}:3000"
+    networks:
+      - kraft-net
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
 networks:
   kraft-net:
     name: kraft-lotto-net
@@ -92,3 +153,7 @@ networks:
 volumes:
   kraft-lotto-db:
     name: kraft-lotto-db
+  kraft-lotto-prometheus:
+    name: kraft-lotto-prometheus
+  kraft-lotto-grafana:
+    name: kraft-lotto-grafana

@@ -7,6 +7,11 @@
       <button class="btn btn-sm btn-primary kraft-submit-btn" type="submit">생성</button>
     </form>
     <p class="small text-secondary mb-2">생성할 번호 세트 수를 입력하세요.</p>
+    <p class="small text-secondary mb-2 kraft-recommend-disclaimer">
+      확률 예측이 아닌 편향 회피 도구입니다.
+      생일·연속수·등차 등 많은 사람이 고르는 조합을 걸러
+      공동 당첨 시 분배 인원을 줄이는 데 목적이 있습니다.
+    </p>
     <div id="countInputFeedback" class="invalid-feedback d-block kraft-input-feedback visually-hidden" aria-live="polite" th:text="|1 ~ ${maxCount} 사이의 정수를 입력하세요.|">1 ~ 10 사이의 정수를 입력하세요.</div>
     <div class="sets-grid" th:if="${combinations != null and !#lists.isEmpty(combinations)}">
       <div th:each="c, stat : ${combinations}" class="set-card">
