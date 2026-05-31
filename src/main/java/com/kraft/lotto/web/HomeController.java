@@ -109,22 +109,32 @@ public class HomeController {
         var summary = statisticsService.frequencySummary();
         List<FrequencyViewModel> freqVMs = toFrequencyViewModels(summary.frequencies());
 
-        List<Integer> top6 = freqVMs.stream()
+        List<FrequencyViewModel> topBalls = freqVMs.stream()
                 .filter(f -> f.rank() <= 6)
-                .sorted(Comparator.comparingInt(FrequencyViewModel::rank))
-                .map(FrequencyViewModel::number)
+                .sorted(Comparator.comparingInt(FrequencyViewModel::number))
                 .toList();
+        FrequencyViewModel topBonus = freqVMs.stream()
+                .filter(f -> f.rank() == 7)
+                .findFirst()
+                .orElse(null);
 
-        List<Integer> bottom6 = freqVMs.stream()
+        List<FrequencyViewModel> bottomBalls = freqVMs.stream()
                 .filter(f -> f.rank() >= 40)
                 .sorted(Comparator.comparingInt(FrequencyViewModel::number))
-                .map(FrequencyViewModel::number)
                 .toList();
+        FrequencyViewModel bottomBonus = freqVMs.stream()
+                .filter(f -> f.rank() == 39)
+                .findFirst()
+                .orElse(null);
+
+        List<Integer> top6sorted = topBalls.stream().map(FrequencyViewModel::number).sorted().toList();
 
         model.addAttribute("frequency", freqVMs);
-        model.addAttribute("top6", top6);
-        model.addAttribute("bottom6", bottom6);
-        model.addAttribute("top6History", statisticsService.combinationPrizeHistory(top6.stream().sorted().toList()));
+        model.addAttribute("topBalls", topBalls);
+        model.addAttribute("topBonus", topBonus);
+        model.addAttribute("bottomBalls", bottomBalls);
+        model.addAttribute("bottomBonus", bottomBonus);
+        model.addAttribute("top6History", statisticsService.combinationPrizeHistory(top6sorted));
         model.addAttribute("bottom6History", summary.lowSixCombinationHistory());
     }
 

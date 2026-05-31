@@ -228,6 +228,36 @@
   background: var(--kraft-border, rgba(0,0,0,.08));
 }
 
+.freq-summary-ball-row {
+  align-items: flex-end;
+}
+
+.freq-summary-ball-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .18rem;
+}
+
+.freq-summary-count {
+  font-size: .6rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--kraft-text-muted, rgba(0,0,0,.45));
+  line-height: 1;
+}
+
+[data-theme="dark"] .freq-summary-count {
+  color: rgba(255,255,255,.45);
+}
+
+.freq-summary-plus {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--kraft-text-muted, rgba(0,0,0,.35));
+  line-height: 1;
+  margin: 0 .1rem .55rem;
+}
+
 /* ===== Frequency List + Sort Controls ===== */
 .freq-controls {
   display: flex;

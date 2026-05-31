@@ -13,9 +13,19 @@
           <span th:if="${top6History == null or top6History.firstPrizeCount == 0}"
                 class="freq-prize-badge freq-prize-badge--none">1등 없음</span>
         </div>
-        <div class="ball-row">
-          <th:block th:each="n : ${top6}">
-            <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
+        <div class="ball-row freq-summary-ball-row">
+          <th:block th:each="vm : ${topBalls}">
+            <div class="freq-summary-ball-wrap">
+              <span th:replace="~{fragments/lotto-ball :: ball(${vm.number}, '')}">1</span>
+              <span class="freq-summary-count" th:text="${vm.count}">100</span>
+            </div>
+          </th:block>
+          <th:block th:if="${topBonus != null}">
+            <span class="freq-summary-plus" aria-hidden="true">+</span>
+            <div class="freq-summary-ball-wrap">
+              <span th:replace="~{fragments/lotto-ball :: ball(${topBonus.number}, 'bonus ')}">7</span>
+              <span class="freq-summary-count" th:text="${topBonus.count}">90</span>
+            </div>
           </th:block>
         </div>
       </div>
@@ -29,9 +39,19 @@
           <span th:if="${bottom6History == null or bottom6History.firstPrizeCount == 0}"
                 class="freq-prize-badge freq-prize-badge--none">1등 없음</span>
         </div>
-        <div class="ball-row">
-          <th:block th:each="n : ${bottom6}">
-            <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
+        <div class="ball-row freq-summary-ball-row">
+          <th:block th:each="vm : ${bottomBalls}">
+            <div class="freq-summary-ball-wrap">
+              <span th:replace="~{fragments/lotto-ball :: ball(${vm.number}, '')}">1</span>
+              <span class="freq-summary-count" th:text="${vm.count}">50</span>
+            </div>
+          </th:block>
+          <th:block th:if="${bottomBonus != null}">
+            <span class="freq-summary-plus" aria-hidden="true">+</span>
+            <div class="freq-summary-ball-wrap">
+              <span th:replace="~{fragments/lotto-ball :: ball(${bottomBonus.number}, 'bonus ')}">9</span>
+              <span class="freq-summary-count" th:text="${bottomBonus.count}">55</span>
+            </div>
           </th:block>
         </div>
       </div>
