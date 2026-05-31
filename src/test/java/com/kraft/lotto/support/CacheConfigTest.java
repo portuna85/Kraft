@@ -2,12 +2,13 @@ package com.kraft.lotto.support;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.kraft.lotto.infra.config.KraftCacheProperties;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 class CacheConfigTest {
 
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
-            .withUserConfiguration(CacheConfig.class, MeterConfig.class, CachePropsConfig.class)
+            .withUserConfiguration(CacheConfig.class, CachePropsConfig.class)
             .withPropertyValues(
                     "kraft.cache.winning-number-frequency.ttl-minutes=5",
                     "kraft.cache.winning-number-frequency.max-size=1000",
@@ -26,28 +27,31 @@ class CacheConfigTest {
             );
 
     @Test
-    @DisplayName("Caffeine 캐시 지표를 MeterRegistry에 바인딩한다")
-    void bindsCaffeineCacheMetrics() {
+    @DisplayName("모든 캐시가 CacheManager에 등록된다")
+    void registersAllCaches() {
         runner.run(context -> {
             CacheManager cacheManager = context.getBean(CacheManager.class);
-            SimpleMeterRegistry registry = context.getBean(SimpleMeterRegistry.class);
-
-            cacheManager.getCache("winningNumberFrequency").get("freq", () -> "value");
-            cacheManager.getCache("combinationPrizeHistory").get("combo", () -> "value");
-            cacheManager.getCache("winningFrequencySummary").get("summary", () -> "value");
-
-            assertThat(registry.find("cache.gets").tag("cache", "winningNumberFrequency").meters()).isNotEmpty();
-            assertThat(registry.find("cache.gets").tag("cache", "combinationPrizeHistory").meters()).isNotEmpty();
-            assertThat(registry.find("cache.gets").tag("cache", "winningFrequencySummary").meters()).isNotEmpty();
+            assertThat(cacheManager.getCache("winningNumberFrequency")).isNotNull();
+            assertThat(cacheManager.getCache("combinationPrizeHistory")).isNotNull();
+            assertThat(cacheManager.getCache("winningFrequencySummary")).isNotNull();
+            assertThat(cacheManager.getCache("winningNumberFrequencyPeriod")).isNotNull();
+            assertThat(cacheManager.getCache("patternStats")).isNotNull();
+            assertThat(cacheManager.getCache("companionNumbers")).isNotNull();
         });
     }
 
-    @Configuration
-    static class MeterConfig {
-        @Bean
-        SimpleMeterRegistry meterRegistry() {
-            return new SimpleMeterRegistry();
-        }
+    @Test
+    @DisplayName("캐시는 통계 수집(recordStats)이 활성화된 Caffeine 캐시로 생성된다")
+    void cacheHasStatsRecordingEnabled() {
+        runner.run(context -> {
+            CacheManager cacheManager = context.getBean(CacheManager.class);
+            CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache("winningNumberFrequency");
+            Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
+
+            nativeCache.get("key", k -> "value");
+
+            assertThat(nativeCache.stats().requestCount()).isPositive();
+        });
     }
 
     @Configuration
