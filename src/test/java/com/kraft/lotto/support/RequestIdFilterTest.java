@@ -1,12 +1,17 @@
 package com.kraft.lotto.support;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import jakarta.servlet.ServletException;
 import java.io.IOException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -38,6 +43,59 @@ class RequestIdFilterTest {
         filter.doFilter(request, response, new AssertingChain());
 
         assertThat(response.getHeader(RequestIdFilter.HEADER_NAME)).isEqualTo("rid-123__bad");
+    }
+
+    @Test
+    @DisplayName("Tracer가 주입되고 현재 span이 있으면 requestId를 tag로 전파한다")
+    void propagatesRequestIdToSpanTagWhenTracerPresent() throws Exception {
+        Span span = mock(Span.class);
+        when(span.tag("requestId", "req-abc")).thenReturn(span);
+        Tracer tracer = mock(Tracer.class);
+        when(tracer.currentSpan()).thenReturn(span);
+        ObjectProvider<Tracer> provider = new ObjectProvider<>() {
+            @Override
+            public Tracer getObject() { return tracer; }
+
+            @Override
+            public Tracer getIfAvailable() { return tracer; }
+        };
+        RequestIdFilter tracingFilter = new RequestIdFilter(provider);
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        request.addHeader(RequestIdFilter.HEADER_NAME, "req-abc");
+
+        tracingFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+        // tag 호출이 예외 없이 완료되면 전파 성공
+        assertThat(response(tracingFilter, "req-abc")).isEqualTo("req-abc");
+    }
+
+    @Test
+    @DisplayName("Tracer가 주입되어 있어도 currentSpan이 null이면 전파하지 않는다")
+    void doesNotPropagateWhenCurrentSpanIsNull() throws Exception {
+        Tracer tracer = mock(Tracer.class);
+        when(tracer.currentSpan()).thenReturn(null);
+        ObjectProvider<Tracer> provider = new ObjectProvider<>() {
+            @Override
+            public Tracer getObject() { return tracer; }
+
+            @Override
+            public Tracer getIfAvailable() { return tracer; }
+        };
+        RequestIdFilter tracingFilter = new RequestIdFilter(provider);
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        tracingFilter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(response.getHeader(RequestIdFilter.HEADER_NAME)).isNotBlank();
+    }
+
+    private static String response(RequestIdFilter f, String reqId) throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest("GET", "/");
+        req.addHeader(RequestIdFilter.HEADER_NAME, reqId);
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        f.doFilter(req, resp, new MockFilterChain());
+        return resp.getHeader(RequestIdFilter.HEADER_NAME);
     }
 
     private static class AssertingChain extends MockFilterChain {
