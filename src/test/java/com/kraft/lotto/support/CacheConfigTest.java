@@ -57,7 +57,10 @@ class CacheConfigTest {
             return new KraftCacheProperties(
                     new KraftCacheProperties.Spec(5, 1000),
                     new KraftCacheProperties.Spec(10, 2000),
-                    new KraftCacheProperties.Spec(5, 1000)
+                    new KraftCacheProperties.Spec(5, 1000),
+                    new KraftCacheProperties.Spec(10, 4),
+                    new KraftCacheProperties.Spec(30, 1),
+                    new KraftCacheProperties.Spec(30, 45)
             );
         }
     }

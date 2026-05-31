@@ -1,0 +1,50 @@
+<div th:fragment="analysis-result" xmlns:th="http://www.thymeleaf.org">
+
+  <!-- 에러 -->
+  <p th:if="${error != null}" class="text-danger small mt-2" th:text="${error}">오류</p>
+
+  <!-- 결과 -->
+  <div th:if="${selectedBalls != null}">
+    <div class="freq-summary-sep my-3"></div>
+
+    <!-- 선택 번호 빈도 -->
+    <h3 class="h6 text-uppercase fw-semibold text-secondary mb-2">번호별 출현 빈도</h3>
+    <div class="analysis-freq-row">
+      <div th:each="vm : ${selectedBalls}" class="freq-summary-ball-wrap">
+        <span th:replace="~{fragments/lotto-ball :: ball(${vm.number}, '')}">1</span>
+        <span class="freq-summary-count" th:text="${vm.count} + '회'">100회</span>
+        <span class="analysis-rank" th:text="'#' + ${vm.rank}">1위</span>
+      </div>
+    </div>
+
+    <!-- 당첨 이력 -->
+    <div class="analysis-history mt-3">
+      <div class="analysis-history-item">
+        <span class="freq-prize-badge"
+              th:classappend="${history.firstPrizeCount > 0} ? 'freq-prize-badge--hit' : 'freq-prize-badge--none'"
+              th:text="${history.firstPrizeCount > 0 ? history.firstPrizeCount + '회 1등' : '1등 없음'}">1등 없음</span>
+        <span class="freq-prize-badge ms-1"
+              th:classappend="${history.secondPrizeCount > 0} ? 'freq-prize-badge--hit' : 'freq-prize-badge--none'"
+              th:text="${history.secondPrizeCount > 0 ? history.secondPrizeCount + '회 2등' : '2등 없음'}">2등 없음</span>
+      </div>
+
+      <div th:if="${history.firstPrizeHits != null and !history.firstPrizeHits.isEmpty()}" class="mt-2">
+        <p class="text-secondary small mb-1">1등 당첨 회차</p>
+        <div class="analysis-hit-list">
+          <span th:each="hit : ${history.firstPrizeHits}"
+                class="analysis-hit-badge analysis-hit-badge--1st"
+                th:text="${hit.round} + '회 (' + ${#temporals.format(hit.drawDate,'yyyy.MM.dd')} + ')'">1회</span>
+        </div>
+      </div>
+
+      <div th:if="${history.secondPrizeHits != null and !history.secondPrizeHits.isEmpty()}" class="mt-2">
+        <p class="text-secondary small mb-1">2등 당첨 회차</p>
+        <div class="analysis-hit-list">
+          <span th:each="hit : ${history.secondPrizeHits}"
+                class="analysis-hit-badge analysis-hit-badge--2nd"
+                th:text="${hit.round} + '회 (' + ${#temporals.format(hit.drawDate,'yyyy.MM.dd')} + ')'">1회</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('번호 조합 분석', '6개의 번호를 선택해 당첨 이력과 출현 빈도를 분석합니다.', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">번호 조합 분석</p>
+    <h1>번호 조합 분석</h1>
+    <p class="kraft-hero-description">6개의 번호를 선택하면 당첨 이력과 출현 빈도를 분석해 드립니다.</p>
+  </header>
+
+  <div class="card mb-4 kraft-section" id="analysis">
+    <div class="card-body">
+      <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">번호 선택</h2>
+
+      <!-- 선택된 볼 표시 -->
+      <div class="analysis-selected-row" id="analysis-selected-display">
+        <span class="analysis-selected-placeholder">번호를 6개 선택하세요</span>
+      </div>
+
+      <!-- 볼 피커 -->
+      <div class="ball-picker-grid" id="analysis-picker" aria-label="번호 선택 그리드">
+        <th:block th:each="n : ${allNumbers}">
+          <button th:replace="~{fragments/ball-picker-item :: item(${n})}">1</button>
+        </th:block>
+      </div>
+
+      <p class="analysis-hint" id="analysis-hint">6개 선택 시 자동으로 분석됩니다</p>
+
+      <!-- 분석 결과 영역 -->
+      <div id="analysis-result" class="analysis-result-area"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var selected = [];
+      var MAX = 6;
+      var picker = document.getElementById('analysis-picker');
+      var display = document.getElementById('analysis-selected-display');
+      var hint = document.getElementById('analysis-hint');
+
+      picker.querySelectorAll('.ball-picker-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var num = +this.dataset.number;
+          var idx = selected.indexOf(num);
+          if (idx >= 0) {
+            selected.splice(idx, 1);
+            this.classList.remove('selected');
+          } else if (selected.length < MAX) {
+            selected.push(num);
+            this.classList.add('selected');
+          }
+          updateDisplay();
+          if (selected.length === MAX) triggerAnalysis();
+        });
+      });
+
+      function updateDisplay() {
+        if (selected.length === 0) {
+          display.innerHTML = '<span class="analysis-selected-placeholder">번호를 6개 선택하세요</span>';
+          return;
+        }
+        var sorted = selected.slice().sort(function (a, b) { return a - b; });
+        display.innerHTML = sorted.map(function (n) {
+          return '<span class="kraft-ball b' + ballGroup(n) + '">' + n + '</span>';
+        }).join('');
+      }
+
+      function triggerAnalysis() {
+        var sorted = selected.slice().sort(function (a, b) { return a - b; });
+        var params = sorted.map(function (n, i) { return 'n' + (i + 1) + '=' + n; }).join('&');
+        hint.textContent = '분석 중…';
+        htmx.ajax('GET', '/fragments/analysis?' + params, {target: '#analysis-result', swap: 'innerHTML'})
+          .then(function () { hint.textContent = '6개 선택 시 자동으로 분석됩니다'; });
+      }
+
+      function ballGroup(n) { return Math.floor((n - 1) / 10) + 1; }
+    })();
+  </script>
+</section>
+</html>

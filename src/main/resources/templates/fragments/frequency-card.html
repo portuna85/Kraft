@@ -57,6 +57,18 @@
       </div>
     </div>
 
+    <!-- 기간 필터 -->
+    <div class="freq-period-tabs" role="tablist" aria-label="조회 기간">
+      <a class="btn-period" th:classappend="${period == 0} ? ' active'" role="tab"
+         hx-get="/fragments/frequency?period=0" hx-target="#frequency" hx-swap="outerHTML">전체</a>
+      <a class="btn-period" th:classappend="${period == 200} ? ' active'" role="tab"
+         hx-get="/fragments/frequency?period=200" hx-target="#frequency" hx-swap="outerHTML">최근 200회</a>
+      <a class="btn-period" th:classappend="${period == 100} ? ' active'" role="tab"
+         hx-get="/fragments/frequency?period=100" hx-target="#frequency" hx-swap="outerHTML">최근 100회</a>
+      <a class="btn-period" th:classappend="${period == 50} ? ' active'" role="tab"
+         hx-get="/fragments/frequency?period=50" hx-target="#frequency" hx-swap="outerHTML">최근 50회</a>
+    </div>
+
     <div class="freq-controls">
       <button class="btn-sort active" data-sort="number" type="button">번호순</button>
       <button class="btn-sort" data-sort="count-desc" type="button">많은 순</button>

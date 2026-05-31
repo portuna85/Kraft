@@ -146,6 +146,15 @@ kraft:
     winning-frequency-summary:
       ttl-minutes: ${KRAFT_CACHE_FREQUENCY_SUMMARY_TTL_MINUTES:5}
       max-size: ${KRAFT_CACHE_FREQUENCY_SUMMARY_MAX_SIZE:1}
+    winning-number-frequency-period:
+      ttl-minutes: ${KRAFT_CACHE_FREQUENCY_PERIOD_TTL_MINUTES:10}
+      max-size: ${KRAFT_CACHE_FREQUENCY_PERIOD_MAX_SIZE:4}
+    pattern-stats:
+      ttl-minutes: ${KRAFT_CACHE_PATTERN_STATS_TTL_MINUTES:30}
+      max-size: ${KRAFT_CACHE_PATTERN_STATS_MAX_SIZE:1}
+    companion-numbers:
+      ttl-minutes: ${KRAFT_CACHE_COMPANION_TTL_MINUTES:30}
+      max-size: ${KRAFT_CACHE_COMPANION_MAX_SIZE:45}
   recommend:
     max-attempts: ${KRAFT_RECOMMEND_MAX_ATTEMPTS:5000}
     initial-pick-max-attempts: ${KRAFT_RECOMMEND_INITIAL_PICK_MAX_ATTEMPTS:10000}

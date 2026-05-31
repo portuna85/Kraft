@@ -5,7 +5,14 @@ import com.kraft.lotto.feature.statistics.infrastructure.WinningNumberFrequencyS
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.CombinationPrizeHistoryDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.CombinationPrizeHitDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.CompanionNumberDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.OddEvenStatDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.PatternStatDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.SumRangeStatDto;
+import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.CompanionRow;
+import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.OddEvenRow;
+import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.SumRow;
 import com.kraft.lotto.support.BusinessException;
 import com.kraft.lotto.support.ErrorCode;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -14,9 +21,12 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.IntStream;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,6 +129,68 @@ public class WinningStatisticsCacheService {
                 firstPrizeHits,
                 secondPrizeHits
         );
+    }
+
+    @Cacheable(cacheNames = "winningNumberFrequencyPeriod", key = "#rounds", sync = true)
+    @Transactional(readOnly = true)
+    public List<NumberFrequencyDto> frequencyForPeriod(int rounds) {
+        int maxRound = repository.findMaxRound().orElse(0);
+        if (maxRound == 0) return List.of();
+        int minRound = Math.max(1, maxRound - rounds + 1);
+        long totalDraws = repository.countDrawsFromRound(minRound);
+        long[] counts = new long[LOTTO_NUMBER_MAX + 1];
+        for (WinningNumberRepository.BallFrequencyRow row : repository.findBallFrequenciesFromRound(minRound)) {
+            counts[row.getBall()] = row.getHitCount();
+        }
+        return IntStream.rangeClosed(LOTTO_NUMBER_MIN, LOTTO_NUMBER_MAX)
+                .mapToObj(n -> new NumberFrequencyDto(n, counts[n], calculateRate(counts[n], totalDraws)))
+                .toList();
+    }
+
+    @Cacheable(cacheNames = "patternStats", sync = true)
+    @Transactional(readOnly = true)
+    public PatternStatDto patternStats() {
+        long totalDraws = repository.count();
+
+        Map<Integer, Long> oddEvenMap = new HashMap<>();
+        for (OddEvenRow row : repository.findOddEvenDistribution()) {
+            oddEvenMap.put(row.getOddCount(), row.getDrawCount());
+        }
+        long maxOddEven = oddEvenMap.values().stream().mapToLong(Long::longValue).max().orElse(1L);
+        List<OddEvenStatDto> oddEvenStats = IntStream.rangeClosed(0, 6)
+                .mapToObj(odd -> {
+                    long cnt = oddEvenMap.getOrDefault(odd, 0L);
+                    double pct = totalDraws > 0 ? cnt * 100.0 / totalDraws : 0;
+                    return new OddEvenStatDto(odd, 6 - odd, cnt, pct, maxOddEven);
+                })
+                .toList();
+
+        Map<Integer, Long> sumBucketMap = new TreeMap<>();
+        for (SumRow row : repository.findSumDistribution()) {
+            int bucket = (row.getTotalSum() / 10) * 10;
+            sumBucketMap.merge(bucket, row.getDrawCount(), Long::sum);
+        }
+        long maxSum = sumBucketMap.values().stream().mapToLong(Long::longValue).max().orElse(1L);
+        List<SumRangeStatDto> sumRangeStats = sumBucketMap.entrySet().stream()
+                .map(e -> new SumRangeStatDto(e.getKey(), e.getKey() + 9, e.getValue(),
+                        totalDraws > 0 ? e.getValue() * 100.0 / totalDraws : 0, maxSum))
+                .toList();
+
+        return new PatternStatDto(oddEvenStats, sumRangeStats, totalDraws);
+    }
+
+    @Cacheable(cacheNames = "companionNumbers", key = "#target", sync = true)
+    @Transactional(readOnly = true)
+    public List<CompanionNumberDto> companionNumbers(int target) {
+        List<CompanionRow> rows = repository.findCompanionNumbers(target);
+        long maxCount = rows.stream().mapToLong(CompanionRow::getHitCount).max().orElse(1L);
+        List<CompanionNumberDto> result = new ArrayList<>(rows.size());
+        int rank = 1;
+        for (CompanionRow row : rows) {
+            double pct = maxCount > 0 ? row.getHitCount() * 100.0 / maxCount : 0;
+            result.add(new CompanionNumberDto(row.getOtherBall(), row.getHitCount(), pct, rank++));
+        }
+        return result;
     }
 
     @Transactional

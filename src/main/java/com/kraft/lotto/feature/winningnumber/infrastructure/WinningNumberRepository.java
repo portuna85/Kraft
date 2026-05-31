@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface WinningNumberRepository extends JpaRepository<WinningNumberEntity, Integer> {
 
@@ -80,6 +81,72 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
     List<PrizeHitWithRankRow> findPrizeHitsByNumbers(
             Integer n1, Integer n2, Integer n3, Integer n4, Integer n5, Integer n6);
 
+    @Query(value = """
+            SELECT sub.ball AS ball, SUM(sub.hit) AS hitCount
+            FROM (
+                SELECT n1 AS ball, COUNT(*) AS hit FROM winning_numbers WHERE round >= :minRound GROUP BY n1
+                UNION ALL
+                SELECT n2, COUNT(*) FROM winning_numbers WHERE round >= :minRound GROUP BY n2
+                UNION ALL
+                SELECT n3, COUNT(*) FROM winning_numbers WHERE round >= :minRound GROUP BY n3
+                UNION ALL
+                SELECT n4, COUNT(*) FROM winning_numbers WHERE round >= :minRound GROUP BY n4
+                UNION ALL
+                SELECT n5, COUNT(*) FROM winning_numbers WHERE round >= :minRound GROUP BY n5
+                UNION ALL
+                SELECT n6, COUNT(*) FROM winning_numbers WHERE round >= :minRound GROUP BY n6
+            ) sub
+            GROUP BY sub.ball
+            ORDER BY sub.ball ASC
+            """, nativeQuery = true)
+    List<BallFrequencyRow> findBallFrequenciesFromRound(@Param("minRound") int minRound);
+
+    @Query("select count(w) from WinningNumberEntity w where w.round >= :minRound")
+    long countDrawsFromRound(@Param("minRound") int minRound);
+
+    @Query(value = """
+            SELECT
+                (CASE WHEN n1 % 2 = 1 THEN 1 ELSE 0 END +
+                 CASE WHEN n2 % 2 = 1 THEN 1 ELSE 0 END +
+                 CASE WHEN n3 % 2 = 1 THEN 1 ELSE 0 END +
+                 CASE WHEN n4 % 2 = 1 THEN 1 ELSE 0 END +
+                 CASE WHEN n5 % 2 = 1 THEN 1 ELSE 0 END +
+                 CASE WHEN n6 % 2 = 1 THEN 1 ELSE 0 END) AS oddCount,
+                COUNT(*) AS drawCount
+            FROM winning_numbers
+            GROUP BY oddCount
+            ORDER BY oddCount
+            """, nativeQuery = true)
+    List<OddEvenRow> findOddEvenDistribution();
+
+    @Query(value = """
+            SELECT (n1+n2+n3+n4+n5+n6) AS totalSum, COUNT(*) AS drawCount
+            FROM winning_numbers
+            GROUP BY totalSum
+            ORDER BY totalSum
+            """, nativeQuery = true)
+    List<SumRow> findSumDistribution();
+
+    @Query(value = """
+            SELECT other_ball AS otherBall, COUNT(*) AS hitCount
+            FROM (
+                SELECT n1 AS other_ball FROM winning_numbers WHERE :target IN (n1,n2,n3,n4,n5,n6) AND n1 != :target
+                UNION ALL
+                SELECT n2 FROM winning_numbers WHERE :target IN (n1,n2,n3,n4,n5,n6) AND n2 != :target
+                UNION ALL
+                SELECT n3 FROM winning_numbers WHERE :target IN (n1,n2,n3,n4,n5,n6) AND n3 != :target
+                UNION ALL
+                SELECT n4 FROM winning_numbers WHERE :target IN (n1,n2,n3,n4,n5,n6) AND n4 != :target
+                UNION ALL
+                SELECT n5 FROM winning_numbers WHERE :target IN (n1,n2,n3,n4,n5,n6) AND n5 != :target
+                UNION ALL
+                SELECT n6 FROM winning_numbers WHERE :target IN (n1,n2,n3,n4,n5,n6) AND n6 != :target
+            ) sub
+            GROUP BY other_ball
+            ORDER BY hitCount DESC
+            """, nativeQuery = true)
+    List<CompanionRow> findCompanionNumbers(@Param("target") int target);
+
     interface BallFrequencyRow {
         Integer getBall();
         Long getHitCount();
@@ -98,5 +165,20 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
         Integer getRound();
         LocalDate getDrawDate();
         Integer getPrizeRank();
+    }
+
+    interface OddEvenRow {
+        Integer getOddCount();
+        Long getDrawCount();
+    }
+
+    interface SumRow {
+        Integer getTotalSum();
+        Long getDrawCount();
+    }
+
+    interface CompanionRow {
+        Integer getOtherBall();
+        Long getHitCount();
     }
 }

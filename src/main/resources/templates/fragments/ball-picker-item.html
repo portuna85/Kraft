@@ -1,0 +1,8 @@
+<th:block xmlns:th="http://www.thymeleaf.org">
+<button th:fragment="item(num)"
+        type="button"
+        class="ball-picker-item"
+        th:attr="data-number=${num}, aria-label=|${num}번|"
+        th:class="|ball-picker-item kraft-ball b${@lottoBallHelper.colorGroup(num)}|"
+        th:text="${num}">1</button>
+</th:block>

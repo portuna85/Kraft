@@ -33,6 +33,18 @@ public class CacheConfig {
                 "winningFrequencySummary",
                 buildCache(cacheProperties.winningFrequencySummary()),
                 meterRegistry));
+        manager.registerCustomCache("winningNumberFrequencyPeriod", monitored(
+                "winningNumberFrequencyPeriod",
+                buildCache(cacheProperties.winningNumberFrequencyPeriod()),
+                meterRegistry));
+        manager.registerCustomCache("patternStats", monitored(
+                "patternStats",
+                buildCache(cacheProperties.patternStats()),
+                meterRegistry));
+        manager.registerCustomCache("companionNumbers", monitored(
+                "companionNumbers",
+                buildCache(cacheProperties.companionNumbers()),
+                meterRegistry));
         return manager;
     }
 

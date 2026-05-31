@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('번호 궁합', '번호를 하나 선택하면 함께 자주 나온 번호(동반 출현)를 볼(구슬)로 보여줍니다.', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">번호 궁합</p>
+    <h1>번호 궁합</h1>
+    <p class="kraft-hero-description">번호 하나를 선택하면 함께 자주 나온 번호를 확인할 수 있습니다.</p>
+  </header>
+
+  <div class="card mb-4 kraft-section" id="companion">
+    <div class="card-body">
+      <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-3">기준 번호 선택</h2>
+
+      <!-- 볼 피커 -->
+      <div class="ball-picker-grid" id="companion-picker" aria-label="기준 번호 선택 그리드">
+        <th:block th:each="n : ${allNumbers}">
+          <span th:replace="~{fragments/ball-picker-item :: item(${n})}"></span>
+        </th:block>
+      </div>
+
+      <!-- 결과 영역 -->
+      <div id="companion-result" class="companion-result-area mt-3"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var current = null;
+      var picker = document.getElementById('companion-picker');
+
+      picker.querySelectorAll('.ball-picker-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (current !== null) {
+            var prev = picker.querySelector('[data-number="' + current + '"]');
+            if (prev) prev.classList.remove('selected');
+          }
+          current = +this.dataset.number;
+          this.classList.add('selected');
+          htmx.ajax('GET', '/fragments/companion?target=' + current, {target: '#companion-result', swap: 'innerHTML'});
+        });
+      });
+    })();
+  </script>
+</section>
+</html>

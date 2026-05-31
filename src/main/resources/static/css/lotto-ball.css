@@ -431,3 +431,307 @@
     font-size: .55rem;
   }
 }
+
+/* ===== Period Filter Tabs ===== */
+.freq-period-tabs {
+  display: flex;
+  gap: .35rem;
+  margin-bottom: .7rem;
+  flex-wrap: wrap;
+}
+
+.btn-period {
+  padding: .22rem .7rem;
+  border-radius: 20px;
+  border: 1px solid var(--kraft-border, rgba(0,0,0,.15));
+  background: transparent;
+  color: inherit;
+  font-size: .75rem;
+  cursor: pointer;
+  transition: all .15s;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.btn-period.active,
+.btn-period:hover {
+  background: rgba(16,185,129,.12);
+  border-color: #059669;
+  color: #059669;
+}
+
+[data-theme="dark"] .btn-period.active,
+[data-theme="dark"] .btn-period:hover {
+  background: rgba(52,211,153,.12);
+  border-color: #34d399;
+  color: #34d399;
+}
+
+/* ===== Ball Picker Grid ===== */
+.ball-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: .4rem .25rem;
+  margin-bottom: .75rem;
+}
+
+.ball-picker-item {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform .1s, box-shadow .1s;
+  opacity: .75;
+}
+
+.ball-picker-item:hover {
+  transform: scale(1.12);
+  opacity: 1;
+}
+
+.ball-picker-item.selected {
+  opacity: 1;
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(23,78,166,.45);
+}
+
+@media (max-width: 575.98px) {
+  .ball-picker-grid {
+    grid-template-columns: repeat(9, 1fr);
+    gap: .3rem .15rem;
+  }
+  .ball-picker-item {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    font-size: .65rem !important;
+  }
+}
+
+/* ===== Analysis Page ===== */
+.analysis-selected-row {
+  display: flex;
+  gap: .4rem;
+  align-items: center;
+  min-height: 2.6rem;
+  padding: .5rem .75rem;
+  background: var(--kraft-surface-muted, rgba(0,0,0,.04));
+  border-radius: 12px;
+  margin-bottom: .9rem;
+  flex-wrap: wrap;
+}
+
+.analysis-selected-placeholder {
+  color: var(--kraft-text-muted, rgba(0,0,0,.4));
+  font-size: .85rem;
+}
+
+.analysis-hint {
+  font-size: .75rem;
+  color: var(--kraft-text-muted, rgba(0,0,0,.4));
+  text-align: center;
+  margin-bottom: .5rem;
+}
+
+.analysis-freq-row {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+  margin-bottom: .5rem;
+}
+
+.analysis-rank {
+  font-size: .58rem;
+  color: var(--kraft-text-muted, rgba(0,0,0,.4));
+  line-height: 1;
+}
+
+.analysis-history-item {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+
+.analysis-hit-list {
+  display: flex;
+  gap: .3rem;
+  flex-wrap: wrap;
+}
+
+.analysis-hit-badge {
+  font-size: .68rem;
+  padding: .15rem .5rem;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.analysis-hit-badge--1st {
+  background: rgba(245,158,11,.15);
+  color: #b45309;
+  border: 1px solid rgba(245,158,11,.3);
+}
+
+.analysis-hit-badge--2nd {
+  background: rgba(99,102,241,.12);
+  color: #4338ca;
+  border: 1px solid rgba(99,102,241,.25);
+}
+
+[data-theme="dark"] .analysis-hit-badge--1st {
+  background: rgba(251,191,36,.12);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .analysis-hit-badge--2nd {
+  background: rgba(129,140,248,.12);
+  color: #818cf8;
+}
+
+/* ===== Companion Page ===== */
+.companion-result-area {
+  min-height: 1rem;
+}
+
+.companion-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.companion-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: .4rem .25rem;
+  align-items: end;
+  margin-top: .5rem;
+}
+
+.companion-ball-wrap {
+  gap: .15rem;
+  position: relative;
+}
+
+.companion-heat-bar {
+  width: 100%;
+  max-height: 2.5rem;
+  min-height: 2px;
+  background: linear-gradient(to top, rgba(16,185,129,.6), rgba(16,185,129,.15));
+  border-radius: 3px 3px 0 0;
+  transition: height .3s;
+}
+
+@media (max-width: 575.98px) {
+  .companion-grid {
+    gap: .3rem .15rem;
+  }
+}
+
+/* ===== Stats Page ===== */
+.stats-oddeven-list,
+.stats-sum-list {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.stats-oddeven-row,
+.stats-sum-row {
+  display: grid;
+  grid-template-columns: 5.5rem 3.5rem 1fr 3rem 3rem;
+  align-items: center;
+  gap: .5rem;
+}
+
+.stats-oddeven-label {
+  display: flex;
+  gap: .3rem;
+  align-items: center;
+}
+
+.stats-tag {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .1rem .35rem;
+  border-radius: 10px;
+}
+
+.stats-tag--hot {
+  background: rgba(239,68,68,.1);
+  color: #dc2626;
+}
+
+.stats-tag--cold {
+  background: rgba(59,130,246,.1);
+  color: #2563eb;
+}
+
+[data-theme="dark"] .stats-tag--hot { color: #f87171; background: rgba(239,68,68,.15); }
+[data-theme="dark"] .stats-tag--cold { color: #60a5fa; background: rgba(59,130,246,.15); }
+
+.stats-oddeven-balls {
+  display: flex;
+  gap: .15rem;
+  align-items: center;
+}
+
+.stats-mini-ball {
+  display: inline-block;
+  width: .85rem;
+  height: .85rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stats-mini-ball--odd  { background: #ef4444; }
+.stats-mini-ball--even { background: #3b82f6; }
+
+.stats-bar-wrap {
+  background: var(--kraft-surface-muted, rgba(0,0,0,.06));
+  border-radius: 4px;
+  height: .55rem;
+  overflow: hidden;
+}
+
+.stats-bar {
+  height: 100%;
+  background: linear-gradient(to right, #f59e0b, #ef4444);
+  border-radius: 4px;
+  transition: width .4s;
+  min-width: 2px;
+}
+
+.stats-bar--sum {
+  background: linear-gradient(to right, #6366f1, #3b82f6);
+}
+
+.stats-count {
+  font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.stats-pct {
+  font-size: .68rem;
+  color: var(--kraft-text-muted, rgba(0,0,0,.4));
+  text-align: right;
+  white-space: nowrap;
+}
+
+.stats-sum-range {
+  font-size: .72rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+  .stats-oddeven-row,
+  .stats-sum-row {
+    grid-template-columns: 4.5rem 3rem 1fr 2.5rem 2.5rem;
+    gap: .3rem;
+  }
+}
+
+.stats-desc {
+  margin-top: -.5rem;
+}

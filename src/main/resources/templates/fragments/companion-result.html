@@ -1,0 +1,19 @@
+<div th:fragment="companion-result" xmlns:th="http://www.thymeleaf.org">
+  <div class="freq-summary-sep mb-3"></div>
+
+  <div class="companion-header mb-2">
+    <span class="text-secondary small">기준 번호</span>
+    <span th:replace="~{fragments/lotto-ball :: ball(${target}, '')}">1</span>
+    <span class="text-secondary small ms-1">와(과) 함께 나온 번호 (출현 많은 순)</span>
+  </div>
+
+  <div class="companion-grid">
+    <div th:each="c : ${companions}" class="freq-summary-ball-wrap companion-ball-wrap">
+      <div class="companion-heat-bar"
+           th:style="|height:${c.percent}%|"
+           th:attr="aria-label=|${c.number}번 동반 출현 ${c.count}회|"></div>
+      <span th:replace="~{fragments/lotto-ball :: ball(${c.number}, '')}">1</span>
+      <span class="freq-summary-count" th:text="${c.count} + '회'">100회</span>
+    </div>
+  </div>
+</div>

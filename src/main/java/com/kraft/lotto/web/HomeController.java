@@ -47,8 +47,11 @@ public class HomeController {
     }
 
     @GetMapping("/frequency")
-    public String frequencyPage(Model model) {
-        addFrequencyModel(model);
+    public String frequencyPage(
+            @RequestParam(defaultValue = "0") @Min(0) @Max(200) int period,
+            Model model
+    ) {
+        addFrequencyModel(period, model);
         return "frequency";
     }
 
@@ -83,8 +86,11 @@ public class HomeController {
     }
 
     @GetMapping("/fragments/frequency")
-    public String frequency(Model model) {
-        addFrequencyModel(model);
+    public String frequency(
+            @RequestParam(defaultValue = "0") @Min(0) @Max(200) int period,
+            Model model
+    ) {
+        addFrequencyModel(period, model);
         return FREQUENCY_FRAGMENT;
     }
 
@@ -105,9 +111,12 @@ public class HomeController {
         return ROUNDS_FRAGMENT;
     }
 
-    private void addFrequencyModel(Model model) {
+    private void addFrequencyModel(int period, Model model) {
         var summary = statisticsService.frequencySummary();
-        List<FrequencyViewModel> freqVMs = toFrequencyViewModels(summary.frequencies());
+        List<NumberFrequencyDto> rawFrequencies = period > 0
+                ? statisticsService.frequencyForPeriod(period)
+                : summary.frequencies();
+        List<FrequencyViewModel> freqVMs = toFrequencyViewModels(rawFrequencies);
 
         List<FrequencyViewModel> topBalls = freqVMs.stream()
                 .filter(f -> f.rank() <= 6)
@@ -136,6 +145,7 @@ public class HomeController {
         model.addAttribute("bottomBonus", bottomBonus);
         model.addAttribute("top6History", statisticsService.combinationPrizeHistory(top6sorted));
         model.addAttribute("bottom6History", summary.lowSixCombinationHistory());
+        model.addAttribute("period", period);
     }
 
     private void addHomeModel(Integer round, Model model) {

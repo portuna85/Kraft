@@ -10,7 +10,10 @@ import org.springframework.validation.annotation.Validated;
 public record KraftCacheProperties(
         @Valid Spec winningNumberFrequency,
         @Valid Spec combinationPrizeHistory,
-        @Valid Spec winningFrequencySummary
+        @Valid Spec winningFrequencySummary,
+        @Valid Spec winningNumberFrequencyPeriod,
+        @Valid Spec patternStats,
+        @Valid Spec companionNumbers
 ) {
     public record Spec(
             @Positive int ttlMinutes,

@@ -53,5 +53,11 @@ class KraftPropertiesBindingTest {
         assertThat(cache.combinationPrizeHistory().maxSize()).isEqualTo(200);
         assertThat(cache.winningFrequencySummary().ttlMinutes()).isEqualTo(5);
         assertThat(cache.winningFrequencySummary().maxSize()).isEqualTo(1);
+        assertThat(cache.winningNumberFrequencyPeriod().ttlMinutes()).isEqualTo(10);
+        assertThat(cache.winningNumberFrequencyPeriod().maxSize()).isEqualTo(4);
+        assertThat(cache.patternStats().ttlMinutes()).isEqualTo(30);
+        assertThat(cache.patternStats().maxSize()).isEqualTo(1);
+        assertThat(cache.companionNumbers().ttlMinutes()).isEqualTo(30);
+        assertThat(cache.companionNumbers().maxSize()).isEqualTo(45);
     }
 }

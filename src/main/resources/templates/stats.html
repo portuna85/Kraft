@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('패턴 통계', '로또 번호의 홀짝 분포와 합산 범위 통계. 자주 나오는 패턴을 볼(구슬)로 한눈에 확인하세요.', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">패턴 통계</p>
+    <h1>패턴 통계</h1>
+    <p class="kraft-hero-description">홀짝 분포와 합산 범위를 기반으로 한 당첨 패턴 통계입니다.</p>
+  </header>
+  <th:block th:replace="~{fragments/stats-card :: stats-card}"></th:block>
+</section>
+</html>

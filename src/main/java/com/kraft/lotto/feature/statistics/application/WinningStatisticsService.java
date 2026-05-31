@@ -3,8 +3,10 @@ package com.kraft.lotto.feature.statistics.application;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.web.dto.CombinationPrizeHistoryDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.CompanionNumberDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FrequencySummaryDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.PatternStatDto;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.cache.annotation.Cacheable;
@@ -47,6 +49,18 @@ public class WinningStatisticsService {
 
     public CombinationPrizeHistoryDto combinationPrizeHistory(List<Integer> numbers) {
         return cacheService.combinationPrizeHistory(numbers);
+    }
+
+    public List<NumberFrequencyDto> frequencyForPeriod(int rounds) {
+        return cacheService.frequencyForPeriod(rounds);
+    }
+
+    public PatternStatDto patternStats() {
+        return cacheService.patternStats();
+    }
+
+    public List<CompanionNumberDto> companionNumbers(int target) {
+        return cacheService.companionNumbers(target);
     }
 
     @Transactional(readOnly = true)
