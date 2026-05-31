@@ -121,7 +121,7 @@ services:
     restart: unless-stopped
     profiles: [ "observability" ]
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${KRAFT_GRAFANA_ADMIN_PASSWORD:?KRAFT_GRAFANA_ADMIN_PASSWORD is required when observability profile is active}
+      GF_SECURITY_ADMIN_PASSWORD: ${KRAFT_GRAFANA_ADMIN_PASSWORD:-changeme}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_SERVER_ROOT_URL: ${KRAFT_GRAFANA_ROOT_URL:-http://localhost:3000}
     volumes:
