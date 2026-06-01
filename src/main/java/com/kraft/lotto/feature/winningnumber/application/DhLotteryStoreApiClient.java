@@ -3,6 +3,7 @@ package com.kraft.lotto.feature.winningnumber.application;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.domain.WinningStore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,8 @@ public class DhLotteryStoreApiClient implements WinningStoreApiClient {
     private final ObjectMapper objectMapper;
     private final String baseUrl;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+            justification = "RestClient and ObjectMapper are shared application-scoped beans")
     public DhLotteryStoreApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl) {
         this.restClient   = restClient;
         this.objectMapper = objectMapper;
@@ -49,7 +52,7 @@ public class DhLotteryStoreApiClient implements WinningStoreApiClient {
         }
     }
 
-    private List<WinningStore> parse(int round, int grade, String body) {
+    List<WinningStore> parse(int round, int grade, String body) {
         try {
             JsonNode root = objectMapper.readTree(body);
             JsonNode arr = root.path("arrWinInfo");
