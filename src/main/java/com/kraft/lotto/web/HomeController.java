@@ -1,5 +1,6 @@
 package com.kraft.lotto.web;
 
+import com.kraft.lotto.feature.recommend.application.RecommendFilter;
 import com.kraft.lotto.feature.recommend.application.RecommendService;
 import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
 import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
@@ -84,9 +85,17 @@ public class HomeController {
     @GetMapping("/fragments/recommend")
     public String recommend(
             @RequestParam(defaultValue = "5") @Min(PublicQueryParams.MIN_COUNT) @Max(PublicQueryParams.MAX_COUNT) int count,
+            @RequestParam(required = false) Integer oddCount,
+            @RequestParam(required = false) Integer sumMin,
+            @RequestParam(required = false) Integer sumMax,
             Model model
     ) {
-        addRecommendModel(PublicQueryParams.normalizeCount(count), model);
+        RecommendFilter filter = RecommendFilter.of(
+                (oddCount != null && oddCount >= 0 && oddCount <= 6) ? oddCount : null,
+                sumMin,
+                sumMax
+        );
+        addRecommendModel(PublicQueryParams.normalizeCount(count), filter, model);
         return RECOMMEND_FRAGMENT;
     }
 
@@ -161,11 +170,18 @@ public class HomeController {
     }
 
     private void addRecommendModel(int count, Model model) {
-        var recommendation = recommendService.recommend(count);
+        addRecommendModel(count, RecommendFilter.NONE, model);
+    }
+
+    private void addRecommendModel(int count, RecommendFilter filter, Model model) {
+        var recommendation = recommendService.recommend(count, filter);
         model.addAttribute("count", count);
         model.addAttribute("combinations", recommendation.combinations());
         model.addAttribute("rules", recommendService.rules());
         model.addAttribute("maxCount", PublicQueryParams.MAX_COUNT);
+        model.addAttribute("filterOddCount", filter.oddCount());
+        model.addAttribute("filterSumMin", filter.sumMin());
+        model.addAttribute("filterSumMax", filter.sumMax());
     }
 
     private static List<FrequencyViewModel> toFrequencyViewModels(List<NumberFrequencyDto> frequencies) {

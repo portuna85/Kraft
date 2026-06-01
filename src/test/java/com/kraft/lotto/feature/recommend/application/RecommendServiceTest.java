@@ -179,7 +179,7 @@ class RecommendServiceTest {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         LottoRecommender failingRecommender = new LottoRecommender(List.of(), new Random(FIXED_SEED), 1) {
             @Override
-            public List<LottoCombination> recommend(int count) {
+            public List<LottoCombination> recommend(int count, List<ExclusionRule> additionalRules) {
                 throw new RecommendGenerationTimeoutException(
                         "initial pick exceeded max attempts",
                         RecommendGenerationTimeoutException.FailureReason.INITIAL_PICK_TIMEOUT
@@ -205,7 +205,7 @@ class RecommendServiceTest {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         LottoRecommender failingRecommender = new LottoRecommender(List.of(), new Random(FIXED_SEED), 1) {
             @Override
-            public List<LottoCombination> recommend(int count) {
+            public List<LottoCombination> recommend(int count, List<ExclusionRule> additionalRules) {
                 throw new RecommendGenerationTimeoutException(
                         "fixup exceeded max attempts",
                         RecommendGenerationTimeoutException.FailureReason.FIXUP_TIMEOUT

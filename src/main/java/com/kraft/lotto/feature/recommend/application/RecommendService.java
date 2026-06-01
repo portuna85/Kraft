@@ -4,10 +4,12 @@ import com.kraft.lotto.feature.recommend.domain.ExclusionRule;
 import com.kraft.lotto.feature.recommend.web.dto.CombinationDto;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
 import com.kraft.lotto.feature.recommend.web.dto.RuleDto;
+import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import com.kraft.lotto.support.BusinessException;
 import com.kraft.lotto.support.ErrorCode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,11 +42,16 @@ public class RecommendService {
     }
 
     public RecommendResponse recommend(int count) {
+        return recommend(count, RecommendFilter.NONE);
+    }
+
+    public RecommendResponse recommend(int count, RecommendFilter filter) {
         long started = System.nanoTime();
         int safeCount = normalizeCount(count);
         metricsRecorder.recordRequestedCount(safeCount);
         try {
-            var combinations = recommender.recommend(safeCount).stream()
+            List<ExclusionRule> filterRules = buildFilterRules(filter);
+            var combinations = recommender.recommend(safeCount, filterRules).stream()
                     .map(c -> new CombinationDto(c.numbers()))
                     .toList();
             return new RecommendResponse(combinations);
@@ -54,6 +61,34 @@ public class RecommendService {
         } finally {
             metricsRecorder.recordLatency(started);
         }
+    }
+
+    private static List<ExclusionRule> buildFilterRules(RecommendFilter filter) {
+        if (filter == null || filter.isNone()) {
+            return List.of();
+        }
+        List<ExclusionRule> filterRules = new ArrayList<>(2);
+        if (filter.hasOddCount()) {
+            int target = filter.oddCount();
+            filterRules.add(new ExclusionRule() {
+                @Override public boolean shouldExclude(LottoCombination c) { return c.oddCount() != target; }
+                @Override public String reason() { return "홀수 개수 " + target + "개 조건 불일치"; }
+                @Override public String name() { return "OddCountFilter"; }
+            });
+        }
+        if (filter.hasSumRange()) {
+            Integer min = filter.sumMin();
+            Integer max = filter.sumMax();
+            filterRules.add(new ExclusionRule() {
+                @Override public boolean shouldExclude(LottoCombination c) {
+                    int s = c.sum();
+                    return (min != null && s < min) || (max != null && s > max);
+                }
+                @Override public String reason() { return "합산 범위 조건 불일치"; }
+                @Override public String name() { return "SumRangeFilter"; }
+            });
+        }
+        return List.copyOf(filterRules);
     }
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP",

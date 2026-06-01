@@ -49,6 +49,10 @@ public class LottoRecommender {
     }
 
     public List<LottoCombination> recommend(int count) {
+        return recommend(count, List.of());
+    }
+
+    public List<LottoCombination> recommend(int count, List<ExclusionRule> additionalRules) {
         if (count <= 0) {
             throw new IllegalArgumentException("count must be positive: " + count);
         }
@@ -72,7 +76,7 @@ public class LottoRecommender {
                 recordDuplicateRejection();
                 continue;
             }
-            String excludedRule = findExcludedRule(candidate);
+            String excludedRule = findExcludedRule(candidate, additionalRules);
             if (excludedRule != null) {
                 rejected++;
                 recordRuleRejection(excludedRule);
@@ -85,8 +89,13 @@ public class LottoRecommender {
         return List.copyOf(result);
     }
 
-    private String findExcludedRule(LottoCombination candidate) {
+    private String findExcludedRule(LottoCombination candidate, List<ExclusionRule> additionalRules) {
         for (ExclusionRule rule : rules) {
+            if (rule.shouldExclude(candidate)) {
+                return rule.name();
+            }
+        }
+        for (ExclusionRule rule : additionalRules) {
             if (rule.shouldExclude(candidate)) {
                 return rule.name();
             }

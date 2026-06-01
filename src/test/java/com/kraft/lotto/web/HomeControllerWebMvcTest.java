@@ -1,5 +1,7 @@
 package com.kraft.lotto.web;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -7,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.kraft.lotto.TestCacheConfig;
+import com.kraft.lotto.feature.recommend.application.RecommendFilter;
 import com.kraft.lotto.feature.recommend.application.RecommendService;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
 import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
@@ -44,7 +47,7 @@ class HomeControllerWebMvcTest {
     void rendersHomeView() throws Exception {
         when(queryService.expectedCurrentRound()).thenReturn(1200);
         when(queryService.findLatest()).thenReturn(Optional.empty());
-        when(recommendService.recommend(5)).thenReturn(new RecommendResponse(List.of()));
+        when(recommendService.recommend(anyInt(), any(RecommendFilter.class))).thenReturn(new RecommendResponse(List.of()));
         when(recommendService.rules()).thenReturn(List.of());
 
         mockMvc.perform(get("/"))

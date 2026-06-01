@@ -708,6 +708,61 @@ body {
   line-height: 1.65;
 }
 
+/* === Recommend Filter Buttons === */
+.recommend-filters {
+  border-top: 1px solid var(--bs-border-color);
+  padding-top: 10px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.filter-group-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--kraft-muted);
+  white-space: nowrap;
+  padding-top: 4px;
+  min-width: 2.6rem;
+}
+
+.filter-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.filter-btn {
+  padding: 2px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--bs-border-color);
+  background: transparent;
+  color: var(--kraft-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  border-color: var(--kraft-primary);
+  color: var(--kraft-primary);
+  background: color-mix(in srgb, var(--kraft-primary) 8%, transparent);
+}
+
+.filter-btn.active {
+  border-color: var(--kraft-primary);
+  color: var(--kraft-primary);
+  background: color-mix(in srgb, var(--kraft-primary) 12%, transparent);
+  font-weight: 600;
+}
+
 /* === Home Page: 2-column desktop grid === */
 .home-grid {
   display: grid;

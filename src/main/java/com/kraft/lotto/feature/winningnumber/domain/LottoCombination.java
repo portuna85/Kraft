@@ -46,4 +46,12 @@ public record LottoCombination(List<Integer> numbers) {
     public boolean sameNumbers(LottoCombination other) {
         return other != null && this.numbers.equals(other.numbers);
     }
+
+    public int oddCount() {
+        return (int) numbers.stream().filter(n -> (n & 1) == 1).count();
+    }
+
+    public int sum() {
+        return numbers.stream().mapToInt(Integer::intValue).sum();
+    }
 }

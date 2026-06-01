@@ -4,6 +4,8 @@ import static com.kraft.lotto.support.fixtures.LottoTestFixtures.combinationDtos
 import static com.kraft.lotto.support.fixtures.LottoTestFixtures.winningNumberDto;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import com.kraft.lotto.feature.recommend.application.RecommendFilter;
 import com.kraft.lotto.feature.recommend.application.RecommendService;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
 import com.kraft.lotto.feature.recommend.web.dto.RuleDto;
@@ -122,7 +125,7 @@ class HomeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("count", 1));
 
-        verify(recommendService).recommend(1);
+        verify(recommendService).recommend(anyInt(), any(RecommendFilter.class));
     }
 
     @Test
@@ -134,7 +137,7 @@ class HomeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("count", 10));
 
-        verify(recommendService).recommend(10);
+        verify(recommendService).recommend(anyInt(), any(RecommendFilter.class));
     }
 
     @Test
@@ -183,7 +186,8 @@ class HomeControllerTest {
     }
 
     private void stubRecommend(int requestedCount, int returnedCount) {
-        when(recommendService.recommend(requestedCount)).thenReturn(new RecommendResponse(combinationDtos(returnedCount)));
+        when(recommendService.recommend(anyInt(), any(RecommendFilter.class)))
+                .thenReturn(new RecommendResponse(combinationDtos(returnedCount)));
         when(recommendService.rules()).thenReturn(List.of(new RuleDto("BirthdayBiasRule", "must include a number above 31")));
     }
 
