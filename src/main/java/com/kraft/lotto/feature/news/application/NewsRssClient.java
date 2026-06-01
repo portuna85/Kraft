@@ -49,7 +49,7 @@ class NewsRssClient {
         return parse(xml);
     }
 
-    private List<NewsArticle> parse(String xml) {
+    List<NewsArticle> parse(String xml) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);

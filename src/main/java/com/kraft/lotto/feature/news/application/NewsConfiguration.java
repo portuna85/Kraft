@@ -2,7 +2,6 @@ package com.kraft.lotto.feature.news.application;
 
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
 import com.kraft.lotto.infra.config.KraftNewsProperties;
-import java.time.Duration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
