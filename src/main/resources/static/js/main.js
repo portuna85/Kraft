@@ -1,6 +1,34 @@
 (function () {
   'use strict';
 
+  // 현재 URL 기반으로 상단 nav와 하단 nav의 active 클래스를 동기화
+  (function syncNavActive() {
+    var path = window.location.pathname;
+    var isHome = path === '/' || path === '/recommend';
+
+    document.querySelectorAll('.navbar-nav .nav-link').forEach(function (link) {
+      var href = link.getAttribute('href');
+      var shouldBeActive = href === path || (href === '/' && isHome);
+      link.classList.toggle('active', shouldBeActive);
+      if (shouldBeActive) {
+        link.setAttribute('aria-current', 'page');
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+
+    document.querySelectorAll('.kraft-bottom-nav-item').forEach(function (link) {
+      var href = link.getAttribute('href');
+      var shouldBeActive = href === path || (href === '/' && isHome);
+      link.classList.toggle('active', shouldBeActive);
+      if (shouldBeActive) {
+        link.setAttribute('aria-current', 'page');
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+  }());
+
   // document에 단일 위임 리스너 — HTMX outerHTML 스왑 후에도 유지됨
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('.filter-btn');
