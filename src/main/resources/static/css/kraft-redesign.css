@@ -1128,6 +1128,92 @@ footer a:hover,
   letter-spacing: 0.04em;
 }
 
+/* ===== 당첨 판매점 ===== */
+.store-tab-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.store-tab {
+  padding: 0.3rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid var(--kraft-border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--kraft-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.store-tab.active {
+  background: color-mix(in srgb, var(--kraft-primary) 12%, transparent);
+  border-color: var(--kraft-primary);
+  color: var(--kraft-primary);
+}
+
+.store-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.store-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--kraft-border);
+  border-radius: 10px;
+  background: var(--kraft-surface);
+}
+
+.store-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.store-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--kraft-primary);
+}
+
+.store-address {
+  font-size: 0.8rem;
+  color: var(--kraft-muted);
+}
+
+.store-meta {
+  font-size: 0.78rem;
+  color: var(--kraft-text);
+}
+
+.store-map-link {
+  font-size: 0.78rem;
+  white-space: nowrap;
+  color: var(--kraft-muted);
+  text-decoration: none;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.store-map-link:hover {
+  color: var(--kraft-primary);
+}
+
+.store-empty {
+  font-size: 0.85rem;
+  color: var(--kraft-muted);
+  padding: 0.5rem 0;
+}
+
 .latest-draw-meta-value {
   font-size: 0.9rem;
   font-weight: 600;

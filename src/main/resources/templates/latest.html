@@ -66,6 +66,14 @@
               <div class="latest-prize-rank">1등</div>
               <dl class="latest-prize-dl">
                 <div class="latest-prize-row">
+                  <dt>1등 총 당첨금</dt>
+                  <dd th:text="${#numbers.formatInteger(firstTotalPrize, 1, 'COMMA') + ' 원'}">0 원</dd>
+                </div>
+                <div class="latest-prize-row">
+                  <dt>당첨자 수</dt>
+                  <dd th:text="${latest.firstWinners + '명'}">0명</dd>
+                </div>
+                <div class="latest-prize-row">
                   <dt>세전 1인당</dt>
                   <dd th:text="${#numbers.formatInteger(latest.firstPrize, 1, 'COMMA') + ' 원'}">0 원</dd>
                 </div>
@@ -81,10 +89,6 @@
                   <dt>세후 수령액</dt>
                   <dd th:text="${#numbers.formatInteger(firstAfterTax, 1, 'COMMA') + ' 원'}">0 원</dd>
                 </div>
-                <div class="latest-prize-row">
-                  <dt>당첨자 수</dt>
-                  <dd th:text="${latest.firstWinners + '명'}">0명</dd>
-                </div>
               </dl>
             </div>
           </div>
@@ -93,6 +97,14 @@
             <div class="latest-prize-card" th:if="${latest.secondPrize > 0}">
               <div class="latest-prize-rank">2등</div>
               <dl class="latest-prize-dl">
+                <div class="latest-prize-row">
+                  <dt>2등 총 당첨금</dt>
+                  <dd th:text="${#numbers.formatInteger(secondTotalPrize, 1, 'COMMA') + ' 원'}">0 원</dd>
+                </div>
+                <div class="latest-prize-row">
+                  <dt>당첨자 수</dt>
+                  <dd th:text="${latest.secondWinners + '명'}">0명</dd>
+                </div>
                 <div class="latest-prize-row">
                   <dt>세전 1인당</dt>
                   <dd th:text="${#numbers.formatInteger(latest.secondPrize, 1, 'COMMA') + ' 원'}">0 원</dd>
@@ -109,10 +121,6 @@
                   <dt>세후 수령액</dt>
                   <dd th:text="${#numbers.formatInteger(secondAfterTax, 1, 'COMMA') + ' 원'}">0 원</dd>
                 </div>
-                <div class="latest-prize-row">
-                  <dt>당첨자 수</dt>
-                  <dd th:text="${latest.secondWinners + '명'}">0명</dd>
-                </div>
               </dl>
             </div>
             <div class="latest-prize-card latest-prize-card--empty" th:if="${latest.secondPrize == 0}">
@@ -124,22 +132,63 @@
       </div>
     </div>
 
-    <!-- 당첨지역 -->
+    <!-- 당첨 판매점 -->
     <div class="card mb-3 kraft-section">
       <div class="card-body">
-        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-          <h2 class="h6 text-uppercase fw-semibold text-secondary mb-0">당첨 지역</h2>
-          <a th:href="${dhLotteryUrl}" target="_blank" rel="noopener noreferrer"
-             class="btn btn-sm btn-outline-secondary">동행복권 사이트에서 확인 →</a>
-        </div>
-        <p class="text-secondary small mb-0">
-          당첨 판매점 지역 정보는 동행복권 사이트에서 확인할 수 있습니다.
-          자동화 수집은 추후 지원 예정입니다.
+        <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">당첨 판매점</h2>
+
+        <!-- 미수집 -->
+        <p class="text-secondary small mb-0" th:if="${!storesCollected}">
+          판매점 정보를 아직 수집하지 못했습니다.
         </p>
+
+        <!-- 수집됨 -->
+        <div th:if="${storesCollected}">
+
+          <!-- 탭 -->
+          <div class="store-tab-row mb-3" id="storeTabs">
+            <button class="store-tab active" data-grade="1">1등 배출점</button>
+            <button class="store-tab" data-grade="2">2등 배출점</button>
+          </div>
+
+          <!-- 1등 목록 -->
+          <ul class="store-list" id="store-list-1">
+            <li class="store-item" th:each="s : ${stores1}">
+              <div class="store-info">
+                <span class="store-name" th:text="${s.name}">-</span>
+                <span class="store-address" th:text="${s.address}">-</span>
+                <span class="store-meta">
+                  <span th:text="'1등 당첨게임 수 ' + ${s.winCount} + '개'">-</span>
+                </span>
+              </div>
+              <a class="store-map-link" th:href="${s.naverMapUrl}"
+                 target="_blank" rel="noopener noreferrer">지도 →</a>
+            </li>
+            <li class="store-empty" th:if="${#lists.isEmpty(stores1)}">데이터 없음</li>
+          </ul>
+
+          <!-- 2등 목록 -->
+          <ul class="store-list d-none" id="store-list-2">
+            <li class="store-item" th:each="s : ${stores2}">
+              <div class="store-info">
+                <span class="store-name" th:text="${s.name}">-</span>
+                <span class="store-address" th:text="${s.address}">-</span>
+                <span class="store-meta">
+                  <span th:text="'2등 당첨게임 수 ' + ${s.winCount} + '개'">-</span>
+                </span>
+              </div>
+              <a class="store-map-link" th:href="${s.naverMapUrl}"
+                 target="_blank" rel="noopener noreferrer">지도 →</a>
+            </li>
+            <li class="store-empty" th:if="${#lists.isEmpty(stores2)}">데이터 없음</li>
+          </ul>
+
+        </div>
       </div>
     </div>
 
 
   </div>
+  <script th:src="@{/js/latest.js}" defer></script>
 </section>
 </html>

@@ -1,6 +1,7 @@
 package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
+import com.kraft.lotto.feature.winningnumber.application.WinningStoreQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -11,12 +12,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RequiredArgsConstructor
 public class LatestRoundController {
 
-    private static final double TAX_HIGH = 0.33;   // 3억 초과: 소득세 30% + 지방소득세 3%
-    private static final double TAX_MID  = 0.22;   // 200만 초과 ~ 3억 이하
+    private static final double TAX_HIGH = 0.33;
+    private static final double TAX_MID  = 0.22;
     private static final long   THRESHOLD_HIGH = 300_000_000L;
     private static final long   THRESHOLD_MID  =   2_000_000L;
 
     private final WinningNumberQueryService queryService;
+    private final WinningStoreQueryService  storeQueryService;
 
     @GetMapping("/latest")
     public String latestPage(Model model) {
@@ -28,14 +30,17 @@ public class LatestRoundController {
         long firstAfterTax  = afterTax(wn.firstPrize());
         long secondAfterTax = afterTax(wn.secondPrize());
         model.addAttribute("latest", wn);
-        model.addAttribute("firstAfterTax",  firstAfterTax);
-        model.addAttribute("secondAfterTax", secondAfterTax);
-        model.addAttribute("firstTax",       wn.firstPrize()  - firstAfterTax);
-        model.addAttribute("secondTax",      wn.secondPrize() - secondAfterTax);
-        model.addAttribute("firstTaxRate",   taxRate(wn.firstPrize()));
-        model.addAttribute("secondTaxRate",  taxRate(wn.secondPrize()));
-        model.addAttribute("dhLotteryUrl",
-                "https://www.dhlottery.co.kr/gameResult.do?method=byWin&drwNo=" + wn.round());
+        model.addAttribute("firstAfterTax",    firstAfterTax);
+        model.addAttribute("secondAfterTax",   secondAfterTax);
+        model.addAttribute("firstTax",         wn.firstPrize()  - firstAfterTax);
+        model.addAttribute("secondTax",        wn.secondPrize() - secondAfterTax);
+        model.addAttribute("firstTaxRate",     taxRate(wn.firstPrize()));
+        model.addAttribute("secondTaxRate",    taxRate(wn.secondPrize()));
+        model.addAttribute("firstTotalPrize",  (long) wn.firstPrize()  * wn.firstWinners());
+        model.addAttribute("secondTotalPrize", (long) wn.secondPrize() * wn.secondWinners());
+        model.addAttribute("stores1",          storeQueryService.findByRoundAndGrade(wn.round(), 1));
+        model.addAttribute("stores2",          storeQueryService.findByRoundAndGrade(wn.round(), 2));
+        model.addAttribute("storesCollected",  storeQueryService.hasStores(wn.round()));
     }
 
     static long afterTax(long prize) {
@@ -50,7 +55,7 @@ public class LatestRoundController {
         } else {
             raw = prize;
         }
-        return (raw / 1_000_000L) * 1_000_000L;
+        return raw;
     }
 
     static String taxRate(long prize) {

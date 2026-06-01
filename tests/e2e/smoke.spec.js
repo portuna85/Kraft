@@ -8,8 +8,8 @@ test.describe('home smoke', () => {
   });
 
   test('shows latest card', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.locator('#latest')).toBeVisible();
+    await page.goto('/latest');
+    await expect(page.locator('.latest-draw-meta')).toBeVisible();
   });
 
   test('renders recommend card', async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe('home smoke', () => {
     });
 
     await page.goto('/');
-    await expect(page.locator('#latest')).toBeVisible();
+    await expect(page.locator('#recommend')).toBeVisible();
 
     expect(violations, `CSP violations: ${violations.join('\n')}`).toHaveLength(0);
   });
@@ -67,7 +67,6 @@ test.describe('home smoke', () => {
     await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
     await page.goto('/');
     await expect(page.locator('#recommend .set-card').first()).toBeVisible();
-    await expect(page.locator('#latest')).toBeVisible();
   });
 });
 
@@ -91,7 +90,7 @@ test.describe('responsive smoke', () => {
 test.describe('accessibility smoke', () => {
   test('home has no critical accessibility violations', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#latest')).toBeVisible();
+    await expect(page.locator('#recommend')).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
       .analyze();
