@@ -59,8 +59,12 @@ public class LatestRoundController {
     }
 
     static String taxRate(long prize) {
-        if (prize > THRESHOLD_HIGH) return "33%";
-        if (prize > THRESHOLD_MID)  return "22%";
+        if (prize > THRESHOLD_HIGH) {
+            return "33%";
+        }
+        if (prize > THRESHOLD_MID) {
+            return "22%";
+        }
         return "-";
     }
 }
