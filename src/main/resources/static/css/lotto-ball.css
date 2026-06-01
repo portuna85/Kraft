@@ -58,19 +58,20 @@
 .sets-grid {
   display: flex;
   flex-direction: column;
-  gap: .5rem;
+  gap: .4rem;
   margin-top: .65rem;
 }
 
 .set-card {
   display: flex;
   align-items: center;
-  gap: .85rem;
+  gap: .7rem;
   background: color-mix(in srgb, var(--kraft-surface-solid, #fff) 50%, transparent);
   border: 1px solid var(--kraft-border, rgba(0,0,0,.1));
   border-radius: 12px;
-  padding: .6rem 1rem;
+  padding: .55rem .9rem;
   transition: background .18s;
+  min-width: 0;
 }
 
 .set-card:hover {
@@ -78,11 +79,16 @@
 }
 
 .set-index {
-  min-width: 1.8rem;
-  font-size: .72rem;
+  min-width: 1.75rem;
+  font-size: .7rem;
   opacity: .4;
   font-weight: 700;
   flex-shrink: 0;
+}
+
+.set-card .ball-row {
+  flex-wrap: nowrap;
+  gap: .3rem;
 }
 
 /* ===== Latest Draw Hero Card ===== */

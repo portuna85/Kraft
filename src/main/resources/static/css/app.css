@@ -715,15 +715,25 @@ body {
   gap: var(--kraft-grid-gap);
 }
 
+.home-grid-main {
+  min-width: 0;
+}
+
 @media (min-width: 768px) {
   .home-grid {
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: minmax(0, 1fr) 300px;
     align-items: start;
+    gap: 14px;
   }
 
   .home-grid-main > *,
   .home-grid-side > * {
     margin-bottom: 0 !important;
+  }
+
+  .home-grid-side .latest-card {
+    position: sticky;
+    top: 5.5rem;
   }
 }
 

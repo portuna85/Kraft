@@ -195,9 +195,9 @@ main section:first-of-type::after,
 .hero::after {
   content: '';
   position: absolute;
-  right: clamp(.75rem, 4vw, 3.5rem);
+  right: clamp(.75rem, 4vw, 3rem);
   top: 50%;
-  width: clamp(6rem, 14vw, 11rem);
+  width: clamp(4rem, 10vw, 7rem);
   aspect-ratio: 1;
   transform: translateY(-50%);
   border-radius: 50%;
@@ -206,7 +206,7 @@ main section:first-of-type::after,
     radial-gradient(circle at 60% 68%, rgba(255,255,255,.75) 0 8%, transparent 9%),
     linear-gradient(135deg, rgba(246, 183, 60, 0.92), rgba(37, 99, 235, 0.92));
   filter: saturate(115%);
-  opacity: .72;
+  opacity: .6;
 }
 
 main section:first-of-type > *,
