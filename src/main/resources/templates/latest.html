@@ -25,12 +25,28 @@
           <span class="text-secondary small"
                 th:text="${#temporals.format(latest.drawDate, 'yyyy년 MM월 dd일 추첨')}">-</span>
         </div>
-        <div class="ball-row mb-0">
+        <div class="ball-row mb-3">
           <th:block th:each="n : ${latest.numbers}">
             <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
           </th:block>
           <span class="bonus-sep" aria-hidden="true">+</span>
           <span th:replace="~{fragments/lotto-ball :: ball(${latest.bonusNumber}, 'bonus ')}">0</span>
+        </div>
+        <div class="latest-draw-meta">
+          <div class="latest-draw-meta-item">
+            <span class="latest-draw-meta-label">1등 당첨금</span>
+            <span class="latest-draw-meta-value font-monospace"
+                  th:text="${#numbers.formatInteger(latest.firstPrize, 1, 'COMMA') + ' 원'}">0 원</span>
+          </div>
+          <div class="latest-draw-meta-item">
+            <span class="latest-draw-meta-label">당첨자 수</span>
+            <span class="latest-draw-meta-value" th:text="${latest.firstWinners + '명'}">0명</span>
+          </div>
+          <div class="latest-draw-meta-item">
+            <span class="latest-draw-meta-label">총 판매액</span>
+            <span class="latest-draw-meta-value font-monospace"
+                  th:text="${#numbers.formatInteger(latest.totalSales, 1, 'COMMA') + ' 원'}">0 원</span>
+          </div>
         </div>
       </div>
     </div>
@@ -53,6 +69,14 @@
                   <dt>세전 1인당</dt>
                   <dd th:text="${#numbers.formatInteger(latest.firstPrize, 1, 'COMMA') + ' 원'}">0 원</dd>
                 </div>
+                <div class="latest-prize-row">
+                  <dt>세율</dt>
+                  <dd th:text="${firstTaxRate}">-</dd>
+                </div>
+                <div class="latest-prize-row">
+                  <dt>세금 공제액</dt>
+                  <dd th:text="${#numbers.formatInteger(firstTax, 1, 'COMMA') + ' 원'}">0 원</dd>
+                </div>
                 <div class="latest-prize-row latest-prize-row--highlight">
                   <dt>세후 수령액</dt>
                   <dd th:text="${#numbers.formatInteger(firstAfterTax, 1, 'COMMA') + ' 원'}">0 원</dd>
@@ -72,6 +96,14 @@
                 <div class="latest-prize-row">
                   <dt>세전 1인당</dt>
                   <dd th:text="${#numbers.formatInteger(latest.secondPrize, 1, 'COMMA') + ' 원'}">0 원</dd>
+                </div>
+                <div class="latest-prize-row">
+                  <dt>세율</dt>
+                  <dd th:text="${secondTaxRate}">-</dd>
+                </div>
+                <div class="latest-prize-row">
+                  <dt>세금 공제액</dt>
+                  <dd th:text="${#numbers.formatInteger(secondTax, 1, 'COMMA') + ' 원'}">0 원</dd>
                 </div>
                 <div class="latest-prize-row latest-prize-row--highlight">
                   <dt>세후 수령액</dt>
@@ -107,17 +139,6 @@
       </div>
     </div>
 
-    <!-- 총 판매액 -->
-    <div class="card mb-3 kraft-section">
-      <div class="card-body">
-        <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">판매 현황</h2>
-        <dl class="row g-2 mb-0">
-          <dt class="col-5 col-sm-4 fw-normal text-secondary">총 판매액</dt>
-          <dd class="col-7 col-sm-8 mb-0 font-monospace"
-              th:text="${#numbers.formatInteger(latest.totalSales, 1, 'COMMA') + ' 원'}">0 원</dd>
-        </dl>
-      </div>
-    </div>
 
   </div>
 </section>

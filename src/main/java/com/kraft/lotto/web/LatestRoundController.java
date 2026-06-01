@@ -25,9 +25,15 @@ public class LatestRoundController {
     }
 
     private void addModel(WinningNumberDto wn, Model model) {
+        long firstAfterTax  = afterTax(wn.firstPrize());
+        long secondAfterTax = afterTax(wn.secondPrize());
         model.addAttribute("latest", wn);
-        model.addAttribute("firstAfterTax",  afterTax(wn.firstPrize()));
-        model.addAttribute("secondAfterTax", afterTax(wn.secondPrize()));
+        model.addAttribute("firstAfterTax",  firstAfterTax);
+        model.addAttribute("secondAfterTax", secondAfterTax);
+        model.addAttribute("firstTax",       wn.firstPrize()  - firstAfterTax);
+        model.addAttribute("secondTax",      wn.secondPrize() - secondAfterTax);
+        model.addAttribute("firstTaxRate",   taxRate(wn.firstPrize()));
+        model.addAttribute("secondTaxRate",  taxRate(wn.secondPrize()));
         model.addAttribute("dhLotteryUrl",
                 "https://www.dhlottery.co.kr/gameResult.do?method=byWin&drwNo=" + wn.round());
     }
@@ -45,5 +51,11 @@ public class LatestRoundController {
             raw = prize;
         }
         return (raw / 1_000_000L) * 1_000_000L;
+    }
+
+    static String taxRate(long prize) {
+        if (prize > THRESHOLD_HIGH) return "33%";
+        if (prize > THRESHOLD_MID)  return "22%";
+        return "-";
     }
 }

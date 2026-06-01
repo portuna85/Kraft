@@ -1106,3 +1106,29 @@ footer a:hover,
   font-size: 1rem;
   color: var(--kraft-primary);
 }
+
+.latest-draw-meta {
+  display: flex;
+  gap: 2rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--kraft-border);
+  flex-wrap: wrap;
+}
+
+.latest-draw-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.latest-draw-meta-label {
+  font-size: 0.72rem;
+  color: var(--kraft-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.latest-draw-meta-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
