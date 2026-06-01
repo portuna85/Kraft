@@ -55,26 +55,20 @@ public record WinningNumber(
         if (combination.contains(bonusNumber)) {
             throw new IllegalArgumentException("보너스 번호는 본번호와 중복될 수 없습니다: " + bonusNumber);
         }
-        if (firstPrize < 0) {
-            throw new IllegalArgumentException("1등 당첨금(firstPrize)은 음수일 수 없습니다: " + firstPrize);
-        }
-        if (firstWinners < 0) {
-            throw new IllegalArgumentException("1등 당첨자수(firstWinners)는 음수일 수 없습니다: " + firstWinners);
-        }
-        if (totalSales < 0) {
-            throw new IllegalArgumentException("총 판매액(totalSales)은 음수일 수 없습니다: " + totalSales);
-        }
-        if (firstAccumAmount < 0) {
-            throw new IllegalArgumentException("1등 총 당첨금(firstAccumAmount)은 음수일 수 없습니다: " + firstAccumAmount);
-        }
-        if (secondPrize < 0) {
-            throw new IllegalArgumentException("2등 당첨금(secondPrize)은 음수일 수 없습니다: " + secondPrize);
-        }
-        if (secondWinners < 0) {
-            throw new IllegalArgumentException("2등 당첨자수(secondWinners)는 음수일 수 없습니다: " + secondWinners);
-        }
+        requireNonNegative(firstPrize,      "1등 당첨금(firstPrize)");
+        requireNonNegative(firstWinners,    "1등 당첨자수(firstWinners)");
+        requireNonNegative(totalSales,      "총 판매액(totalSales)");
+        requireNonNegative(firstAccumAmount,"1등 총 당첨금(firstAccumAmount)");
+        requireNonNegative(secondPrize,     "2등 당첨금(secondPrize)");
+        requireNonNegative(secondWinners,   "2등 당첨자수(secondWinners)");
         if (rawJson != null && rawJson.isBlank()) {
             rawJson = null;
+        }
+    }
+
+    private static void requireNonNegative(long value, String fieldName) {
+        if (value < 0) {
+            throw new IllegalArgumentException(fieldName + "은 음수일 수 없습니다: " + value);
         }
     }
 }

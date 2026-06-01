@@ -33,12 +33,17 @@ public class LatestRoundController {
     }
 
     static long afterTax(long prize) {
-        if (prize <= 0) return 0;
-        if (prize > THRESHOLD_HIGH) {
-            return Math.round(prize * (1.0 - TAX_HIGH));
-        } else if (prize > THRESHOLD_MID) {
-            return Math.round(prize * (1.0 - TAX_MID));
+        if (prize <= 0) {
+            return 0;
         }
-        return prize;
+        long raw;
+        if (prize > THRESHOLD_HIGH) {
+            raw = (long) (prize * (1.0 - TAX_HIGH));
+        } else if (prize > THRESHOLD_MID) {
+            raw = (long) (prize * (1.0 - TAX_MID));
+        } else {
+            raw = prize;
+        }
+        return (raw / 1_000_000L) * 1_000_000L;
     }
 }
