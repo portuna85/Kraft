@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-class NewsCollectionService {
+public class NewsCollectionService {
 
     private static final Logger log = LoggerFactory.getLogger(NewsCollectionService.class);
 
@@ -87,6 +87,6 @@ class NewsCollectionService {
         return value.substring(0, max);
     }
 
-    record NewsCollectResult(int saved, int skipped) {
+    public record NewsCollectResult(int saved, int skipped) {
     }
 }

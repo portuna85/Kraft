@@ -1,5 +1,6 @@
 package com.kraft.lotto.web;
 
+import com.kraft.lotto.feature.news.application.NewsCollectionService;
 import com.kraft.lotto.feature.recommend.application.RecommendMetricsQueryService;
 import com.kraft.lotto.feature.winningnumber.application.ApiCircuitBreakerRegistry;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendStatsDto;
@@ -44,6 +45,7 @@ public class OpsController {
     private final KraftCollectProperties collectProperties;
     private final KraftSecurityProperties securityProperties;
     private final Clock clock;
+    private final NewsCollectionService newsCollectionService;
 
     @Autowired
     @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
@@ -57,7 +59,8 @@ public class OpsController {
                          ApiCircuitBreakerRegistry circuitBreakerRegistry,
                          KraftCollectProperties collectProperties,
                          KraftSecurityProperties securityProperties,
-                         Clock clock) {
+                         Clock clock,
+                         NewsCollectionService newsCollectionService) {
         this.fetchLogQueryService = fetchLogQueryService;
         this.collectionCommandService = collectionCommandService;
         this.opsCollectionFacade = opsCollectionFacade;
@@ -66,6 +69,7 @@ public class OpsController {
         this.collectProperties = collectProperties;
         this.securityProperties = securityProperties;
         this.clock = clock;
+        this.newsCollectionService = newsCollectionService;
     }
 
     private record NormalizedQuery(int limit, String reason, Integer from, Integer to) {
@@ -143,6 +147,17 @@ public class OpsController {
         return opsCollectionFacade.collectMissing(
                 MDC.get("requestId"),
                 ClientIpResolver.resolve(request, securityProperties.getTrustedProxies()));
+    }
+
+    @PostMapping("/ops/news/collect")
+    @Operation(summary = "Manually trigger news collection")
+    public Map<String, Object> collectNews() {
+        NewsCollectionService.NewsCollectResult result = newsCollectionService.collect();
+        newsCollectionService.purgeOldArticles();
+        Map<String, Object> response = new TreeMap<>();
+        response.put("saved", result.saved());
+        response.put("skipped", result.skipped());
+        return response;
     }
 
     @GetMapping("/ops/recommend/stats")

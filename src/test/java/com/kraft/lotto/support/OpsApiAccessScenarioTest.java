@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
+import com.kraft.lotto.feature.news.application.NewsCollectionService;
 import com.kraft.lotto.feature.recommend.application.RecommendMetricsQueryService;
 import com.kraft.lotto.feature.winningnumber.application.ApiCircuitBreakerRegistry;
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
@@ -51,6 +52,9 @@ class OpsApiAccessScenarioTest {
     @Mock
     OpsCollectionFacade opsCollectionFacade;
 
+    @Mock
+    NewsCollectionService newsCollectionService;
+
     MockMvc mockMvc;
 
     @BeforeEach
@@ -63,7 +67,8 @@ class OpsApiAccessScenarioTest {
                 circuitBreakerRegistry,
                 collectProperties(),
                 securityProperties(),
-                Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul"))
+                Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul")),
+                newsCollectionService
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .addFilters(new OpsAccessFilter(securityProperties()))
