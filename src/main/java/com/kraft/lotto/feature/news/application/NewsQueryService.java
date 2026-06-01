@@ -30,5 +30,8 @@ public class NewsQueryService {
 
     public record NewsPage(List<NewsArticleDto> articles, int page, int size,
                            int totalElements, int totalPages) {
+        public NewsPage {
+            articles = List.copyOf(articles);
+        }
     }
 }

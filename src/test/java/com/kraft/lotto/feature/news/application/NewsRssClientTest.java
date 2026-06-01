@@ -1,7 +1,6 @@
 package com.kraft.lotto.feature.news.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.news.domain.NewsArticle;
 import java.util.List;

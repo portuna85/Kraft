@@ -22,7 +22,7 @@ public class NewsArticleEntity {
     @Column(name = "link", nullable = false, length = 2000)
     private String link;
 
-    @Column(name = "link_hash", nullable = false, length = 64, unique = true)
+    @Column(name = "link_hash", nullable = false, length = 64, unique = true, columnDefinition = "VARCHAR(64)")
     private String linkHash;
 
     @Column(name = "description", columnDefinition = "TEXT")
