@@ -8,11 +8,11 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("ConstraintAwareLottoNumberGenerator")
+@DisplayName("제약 조건 인식 로또 번호 생성기")
 class ConstraintAwareLottoNumberGeneratorTest {
 
     @Test
-    @DisplayName("invalid threshold values fail fast")
+    @DisplayName("유효하지 않은 임계값 설정 시 예외가 발생한다")
     void rejectsInvalidThresholds() {
         assertThatThrownBy(() -> new ConstraintAwareLottoNumberGenerator(0, 4, 3))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -26,7 +26,7 @@ class ConstraintAwareLottoNumberGeneratorTest {
     }
 
     @Test
-    @DisplayName("non-positive attempt bounds fail fast")
+    @DisplayName("양수가 아닌 시도 횟수 설정 시 예외가 발생한다")
     void rejectsNonPositiveAttemptBounds() {
         assertThatThrownBy(() -> new ConstraintAwareLottoNumberGenerator(31, 4, 3, 0, 100))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -37,7 +37,7 @@ class ConstraintAwareLottoNumberGeneratorTest {
     }
 
     @Test
-    @DisplayName("generated combination has six unique sorted numbers")
+    @DisplayName("생성된 조합은 6개의 유일하고 정렬된 숫자를 가진다")
     void generatedCombinationHasSixUniqueSortedNumbers() {
         var generator = new ConstraintAwareLottoNumberGenerator(31, 4, 3);
 
@@ -51,7 +51,7 @@ class ConstraintAwareLottoNumberGeneratorTest {
     }
 
     @Test
-    @DisplayName("combination includes at least one number above birthday threshold")
+    @DisplayName("생성된 조합은 적어도 하나의 숫자가 생일 임계값보다 크다")
     void birthdayThresholdConstraintSatisfied() {
         int threshold = 31;
         var generator = new ConstraintAwareLottoNumberGenerator(threshold, 4, 3);
@@ -63,7 +63,7 @@ class ConstraintAwareLottoNumberGeneratorTest {
     }
 
     @Test
-    @DisplayName("fixup removes long consecutive runs")
+    @DisplayName("연속 번호 수정을 통해 긴 연속 번호를 제거한다")
     void consecutiveRunFixupWorks() {
         var generator = new ConstraintAwareLottoNumberGenerator(31, 3, 3);
 
@@ -80,7 +80,7 @@ class ConstraintAwareLottoNumberGeneratorTest {
     }
 
     @Test
-    @DisplayName("decade threshold is respected")
+    @DisplayName("십단위 분포 제약 조건을 준수한다")
     void decadeBucketDistributionRespected() {
         var generator = new ConstraintAwareLottoNumberGenerator(31, 4, 3);
 
