@@ -312,11 +312,17 @@ class WinningStatisticsServiceTest {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
         CacheManager cacheManager = mock(CacheManager.class);
         Cache frequency = mock(Cache.class);
+        Cache frequencyPeriod = mock(Cache.class);
         Cache history = mock(Cache.class);
         Cache summary = mock(Cache.class);
+        Cache patternStats = mock(Cache.class);
+        Cache companionNumbers = mock(Cache.class);
         when(cacheManager.getCache("winningNumberFrequency")).thenReturn(frequency);
+        when(cacheManager.getCache("winningNumberFrequencyPeriod")).thenReturn(frequencyPeriod);
         when(cacheManager.getCache("combinationPrizeHistory")).thenReturn(history);
         when(cacheManager.getCache("winningFrequencySummary")).thenReturn(summary);
+        when(cacheManager.getCache("patternStats")).thenReturn(patternStats);
+        when(cacheManager.getCache("companionNumbers")).thenReturn(companionNumbers);
 
         WinningStatisticsService service = new WinningStatisticsService(mockCacheService, cacheManager);
         WinningNumbersCollectedEvent event = WinningNumbersCollectedEvent.of(1, 0, 0, 0);
@@ -324,8 +330,11 @@ class WinningStatisticsServiceTest {
         service.evictCachesOnCollected(event);
 
         verify(frequency).clear();
+        verify(frequencyPeriod).clear();
         verify(history).clear();
         verify(summary).clear();
+        verify(patternStats).clear();
+        verify(companionNumbers).clear();
         verify(mockCacheService).refreshFrequencySummary();
     }
 
@@ -348,9 +357,13 @@ class WinningStatisticsServiceTest {
         CacheManager cacheManager = mock(CacheManager.class);
         Cache frequency = mock(Cache.class);
         Cache summary = mock(Cache.class);
+        Cache patternStats = mock(Cache.class);
         when(cacheManager.getCache("winningNumberFrequency")).thenReturn(frequency);
+        when(cacheManager.getCache("winningNumberFrequencyPeriod")).thenReturn(null);
         when(cacheManager.getCache("combinationPrizeHistory")).thenReturn(null);
         when(cacheManager.getCache("winningFrequencySummary")).thenReturn(summary);
+        when(cacheManager.getCache("patternStats")).thenReturn(patternStats);
+        when(cacheManager.getCache("companionNumbers")).thenReturn(null);
 
         WinningStatisticsService service = new WinningStatisticsService(mockCacheService, cacheManager);
         WinningNumbersCollectedEvent event = WinningNumbersCollectedEvent.of(1, 0, 0, 0);
@@ -359,6 +372,7 @@ class WinningStatisticsServiceTest {
 
         verify(frequency).clear();
         verify(summary).clear();
+        verify(patternStats).clear();
         verify(mockCacheService).refreshFrequencySummary();
     }
 

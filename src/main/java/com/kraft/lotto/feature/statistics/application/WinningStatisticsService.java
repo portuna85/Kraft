@@ -84,8 +84,11 @@ public class WinningStatisticsService {
             return;
         }
         evictAll("winningNumberFrequency");
+        evictAll("winningNumberFrequencyPeriod");
         evictAll("combinationPrizeHistory");
         evictAll("winningFrequencySummary");
+        evictAll("patternStats");
+        evictAll("companionNumbers");
         cacheService.refreshFrequencySummary();
     }
 

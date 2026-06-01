@@ -7,9 +7,11 @@ import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryServi
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -168,10 +170,14 @@ public class HomeController {
         List<NumberFrequencyDto> byCount = frequencies.stream()
                 .sorted(java.util.Comparator.comparingLong(NumberFrequencyDto::count).reversed())
                 .toList();
+        Map<Integer, Integer> rankByNumber = new HashMap<>(byCount.size() * 2);
+        for (int i = 0; i < byCount.size(); i++) {
+            rankByNumber.put(byCount.get(i).number(), i + 1);
+        }
         List<FrequencyViewModel> result = new ArrayList<>(frequencies.size());
         for (NumberFrequencyDto f : frequencies) {
             double percent = f.count() * 100.0 / max;
-            int rank = byCount.indexOf(f) + 1;
+            int rank = rankByNumber.getOrDefault(f.number(), frequencies.size());
             result.add(new FrequencyViewModel(f.number(), f.count(), percent, rank));
         }
         return result;

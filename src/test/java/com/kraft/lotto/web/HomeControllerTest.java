@@ -153,9 +153,9 @@ class HomeControllerTest {
     @DisplayName("존재하지 않는 회차 조회 시 에러 뷰를 렌더링한다")
     void homeWithInvalidRoundReturnsErrorView() throws Exception {
         stubHomeFrame();
-        when(queryService.findByRound(2000)).thenReturn(Optional.empty());
+        when(queryService.findByRound(1500)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/").param("round", "2000"))
+        mockMvc.perform(get("/").param("round", "1500"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("home"))
                 .andExpect(model().attribute("result", (Object) null));
