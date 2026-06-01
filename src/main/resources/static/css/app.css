@@ -708,6 +708,25 @@ body {
   line-height: 1.65;
 }
 
+/* === Home Page: 2-column desktop grid === */
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--kraft-grid-gap);
+}
+
+@media (min-width: 768px) {
+  .home-grid {
+    grid-template-columns: 1fr 340px;
+    align-items: start;
+  }
+
+  .home-grid-main > *,
+  .home-grid-side > * {
+    margin-bottom: 0 !important;
+  }
+}
+
 /* === Shared Components: State Containers === */
 .kraft-state {
   padding: 20px 16px;

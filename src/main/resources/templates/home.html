@@ -8,7 +8,13 @@
     <p class="kraft-hero-description">과거 당첨 데이터를 분석해 규칙 기반 추천 조합을 제공합니다.</p>
   </header>
 
-  <th:block th:replace="~{fragments/recommend-card :: recommend-card}"></th:block>
-  <th:block th:replace="~{fragments/home-static-cards :: latest-card}"></th:block>
+  <div class="home-grid">
+    <div class="home-grid-main">
+      <th:block th:replace="~{fragments/recommend-card :: recommend-card}"></th:block>
+    </div>
+    <div class="home-grid-side">
+      <th:block th:replace="~{fragments/home-static-cards :: latest-card}"></th:block>
+    </div>
+  </div>
 </section>
 </html>

@@ -18,6 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.view.RedirectView;
 
 @Validated
 @Controller
@@ -44,8 +45,10 @@ public class HomeController {
     }
 
     @GetMapping("/recommend")
-    public String recommendRedirect() {
-        return "redirect:/";
+    public RedirectView recommendRedirect() {
+        RedirectView rv = new RedirectView("/");
+        rv.setStatusCode(org.springframework.http.HttpStatus.MOVED_PERMANENTLY);
+        return rv;
     }
 
     @GetMapping("/frequency")

@@ -18,33 +18,44 @@ public class SeoController {
 
     @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> sitemap() {
-        String lineSeparator = System.lineSeparator();
+        String nl = System.lineSeparator();
         String baseUrl = publicBaseUrl();
-        String body = String.join(
-                lineSeparator,
+        String body = String.join(nl,
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
                 "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
-                "    <url>",
-                "        <loc>" + xmlEscape(baseUrl + "/") + "</loc>",
-                "    </url>",
+                sitemapUrl(baseUrl, "/",          "daily",  "1.0"),
+                sitemapUrl(baseUrl, "/frequency", "weekly", "0.8"),
+                sitemapUrl(baseUrl, "/rounds",    "daily",  "0.8"),
+                sitemapUrl(baseUrl, "/stats",     "weekly", "0.7"),
+                sitemapUrl(baseUrl, "/analysis",  "weekly", "0.7"),
+                sitemapUrl(baseUrl, "/companion", "weekly", "0.6"),
                 "</urlset>"
-        ) + lineSeparator;
+        ) + nl;
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(body);
     }
 
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> robots() {
-        String lineSeparator = System.lineSeparator();
-        String body = String.join(
-                lineSeparator,
+        String nl = System.lineSeparator();
+        String body = String.join(nl,
                 "User-agent: *",
                 "Allow: /",
                 "Disallow: /admin",
                 "Disallow: /ops",
+                "Disallow: /actuator",
+                "Disallow: /fragments/",
                 "",
                 "Sitemap: " + publicBaseUrl() + "/sitemap.xml"
-        ) + lineSeparator;
+        ) + nl;
         return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(body);
+    }
+
+    private static String sitemapUrl(String baseUrl, String path, String changefreq, String priority) {
+        return "    <url>" + System.lineSeparator()
+                + "        <loc>" + xmlEscape(baseUrl + path) + "</loc>" + System.lineSeparator()
+                + "        <changefreq>" + changefreq + "</changefreq>" + System.lineSeparator()
+                + "        <priority>" + priority + "</priority>" + System.lineSeparator()
+                + "    </url>";
     }
 
     private String publicBaseUrl() {
