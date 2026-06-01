@@ -29,6 +29,7 @@ public class SeoController {
                 sitemapUrl(baseUrl, "/stats",     "weekly", "0.7"),
                 sitemapUrl(baseUrl, "/analysis",  "weekly", "0.7"),
                 sitemapUrl(baseUrl, "/companion", "weekly", "0.6"),
+                sitemapUrl(baseUrl, "/news",      "daily",  "0.7"),
                 "</urlset>"
         ) + nl;
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(body);

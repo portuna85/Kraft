@@ -155,6 +155,14 @@ kraft:
     companion-numbers:
       ttl-minutes: ${KRAFT_CACHE_COMPANION_TTL_MINUTES:30}
       max-size: ${KRAFT_CACHE_COMPANION_MAX_SIZE:45}
+  news:
+    enabled: ${KRAFT_NEWS_ENABLED:true}
+    cron: ${KRAFT_NEWS_CRON:0 0 */6 * * *}
+    rss-url: "${KRAFT_NEWS_RSS_URL:https://news.google.com/rss/search?q=로또&hl=ko&gl=KR&ceid=KR:ko}"
+    max-articles-per-run: ${KRAFT_NEWS_MAX_ARTICLES_PER_RUN:30}
+    retention-days: ${KRAFT_NEWS_RETENTION_DAYS:30}
+    connect-timeout-ms: ${KRAFT_NEWS_CONNECT_TIMEOUT_MS:5000}
+    read-timeout-ms: ${KRAFT_NEWS_READ_TIMEOUT_MS:10000}
   recommend:
     max-attempts: ${KRAFT_RECOMMEND_MAX_ATTEMPTS:5000}
     initial-pick-max-attempts: ${KRAFT_RECOMMEND_INITIAL_PICK_MAX_ATTEMPTS:10000}

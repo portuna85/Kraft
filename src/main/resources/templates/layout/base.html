@@ -65,6 +65,10 @@
           <a class="nav-link" th:classappend="${reqPath == '/rounds'} ? 'active'" href="/rounds"
              th:attr="aria-current=${reqPath == '/rounds' ? 'page' : null}">회차</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" th:classappend="${reqPath == '/news'} ? 'active'" href="/news"
+             th:attr="aria-current=${reqPath == '/news' ? 'page' : null}">뉴스</a>
+        </li>
       </ul>
     </div>
     <button id="theme-btn" class="theme-toggle-btn ms-auto" type="button"
