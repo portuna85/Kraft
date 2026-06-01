@@ -70,6 +70,27 @@ class WinningNumberAutoCollectSchedulerTest {
     }
 
     @Test
+    @DisplayName("월요일 10:10 트리거로 수집 성공 시 메트릭을 기록한다")
+    void recordsSuccessMetricsForMonday1010() {
+        LottoCollectionCommandService service = mock(LottoCollectionCommandService.class);
+        when(service.collectAllUntilLatest()).thenReturn(CollectResponse.ofInserted(1, 1227));
+
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        WinningNumberAutoCollectScheduler scheduler = new WinningNumberAutoCollectScheduler(
+                service,
+                provider(registry)
+        );
+
+        scheduler.collectMonday1010();
+
+        assertThat(registry.get("kraft.collect.auto.run")
+                .tag("trigger", "mon-10-10")
+                .tag("status", "success")
+                .counter()
+                .count()).isEqualTo(1.0);
+    }
+
+    @Test
     @DisplayName("중복 실행 시 두 번째 스케줄 실행은 건너뛴다")
     void skipsOverlappingRuns() throws Exception {
         LottoCollectionCommandService service = mock(LottoCollectionCommandService.class);

@@ -52,6 +52,15 @@ public class WinningNumberAutoCollectScheduler {
         runCollectAll("sun-07-00");
     }
 
+    @Scheduled(
+            cron = "${kraft.collect.auto.cron.monday-10-10:0 10 10 ? * MON}",
+            zone = "${kraft.collect.auto.zone:Asia/Seoul}"
+    )
+    @SchedulerLock(name = COLLECT_ALL_LOCK_NAME, lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
+    public void collectMonday1010() {
+        runCollectAll("mon-10-10");
+    }
+
     private void runCollectAll(String trigger) {
         // ShedLock prevents concurrent runs across nodes; AtomicBoolean guards within a single node
         // in case the scheduler fires twice before the lock is released (e.g. clock skew).
