@@ -54,6 +54,12 @@ public class WinningNumberEntity {
     @Column(name = "first_accum_amount", nullable = false)
     private Long firstAccumAmount;
 
+    @Column(name = "second_prize", nullable = false)
+    private Long secondPrize;
+
+    @Column(name = "second_winners", nullable = false)
+    private Integer secondWinners;
+
     // Raw API response stored for auditability; capped to avoid storing arbitrarily large payloads.
     private static final int RAW_JSON_MAX_LENGTH = 4000;
 
@@ -103,6 +109,25 @@ public class WinningNumberEntity {
                                LocalDateTime fetchedAt,
                                LocalDateTime createdAt,
                                LocalDateTime updatedAt) {
+        this(round, drawDate, n1, n2, n3, n4, n5, n6, bonusNumber,
+                firstPrize, firstWinners, totalSales, firstAccumAmount, 0L, 0, rawJson, fetchedAt, createdAt, updatedAt);
+    }
+
+    public WinningNumberEntity(Integer round,
+                               LocalDate drawDate,
+                               Integer n1, Integer n2, Integer n3,
+                               Integer n4, Integer n5, Integer n6,
+                               Integer bonusNumber,
+                               Long firstPrize,
+                               Integer firstWinners,
+                               Long totalSales,
+                               Long firstAccumAmount,
+                               Long secondPrize,
+                               Integer secondWinners,
+                               String rawJson,
+                               LocalDateTime fetchedAt,
+                               LocalDateTime createdAt,
+                               LocalDateTime updatedAt) {
         this.round = round;
         this.drawDate = drawDate;
         this.n1 = n1;
@@ -116,6 +141,8 @@ public class WinningNumberEntity {
         this.firstWinners = firstWinners;
         this.totalSales = totalSales;
         this.firstAccumAmount = firstAccumAmount;
+        this.secondPrize = secondPrize != null ? secondPrize : 0L;
+        this.secondWinners = secondWinners != null ? secondWinners : 0;
         this.rawJson = truncate(rawJson, RAW_JSON_MAX_LENGTH);
         this.fetchedAt = fetchedAt;
         this.createdAt = createdAt;
@@ -160,6 +187,8 @@ public class WinningNumberEntity {
     public Integer getFirstWinners() { return firstWinners; }
     public Long getTotalSales() { return totalSales; }
     public Long getFirstAccumAmount() { return firstAccumAmount; }
+    public Long getSecondPrize() { return secondPrize != null ? secondPrize : 0L; }
+    public Integer getSecondWinners() { return secondWinners != null ? secondWinners : 0; }
     public String getRawJson() { return rawJson; }
     public LocalDateTime getFetchedAt() { return fetchedAt; }
     public LocalDateTime getCreatedAt() { return createdAt; }

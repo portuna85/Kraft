@@ -11,7 +11,9 @@ public record WinningNumberDto(
         int bonusNumber,
         long firstPrize,
         int firstWinners,
-        long totalSales
+        long totalSales,
+        long secondPrize,
+        int secondWinners
 ) {
     public WinningNumberDto {
         numbers = numbers == null ? List.of() : List.copyOf(numbers);
@@ -25,7 +27,9 @@ public record WinningNumberDto(
                 wn.bonusNumber(),
                 wn.firstPrize(),
                 wn.firstWinners(),
-                wn.totalSales()
+                wn.totalSales(),
+                wn.secondPrize(),
+                wn.secondWinners()
         );
     }
 }

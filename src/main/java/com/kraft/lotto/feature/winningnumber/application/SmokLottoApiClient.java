@@ -139,9 +139,14 @@ public class SmokLottoApiClient implements LottoApiClient {
             int firstWinners = div1.path("winners").asInt(0);
             long firstAccumAmount = firstPrize * firstWinners;
 
+            JsonNode div2 = node.path("divisions").path(1);
+            long secondPrize = div2.path("prize").asLong(0L);
+            int secondWinners = div2.path("winners").asInt(0);
+
             return Optional.of(new WinningNumber(
                     round, drawDate, new LottoCombination(mains), bonus,
-                    firstPrize, firstWinners, totalSales, firstAccumAmount, body, LocalDateTime.now(clock)));
+                    firstPrize, firstWinners, totalSales, firstAccumAmount,
+                    secondPrize, secondWinners, body, LocalDateTime.now(clock)));
         } catch (LottoApiClientException ex) {
             throw ex;
         } catch (Exception ex) {

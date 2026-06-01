@@ -13,6 +13,8 @@ public record WinningNumber(
         int firstWinners,
         long totalSales,
         long firstAccumAmount,
+        long secondPrize,
+        int secondWinners,
         String rawJson,
         LocalDateTime fetchedAt
 ) {
@@ -24,7 +26,20 @@ public record WinningNumber(
                          long firstPrize,
                          int firstWinners,
                          long totalSales) {
-        this(round, drawDate, combination, bonusNumber, firstPrize, firstWinners, totalSales, 0L, null, null);
+        this(round, drawDate, combination, bonusNumber, firstPrize, firstWinners, totalSales, 0L, 0L, 0, null, null);
+    }
+
+    public WinningNumber(int round,
+                         LocalDate drawDate,
+                         LottoCombination combination,
+                         int bonusNumber,
+                         long firstPrize,
+                         int firstWinners,
+                         long totalSales,
+                         long firstAccumAmount,
+                         String rawJson,
+                         LocalDateTime fetchedAt) {
+        this(round, drawDate, combination, bonusNumber, firstPrize, firstWinners, totalSales, firstAccumAmount, 0L, 0, rawJson, fetchedAt);
     }
 
     public WinningNumber {
@@ -51,6 +66,12 @@ public record WinningNumber(
         }
         if (firstAccumAmount < 0) {
             throw new IllegalArgumentException("1등 총 당첨금(firstAccumAmount)은 음수일 수 없습니다: " + firstAccumAmount);
+        }
+        if (secondPrize < 0) {
+            throw new IllegalArgumentException("2등 당첨금(secondPrize)은 음수일 수 없습니다: " + secondPrize);
+        }
+        if (secondWinners < 0) {
+            throw new IllegalArgumentException("2등 당첨자수(secondWinners)는 음수일 수 없습니다: " + secondWinners);
         }
         if (rawJson != null && rawJson.isBlank()) {
             rawJson = null;

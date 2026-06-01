@@ -45,6 +45,10 @@
              th:attr="aria-current=${reqPath == '/' or reqPath == '/recommend' ? 'page' : null}">번호 추천</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" th:classappend="${reqPath == '/latest'} ? 'active'" href="/latest"
+             th:attr="aria-current=${reqPath == '/latest' ? 'page' : null}">최신회차</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" th:classappend="${reqPath == '/frequency'} ? 'active'" href="/frequency"
              th:attr="aria-current=${reqPath == '/frequency' ? 'page' : null}">빈도</a>
         </li>
@@ -98,6 +102,12 @@
      th:attr="aria-current=${reqPath == '/' or reqPath == '/recommend' ? 'page' : null}">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
     <span>추천</span>
+  </a>
+  <a href="/latest" class="kraft-bottom-nav-item"
+     th:classappend="${reqPath == '/latest'} ? ' active'"
+     th:attr="aria-current=${reqPath == '/latest' ? 'page' : null}">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a3 3 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>
+    <span>최신</span>
   </a>
   <a href="/frequency" class="kraft-bottom-nav-item"
      th:classappend="${reqPath == '/frequency'} ? ' active'"

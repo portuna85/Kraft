@@ -24,6 +24,8 @@ public final class WinningNumberMapper {
                 entity.getFirstWinners(),
                 entity.getTotalSales(),
                 entity.getFirstAccumAmount(),
+                entity.getSecondPrize(),
+                entity.getSecondWinners(),
                 entity.getRawJson(),
                 entity.getFetchedAt()
         );
@@ -49,6 +51,8 @@ public final class WinningNumberMapper {
                 domain.firstWinners(),
                 domain.totalSales(),
                 domain.firstAccumAmount(),
+                domain.secondPrize(),
+                domain.secondWinners(),
                 domain.rawJson(),
                 fetchedAt,
                 createdAt,

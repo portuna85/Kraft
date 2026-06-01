@@ -1040,3 +1040,69 @@ footer a:hover,
     gap: 4px !important;
   }
 }
+
+/* ===== 최신 회차 페이지 ===== */
+.latest-prize-card {
+  background: var(--kraft-surface);
+  border: 1px solid var(--kraft-border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  height: 100%;
+}
+
+.latest-prize-card--empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.latest-prize-rank {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kraft-muted);
+  margin-bottom: 0.75rem;
+}
+
+.latest-prize-dl {
+  margin: 0;
+}
+
+.latest-prize-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--kraft-border);
+}
+
+.latest-prize-row:last-child {
+  border-bottom: none;
+}
+
+.latest-prize-row dt {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--kraft-muted);
+  white-space: nowrap;
+}
+
+.latest-prize-row dd {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.latest-prize-row--highlight dt {
+  font-weight: 600;
+  color: var(--kraft-text);
+}
+
+.latest-prize-row--highlight dd {
+  font-size: 1rem;
+  color: var(--kraft-primary);
+}
