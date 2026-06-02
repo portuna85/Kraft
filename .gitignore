@@ -42,6 +42,7 @@ playwright-report/
 .DS_Store
 *.log
 logs/
+deploy-state/
 
 # Local secrets
 .env

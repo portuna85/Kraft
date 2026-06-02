@@ -83,6 +83,73 @@ class DhLotteryResponseParserTest {
         assertThat(ex.getFailureReason()).isEqualTo(LottoApiClientException.FailureReason.MISSING_FIELD);
     }
 
+    @Test
+    @DisplayName("숫자 필드 타입이 잘못되면 validation 예외를 던진다")
+    void rejectsNonIntegralField() {
+        String body = """
+                {
+                  "returnValue": "success",
+                  "drwNo": 1204,
+                  "drwNoDate": "2026-05-16",
+                  "drwtNo1": "one",
+                  "drwtNo2": 2,
+                  "drwtNo3": 3,
+                  "drwtNo4": 4,
+                  "drwtNo5": 5,
+                  "drwtNo6": 6,
+                  "bnusNo": 7,
+                  "firstWinamnt": 2000000000,
+                  "firstPrzwnerCo": 10,
+                  "totSellamnt": 90000000000
+                }
+                """;
+
+        LottoApiClientException ex = assertThatExceptionOfType(LottoApiClientException.class)
+                .isThrownBy(() -> parser.parse(1204, body))
+                .withMessageContaining("field is not integral")
+                .withMessageContaining("drwtNo1")
+                .actual();
+        assertThat(ex.getFailureReason()).isEqualTo(LottoApiClientException.FailureReason.VALIDATION);
+    }
+
+    @Test
+    @DisplayName("날짜 파싱에 실패하면 transform 예외를 던진다")
+    void rejectsInvalidDrawDate() {
+        String body = """
+                {
+                  "returnValue": "success",
+                  "drwNo": 1205,
+                  "drwNoDate": "2026/05/16",
+                  "drwtNo1": 1,
+                  "drwtNo2": 2,
+                  "drwtNo3": 3,
+                  "drwtNo4": 4,
+                  "drwtNo5": 5,
+                  "drwtNo6": 6,
+                  "bnusNo": 7,
+                  "firstWinamnt": 2000000000,
+                  "firstPrzwnerCo": 10,
+                  "totSellamnt": 90000000000
+                }
+                """;
+
+        LottoApiClientException ex = assertThatExceptionOfType(LottoApiClientException.class)
+                .isThrownBy(() -> parser.parse(1205, body))
+                .withMessageContaining("response transform failed")
+                .actual();
+        assertThat(ex.getFailureReason()).isEqualTo(LottoApiClientException.FailureReason.TRANSFORM);
+    }
+
+    @Test
+    @DisplayName("JSON이 아닌 본문은 json_parse 예외를 던진다")
+    void rejectsMalformedJsonBody() {
+        LottoApiClientException ex = assertThatExceptionOfType(LottoApiClientException.class)
+                .isThrownBy(() -> parser.parse(1206, "{invalid-json"))
+                .withMessageContaining("response parse failed")
+                .actual();
+        assertThat(ex.getFailureReason()).isEqualTo(LottoApiClientException.FailureReason.JSON_PARSE);
+    }
+
     private static String successBody(int round) {
         return """
                 {%n\

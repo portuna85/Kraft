@@ -1,5 +1,8 @@
 package com.kraft.lotto.support;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+
 public final class LogSanitizer {
 
     private static final String SENSITIVE_KEYS = "token|secret|key|password|passwd|pwd|authorization|access_token";
@@ -15,7 +18,7 @@ public final class LogSanitizer {
     }
 
     public static String maskSensitiveQuery(String queryString) {
-        String sanitized = sanitizeLogValue(queryString);
+        String sanitized = sanitizeLogValue(decodeQueryString(queryString));
         if (sanitized.isBlank()) {
             return "";
         }
@@ -28,5 +31,16 @@ public final class LogSanitizer {
             return "";
         }
         return sanitized.replaceAll("(?i)(/(" + SENSITIVE_KEYS + ")/)[^/?#\\s]*", "$1***");
+    }
+
+    private static String decodeQueryString(String queryString) {
+        if (queryString == null || queryString.isBlank()) {
+            return queryString;
+        }
+        try {
+            return URLDecoder.decode(queryString, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ex) {
+            return queryString;
+        }
     }
 }

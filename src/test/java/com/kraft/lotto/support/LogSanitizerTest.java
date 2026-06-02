@@ -41,6 +41,13 @@ class LogSanitizerTest {
     }
 
     @Test
+    @DisplayName("URL 인코딩된 민감 쿼리 파라미터도 마스킹한다")
+    void maskSensitiveQueryUrlEncodedTokenShouldBeMasked() {
+        assertThat(LogSanitizer.maskSensitiveQuery("token=%74%65%73%74&count=5"))
+                .isEqualTo("token=***&count=5");
+    }
+
+    @Test
     @DisplayName("경로에서 민감 세그먼트를 마스킹한다")
     void maskSensitivePathMasksSensitiveSegment() {
         assertThat(LogSanitizer.maskSensitivePath("/ops/token/abc123"))

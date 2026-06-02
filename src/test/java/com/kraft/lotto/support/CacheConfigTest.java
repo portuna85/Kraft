@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.kraft.lotto.infra.config.KraftCacheProperties;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -17,6 +18,7 @@ class CacheConfigTest {
 
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
             .withUserConfiguration(CacheConfig.class, CachePropsConfig.class)
+            .withBean(SimpleMeterRegistry.class)
             .withPropertyValues(
                     "kraft.cache.winning-number-frequency.ttl-minutes=5",
                     "kraft.cache.winning-number-frequency.max-size=1000",
@@ -51,6 +53,21 @@ class CacheConfigTest {
             nativeCache.get("key", k -> "value");
 
             assertThat(nativeCache.stats().requestCount()).isPositive();
+        });
+    }
+
+    @Test
+    @DisplayName("캐시 메트릭이 MeterRegistry에 바인딩된다")
+    void cacheMetricsAreBoundToMeterRegistry() {
+        runner.run(context -> {
+            CacheManager cacheManager = context.getBean(CacheManager.class);
+            SimpleMeterRegistry meterRegistry = context.getBean(SimpleMeterRegistry.class);
+            CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache("winningNumberFrequency");
+            Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
+
+            nativeCache.get("key", key -> "value");
+
+            assertThat(meterRegistry.find("cache.gets").tag("cache", "winningNumberFrequency").meter()).isNotNull();
         });
     }
 

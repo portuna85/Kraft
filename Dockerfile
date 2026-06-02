@@ -11,7 +11,7 @@ RUN --mount=type=cache,target=/root/.gradle \
 
 COPY src ./src
 RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew --no-daemon clean bootJar -x test $GRADLE_BUILD_ARGS
+    ./gradlew --no-daemon bootJar -x test $GRADLE_BUILD_ARGS
 
 FROM eclipse-temurin:25-jre@sha256:04262e8782d6b034ee5d7c1c5d4e8938fcf2063a76b4bfcd84e5d994d09c27bc
 WORKDIR /app

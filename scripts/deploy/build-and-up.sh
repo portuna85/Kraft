@@ -6,6 +6,10 @@ mkdir -p deploy-state
 image_ref="${KRAFT_APP_IMAGE_REF:-kraft-lotto-app}"
 image_tag="${KRAFT_APP_IMAGE_TAG:-local}"
 deployed_ref="${image_ref}:${image_tag}"
+previous_image_ref="${image_ref}:latest"
+
+echo "PREVIOUS_DIGEST=$(docker inspect "$previous_image_ref" --format '{{.Id}}' 2>/dev/null || echo '')" \
+  > deploy-state/previous.env
 
 current_image="$(docker inspect --format='{{.Config.Image}}' kraft-lotto-app 2>/dev/null || true)"
 if [[ -n "$current_image" ]] && docker image inspect "$current_image" >/dev/null 2>&1; then
@@ -14,7 +18,7 @@ if [[ -n "$current_image" ]] && docker image inspect "$current_image" >/dev/null
   {
     echo "PREVIOUS_IMAGE=$current_image"
     echo "PREVIOUS_DIGEST=$current_digest"
-  } > deploy-state/previous.env
+  } >> deploy-state/previous.env
 fi
 
 docker compose down --remove-orphans || true

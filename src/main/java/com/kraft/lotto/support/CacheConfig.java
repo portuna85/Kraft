@@ -3,6 +3,8 @@ package com.kraft.lotto.support;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.kraft.lotto.infra.config.KraftCacheProperties;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics;
 import java.util.concurrent.TimeUnit;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -13,28 +15,32 @@ import org.springframework.context.annotation.Configuration;
 public class CacheConfig {
 
     @Bean
-    public CacheManager cacheManager(KraftCacheProperties cacheProperties) {
+    public CacheManager cacheManager(KraftCacheProperties cacheProperties, MeterRegistry meterRegistry) {
         CaffeineCacheManager manager = new CaffeineCacheManager();
         manager.registerCustomCache("winningNumberFrequency",
-                buildCache(cacheProperties.winningNumberFrequency()));
+                buildCache("winningNumberFrequency", cacheProperties.winningNumberFrequency(), meterRegistry));
         manager.registerCustomCache("combinationPrizeHistory",
-                buildCache(cacheProperties.combinationPrizeHistory()));
+                buildCache("combinationPrizeHistory", cacheProperties.combinationPrizeHistory(), meterRegistry));
         manager.registerCustomCache("winningFrequencySummary",
-                buildCache(cacheProperties.winningFrequencySummary()));
+                buildCache("winningFrequencySummary", cacheProperties.winningFrequencySummary(), meterRegistry));
         manager.registerCustomCache("winningNumberFrequencyPeriod",
-                buildCache(cacheProperties.winningNumberFrequencyPeriod()));
+                buildCache("winningNumberFrequencyPeriod", cacheProperties.winningNumberFrequencyPeriod(), meterRegistry));
         manager.registerCustomCache("patternStats",
-                buildCache(cacheProperties.patternStats()));
+                buildCache("patternStats", cacheProperties.patternStats(), meterRegistry));
         manager.registerCustomCache("companionNumbers",
-                buildCache(cacheProperties.companionNumbers()));
+                buildCache("companionNumbers", cacheProperties.companionNumbers(), meterRegistry));
         return manager;
     }
 
-    private static Cache<Object, Object> buildCache(KraftCacheProperties.Spec spec) {
-        return Caffeine.newBuilder()
+    private static Cache<Object, Object> buildCache(String cacheName,
+                                                    KraftCacheProperties.Spec spec,
+                                                    MeterRegistry meterRegistry) {
+        Cache<Object, Object> cache = Caffeine.newBuilder()
                 .expireAfterWrite(spec.ttlMinutes(), TimeUnit.MINUTES)
                 .maximumSize(spec.maxSize())
                 .recordStats()
                 .build();
+        CaffeineCacheMetrics.monitor(meterRegistry, cache, cacheName);
+        return cache;
     }
 }

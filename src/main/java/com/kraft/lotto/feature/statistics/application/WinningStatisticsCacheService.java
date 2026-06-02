@@ -194,9 +194,15 @@ public class WinningStatisticsCacheService {
         long maxCount = rows.stream().mapToLong(CompanionRow::getHitCount).max().orElse(1L);
         List<CompanionNumberDto> result = new ArrayList<>(rows.size());
         int rank = 1;
+        long prevCount = Long.MIN_VALUE;
+        int denseRank = 0;
         for (CompanionRow row : rows) {
+            if (row.getHitCount() != prevCount) {
+                denseRank++;
+                prevCount = row.getHitCount();
+            }
             double pct = maxCount > 0 ? row.getHitCount() * 100.0 / maxCount : 0;
-            result.add(new CompanionNumberDto(row.getOtherBall(), row.getHitCount(), pct, rank++));
+            result.add(new CompanionNumberDto(row.getOtherBall(), row.getHitCount(), pct, denseRank));
         }
         return result;
     }

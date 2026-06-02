@@ -21,6 +21,10 @@ spring:
         period: 31536000
         cachecontrol:
           max-age: 31536000
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
   datasource:
     url: ${KRAFT_DB_URL:jdbc:mariadb://${KRAFT_DB_HOST:mariadb}:${KRAFT_DB_PORT:3306}/${KRAFT_DB_NAME}?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Seoul&connectTimeout=3000}
     username: ${KRAFT_DB_USER}
