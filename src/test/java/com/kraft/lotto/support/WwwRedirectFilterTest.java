@@ -9,11 +9,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("WWW 리다이렉트 필터")
 class WwwRedirectFilterTest {
 
-    private final WwwRedirectFilter filter = new WwwRedirectFilter();
+    private final WwwRedirectFilter filter = configuredFilter("kraft.io.kr", "https://www.kraft.io.kr");
 
     @Test
     @DisplayName("non-www 도메인 요청을 www로 301 리다이렉트한다")
@@ -96,5 +97,25 @@ class WwwRedirectFilterTest {
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(chain.getRequest()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("설정된 apex/canonical 도메인을 사용해 리다이렉트한다")
+    void redirectsUsingConfiguredHosts() throws Exception {
+        WwwRedirectFilter customFilter = configuredFilter("example.com", "https://www.example.com");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/promo");
+        request.setServerName("example.com");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        customFilter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(response.getHeader("Location")).isEqualTo("https://www.example.com/promo");
+    }
+
+    private static WwwRedirectFilter configuredFilter(String apexHost, String canonicalOrigin) {
+        WwwRedirectFilter filter = new WwwRedirectFilter();
+        ReflectionTestUtils.setField(filter, "apexHost", apexHost);
+        ReflectionTestUtils.setField(filter, "canonicalOrigin", canonicalOrigin);
+        return filter;
     }
 }

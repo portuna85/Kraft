@@ -3,9 +3,11 @@ package com.kraft.lotto.feature.news.application;
 import com.kraft.lotto.feature.news.domain.NewsArticle;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.List;
@@ -19,22 +21,29 @@ public class NewsCollectionService {
 
     private final NewsArticleRepository repository;
     private final NewsRssClient rssClient;
+    private final NewsArticlePersister persister;
+    private final Clock clock;
     private final int retentionDays;
 
-    NewsCollectionService(NewsArticleRepository repository, NewsRssClient rssClient, int retentionDays) {
+    NewsCollectionService(NewsArticleRepository repository,
+                          NewsRssClient rssClient,
+                          NewsArticlePersister persister,
+                          Clock clock,
+                          int retentionDays) {
         this.repository = repository;
         this.rssClient = rssClient;
+        this.persister = persister;
+        this.clock = clock;
         this.retentionDays = retentionDays;
     }
 
-    @Transactional
     public NewsCollectResult collect() {
         List<NewsArticle> articles = rssClient.fetch();
         if (articles.isEmpty()) {
             return new NewsCollectResult(0, 0);
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         int saved = 0;
         int skipped = 0;
 
@@ -44,16 +53,21 @@ public class NewsCollectionService {
                 skipped++;
                 continue;
             }
-            repository.save(new NewsArticleEntity(
-                    truncate(article.title(), 500),
-                    truncate(article.link(), 2000),
-                    hash,
-                    truncate(article.description(), 2000),
-                    truncate(article.source(), 200),
-                    article.pubDate(),
-                    now
-            ));
-            saved++;
+            try {
+                persister.saveArticle(new NewsArticleEntity(
+                        truncate(article.title(), 500),
+                        truncate(article.link(), 2000),
+                        hash,
+                        truncate(article.description(), 2000),
+                        truncate(article.source(), 200),
+                        article.pubDate(),
+                        now
+                ));
+                saved++;
+            } catch (DataIntegrityViolationException e) {
+                skipped++;
+                log.warn("article duplicate, skipped: hash={}", hash);
+            }
         }
 
         log.info("news collect done saved={} skipped={}", saved, skipped);
@@ -62,7 +76,7 @@ public class NewsCollectionService {
 
     @Transactional
     public int purgeOldArticles() {
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(retentionDays);
+        LocalDateTime cutoff = LocalDateTime.now(clock).minusDays(retentionDays);
         int deleted = repository.deleteByCollectedAtBefore(cutoff);
         if (deleted > 0) {
             log.info("news retention purged count={} cutoff={}", deleted, cutoff);

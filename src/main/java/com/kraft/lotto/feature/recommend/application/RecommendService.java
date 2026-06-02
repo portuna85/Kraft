@@ -47,11 +47,11 @@ public class RecommendService {
 
     public RecommendResponse recommend(int count, RecommendFilter filter) {
         long started = System.nanoTime();
-        int safeCount = normalizeCount(count);
-        metricsRecorder.recordRequestedCount(safeCount);
+        int validatedCount = validateCount(count);
+        metricsRecorder.recordRequestedCount(validatedCount);
         try {
             List<ExclusionRule> filterRules = buildFilterRules(filter);
-            var combinations = recommender.recommend(safeCount, filterRules).stream()
+            var combinations = recommender.recommend(validatedCount, filterRules).stream()
                     .map(c -> new CombinationDto(c.numbers()))
                     .toList();
             return new RecommendResponse(combinations);
@@ -112,8 +112,14 @@ public class RecommendService {
         return ruleDtos;
     }
 
-    private static int normalizeCount(int count) {
-        return (int) Math.clamp(count, MIN_COUNT, MAX_COUNT);
+    private static int validateCount(int count) {
+        if (count < MIN_COUNT || count > MAX_COUNT) {
+            throw new BusinessException(
+                    ErrorCode.LOTTO_INVALID_COUNT,
+                    "count must be between " + MIN_COUNT + " and " + MAX_COUNT
+            );
+        }
+        return count;
     }
 
 }

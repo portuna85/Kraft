@@ -41,6 +41,32 @@ class WinningNumberEntityTest {
         assertThat(entity.getRawJson()).isNull();
     }
 
+    @Test
+    @DisplayName("updateFrom은 secondPrize와 secondWinners도 갱신한다")
+    void updateFromShouldUpdateSecondPrizeAndWinners() {
+        WinningNumberEntity target = new WinningNumberEntity(
+                1150, DATE,
+                1, 2, 3, 4, 5, 6, 7,
+                1_000_000_000L, 1,
+                100_000_000_000L, 0L,
+                100_000L, 2,
+                "{\"a\":1}", NOW, NOW, NOW
+        );
+        WinningNumberEntity source = new WinningNumberEntity(
+                1150, DATE,
+                1, 2, 3, 4, 5, 6, 7,
+                1_000_000_000L, 1,
+                100_000_000_000L, 0L,
+                250_000L, 5,
+                "{\"b\":2}", NOW, NOW, NOW
+        );
+
+        target.updateFrom(source, NOW.plusDays(1));
+
+        assertThat(target.getSecondPrize()).isEqualTo(250_000L);
+        assertThat(target.getSecondWinners()).isEqualTo(5);
+    }
+
     private static WinningNumberEntity entity(String rawJson) {
         return new WinningNumberEntity(
                 1150, DATE,

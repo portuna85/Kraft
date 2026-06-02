@@ -9,6 +9,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.function.LongSupplier;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
@@ -23,7 +26,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class PublicRateLimitFilter extends OncePerRequestFilter {
 
     private final KraftSecurityProperties securityProperties;
-    private final Cache<String, FixedWindowCounter> counters;
+    private final Cache<String, SlidingWindowCounter> counters;
+    private final LongSupplier nanoTimeSupplier;
 
     @Autowired
     public PublicRateLimitFilter(ObjectProvider<KraftSecurityProperties> securityPropertiesProvider) {
@@ -31,7 +35,12 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
     }
 
     PublicRateLimitFilter(KraftSecurityProperties securityProperties) {
+        this(securityProperties, System::nanoTime);
+    }
+
+    PublicRateLimitFilter(KraftSecurityProperties securityProperties, LongSupplier nanoTimeSupplier) {
         this.securityProperties = securityProperties;
+        this.nanoTimeSupplier = nanoTimeSupplier;
         long windowSeconds = Math.max(1L, securityProperties.getRateLimit().getWindowSeconds());
         long maxKeys = Math.max(1L, securityProperties.getRateLimit().getMaxKeys());
         this.counters = Caffeine.newBuilder()
@@ -56,15 +65,15 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        long now = System.nanoTime();
+        long now = nanoTimeSupplier.getAsLong();
         long windowNanos = TimeUnit.SECONDS.toNanos(securityProperties.getRateLimit().getWindowSeconds());
         int maxRequests = securityProperties.getRateLimit().getMaxRequests();
 
         String clientIp = ClientIpResolver.resolve(request, securityProperties.getTrustedProxies());
         String counterKey = clientIp + "|" + request.getRequestURI();
-        FixedWindowCounter counter = counters.get(counterKey, key -> new FixedWindowCounter(now));
+        SlidingWindowCounter counter = counters.get(counterKey, key -> new SlidingWindowCounter());
 
-        FixedWindowCounter.Result result = counter.tryAcquire(now, maxRequests, windowNanos);
+        SlidingWindowCounter.Result result = counter.tryAcquire(now, maxRequests, windowNanos);
         response.setHeader("X-RateLimit-Limit", Integer.toString(maxRequests));
         response.setHeader("X-RateLimit-Remaining", Integer.toString(result.remainingRequests()));
         response.setHeader("X-RateLimit-Reset", Long.toString(result.resetAfterSeconds()));
@@ -79,28 +88,33 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    static final class FixedWindowCounter {
+    static final class SlidingWindowCounter {
 
-        private long windowStartedAtNanos;
-        private int count;
-
-        FixedWindowCounter(long nowNanos) {
-            this.windowStartedAtNanos = nowNanos;
-        }
+        private final Deque<Long> requestTimes = new ArrayDeque<>();
 
         synchronized Result tryAcquire(long nowNanos, int maxRequests, long windowNanos) {
-            if (nowNanos - windowStartedAtNanos >= windowNanos) {
-                windowStartedAtNanos = nowNanos;
-                count = 0;
+            evictExpired(nowNanos, windowNanos);
+            if (requestTimes.size() < maxRequests) {
+                requestTimes.addLast(nowNanos);
+                long resetAfterSeconds = requestTimes.isEmpty()
+                        ? 1L
+                        : secondsUntilExpiry(requestTimes.peekFirst(), nowNanos, windowNanos);
+                return new Result(true, 0L, Math.max(0, maxRequests - requestTimes.size()), resetAfterSeconds);
             }
-            count++;
-            long retryAfterNanos = Math.max(0L, windowNanos - (nowNanos - windowStartedAtNanos));
-            long retryAfterSeconds = Math.max(1L, TimeUnit.NANOSECONDS.toSeconds(retryAfterNanos));
-            if (count <= maxRequests) {
-                int remaining = Math.max(0, maxRequests - count);
-                return new Result(true, 0L, remaining, retryAfterSeconds);
-            }
+            long retryAfterSeconds = secondsUntilExpiry(requestTimes.peekFirst(), nowNanos, windowNanos);
             return new Result(false, retryAfterSeconds, 0, retryAfterSeconds);
+        }
+
+        private void evictExpired(long nowNanos, long windowNanos) {
+            while (!requestTimes.isEmpty() && nowNanos - requestTimes.peekFirst() >= windowNanos) {
+                requestTimes.removeFirst();
+            }
+        }
+
+        private static long secondsUntilExpiry(long timestampNanos, long nowNanos, long windowNanos) {
+            long remainingNanos = Math.max(0L, windowNanos - (nowNanos - timestampNanos));
+            long seconds = TimeUnit.NANOSECONDS.toSeconds(remainingNanos);
+            return Math.max(1L, seconds == 0L && remainingNanos > 0L ? 1L : seconds);
         }
 
         record Result(boolean allowed, long retryAfterSeconds, int remainingRequests, long resetAfterSeconds) {

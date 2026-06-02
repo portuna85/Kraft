@@ -1,5 +1,9 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import javax.net.ssl.SSLException;
+
 final class FetchFailureReasonSupport {
     private static final String[][] REASON_RULES = {
             {"missing_field", "missing_field", "field missing"},
@@ -31,7 +35,7 @@ final class FetchFailureReasonSupport {
             return normalizeFailureMessage((String) null);
         }
         String message = ex.getMessage() == null ? "" : ex.getMessage();
-        return "reason=" + ex.metricReason() + "; " + message;
+        return "reason=" + classifyFailureReason(ex) + "; " + message;
     }
 
     static String extractReason(String message) {
@@ -74,5 +78,24 @@ final class FetchFailureReasonSupport {
             }
         }
         return "other";
+    }
+
+    private static String classifyFailureReason(LottoApiClientException ex) {
+        Throwable cause = ex.getCause();
+        if (cause instanceof SocketTimeoutException) {
+            return LottoApiClientException.FailureReason.TIMEOUT.metricName();
+        }
+        if (cause instanceof ConnectException) {
+            return LottoApiClientException.FailureReason.NETWORK.metricName();
+        }
+        if (cause instanceof SSLException) {
+            return LottoApiClientException.FailureReason.OTHER.metricName();
+        }
+        String metricReason = ex.metricReason();
+        if (metricReason != null && !metricReason.isBlank()
+                && !LottoApiClientException.FailureReason.OTHER.metricName().equals(metricReason)) {
+            return metricReason;
+        }
+        return classifyFailureReason(ex.getMessage());
     }
 }

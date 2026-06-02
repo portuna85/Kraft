@@ -1,11 +1,14 @@
 package com.kraft.lotto.feature.news.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
+import com.kraft.lotto.support.BusinessException;
+import com.kraft.lotto.support.ErrorCode;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -53,5 +56,23 @@ class NewsQueryServiceTest {
 
         assertThat(result.articles()).isEmpty();
         assertThat(result.totalElements()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("page가 음수면 예외가 발생한다")
+    void listPageNegativeShouldThrow() {
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.list(-1, 20))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.INVALID_PARAMETER);
+    }
+
+    @Test
+    @DisplayName("size가 0이면 예외가 발생한다")
+    void listSizeZeroShouldThrow() {
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.list(0, 0))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.INVALID_PARAMETER);
     }
 }

@@ -3,7 +3,7 @@ package com.kraft.lotto.support;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
-import com.kraft.lotto.support.PublicRateLimitFilter.FixedWindowCounter;
+import com.kraft.lotto.support.PublicRateLimitFilter.SlidingWindowCounter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
@@ -78,20 +79,20 @@ class PublicRateLimitFilterTest {
         assertThat(filter.estimatedCounterSize()).isLessThanOrEqualTo(32);
     }
 
-    // --- FixedWindowCounter 단위 테스트 ---
+    // --- SlidingWindowCounter 단위 테스트 ---
 
     @Test
-    @DisplayName("FixedWindowCounter: 윈도우 내 한도 초과 직후 remaining은 0이다")
-    void fixedWindowRemainingIsZeroAfterExhaustion() {
+    @DisplayName("SlidingWindowCounter: 윈도우 내 한도 초과 직후 remaining은 0이다")
+    void slidingWindowRemainingIsZeroAfterExhaustion() {
         long startNanos = 0L;
-        FixedWindowCounter counter = new FixedWindowCounter(startNanos);
+        SlidingWindowCounter counter = new SlidingWindowCounter();
         long windowNanos = TimeUnit.SECONDS.toNanos(60);
         int maxRequests = 3;
 
-        FixedWindowCounter.Result r1 = counter.tryAcquire(startNanos, maxRequests, windowNanos);
-        FixedWindowCounter.Result r2 = counter.tryAcquire(startNanos, maxRequests, windowNanos);
-        FixedWindowCounter.Result r3 = counter.tryAcquire(startNanos, maxRequests, windowNanos);
-        FixedWindowCounter.Result r4 = counter.tryAcquire(startNanos, maxRequests, windowNanos);
+        SlidingWindowCounter.Result r1 = counter.tryAcquire(startNanos, maxRequests, windowNanos);
+        SlidingWindowCounter.Result r2 = counter.tryAcquire(startNanos + 1, maxRequests, windowNanos);
+        SlidingWindowCounter.Result r3 = counter.tryAcquire(startNanos + 2, maxRequests, windowNanos);
+        SlidingWindowCounter.Result r4 = counter.tryAcquire(startNanos + 3, maxRequests, windowNanos);
 
         assertThat(r1.allowed()).isTrue();
         assertThat(r2.allowed()).isTrue();
@@ -103,32 +104,32 @@ class PublicRateLimitFilterTest {
     }
 
     @Test
-    @DisplayName("FixedWindowCounter: 윈도우 롤오버 시 카운트가 리셋된다")
-    void fixedWindowRolloverResetsCount() {
+    @DisplayName("SlidingWindowCounter: 윈도우 만료 후 요청이 다시 허용된다")
+    void slidingWindowExpiryAllowsRequestsAgain() {
         long startNanos = 0L;
         long windowNanos = TimeUnit.SECONDS.toNanos(10);
         int maxRequests = 1;
-        FixedWindowCounter counter = new FixedWindowCounter(startNanos);
+        SlidingWindowCounter counter = new SlidingWindowCounter();
 
-        FixedWindowCounter.Result first = counter.tryAcquire(startNanos, maxRequests, windowNanos);
-        FixedWindowCounter.Result blocked = counter.tryAcquire(startNanos, maxRequests, windowNanos);
+        SlidingWindowCounter.Result first = counter.tryAcquire(startNanos, maxRequests, windowNanos);
+        SlidingWindowCounter.Result blocked = counter.tryAcquire(startNanos + 1, maxRequests, windowNanos);
 
         assertThat(first.allowed()).isTrue();
         assertThat(blocked.allowed()).isFalse();
 
         // 윈도우 경계 정확히 만료 후 첫 요청은 허가돼야 한다
         long afterWindow = startNanos + windowNanos;
-        FixedWindowCounter.Result afterRollover = counter.tryAcquire(afterWindow, maxRequests, windowNanos);
+        SlidingWindowCounter.Result afterRollover = counter.tryAcquire(afterWindow, maxRequests, windowNanos);
         assertThat(afterRollover.allowed()).isTrue();
     }
 
     @Test
-    @DisplayName("FixedWindowCounter: 동시성 — N 스레드 동시 요청 시 허가 수가 maxRequests를 초과하지 않는다")
-    void fixedWindowConcurrentRequestsNeverExceedMax() throws InterruptedException {
+    @DisplayName("SlidingWindowCounter: 동시성 — N 스레드 동시 요청 시 허가 수가 maxRequests를 초과하지 않는다")
+    void slidingWindowConcurrentRequestsNeverExceedMax() throws InterruptedException {
         long startNanos = System.nanoTime();
         long windowNanos = TimeUnit.SECONDS.toNanos(60);
         int maxRequests = 10;
-        FixedWindowCounter counter = new FixedWindowCounter(startNanos);
+        SlidingWindowCounter counter = new SlidingWindowCounter();
 
         int threads = 50;
         CountDownLatch ready = new CountDownLatch(threads);
@@ -156,6 +157,29 @@ class PublicRateLimitFilterTest {
                 .sum();
 
         assertThat(allowedCount).isLessThanOrEqualTo(maxRequests);
+    }
+
+    @Test
+    @DisplayName("윈도우 경계에서는 2배 burst를 허용하지 않는다")
+    void windowBoundaryShouldNotAllow2xBurst() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getRateLimit().setEnabled(true);
+        properties.getRateLimit().setMaxRequests(2);
+        properties.getRateLimit().setWindowSeconds(60);
+        AtomicLong now = new AtomicLong(0L);
+        PublicRateLimitFilter filter = new PublicRateLimitFilter(properties, now::get);
+
+        MockHttpServletResponse first = execute(filter, "/fragments/recommend", "198.51.100.11");
+        now.set(TimeUnit.SECONDS.toNanos(59));
+        MockHttpServletResponse second = execute(filter, "/fragments/recommend", "198.51.100.11");
+        now.set(TimeUnit.SECONDS.toNanos(60));
+        MockHttpServletResponse third = execute(filter, "/fragments/recommend", "198.51.100.11");
+        MockHttpServletResponse fourth = execute(filter, "/fragments/recommend", "198.51.100.11");
+
+        assertThat(first.getStatus()).isEqualTo(200);
+        assertThat(second.getStatus()).isEqualTo(200);
+        assertThat(third.getStatus()).isEqualTo(200);
+        assertThat(fourth.getStatus()).isEqualTo(429);
     }
 
     private static MockHttpServletResponse execute(PublicRateLimitFilter filter,

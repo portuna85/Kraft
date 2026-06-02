@@ -38,23 +38,25 @@ class RecommendServiceTest {
     }
 
     @Test
-    @DisplayName("추천 개수가 0이면 1로 보정하여 추천한다")
-    void clampsZeroCountToOne() {
+    @DisplayName("추천 개수가 0이면 예외가 발생한다")
+    void throwsWhenCountIsZero() {
         var service = service(List.of());
 
-        var response = service.recommend(0);
-
-        assertThat(response.combinations()).hasSize(1);
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.recommend(0))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_INVALID_COUNT);
     }
 
     @Test
-    @DisplayName("추천 개수가 11이면 10으로 보정하여 추천한다")
-    void clampsElevenCountToTen() {
+    @DisplayName("추천 개수가 11이면 예외가 발생한다")
+    void throwsWhenCountIsEleven() {
         var service = service(List.of());
 
-        var response = service.recommend(11);
-
-        assertThat(response.combinations()).hasSize(10);
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.recommend(11))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_INVALID_COUNT);
     }
 
     @Test
@@ -223,5 +225,27 @@ class RecommendServiceTest {
                 .tag("reason", "fixup_timeout")
                 .counter()
                 .count()).isEqualTo(1.0);
+    }
+
+    @Test
+    @DisplayName("oddCount가 6을 초과하면 예외가 발생한다")
+    void throwsWhenOddCountExceedsSix() {
+        var service = service(List.of());
+
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.recommend(1, RecommendFilter.of(7, null, null)))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_INVALID_NUMBER);
+    }
+
+    @Test
+    @DisplayName("sumMin이 sumMax보다 크면 예외가 발생한다")
+    void throwsWhenSumMinGreaterThanSumMax() {
+        var service = service(List.of());
+
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.recommend(1, RecommendFilter.of(null, 100, 50)))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_INVALID_NUMBER);
     }
 }

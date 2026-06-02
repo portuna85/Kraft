@@ -6,17 +6,21 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Locale;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE + 10)
+@Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class WwwRedirectFilter extends OncePerRequestFilter {
 
-    private static final String APEX_HOST = "kraft.io.kr";
-    private static final String CANONICAL_ORIGIN = "https://www.kraft.io.kr";
+    @Value("${kraft.web.apex-host:kraft.io.kr}")
+    private String apexHost;
+
+    @Value("${kraft.web.canonical-origin:https://www.kraft.io.kr}")
+    private String canonicalOrigin;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -24,7 +28,7 @@ public class WwwRedirectFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         if (needsWwwRedirect(request.getServerName())) {
             String query = request.getQueryString();
-            String location = CANONICAL_ORIGIN + stripCrLf(request.getRequestURI())
+            String location = canonicalOrigin + stripCrLf(request.getRequestURI())
                     + (query != null && !query.isBlank() ? "?" + stripCrLf(query) : "");
             response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
             response.setHeader("Location", location);
@@ -33,7 +37,7 @@ public class WwwRedirectFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private static boolean needsWwwRedirect(String host) {
+    private boolean needsWwwRedirect(String host) {
         if (host == null || host.isBlank()) {
             return false;
         }
@@ -42,7 +46,7 @@ public class WwwRedirectFilter extends OncePerRequestFilter {
         if (colon >= 0) {
             h = h.substring(0, colon);
         }
-        return APEX_HOST.equals(h);
+        return apexHost.equals(h);
     }
 
     private static String stripCrLf(String value) {

@@ -1,7 +1,9 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -208,5 +210,16 @@ class ApiCircuitBreakerTest {
         // 예외가 발생하지 않고 stateName이 유효한 값이어야 한다
         String state = breaker.stateName();
         assertThat(state).isIn("closed", "open", "half_open");
+    }
+
+    @Test
+    @DisplayName("리스너는 락 해제 후 호출되어 재진입 시 데드락이 없다")
+    void transitionToListenerCalledOutsideLock() {
+        AtomicLong now = new AtomicLong(0L);
+        ApiCircuitBreaker breaker = new ApiCircuitBreaker(true, 1, 100, 1, now::get);
+        breaker.setStateTransitionListener((previous, next) -> breaker.stateName());
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), breaker::recordFailure);
+        assertThat(breaker.stateName()).isEqualTo("open");
     }
 }

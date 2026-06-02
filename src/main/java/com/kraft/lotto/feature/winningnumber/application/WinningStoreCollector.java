@@ -5,6 +5,8 @@ import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
+import com.kraft.lotto.support.BusinessException;
+import com.kraft.lotto.support.ErrorCode;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -44,16 +46,18 @@ public class WinningStoreCollector {
 
     public void collectStores(int round) {
         log.info("collecting winning stores: round={}", round);
-        List<WinningStoreEntity> allEntities = fetchAllGrades(round);
-        persist(round, allEntities);
+        StoreFetchBatch batch = fetchAllGrades(round);
+        persist(batch);
     }
 
-    private List<WinningStoreEntity> fetchAllGrades(int round) {
+    private StoreFetchBatch fetchAllGrades(int round) {
         List<WinningStoreEntity> result = new java.util.ArrayList<>();
+        boolean complete = true;
         for (int grade : GRADES) {
             List<WinningStore> stores = storeApiClient.fetchStores(round, grade);
             if (stores.isEmpty()) {
                 log.warn("no winning stores fetched: round={}, grade={}", round, grade);
+                complete = false;
                 continue;
             }
             stores.stream()
@@ -61,15 +65,24 @@ public class WinningStoreCollector {
                     .forEach(result::add);
             log.info("winning stores fetched: round={}, grade={}, count={}", round, grade, stores.size());
         }
-        return result;
+        return new StoreFetchBatch(round, complete, List.copyOf(result));
     }
 
     @Transactional
-    public void persist(int round, List<WinningStoreEntity> entities) {
-        storeRepository.deleteByRound(round);
-        if (!entities.isEmpty()) {
-            storeRepository.saveAll(entities);
-            log.info("winning stores saved: round={}, count={}", round, entities.size());
+    public void persist(StoreFetchBatch batch) {
+        if (!batch.complete()) {
+            throw new BusinessException(
+                    ErrorCode.EXTERNAL_API_FAILURE,
+                    "winning store fetch incomplete for round=" + batch.round()
+            );
         }
+        storeRepository.deleteByRound(batch.round());
+        if (!batch.entities().isEmpty()) {
+            storeRepository.saveAll(batch.entities());
+            log.info("winning stores saved: round={}, count={}", batch.round(), batch.entities().size());
+        }
+    }
+
+    record StoreFetchBatch(int round, boolean complete, List<WinningStoreEntity> entities) {
     }
 }

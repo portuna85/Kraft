@@ -45,14 +45,16 @@ class WinningNumberUpsertExecutor {
             java.time.LocalDate drawDate,
             Integer n1, Integer n2, Integer n3, Integer n4, Integer n5, Integer n6,
             Integer bonusNumber,
-            Long firstPrize, Integer firstWinners, Long totalSales, Long firstAccumAmount
+            Long firstPrize, Integer firstWinners, Long totalSales, Long firstAccumAmount,
+            Long secondPrize, Integer secondWinners
     ) {
         static Snapshot of(WinningNumberEntity e) {
             return new Snapshot(
                     e.getDrawDate(),
                     e.getN1(), e.getN2(), e.getN3(), e.getN4(), e.getN5(), e.getN6(),
                     e.getBonusNumber(),
-                    e.getFirstPrize(), e.getFirstWinners(), e.getTotalSales(), e.getFirstAccumAmount()
+                    e.getFirstPrize(), e.getFirstWinners(), e.getTotalSales(), e.getFirstAccumAmount(),
+                    e.getSecondPrize(), e.getSecondWinners()
             );
         }
     }

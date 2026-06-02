@@ -63,4 +63,12 @@ class HomeControllerWebMvcTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(view().name("error"));
     }
+
+    @Test
+    @DisplayName("oddCount가 허용 범위를 벗어나면 400을 반환한다")
+    void invalidOddCountReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/fragments/recommend").param("oddCount", "7"))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("error"));
+    }
 }

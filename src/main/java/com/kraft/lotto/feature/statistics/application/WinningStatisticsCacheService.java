@@ -134,6 +134,9 @@ public class WinningStatisticsCacheService {
     @Cacheable(cacheNames = "winningNumberFrequencyPeriod", key = "#rounds", sync = true)
     @Transactional(readOnly = true)
     public List<NumberFrequencyDto> frequencyForPeriod(int rounds) {
+        if (rounds <= 0) {
+            throw new BusinessException(ErrorCode.LOTTO_INVALID_NUMBER, "rounds must be positive");
+        }
         int maxRound = repository.findMaxRound().orElse(0);
         if (maxRound == 0) {
             return List.of();
@@ -184,6 +187,9 @@ public class WinningStatisticsCacheService {
     @Cacheable(cacheNames = "companionNumbers", key = "#target", sync = true)
     @Transactional(readOnly = true)
     public List<CompanionNumberDto> companionNumbers(int target) {
+        if (target < LOTTO_NUMBER_MIN || target > LOTTO_NUMBER_MAX) {
+            throw new BusinessException(ErrorCode.LOTTO_INVALID_NUMBER, "target must be between 1 and 45");
+        }
         List<CompanionRow> rows = repository.findCompanionNumbers(target);
         long maxCount = rows.stream().mapToLong(CompanionRow::getHitCount).max().orElse(1L);
         List<CompanionNumberDto> result = new ArrayList<>(rows.size());

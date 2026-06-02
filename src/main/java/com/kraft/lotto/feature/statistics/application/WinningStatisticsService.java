@@ -9,6 +9,8 @@ import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.PatternStatDto;
 import java.util.Comparator;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -22,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Spring-managed service constructor validates required wiring")
 public class WinningStatisticsService {
+
+    private static final Logger log = LoggerFactory.getLogger(WinningStatisticsService.class);
 
     private final WinningStatisticsCacheService cacheService;
     private final CacheManager cacheManager;
@@ -86,7 +90,12 @@ public class WinningStatisticsService {
         // Summary table must be updated before frequency cache is evicted,
         // so the next frequency() cache miss hits fresh summary data instead of triggering
         // a full recompute from the raw winning_numbers table.
-        cacheService.refreshFrequencySummary();
+        try {
+            cacheService.refreshFrequencySummary();
+        } catch (Exception e) {
+            log.error("frequency summary refresh failed, skipping cache eviction", e);
+            return;
+        }
         evictAll("winningNumberFrequency");
         evictAll("winningNumberFrequencyPeriod");
         evictAll("combinationPrizeHistory");

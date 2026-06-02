@@ -4,7 +4,9 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
 
+    LOTTO_INVALID_COUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 추천 개수입니다.", false),
     LOTTO_INVALID_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 로또 번호입니다.", false),
+    INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "유효하지 않은 요청 파라미터입니다.", false),
     LOTTO_INVALID_TARGET_ROUND(HttpStatus.BAD_REQUEST, "targetRound는 1 이상이어야 합니다.", false),
     REQUEST_VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "요청 값이 유효하지 않습니다.", false),
     LOTTO_GENERATION_TIMEOUT(HttpStatus.SERVICE_UNAVAILABLE, "추천 조합 생성 시도를 초과했습니다.", true),

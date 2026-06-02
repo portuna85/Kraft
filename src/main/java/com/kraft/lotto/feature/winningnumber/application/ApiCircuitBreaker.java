@@ -40,58 +40,64 @@ final class ApiCircuitBreaker {
         return new ApiCircuitBreaker(false, 1, 1, 1);
     }
 
-    synchronized boolean tryAcquirePermission() {
+    boolean tryAcquirePermission() {
         if (!enabled) {
             return true;
         }
-        long now = nanoTime.getAsLong();
-        if (state == State.OPEN) {
-            long elapsed = now - openedAtNanos;
-            if (elapsed < openDurationNanos) {
-                return false;
+        StateTransition transition = null;
+        synchronized (this) {
+            long now = nanoTime.getAsLong();
+            if (state == State.OPEN) {
+                long elapsed = now - openedAtNanos;
+                if (elapsed < openDurationNanos) {
+                    return false;
+                }
+                transition = transitionState(State.HALF_OPEN);
+                halfOpenCalls = 0;
             }
-            transitionTo(State.HALF_OPEN);
-            halfOpenCalls = 0;
-        }
 
-        if (state == State.HALF_OPEN) {
-            if (halfOpenCalls >= halfOpenMaxCalls) {
-                return false;
+            if (state == State.HALF_OPEN) {
+                if (halfOpenCalls >= halfOpenMaxCalls) {
+                    return false;
+                }
+                halfOpenCalls++;
+                notifyTransition(transition);
+                return true;
             }
-            halfOpenCalls++;
-            return true;
         }
-
+        notifyTransition(transition);
         return true;
     }
 
-    synchronized void recordSuccess() {
+    void recordSuccess() {
         if (!enabled) {
             return;
         }
-        transitionTo(State.CLOSED);
-        consecutiveFailures = 0;
-        halfOpenCalls = 0;
+        StateTransition transition;
+        synchronized (this) {
+            transition = transitionState(State.CLOSED);
+            consecutiveFailures = 0;
+            halfOpenCalls = 0;
+        }
+        notifyTransition(transition);
     }
 
-    synchronized void recordFailure() {
+    void recordFailure() {
         if (!enabled) {
             return;
         }
-
-        if (state == State.HALF_OPEN) {
-            open();
-            return;
+        StateTransition transition = null;
+        synchronized (this) {
+            if (state == State.HALF_OPEN) {
+                transition = openTransition();
+            } else if (state != State.OPEN) {
+                consecutiveFailures++;
+                if (consecutiveFailures >= failureThreshold) {
+                    transition = openTransition();
+                }
+            }
         }
-
-        if (state == State.OPEN) {
-            return;
-        }
-
-        consecutiveFailures++;
-        if (consecutiveFailures >= failureThreshold) {
-            open();
-        }
+        notifyTransition(transition);
     }
 
     synchronized String stateName() {
@@ -114,22 +120,31 @@ final class ApiCircuitBreaker {
         this.stateTransitionListener = listener;
     }
 
-    private void open() {
-        transitionTo(State.OPEN);
+    private StateTransition openTransition() {
+        StateTransition transition = transitionState(State.OPEN);
         openedAtNanos = nanoTime.getAsLong();
         consecutiveFailures = 0;
         halfOpenCalls = 0;
+        return transition;
     }
 
-    private void transitionTo(State next) {
+    private StateTransition transitionState(State next) {
         if (state == next) {
-            return;
+            return null;
         }
         State prev = state;
         state = next;
-        if (stateTransitionListener != null) {
-            stateTransitionListener.onTransition(prev.name().toLowerCase(), next.name().toLowerCase());
+        return new StateTransition(prev, next);
+    }
+
+    private void notifyTransition(StateTransition transition) {
+        if (transition == null || stateTransitionListener == null) {
+            return;
         }
+        stateTransitionListener.onTransition(
+                transition.previous().name().toLowerCase(),
+                transition.next().name().toLowerCase()
+        );
     }
 
     interface StateTransitionListener {
@@ -140,5 +155,8 @@ final class ApiCircuitBreaker {
         CLOSED,
         OPEN,
         HALF_OPEN
+    }
+
+    private record StateTransition(State previous, State next) {
     }
 }

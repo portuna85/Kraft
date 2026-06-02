@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -123,6 +124,7 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
             return Collections.emptyList();
         }
         List<Integer> indices = new ArrayList<>();
+        Set<Integer> uniqueIndices = new HashSet<>();
         int runStart = 0;
         int runLength = 1;
         for (int i = 1; i < numbers.size(); i++) {
@@ -130,7 +132,7 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
                 runLength++;
                 if (runLength >= threshold) {
                     for (int idx = runStart; idx <= i; idx++) {
-                        if (!indices.contains(idx)) {
+                        if (uniqueIndices.add(idx)) {
                             indices.add(idx);
                         }
                     }

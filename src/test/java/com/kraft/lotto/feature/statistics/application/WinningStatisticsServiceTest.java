@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -397,6 +398,20 @@ class WinningStatisticsServiceTest {
         InOrder order = inOrder(mockCacheService, frequency);
         order.verify(mockCacheService).refreshFrequencySummary();
         order.verify(frequency).clear();
+    }
+
+    @Test
+    @DisplayName("요약 갱신이 실패하면 캐시 무효화를 수행하지 않는다")
+    void evictCachesOnCollectedSkipsEvictionWhenRefreshFails() {
+        WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        CacheManager cacheManager = mock(CacheManager.class);
+        doThrow(new RuntimeException("boom")).when(mockCacheService).refreshFrequencySummary();
+
+        WinningStatisticsService service = new WinningStatisticsService(mockCacheService, cacheManager);
+        service.evictCachesOnCollected(WinningNumbersCollectedEvent.of(1, 0, 0, 0));
+
+        verify(mockCacheService).refreshFrequencySummary();
+        verify(cacheManager, never()).getCache(org.mockito.ArgumentMatchers.anyString());
     }
 
     @Test

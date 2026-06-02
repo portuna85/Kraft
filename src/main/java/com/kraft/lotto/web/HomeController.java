@@ -86,11 +86,7 @@ public class HomeController {
             @RequestParam(required = false) Integer sumMax,
             Model model
     ) {
-        RecommendFilter filter = RecommendFilter.of(
-                (oddCount != null && oddCount >= 0 && oddCount <= 6) ? oddCount : null,
-                sumMin,
-                sumMax
-        );
+        RecommendFilter filter = RecommendFilter.of(oddCount, sumMin, sumMax);
         addRecommendModel(PublicQueryParams.normalizeCount(count), filter, model);
         return RECOMMEND_FRAGMENT;
     }

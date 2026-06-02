@@ -2,6 +2,7 @@ package com.kraft.lotto.feature.news.application;
 
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
 import com.kraft.lotto.infra.config.KraftNewsProperties;
+import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -26,9 +27,16 @@ class NewsConfiguration {
     }
 
     @Bean
+    NewsArticlePersister newsArticlePersister(NewsArticleRepository repository) {
+        return new NewsArticlePersister(repository);
+    }
+
+    @Bean
     NewsCollectionService newsCollectionService(NewsArticleRepository repository,
                                                 NewsRssClient rssClient,
+                                                NewsArticlePersister persister,
+                                                Clock clock,
                                                 KraftNewsProperties properties) {
-        return new NewsCollectionService(repository, rssClient, properties.retentionDays());
+        return new NewsCollectionService(repository, rssClient, persister, clock, properties.retentionDays());
     }
 }

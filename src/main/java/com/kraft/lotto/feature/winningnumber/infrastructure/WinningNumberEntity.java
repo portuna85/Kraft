@@ -169,6 +169,8 @@ public class WinningNumberEntity {
         this.firstWinners = source.firstWinners;
         this.totalSales = source.totalSales;
         this.firstAccumAmount = source.firstAccumAmount;
+        this.secondPrize = source.secondPrize;
+        this.secondWinners = source.secondWinners;
         this.rawJson = source.rawJson;
         this.fetchedAt = source.fetchedAt;
         this.updatedAt = updatedAt;

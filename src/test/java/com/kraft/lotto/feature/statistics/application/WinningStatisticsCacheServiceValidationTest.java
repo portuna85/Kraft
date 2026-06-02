@@ -44,6 +44,42 @@ class WinningStatisticsCacheServiceValidationTest {
         assertInvalid(List.of(1, 2, 3, 4, 5, 5));
     }
 
+    @Test
+    @DisplayName("frequencyForPeriod의 rounds가 0 이하이면 예외가 발생한다")
+    void frequencyForPeriodRoundsZeroShouldThrow() {
+        var repository = org.mockito.Mockito.mock(com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.class);
+        var service = new WinningStatisticsCacheService(repository, null);
+
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.frequencyForPeriod(0))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_INVALID_NUMBER);
+    }
+
+    @Test
+    @DisplayName("companionNumbers의 target이 0이면 예외가 발생한다")
+    void companionNumbersTargetZeroShouldThrow() {
+        var repository = org.mockito.Mockito.mock(com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.class);
+        var service = new WinningStatisticsCacheService(repository, null);
+
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.companionNumbers(0))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_INVALID_NUMBER);
+    }
+
+    @Test
+    @DisplayName("companionNumbers의 target이 46이면 예외가 발생한다")
+    void companionNumbersTarget46ShouldThrow() {
+        var repository = org.mockito.Mockito.mock(com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.class);
+        var service = new WinningStatisticsCacheService(repository, null);
+
+        assertThatExceptionOfType(BusinessException.class)
+                .isThrownBy(() -> service.companionNumbers(46))
+                .extracting(BusinessException::getErrorCode)
+                .isEqualTo(ErrorCode.LOTTO_INVALID_NUMBER);
+    }
+
     private static void assertInvalid(List<Integer> numbers) {
         assertThatExceptionOfType(BusinessException.class)
                 .isThrownBy(() -> WinningStatisticsCacheService.combinationPrizeHistoryCacheKey(numbers))

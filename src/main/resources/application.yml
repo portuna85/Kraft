@@ -86,6 +86,9 @@ otel:
 
 kraft:
   public-base-url: ${KRAFT_PUBLIC_BASE_URL:https://www.kraft.io.kr}
+  web:
+    apex-host: ${KRAFT_WEB_APEX_HOST:kraft.io.kr}
+    canonical-origin: ${KRAFT_WEB_CANONICAL_ORIGIN:https://www.kraft.io.kr}
   security:
     headers:
       enabled: ${KRAFT_SECURITY_HEADERS_ENABLED:true}

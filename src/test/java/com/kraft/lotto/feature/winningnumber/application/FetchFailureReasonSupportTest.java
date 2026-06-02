@@ -2,6 +2,7 @@ package com.kraft.lotto.feature.winningnumber.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.SocketTimeoutException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -41,5 +42,19 @@ class FetchFailureReasonSupportTest {
         String normalized = FetchFailureReasonSupport.normalizeFailureMessage("some unknown failure");
 
         assertThat(FetchFailureReasonSupport.extractReason(normalized)).isEqualTo("other");
+    }
+
+    @Test
+    @DisplayName("SocketTimeoutException 원인은 timeout으로 우선 분류한다")
+    void classifiesSocketTimeoutCauseAsTimeout() {
+        LottoApiClientException ex = new LottoApiClientException(
+                "some other message",
+                new SocketTimeoutException("read timed out"),
+                LottoApiClientException.FailureReason.OTHER
+        );
+
+        String normalized = FetchFailureReasonSupport.normalizeFailureMessage(ex);
+
+        assertThat(FetchFailureReasonSupport.extractReason(normalized)).isEqualTo("timeout");
     }
 }

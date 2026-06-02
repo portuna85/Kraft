@@ -14,10 +14,23 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class NewsQueryService {
 
+    static final int MAX_PAGE_SIZE = 50;
     private final NewsArticleRepository repository;
 
     @Transactional(readOnly = true)
     public NewsPage list(int page, int size) {
+        if (page < 0) {
+            throw new com.kraft.lotto.support.BusinessException(
+                    com.kraft.lotto.support.ErrorCode.INVALID_PARAMETER,
+                    "page must be >= 0"
+            );
+        }
+        if (size <= 0 || size > MAX_PAGE_SIZE) {
+            throw new com.kraft.lotto.support.BusinessException(
+                    com.kraft.lotto.support.ErrorCode.INVALID_PARAMETER,
+                    "size must be between 1 and " + MAX_PAGE_SIZE
+            );
+        }
         Page<NewsArticleEntity> p = repository.findAllByOrderByPubDateDescCollectedAtDesc(
                 PageRequest.of(page, size));
         List<NewsArticleDto> articles = p.getContent().stream()
