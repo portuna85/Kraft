@@ -100,20 +100,27 @@ jobs:
             echo "MariaDB not running — fresh install, skipping repair"
             exit 0
           fi
-          # 컨테이너 내부의 MARIADB_* 환경변수를 사용해 .env source 없이 접속
-          actual=$(
-            echo "SELECT COALESCE(checksum,'') FROM flyway_schema_history WHERE version='1';" \
-            | docker compose exec -T mariadb bash -c \
-                'mysql -u"${MARIADB_USER}" -p"${MARIADB_PASSWORD}" "${MARIADB_DATABASE}" --skip-column-names --silent' \
-                2>/dev/null
-          ) || actual=""
-          if [ "${actual}" != "-2024252480" ]; then
-            echo "Flyway V1 checksum='${actual}' — no repair needed"
+          # source .env 대신 grep으로 필요한 값만 안전하게 추출 (cron 공백 문제 방지)
+          db_user=$(grep -m1 '^KRAFT_DB_USER=' .env | cut -d= -f2-)
+          db_pass=$(grep -m1 '^KRAFT_DB_PASSWORD=' .env | cut -d= -f2-)
+          db_name=$(grep -m1 '^KRAFT_DB_NAME=' .env | cut -d= -f2-)
+          if [ -z "${db_user}" ] || [ -z "${db_name}" ]; then
+            echo "::warning::DB credentials not found in .env, skipping repair"
             exit 0
           fi
-          echo "Repairing Flyway V1 schema history (V1–V18 squash)..."
-          docker compose exec -T mariadb bash -c \
-            'mysql -u"${MARIADB_USER}" -p"${MARIADB_PASSWORD}" "${MARIADB_DATABASE}"' \
+          actual=$(docker compose exec -T mariadb mysql \
+            -u"${db_user}" -p"${db_pass}" "${db_name}" \
+            --skip-column-names --silent \
+            -e "SELECT COALESCE(checksum,-1) FROM flyway_schema_history WHERE version='1'" \
+            2>/dev/null) || actual=""
+          echo "Flyway V1 checksum: ${actual}"
+          if [ "${actual}" != "-2024252480" ]; then
+            echo "No repair needed"
+            exit 0
+          fi
+          echo "Repairing Flyway schema history (V1–V18 squash)..."
+          docker compose exec -T mariadb mysql \
+            -u"${db_user}" -p"${db_pass}" "${db_name}" \
             < scripts/flyway-reset-history.sql
           echo "Repair complete"
 
