@@ -83,13 +83,16 @@ public class WinningStatisticsService {
         if (!event.dataChanged()) {
             return;
         }
+        // Summary table must be updated before frequency cache is evicted,
+        // so the next frequency() cache miss hits fresh summary data instead of triggering
+        // a full recompute from the raw winning_numbers table.
+        cacheService.refreshFrequencySummary();
         evictAll("winningNumberFrequency");
         evictAll("winningNumberFrequencyPeriod");
         evictAll("combinationPrizeHistory");
         evictAll("winningFrequencySummary");
         evictAll("patternStats");
         evictAll("companionNumbers");
-        cacheService.refreshFrequencySummary();
     }
 
     private void evictAll(String cacheName) {

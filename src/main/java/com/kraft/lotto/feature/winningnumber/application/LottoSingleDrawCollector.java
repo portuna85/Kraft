@@ -57,13 +57,8 @@ class LottoSingleDrawCollector {
         }
         long startedNanos = System.nanoTime();
         try {
-            CollectResponse response = collectFetchedRound(drwNo);
-            meterRegistry.timer("kraft.collect.fetch.latency")
-                    .record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS);
-            return response;
+            return collectFetchedRound(drwNo);
         } catch (LottoApiClientException ex) {
-            meterRegistry.timer("kraft.collect.fetch.latency")
-                    .record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS);
             log.warn("lotto draw collect failed: drwNo={}", drwNo, ex);
             saveLog(
                     drwNo,
@@ -75,8 +70,6 @@ class LottoSingleDrawCollector {
             recordOutcome("failed");
             return CollectResponse.ofFailed(List.of(drwNo), winningNumberRepository.findMaxRound().orElse(0), false);
         } catch (RuntimeException ex) {
-            meterRegistry.timer("kraft.collect.fetch.latency")
-                    .record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS);
             log.warn("lotto draw collect failed: drwNo={}", drwNo, ex);
             saveLog(
                     drwNo,
@@ -87,6 +80,9 @@ class LottoSingleDrawCollector {
             );
             recordOutcome("failed");
             return CollectResponse.ofFailed(List.of(drwNo), winningNumberRepository.findMaxRound().orElse(0), false);
+        } finally {
+            meterRegistry.timer("kraft.collect.fetch.latency")
+                    .record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS);
         }
     }
 

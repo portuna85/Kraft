@@ -1,6 +1,10 @@
 spring:
   thymeleaf:
     cache: true
+  datasource:
+    hikari:
+      maximum-pool-size: ${KRAFT_DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${KRAFT_DB_POOL_MIN_IDLE:5}
 
 springdoc:
   api-docs:
@@ -29,3 +33,6 @@ kraft:
     enabled: ${KRAFT_HISTORY_INIT_ENABLED:false}
   api:
     client: ${KRAFT_API_CLIENT:real}
+  security:
+    headers:
+      hsts-enabled: ${KRAFT_SECURITY_HSTS_ENABLED:true}

@@ -40,6 +40,12 @@ public class DhLotteryApiClient implements LottoApiClient {
             "missing_field", "other"
     );
 
+    // Parser-derived reasons that are NOT already counted before the exception is thrown.
+    // Other reasons (http_error, blank_body, html_upstream_blocked) are pre-counted at throw site.
+    private static final Set<String> NOT_PRECOUNTED_REASONS = Set.of(
+            "json_parse", "validation", "transform", "unexpected_return_value", "non_json", "missing_field"
+    );
+
     public DhLotteryApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl) {
         this(restClient, objectMapper, baseUrl, 0, new SimpleMeterRegistry(), Clock.systemDefaultZone(),
                 new ApiRetrySupport(0, 0), ApiCircuitBreaker.disabled());
@@ -219,12 +225,7 @@ public class DhLotteryApiClient implements LottoApiClient {
     }
 
     private void countFailureReasonMetric(String reason) {
-        if ("json_parse".equals(reason)
-                || "validation".equals(reason)
-                || "transform".equals(reason)
-                || "unexpected_return_value".equals(reason)
-                || "non_json".equals(reason)
-                || "missing_field".equals(reason)) {
+        if (NOT_PRECOUNTED_REASONS.contains(reason)) {
             count("kraft.api.dhlottery.call.failure", "reason", reason);
         }
     }

@@ -6,7 +6,6 @@ import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberMapper;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,17 +38,22 @@ class WinningNumberUpsertExecutor {
     }
 
     static boolean isSame(WinningNumberEntity existing, WinningNumberEntity incoming) {
-        return Objects.equals(existing.getDrawDate(), incoming.getDrawDate())
-                && Objects.equals(existing.getN1(), incoming.getN1())
-                && Objects.equals(existing.getN2(), incoming.getN2())
-                && Objects.equals(existing.getN3(), incoming.getN3())
-                && Objects.equals(existing.getN4(), incoming.getN4())
-                && Objects.equals(existing.getN5(), incoming.getN5())
-                && Objects.equals(existing.getN6(), incoming.getN6())
-                && Objects.equals(existing.getBonusNumber(), incoming.getBonusNumber())
-                && Objects.equals(existing.getFirstPrize(), incoming.getFirstPrize())
-                && Objects.equals(existing.getFirstWinners(), incoming.getFirstWinners())
-                && Objects.equals(existing.getTotalSales(), incoming.getTotalSales())
-                && Objects.equals(existing.getFirstAccumAmount(), incoming.getFirstAccumAmount());
+        return Snapshot.of(existing).equals(Snapshot.of(incoming));
+    }
+
+    private record Snapshot(
+            java.time.LocalDate drawDate,
+            Integer n1, Integer n2, Integer n3, Integer n4, Integer n5, Integer n6,
+            Integer bonusNumber,
+            Long firstPrize, Integer firstWinners, Long totalSales, Long firstAccumAmount
+    ) {
+        static Snapshot of(WinningNumberEntity e) {
+            return new Snapshot(
+                    e.getDrawDate(),
+                    e.getN1(), e.getN2(), e.getN3(), e.getN4(), e.getN5(), e.getN6(),
+                    e.getBonusNumber(),
+                    e.getFirstPrize(), e.getFirstWinners(), e.getTotalSales(), e.getFirstAccumAmount()
+            );
+        }
     }
 }

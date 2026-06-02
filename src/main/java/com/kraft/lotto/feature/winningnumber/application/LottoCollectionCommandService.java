@@ -58,20 +58,14 @@ public class LottoCollectionCommandService {
 
     public CollectResponse collectAllUntilLatest() {
         return runExclusive("collect-all", () -> {
-            int totalCollected = 0, totalUpdated = 0, totalSkipped = 0;
-            List<Integer> allFailedRounds = new ArrayList<>();
-            int latestRound = winningNumberRepository.findMaxRound().orElse(0);
-            int nextRound = latestRound + 1;
+            BatchAccumulator batch = new BatchAccumulator(winningNumberRepository.findMaxRound().orElse(0));
+            int nextRound = batch.latestRound + 1;
             boolean reachedEnd = false;
 
             for (int i = 0; i < maxCollectPerRun; i++) {
                 int targetRound = nextRound;
                 CollectResponse one = singleDrawCollector.collectOne(targetRound, false);
-                totalCollected += one.collected();
-                totalUpdated += one.updated();
-                totalSkipped += one.skipped();
-                latestRound = Math.max(latestRound, one.latestRound());
-                allFailedRounds.addAll(one.failedRounds());
+                batch.accumulate(one);
                 if (one.notDrawn()) {
                     reachedEnd = true;
                     break;
@@ -85,14 +79,13 @@ public class LottoCollectionCommandService {
                     nextRound = targetRound + 1;
                     continue;
                 }
-                nextRound = latestRound + 1;
+                nextRound = batch.latestRound + 1;
             }
             boolean truncated = !reachedEnd;
             if (truncated) {
                 log.warn("collect-all: MAX_COLLECT_PER_RUN({}) reached, collection stopped", maxCollectPerRun);
             }
-            CollectResponse aggregated = CollectResponse.of(totalCollected, totalUpdated, totalSkipped,
-                    latestRound, allFailedRounds, truncated, truncated ? latestRound + 1 : null, false);
+            CollectResponse aggregated = batch.toResponse(truncated, truncated ? batch.latestRound + 1 : null);
             eventNotifier.publishCollected(aggregated);
             return aggregated;
         });
@@ -100,19 +93,13 @@ public class LottoCollectionCommandService {
 
     public CollectResponse collectAllHistory() {
         return runExclusive("collect-history", () -> {
-            int totalCollected = 0, totalUpdated = 0, totalSkipped = 0;
-            List<Integer> allFailedRounds = new ArrayList<>();
-            int latestRound = winningNumberRepository.findMaxRound().orElse(0);
-            int nextRound = latestRound + 1;
+            BatchAccumulator batch = new BatchAccumulator(winningNumberRepository.findMaxRound().orElse(0));
+            int nextRound = batch.latestRound + 1;
 
             for (int i = 0; i < maxHistoryCollect; i++) {
                 CollectResponse one = singleDrawCollector.collectOne(nextRound, false);
-                totalCollected += one.collected();
-                totalUpdated += one.updated();
-                totalSkipped += one.skipped();
-                latestRound = Math.max(latestRound, one.latestRound());
-                nextRound = latestRound + 1;
-                allFailedRounds.addAll(one.failedRounds());
+                batch.accumulate(one);
+                nextRound = batch.latestRound + 1;
                 if (one.notDrawn() || one.failed() > 0) {
                     break;
                 }
@@ -121,8 +108,7 @@ public class LottoCollectionCommandService {
                     break;
                 }
             }
-            CollectResponse aggregated = CollectResponse.of(totalCollected, totalUpdated, totalSkipped,
-                    latestRound, allFailedRounds, false, null, false);
+            CollectResponse aggregated = batch.toResponse(false, null);
             eventNotifier.publishCollected(aggregated);
             return aggregated;
         });
@@ -161,5 +147,29 @@ public class LottoCollectionCommandService {
                     return CollectResponse.ofOverlapSkipped(latestRound);
                 }
         );
+    }
+
+    private static final class BatchAccumulator {
+        int collected;
+        int updated;
+        int skipped;
+        int latestRound;
+        final List<Integer> failedRounds = new ArrayList<>();
+
+        BatchAccumulator(int initialLatestRound) {
+            this.latestRound = initialLatestRound;
+        }
+
+        void accumulate(CollectResponse one) {
+            collected += one.collected();
+            updated += one.updated();
+            skipped += one.skipped();
+            latestRound = Math.max(latestRound, one.latestRound());
+            failedRounds.addAll(one.failedRounds());
+        }
+
+        CollectResponse toResponse(boolean truncated, Integer nextRound) {
+            return CollectResponse.of(collected, updated, skipped, latestRound, failedRounds, truncated, nextRound, false);
+        }
     }
 }

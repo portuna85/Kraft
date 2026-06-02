@@ -5,12 +5,8 @@ import com.kraft.lotto.feature.recommend.application.RecommendService;
 import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
 import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
-import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -127,10 +123,10 @@ public class HomeController {
 
     private void addFrequencyModel(int period, Model model) {
         var summary = statisticsService.frequencySummary();
-        List<NumberFrequencyDto> rawFrequencies = period > 0
+        var rawFrequencies = period > 0
                 ? statisticsService.frequencyForPeriod(period)
                 : summary.frequencies();
-        List<FrequencyViewModel> freqVMs = toFrequencyViewModels(rawFrequencies);
+        List<FrequencyViewModel> freqVMs = FrequencyViewModel.from(rawFrequencies);
 
         List<FrequencyViewModel> topBalls = freqVMs.stream()
                 .filter(f -> f.rank() <= 6)
@@ -184,21 +180,4 @@ public class HomeController {
         model.addAttribute("filterSumMax", filter.sumMax());
     }
 
-    private static List<FrequencyViewModel> toFrequencyViewModels(List<NumberFrequencyDto> frequencies) {
-        long max = Math.max(1L, frequencies.stream().mapToLong(NumberFrequencyDto::count).max().orElse(1L));
-        List<NumberFrequencyDto> byCount = frequencies.stream()
-                .sorted(java.util.Comparator.comparingLong(NumberFrequencyDto::count).reversed())
-                .toList();
-        Map<Integer, Integer> rankByNumber = new HashMap<>(byCount.size() * 2);
-        for (int i = 0; i < byCount.size(); i++) {
-            rankByNumber.put(byCount.get(i).number(), i + 1);
-        }
-        List<FrequencyViewModel> result = new ArrayList<>(frequencies.size());
-        for (NumberFrequencyDto f : frequencies) {
-            double percent = f.count() * 100.0 / max;
-            int rank = rankByNumber.getOrDefault(f.number(), frequencies.size());
-            result.add(new FrequencyViewModel(f.number(), f.count(), percent, rank));
-        }
-        return result;
-    }
 }

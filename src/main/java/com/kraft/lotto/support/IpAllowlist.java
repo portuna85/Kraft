@@ -5,8 +5,11 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class IpAllowlist {
+
+    private static final Logger log = LoggerFactory.getLogger(IpAllowlist.class);
 
     private final List<IpRange> rules;
 
@@ -42,6 +45,7 @@ final class IpAllowlist {
             }
             return false;
         } catch (Exception ex) {
+            log.warn("IP 주소 해석 실패: {}", LogSanitizer.sanitizeLogValue(clientIp));
             return false;
         }
     }

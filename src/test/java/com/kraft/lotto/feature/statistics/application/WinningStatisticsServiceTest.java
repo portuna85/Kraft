@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.statistics.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
@@ -374,6 +376,27 @@ class WinningStatisticsServiceTest {
         verify(summary).clear();
         verify(patternStats).clear();
         verify(mockCacheService).refreshFrequencySummary();
+    }
+
+    @Test
+    @DisplayName("데이터 변경 이벤트 시 요약 테이블 갱신은 캐시 삭제보다 먼저 실행된다")
+    void evictCachesOnCollectedRefreshesSummaryBeforeCacheEviction() {
+        WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        CacheManager cacheManager = mock(CacheManager.class);
+        Cache frequency = mock(Cache.class);
+        when(cacheManager.getCache("winningNumberFrequency")).thenReturn(frequency);
+        when(cacheManager.getCache("winningNumberFrequencyPeriod")).thenReturn(null);
+        when(cacheManager.getCache("combinationPrizeHistory")).thenReturn(null);
+        when(cacheManager.getCache("winningFrequencySummary")).thenReturn(null);
+        when(cacheManager.getCache("patternStats")).thenReturn(null);
+        when(cacheManager.getCache("companionNumbers")).thenReturn(null);
+
+        WinningStatisticsService service = new WinningStatisticsService(mockCacheService, cacheManager);
+        service.evictCachesOnCollected(WinningNumbersCollectedEvent.of(1, 0, 0, 0));
+
+        InOrder order = inOrder(mockCacheService, frequency);
+        order.verify(mockCacheService).refreshFrequencySummary();
+        order.verify(frequency).clear();
     }
 
     @Test

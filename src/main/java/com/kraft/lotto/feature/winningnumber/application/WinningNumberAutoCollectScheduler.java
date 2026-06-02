@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
+import com.kraft.lotto.support.LogSanitizer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -81,7 +82,7 @@ public class WinningNumberAutoCollectScheduler {
             status = "failure";
             recordFailure(trigger, ex);
             log.error("[ALERT] lotto collect-all fail trigger={} exception={} message={}",
-                    trigger, classifyException(ex), sanitizeLogValue(ex.getMessage()));
+                    trigger, classifyException(ex), LogSanitizer.sanitizeLogValue(ex.getMessage()));
             log.error("lotto collect-all fail  trigger={}", trigger, ex);
         } finally {
             recordRun(trigger, status, startedAt);
@@ -122,10 +123,4 @@ public class WinningNumberAutoCollectScheduler {
         return simpleName.isBlank() ? "unknown" : simpleName;
     }
 
-    private static String sanitizeLogValue(String value) {
-        if (value == null || value.isBlank()) {
-            return "";
-        }
-        return value.replace('\r', '_').replace('\n', '_');
-    }
 }

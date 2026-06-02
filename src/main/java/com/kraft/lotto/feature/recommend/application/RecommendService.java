@@ -69,26 +69,41 @@ public class RecommendService {
         }
         List<ExclusionRule> filterRules = new ArrayList<>(2);
         if (filter.hasOddCount()) {
-            int target = filter.oddCount();
-            filterRules.add(new ExclusionRule() {
-                @Override public boolean shouldExclude(LottoCombination c) { return c.oddCount() != target; }
-                @Override public String reason() { return "홀수 개수 " + target + "개 조건 불일치"; }
-                @Override public String name() { return "OddCountFilter"; }
-            });
+            filterRules.add(new OddCountFilterRule(filter.oddCount()));
         }
         if (filter.hasSumRange()) {
-            Integer min = filter.sumMin();
-            Integer max = filter.sumMax();
-            filterRules.add(new ExclusionRule() {
-                @Override public boolean shouldExclude(LottoCombination c) {
-                    int s = c.sum();
-                    return (min != null && s < min) || (max != null && s > max);
-                }
-                @Override public String reason() { return "합산 범위 조건 불일치"; }
-                @Override public String name() { return "SumRangeFilter"; }
-            });
+            filterRules.add(new SumRangeFilterRule(filter.sumMin(), filter.sumMax()));
         }
         return List.copyOf(filterRules);
+    }
+
+    private static final class OddCountFilterRule implements ExclusionRule {
+        private final int target;
+
+        OddCountFilterRule(int target) {
+            this.target = target;
+        }
+
+        @Override public boolean shouldExclude(LottoCombination c) { return c.oddCount() != target; }
+        @Override public String reason() { return "홀수 개수 " + target + "개 조건 불일치"; }
+        @Override public String name() { return "OddCountFilter"; }
+    }
+
+    private static final class SumRangeFilterRule implements ExclusionRule {
+        private final Integer min;
+        private final Integer max;
+
+        SumRangeFilterRule(Integer min, Integer max) {
+            this.min = min;
+            this.max = max;
+        }
+
+        @Override public boolean shouldExclude(LottoCombination c) {
+            int s = c.sum();
+            return (min != null && s < min) || (max != null && s > max);
+        }
+        @Override public String reason() { return "합산 범위 조건 불일치"; }
+        @Override public String name() { return "SumRangeFilter"; }
     }
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP",
