@@ -23,6 +23,7 @@ env:
   GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true'
   TRIVY_VERSION: 'v0.70.0'
   SYFT_VERSION: 'v1.24.0'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   build-test:
