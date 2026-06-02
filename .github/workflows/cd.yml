@@ -96,24 +96,24 @@ jobs:
       - name: Repair Flyway V1 checksum (migration squash)
         run: |
           set -euo pipefail
-          # 이전 배포 없이 최초 설치인 경우 MariaDB가 없으므로 건너뜀
           if ! docker compose ps mariadb 2>/dev/null | grep -qE "Up|running"; then
             echo "MariaDB not running — fresh install, skipping repair"
             exit 0
           fi
-          set -a; source .env; set +a
-          actual=$(docker compose exec -T mariadb mysql \
-            -u"${KRAFT_DB_USER}" -p"${KRAFT_DB_PASSWORD}" "${KRAFT_DB_NAME}" \
-            --skip-column-names --silent \
-            -e "SELECT COALESCE(checksum,'') FROM flyway_schema_history WHERE version='1'" \
-            2>/dev/null || echo "")
+          # 컨테이너 내부의 MARIADB_* 환경변수를 사용해 .env source 없이 접속
+          actual=$(
+            echo "SELECT COALESCE(checksum,'') FROM flyway_schema_history WHERE version='1';" \
+            | docker compose exec -T mariadb bash -c \
+                'mysql -u"${MARIADB_USER}" -p"${MARIADB_PASSWORD}" "${MARIADB_DATABASE}" --skip-column-names --silent' \
+                2>/dev/null
+          ) || actual=""
           if [ "${actual}" != "-2024252480" ]; then
             echo "Flyway V1 checksum='${actual}' — no repair needed"
             exit 0
           fi
           echo "Repairing Flyway V1 schema history (V1–V18 squash)..."
-          docker compose exec -i mariadb mysql \
-            -u"${KRAFT_DB_USER}" -p"${KRAFT_DB_PASSWORD}" "${KRAFT_DB_NAME}" \
+          docker compose exec -T mariadb bash -c \
+            'mysql -u"${MARIADB_USER}" -p"${MARIADB_PASSWORD}" "${MARIADB_DATABASE}"' \
             < scripts/flyway-reset-history.sql
           echo "Repair complete"
 
