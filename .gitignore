@@ -45,6 +45,7 @@ logs/
 
 # Local secrets
 .env
+.claude.json
 !.env.example
 !.env.local.example
 !.env.prod.example
@@ -55,3 +56,4 @@ logs/
 # Local agent instruction files
 AGENTS.md
 CLAUDE.md
+.env
