@@ -19,7 +19,12 @@ import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import com.kraft.lotto.infra.config.KraftCollectProperties;
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
 import com.kraft.lotto.web.OpsCollectionFacade;
-import com.kraft.lotto.web.OpsController;
+import com.kraft.lotto.web.OpsCollectionController;
+import com.kraft.lotto.web.OpsExceptionHandler;
+import com.kraft.lotto.web.OpsFetchLogController;
+import com.kraft.lotto.web.OpsMonitoringController;
+import com.kraft.lotto.web.OpsNewsController;
+import com.kraft.lotto.web.OpsNoStoreAdvice;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -59,18 +64,17 @@ class OpsApiAccessScenarioTest {
 
     @BeforeEach
     void setUp() {
-        OpsController controller = new OpsController(
-                fetchLogQueryService,
-                collectionCommandService,
-                opsCollectionFacade,
-                recommendMetricsQueryService,
-                circuitBreakerRegistry,
-                collectProperties(),
-                securityProperties(),
-                Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul")),
-                newsCollectionService
-        );
-        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                        new OpsCollectionController(collectionCommandService, opsCollectionFacade, securityProperties()),
+                        new OpsFetchLogController(fetchLogQueryService, collectProperties()),
+                        new OpsMonitoringController(
+                                recommendMetricsQueryService,
+                                circuitBreakerRegistry,
+                                Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul"))
+                        ),
+                        new OpsNewsController(newsCollectionService)
+                )
+                .setControllerAdvice(new OpsNoStoreAdvice(), new OpsExceptionHandler())
                 .addFilters(new OpsAccessFilter(securityProperties()))
                 .build();
     }
@@ -219,6 +223,47 @@ class OpsApiAccessScenarioTest {
                 .andExpect(jsonPath("$.latestRound").value(1200));
 
         verify(opsCollectionFacade).collectLatest(any(), any());
+    }
+
+    @Test
+    @DisplayName("POST /ops/collect/missing: 정상 토큰/허용 IP면 facade 위임 후 200")
+    void collectMissingWithValidTokenAndAllowedIpReturnsOk() throws Exception {
+        when(opsCollectionFacade.collectMissing(any(), any())).thenReturn(
+                com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse.of(
+                        2, 0, 0, 1200, java.util.List.of(), false, null, false
+                ));
+
+        mockMvc.perform(post("/ops/collect/missing")
+                        .header("X-Ops-Token", "expected-token")
+                        .with(request -> {
+                            request.setRemoteAddr("127.0.0.1");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.collected").value(2))
+                .andExpect(jsonPath("$.latestRound").value(1200));
+
+        verify(opsCollectionFacade).collectMissing(any(), any());
+    }
+
+    @Test
+    @DisplayName("POST /ops/news/collect: 정상 토큰/허용 IP면 뉴스 수집 결과를 반환한다")
+    void collectNewsWithValidTokenAndAllowedIpReturnsOk() throws Exception {
+        when(newsCollectionService.collect()).thenReturn(new NewsCollectionService.NewsCollectResult(3, 4));
+
+        mockMvc.perform(post("/ops/news/collect")
+                        .header("X-Ops-Token", "expected-token")
+                        .with(request -> {
+                            request.setRemoteAddr("127.0.0.1");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.saved").value(3))
+                .andExpect(jsonPath("$.skipped").value(4))
+                .andExpect(header().string("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0"));
+
+        verify(newsCollectionService).collect();
+        verify(newsCollectionService).purgeOldArticles();
     }
 
     private static KraftSecurityProperties securityProperties() {

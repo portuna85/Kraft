@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-@RestControllerAdvice(assignableTypes = OpsController.class)
+@RestControllerAdvice(annotations = OpsApi.class)
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class OpsExceptionHandler {
 
