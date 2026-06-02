@@ -1,7 +1,6 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;

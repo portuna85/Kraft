@@ -126,7 +126,6 @@ class PublicRateLimitFilterTest {
     @Test
     @DisplayName("SlidingWindowCounter: 동시성 — N 스레드 동시 요청 시 허가 수가 maxRequests를 초과하지 않는다")
     void slidingWindowConcurrentRequestsNeverExceedMax() throws InterruptedException {
-        long startNanos = System.nanoTime();
         long windowNanos = TimeUnit.SECONDS.toNanos(60);
         int maxRequests = 10;
         SlidingWindowCounter counter = new SlidingWindowCounter();

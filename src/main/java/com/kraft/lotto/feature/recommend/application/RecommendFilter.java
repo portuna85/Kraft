@@ -12,21 +12,19 @@ public record RecommendFilter(Integer oddCount, Integer sumMin, Integer sumMax) 
     private static final int MAX_SUM = 255;
 
     public RecommendFilter {
-        if (oddCount != null && (oddCount < MIN_ODD_COUNT || oddCount > MAX_ODD_COUNT)) {
-            throw new BusinessException(ErrorCode.LOTTO_INVALID_NUMBER,
-                    "oddCount must be between " + MIN_ODD_COUNT + " and " + MAX_ODD_COUNT);
-        }
-        if (sumMin != null && (sumMin < MIN_SUM || sumMin > MAX_SUM)) {
-            throw new BusinessException(ErrorCode.LOTTO_INVALID_NUMBER,
-                    "sumMin must be between " + MIN_SUM + " and " + MAX_SUM);
-        }
-        if (sumMax != null && (sumMax < MIN_SUM || sumMax > MAX_SUM)) {
-            throw new BusinessException(ErrorCode.LOTTO_INVALID_NUMBER,
-                    "sumMax must be between " + MIN_SUM + " and " + MAX_SUM);
-        }
+        validateRange("oddCount", oddCount, MIN_ODD_COUNT, MAX_ODD_COUNT);
+        validateRange("sumMin", sumMin, MIN_SUM, MAX_SUM);
+        validateRange("sumMax", sumMax, MIN_SUM, MAX_SUM);
         if (sumMin != null && sumMax != null && sumMin > sumMax) {
             throw new BusinessException(ErrorCode.LOTTO_INVALID_NUMBER,
                     "sumMin must be less than or equal to sumMax");
+        }
+    }
+
+    private static void validateRange(String name, Integer value, int min, int max) {
+        if (value != null && (value < min || value > max)) {
+            throw new BusinessException(ErrorCode.LOTTO_INVALID_NUMBER,
+                    name + " must be between " + min + " and " + max);
         }
     }
 
