@@ -87,6 +87,6 @@ class LatestRoundControllerTest {
     })
     @DisplayName("세후 금액을 세율에 따라 계산한다")
     void afterTaxCalculation(long prize, long expectedAfterTax) {
-        assertThat(LatestRoundController.afterTax(prize)).isEqualTo(expectedAfterTax);
+        assertThat(LottoPrizeTaxCalculator.afterTax(prize)).isEqualTo(expectedAfterTax);
     }
 }

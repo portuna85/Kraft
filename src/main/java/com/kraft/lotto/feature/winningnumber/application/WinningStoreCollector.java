@@ -42,21 +42,34 @@ public class WinningStoreCollector {
         collectStores(latestRound);
     }
 
-    @Transactional
     public void collectStores(int round) {
         log.info("collecting winning stores: round={}", round);
-        storeRepository.deleteByRound(round);
+        List<WinningStoreEntity> allEntities = fetchAllGrades(round);
+        persist(round, allEntities);
+    }
+
+    private List<WinningStoreEntity> fetchAllGrades(int round) {
+        List<WinningStoreEntity> result = new java.util.ArrayList<>();
         for (int grade : GRADES) {
             List<WinningStore> stores = storeApiClient.fetchStores(round, grade);
             if (stores.isEmpty()) {
                 log.warn("no winning stores fetched: round={}, grade={}", round, grade);
                 continue;
             }
-            List<WinningStoreEntity> entities = stores.stream()
+            stores.stream()
                     .map(s -> new WinningStoreEntity(s.round(), s.grade(), s.name(), s.address(), s.winCount()))
-                    .toList();
+                    .forEach(result::add);
+            log.info("winning stores fetched: round={}, grade={}, count={}", round, grade, stores.size());
+        }
+        return result;
+    }
+
+    @Transactional
+    public void persist(int round, List<WinningStoreEntity> entities) {
+        storeRepository.deleteByRound(round);
+        if (!entities.isEmpty()) {
             storeRepository.saveAll(entities);
-            log.info("winning stores saved: round={}, grade={}, count={}", round, grade, entities.size());
+            log.info("winning stores saved: round={}, count={}", round, entities.size());
         }
     }
 }

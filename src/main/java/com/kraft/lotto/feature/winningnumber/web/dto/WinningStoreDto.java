@@ -11,14 +11,20 @@ public record WinningStoreDto(
         int winCount,
         String naverMapUrl
 ) {
+    private static final String NAVER_MAP_SEARCH = "https://map.naver.com/v5/search/";
+
     public static WinningStoreDto from(WinningStore store) {
-        String query = URLEncoder.encode(store.name() + " " + store.address(), StandardCharsets.UTF_8);
         return new WinningStoreDto(
                 store.grade(),
                 store.name(),
                 store.address(),
                 store.winCount(),
-                "https://map.naver.com/v5/search/" + query
+                naverMapUrl(store.name(), store.address())
         );
+    }
+
+    private static String naverMapUrl(String name, String address) {
+        String query = URLEncoder.encode(name + " " + address, StandardCharsets.UTF_8);
+        return NAVER_MAP_SEARCH + query;
     }
 }

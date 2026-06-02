@@ -2,7 +2,6 @@ package com.kraft.lotto.feature.winningnumber.application;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -72,8 +71,8 @@ class WinningStoreCollectorTest {
         collector.collectStores(1226);
 
         verify(storeRepository).deleteByRound(1226);
-        verify(storeRepository, times(2)).saveAll(org.mockito.ArgumentMatchers.argThat(
-                list -> ((List<?>) list).size() == 1));
+        verify(storeRepository).saveAll(org.mockito.ArgumentMatchers.argThat(
+                list -> ((List<?>) list).size() == 2));
     }
 
     @Test
