@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("보안 헤더 필터")
 class SecurityHeadersFilterTest {
@@ -59,5 +61,50 @@ class SecurityHeadersFilterTest {
         filter.doFilter(request, response, new MockFilterChain());
 
         assertThat(response.getHeader("Strict-Transport-Security")).isNull();
+    }
+
+    @Test
+    @DisplayName("요청마다 CSP nonce를 생성해 request attribute와 CSP 헤더에 포함한다")
+    void nonceIsInjectedIntoCspAndRequestAttribute() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        String nonce = (String) request.getAttribute(SecurityHeadersFilter.CSP_NONCE_ATTRIBUTE);
+        assertThat(nonce).isNotBlank();
+        assertThat(response.getHeader("Content-Security-Policy")).contains("'nonce-" + nonce + "'");
+    }
+
+    @Test
+    @DisplayName("두 요청의 nonce는 서로 다르다")
+    void eachRequestGetsDifferentNonce() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties);
+
+        MockHttpServletRequest req1 = new MockHttpServletRequest("GET", "/");
+        MockHttpServletRequest req2 = new MockHttpServletRequest("GET", "/");
+        filter.doFilter(req1, new MockHttpServletResponse(), new MockFilterChain());
+        filter.doFilter(req2, new MockHttpServletResponse(), new MockFilterChain());
+
+        String nonce1 = (String) req1.getAttribute(SecurityHeadersFilter.CSP_NONCE_ATTRIBUTE);
+        String nonce2 = (String) req2.getAttribute(SecurityHeadersFilter.CSP_NONCE_ATTRIBUTE);
+        assertThat(nonce1).isNotEqualTo(nonce2);
+    }
+
+    @ParameterizedTest
+    @DisplayName("injectNonce는 script-src 지시자에 nonce를 주입한다")
+    @ValueSource(strings = {
+            "default-src 'self'; script-src 'self'; style-src 'self'",
+            "script-src 'self' https://cdn.example.com; object-src 'none'"
+    })
+    void injectNonceAddsNonceToScriptSrc(String csp) {
+        String result = SecurityHeadersFilter.injectNonce(csp, "abc123");
+
+        assertThat(result).contains("'nonce-abc123'");
+        assertThat(result).contains("script-src 'nonce-abc123'");
     }
 }

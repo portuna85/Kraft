@@ -3,6 +3,11 @@ package com.kraft.lotto.web;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
+import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberDto;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +26,9 @@ class SeoControllerTest {
 
     @Mock
     Environment environment;
+
+    @Mock
+    WinningNumberQueryService winningNumberQueryService;
 
     @InjectMocks
     SeoController controller;
@@ -145,5 +153,32 @@ class SeoControllerTest {
         String body = response.getBody();
         assertThat(body).doesNotContain("<loc>https://www.kraft.io.kr&</loc>");
         assertThat(body).contains("</urlset>");
+    }
+
+    @Test
+    @DisplayName("최신 당첨 회차가 있으면 sitemap에 lastmod가 포함된다")
+    void sitemapContainsLastmodWhenDrawExists() {
+        when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
+                .thenReturn("https://www.kraft.io.kr");
+        WinningNumberDto dto = new WinningNumberDto(
+                1180, LocalDate.of(2026, 5, 31), List.of(1, 2, 3, 4, 5, 6), 7,
+                1_000_000_000L, 1, 50_000_000_000L, 50_000_000L, 50);
+        when(winningNumberQueryService.findLatest()).thenReturn(Optional.of(dto));
+
+        var response = controller.sitemap();
+
+        assertThat(response.getBody()).contains("<lastmod>2026-05-31</lastmod>");
+    }
+
+    @Test
+    @DisplayName("당첨 회차 데이터가 없으면 sitemap에 lastmod가 없다")
+    void sitemapOmitsLastmodWhenNoDrawData() {
+        when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
+                .thenReturn("https://www.kraft.io.kr");
+        when(winningNumberQueryService.findLatest()).thenReturn(Optional.empty());
+
+        var response = controller.sitemap();
+
+        assertThat(response.getBody()).doesNotContain("<lastmod>");
     }
 }

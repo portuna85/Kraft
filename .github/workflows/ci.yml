@@ -173,6 +173,7 @@ jobs:
 
       - name: Build and push Docker image to GHCR
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        id: docker-push
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -180,6 +181,21 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.IMAGE_NAME }}:latest
+
+      # C-5: 빌드 프로비넌스 어테스테이션 — jar + 이미지
+      - name: Attest jar provenance
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: build/libs/app.jar
+
+      - name: Attest image provenance
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.docker-push.outputs.digest }}
+          push-to-registry: true
 
       - name: Upload test report
         if: always()

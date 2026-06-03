@@ -33,6 +33,15 @@
   <link rel="stylesheet" th:href="@{/css/kraft-redesign.css}">
   <link rel="stylesheet" th:href="@{/css/lotto-ball.css}">
   <title th:text="${title}">최고의 번호</title>
+  <script type="application/ld+json" th:inline="text" th:attr="nonce=${cspNonce}" th:unless="${isAdmin}">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "최고의 번호",
+    "url": "[[${baseUrl}]]",
+    "description": "로또 당첨번호 조회, 번호 추천, 빈도·패턴 통계 서비스"
+  }
+  </script>
 </head>
 <body>
 <nav class="navbar navbar-expand-md border-bottom sticky-top">

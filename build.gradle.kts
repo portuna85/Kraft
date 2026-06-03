@@ -45,7 +45,7 @@ dependencies {
     implementation("org.flywaydb:flyway-mysql")
     implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.2")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.9.2")
-    implementation("org.webjars:bootstrap:5.3.3")
+    // bootstrap CSS는 src/main/resources/static/vendor/bootstrap/ 에서 직접 서빙
 
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
     compileOnly("org.projectlombok:lombok:$lombokVersion")

@@ -6,6 +6,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.Ordered;
@@ -16,6 +18,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 40)
 public class SecurityHeadersFilter extends OncePerRequestFilter {
+
+    static final String CSP_NONCE_ATTRIBUTE = "cspNonce";
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final int NONCE_BYTE_LENGTH = 16;
 
     private final KraftSecurityProperties securityProperties;
 
@@ -33,7 +40,11 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         if (securityProperties.getHeaders().isEnabled()) {
-            response.setHeader("Content-Security-Policy", securityProperties.getHeaders().getContentSecurityPolicy());
+            String nonce = generateNonce();
+            request.setAttribute(CSP_NONCE_ATTRIBUTE, nonce);
+
+            String csp = injectNonce(securityProperties.getHeaders().getContentSecurityPolicy(), nonce);
+            response.setHeader("Content-Security-Policy", csp);
             response.setHeader("X-Frame-Options", securityProperties.getHeaders().getXFrameOptions());
             response.setHeader("Referrer-Policy", securityProperties.getHeaders().getReferrerPolicy());
             response.setHeader("Permissions-Policy", securityProperties.getHeaders().getPermissionsPolicy());
@@ -45,5 +56,19 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private static String generateNonce() {
+        byte[] bytes = new byte[NONCE_BYTE_LENGTH];
+        SECURE_RANDOM.nextBytes(bytes);
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    static String injectNonce(String csp, String nonce) {
+        String nonceDirective = "'nonce-" + nonce + "'";
+        if (csp.contains("script-src ")) {
+            return csp.replace("script-src ", "script-src " + nonceDirective + " ");
+        }
+        return csp;
     }
 }

@@ -1,6 +1,8 @@
 package com.kraft.lotto.web;
 
+import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import java.net.URI;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
@@ -13,23 +15,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class SeoController {
 
     private static final String DEFAULT_BASE_URL = "https://www.kraft.io.kr";
+    private static final DateTimeFormatter LASTMOD_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
 
     private final Environment environment;
+    private final WinningNumberQueryService winningNumberQueryService;
 
     @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> sitemap() {
         String nl = System.lineSeparator();
         String baseUrl = publicBaseUrl();
+        String lastmod = latestDrawDateIso();
         String body = String.join(nl,
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
                 "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
-                sitemapUrl(baseUrl, "/",          "daily",  "1.0"),
-                sitemapUrl(baseUrl, "/frequency", "weekly", "0.8"),
-                sitemapUrl(baseUrl, "/rounds",    "daily",  "0.8"),
-                sitemapUrl(baseUrl, "/stats",     "weekly", "0.7"),
-                sitemapUrl(baseUrl, "/analysis",  "weekly", "0.7"),
-                sitemapUrl(baseUrl, "/companion", "weekly", "0.6"),
-                sitemapUrl(baseUrl, "/news",      "daily",  "0.7"),
+                sitemapUrl(baseUrl, "/",          "daily",  "1.0", lastmod),
+                sitemapUrl(baseUrl, "/frequency", "weekly", "0.8", lastmod),
+                sitemapUrl(baseUrl, "/rounds",    "daily",  "0.8", lastmod),
+                sitemapUrl(baseUrl, "/stats",     "weekly", "0.7", lastmod),
+                sitemapUrl(baseUrl, "/analysis",  "weekly", "0.7", lastmod),
+                sitemapUrl(baseUrl, "/companion", "weekly", "0.6", lastmod),
+                sitemapUrl(baseUrl, "/news",      "daily",  "0.7", lastmod),
                 "</urlset>"
         ) + nl;
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(body);
@@ -51,12 +56,24 @@ public class SeoController {
         return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(body);
     }
 
-    private static String sitemapUrl(String baseUrl, String path, String changefreq, String priority) {
-        return "    <url>" + System.lineSeparator()
-                + "        <loc>" + xmlEscape(baseUrl + path) + "</loc>" + System.lineSeparator()
-                + "        <changefreq>" + changefreq + "</changefreq>" + System.lineSeparator()
-                + "        <priority>" + priority + "</priority>" + System.lineSeparator()
-                + "    </url>";
+    private String latestDrawDateIso() {
+        return winningNumberQueryService.findLatest()
+                .map(dto -> dto.drawDate().format(LASTMOD_FORMAT))
+                .orElse(null);
+    }
+
+    private static String sitemapUrl(String baseUrl, String path, String changefreq, String priority,
+                                     String lastmod) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("    <url>").append(System.lineSeparator());
+        sb.append("        <loc>").append(xmlEscape(baseUrl + path)).append("</loc>").append(System.lineSeparator());
+        if (lastmod != null) {
+            sb.append("        <lastmod>").append(lastmod).append("</lastmod>").append(System.lineSeparator());
+        }
+        sb.append("        <changefreq>").append(changefreq).append("</changefreq>").append(System.lineSeparator());
+        sb.append("        <priority>").append(priority).append("</priority>").append(System.lineSeparator());
+        sb.append("    </url>");
+        return sb.toString();
     }
 
     private String publicBaseUrl() {
