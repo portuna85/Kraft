@@ -24,4 +24,11 @@ public interface ExclusionRule {
     default String name() {
         return getClass().getSimpleName();
     }
+
+    /**
+     * 조합이 이 규칙을 통과했을 때 사용자에게 표시할 짧은 긍정 문구.
+     */
+    default String label() {
+        return name();
+    }
 }

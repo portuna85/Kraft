@@ -67,7 +67,7 @@ public final class LottoTestFixtures {
 
     public static List<CombinationDto> combinationDtos(int count) {
         return IntStream.rangeClosed(1, count)
-                .mapToObj(offset -> new CombinationDto(List.of(offset, offset + 10, offset + 20, 31, 40, 45)))
+                .mapToObj(offset -> new CombinationDto(List.of(offset, offset + 10, offset + 20, 31, 40, 45), List.of()))
                 .toList();
     }
 }

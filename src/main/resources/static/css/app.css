@@ -7,3 +7,13 @@
 .kraft-footer-nav{display:flex;flex-wrap:wrap;gap:.25rem .85rem;}
 .kraft-footer-nav a{font-size:.75rem;font-weight:600;text-decoration:none;}
 .kraft-footer-nav a:hover{text-decoration:underline;}
+
+/* --- Set card bias analysis --- */
+.set-card-analysis{margin-top:.5rem;}
+.set-card-analysis-toggle{cursor:pointer;list-style:none;padding:.2rem 0;}
+.set-card-analysis-toggle::-webkit-details-marker{display:none;}
+.set-card-analysis-toggle::before{content:'▸ ';font-size:.72rem;}
+details[open] .set-card-analysis-toggle::before{content:'▾ ';}
+.set-card-analysis-list{list-style:none;margin:.3rem 0 0;padding:0;display:flex;flex-direction:column;gap:.15rem;}
+.set-card-analysis-item{display:flex;align-items:center;gap:.3rem;font-size:.72rem;color:var(--kraft-muted,#4f5e70);}
+.set-card-analysis-check{color:var(--kraft-success,#16a34a);font-size:.72rem;flex-shrink:0;}

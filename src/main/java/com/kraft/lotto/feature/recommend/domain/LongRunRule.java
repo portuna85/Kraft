@@ -42,4 +42,9 @@ public class LongRunRule implements ExclusionRule {
     public String reason() {
         return "5개 이상 연속된 번호가 포함된 긴 연속 조합은 제외합니다.";
     }
+
+    @Override
+    public String label() {
+        return "5개 이상 연속 번호 없음";
+    }
 }

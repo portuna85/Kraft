@@ -34,4 +34,9 @@ public class BirthdayBiasRule implements ExclusionRule {
     public String reason() {
         return "6개 번호가 모두 31 이하인 생일 번호 편향 조합은 제외합니다.";
     }
+
+    @Override
+    public String label() {
+        return "생일 번호 편향 낮음";
+    }
 }

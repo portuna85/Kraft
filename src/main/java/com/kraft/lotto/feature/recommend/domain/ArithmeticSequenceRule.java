@@ -28,4 +28,9 @@ public class ArithmeticSequenceRule implements ExclusionRule {
     public String reason() {
         return "동일한 공차를 가지는 완전 등차수열 조합은 제외합니다.";
     }
+
+    @Override
+    public String label() {
+        return "완전 등차수열 아님";
+    }
 }

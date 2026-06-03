@@ -25,4 +25,9 @@ public class PastWinningRule implements ExclusionRule {
     public String reason() {
         return "과거 1등 당첨 조합과 완전히 동일한 조합은 제외합니다.";
     }
+
+    @Override
+    public String label() {
+        return "과거 1등 조합과 불일치";
+    }
 }

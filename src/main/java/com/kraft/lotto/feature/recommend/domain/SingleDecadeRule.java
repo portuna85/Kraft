@@ -58,4 +58,9 @@ public class SingleDecadeRule implements ExclusionRule {
     public String reason() {
         return "동일 십의 자리 그룹에 5개 이상 번호가 몰린 조합은 제외합니다.";
     }
+
+    @Override
+    public String label() {
+        return "특정 번호대 과밀 없음";
+    }
 }

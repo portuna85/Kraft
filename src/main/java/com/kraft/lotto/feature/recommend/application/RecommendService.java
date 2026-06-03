@@ -22,6 +22,7 @@ public class RecommendService {
 
     private final List<ExclusionRule> rules;
     private final List<RuleDto> ruleDtos;
+    private final List<String> passedLabels;
     private final LottoRecommender recommender;
     private final RecommendMetricsRecorder metricsRecorder;
 
@@ -33,12 +34,19 @@ public class RecommendService {
         this.ruleDtos = this.rules.stream()
                 .map(r -> new RuleDto(r.name(), r.reason()))
                 .toList();
+        this.passedLabels = this.rules.stream()
+                .map(ExclusionRule::label)
+                .toList();
         this.recommender = recommender;
         this.metricsRecorder = metricsRecorder;
     }
 
     RecommendService(List<ExclusionRule> rules, LottoRecommender recommender, MeterRegistry meterRegistry) {
         this(rules, recommender, new RecommendMetricsRecorder(meterRegistry));
+    }
+
+    List<String> passedLabels() {
+        return passedLabels;
     }
 
     public RecommendResponse recommend(int count) {
@@ -52,7 +60,7 @@ public class RecommendService {
         try {
             List<ExclusionRule> filterRules = buildFilterRules(filter);
             var combinations = recommender.recommend(validatedCount, filterRules).stream()
-                    .map(c -> new CombinationDto(c.numbers()))
+                    .map(c -> new CombinationDto(c.numbers(), passedLabels))
                     .toList();
             return new RecommendResponse(combinations);
         } catch (RecommendGenerationTimeoutException ex) {

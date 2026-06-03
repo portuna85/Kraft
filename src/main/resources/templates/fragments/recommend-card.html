@@ -59,6 +59,15 @@
             <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
           </th:block>
         </div>
+        <details class="set-card-analysis" th:if="${not #lists.isEmpty(c.passedLabels)}">
+          <summary class="set-card-analysis-toggle small text-secondary">편향 회피 분석</summary>
+          <ul class="set-card-analysis-list">
+            <li th:each="label : ${c.passedLabels}" class="set-card-analysis-item">
+              <span class="set-card-analysis-check" aria-hidden="true">✓</span>
+              <span th:text="${label}">label</span>
+            </li>
+          </ul>
+        </details>
       </div>
     </div>
     <details class="mt-3"><summary class="kraft-summary-trigger text-secondary small">규칙 보기</summary><ul class="mt-2 ps-3 mb-0 small text-secondary"><li th:each="r : ${rules}" th:text="${r.name() + ' - ' + r.reason()}">rule</li></ul></details>
