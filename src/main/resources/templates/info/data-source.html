@@ -58,6 +58,37 @@
     </div>
   </div>
 
+  <!-- 최근 수집 이력 -->
+  <div class="card mb-4 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">최근 수집 이력</h2>
+      <p class="small text-secondary mb-3">최근 20건의 데이터 수집 결과입니다.</p>
+      <div th:if="${#lists.isEmpty(changeLog)}" class="small text-secondary">수집 이력이 없습니다.</div>
+      <div class="changelog-table-wrap" th:unless="${#lists.isEmpty(changeLog)}">
+        <table class="changelog-table small">
+          <thead>
+            <tr>
+              <th>회차</th>
+              <th>상태</th>
+              <th>수집 시각</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="log : ${changeLog}">
+              <td class="changelog-round" th:text="${log.round()} + '회'">1000회</td>
+              <td>
+                <span class="changelog-badge"
+                      th:classappend="${log.statusCssClass()}"
+                      th:text="${log.statusLabel()}">상태</span>
+              </td>
+              <td class="changelog-time font-monospace" th:text="${log.fetchedAtFormatted()}">2026-01-01 00:00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div class="card mb-4 kraft-section">
     <div class="card-body">
       <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">데이터 정확성 안내</h2>

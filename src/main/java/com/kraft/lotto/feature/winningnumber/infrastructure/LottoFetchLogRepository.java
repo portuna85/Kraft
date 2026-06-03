@@ -35,6 +35,12 @@ public interface LottoFetchLogRepository extends JpaRepository<LottoFetchLogEnti
             Pageable pageable
     );
 
+    @Query("""
+            select l from LottoFetchLogEntity l
+            order by l.fetchedAt desc
+            """)
+    List<LottoFetchLogEntity> findRecentAll(Pageable pageable);
+
     @Query("select min(l.fetchedAt) from LottoFetchLogEntity l")
     LocalDateTime findOldestFetchedAt();
 

@@ -2,6 +2,7 @@ package com.kraft.lotto.feature.winningnumber.application;
 
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogRepository;
+import com.kraft.lotto.feature.winningnumber.web.dto.DataChangeLogDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureLogsResponseDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
@@ -97,6 +98,13 @@ public class LottoFetchLogQueryService {
                 drwNoTo,
                 listRecentFailures(limit, reason, drwNoFrom, drwNoTo)
         );
+    }
+
+    public List<DataChangeLogDto> recentCollectionLogs(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 50));
+        return fetchLogRepository.findRecentAll(PageRequest.of(0, safeLimit)).stream()
+                .map(e -> DataChangeLogDto.of(e.getDrwNo(), e.getStatus(), e.getFetchedAt()))
+                .toList();
     }
 
     public FetchLogRetentionStatusDto retentionStatus(boolean enabled,

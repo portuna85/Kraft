@@ -34,3 +34,16 @@ details[open] .set-card-analysis-toggle::before{content:'▾ ';}
 .tier-official{background:color-mix(in srgb,var(--kraft-primary) 14%,transparent);color:var(--kraft-primary);}
 .tier-press{background:color-mix(in srgb,var(--kraft-success,#16a34a) 14%,transparent);color:var(--kraft-success,#16a34a);}
 .tier-general{background:var(--kraft-surface-muted,#edf2fb);color:var(--kraft-muted,#4f5e70);}
+
+/* --- 데이터 변경 로그 테이블 --- */
+.changelog-table-wrap{overflow-x:auto;}
+.changelog-table{border-collapse:collapse;width:100%;}
+.changelog-table th{color:var(--kraft-muted);font-size:.72rem;font-weight:700;letter-spacing:.04em;padding:.4rem .6rem;text-align:left;text-transform:uppercase;}
+.changelog-table td{border-top:1px solid var(--kraft-border);padding:.4rem .6rem;}
+.changelog-round{color:var(--kraft-primary);font-weight:700;}
+.changelog-time{color:var(--kraft-muted);font-size:.78rem;}
+.changelog-badge{border-radius:999px;font-size:.65rem;font-weight:700;padding:.1rem .45rem;}
+.changelog-success{background:color-mix(in srgb,var(--kraft-success,#16a34a) 14%,transparent);color:var(--kraft-success,#16a34a);}
+.changelog-failed{background:color-mix(in srgb,var(--kraft-danger,#dc2626) 14%,transparent);color:var(--kraft-danger,#dc2626);}
+.changelog-skipped{background:var(--kraft-surface-muted,#edf2fb);color:var(--kraft-muted,#4f5e70);}
+.changelog-not-drawn{background:var(--kraft-surface-muted,#edf2fb);color:var(--kraft-muted,#4f5e70);}
