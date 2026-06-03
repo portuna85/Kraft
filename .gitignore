@@ -52,7 +52,7 @@ deploy-state/
 !.env.prod.example
 
 # Documentation policy
-
+docs/*.md
 
 # Local agent instruction files
 AGENTS.md
