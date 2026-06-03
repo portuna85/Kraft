@@ -1,6 +1,7 @@
 .git
 .gradle
 build
+!build/libs/app.jar
 out
 logs
 .env
