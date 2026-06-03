@@ -2,6 +2,7 @@ package com.kraft.lotto.feature.winningnumber.web.dto;
 
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record WinningNumberDto(
@@ -13,7 +14,8 @@ public record WinningNumberDto(
         int firstWinners,
         long totalSales,
         long secondPrize,
-        int secondWinners
+        int secondWinners,
+        LocalDateTime fetchedAt
 ) {
     public WinningNumberDto {
         numbers = numbers == null ? List.of() : List.copyOf(numbers);
@@ -29,7 +31,8 @@ public record WinningNumberDto(
                 wn.firstWinners(),
                 wn.totalSales(),
                 wn.secondPrize(),
-                wn.secondWinners()
+                wn.secondWinners(),
+                wn.fetchedAt()
         );
     }
 }

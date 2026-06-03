@@ -76,7 +76,7 @@
         </li>
         <li class="nav-item">
           <a class="nav-link" th:classappend="${reqPath == '/companion'} ? 'active'" href="/companion"
-             th:attr="aria-current=${reqPath == '/companion' ? 'page' : null}">궁합</a>
+             th:attr="aria-current=${reqPath == '/companion' ? 'page' : null}">동반출현</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" th:classappend="${reqPath == '/news'} ? 'active'" href="/news"
@@ -147,7 +147,7 @@
      th:classappend="${reqPath == '/companion'} ? ' active'"
      th:attr="aria-current=${reqPath == '/companion' ? 'page' : null}">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
-    <span>궁합</span>
+    <span>동반출현</span>
   </a>
   <a href="/news" class="kraft-bottom-nav-item"
      th:classappend="${reqPath == '/news'} ? ' active'"
@@ -156,6 +156,25 @@
     <span>뉴스</span>
   </a>
 </nav>
+<footer class="kraft-footer" th:if="${!isAdmin}">
+  <div class="container kraft-container">
+    <p class="kraft-footer-disclaimer small text-secondary mb-2">
+      본 서비스는 로또 당첨을 보장하지 않으며, 모든 번호·통계는 참고용입니다.
+      최종 정보는
+      <a href="https://www.dhlottery.co.kr" target="_blank" rel="noopener noreferrer" class="text-secondary">동행복권 공식 사이트</a>를
+      확인해 주세요.
+    </p>
+    <nav class="kraft-footer-nav" aria-label="서비스 안내">
+      <a href="/faq" class="text-secondary">FAQ</a>
+      <a href="/methodology" class="text-secondary">알고리즘 설명</a>
+      <a href="/data-source" class="text-secondary">데이터 출처</a>
+      <a href="/responsible-play" class="text-secondary">책임 있는 복권 이용</a>
+      <a href="/privacy" class="text-secondary">개인정보처리방침</a>
+      <a href="/terms" class="text-secondary">이용약관</a>
+      <a href="/contact" class="text-secondary">문의</a>
+    </nav>
+  </div>
+</footer>
 <script th:src="@{/vendor/htmx/htmx.min.js}"></script>
 <script th:src="@{/js/theme.js}"></script>
 <script th:src="@{/js/validation.js}"></script>

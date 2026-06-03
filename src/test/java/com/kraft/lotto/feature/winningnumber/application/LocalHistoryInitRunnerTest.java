@@ -84,7 +84,7 @@ class LocalHistoryInitRunnerTest {
 
     private static WinningNumberDto latest() {
         return new WinningNumberDto(1, LocalDate.of(2002, 12, 7), List.of(1, 2, 3, 4, 5, 6),
-                7, 0L, 0, 0L, 0L, 0);
+                7, 0L, 0, 0L, 0L, 0, null);
     }
 
     private static class HoldingExecutor implements AsyncTaskExecutor {

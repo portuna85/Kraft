@@ -162,7 +162,7 @@ class SeoControllerTest {
                 .thenReturn("https://www.kraft.io.kr");
         WinningNumberDto dto = new WinningNumberDto(
                 1180, LocalDate.of(2026, 5, 31), List.of(1, 2, 3, 4, 5, 6), 7,
-                1_000_000_000L, 1, 50_000_000_000L, 50_000_000L, 50);
+                1_000_000_000L, 1, 50_000_000_000L, 50_000_000L, 50, null);
         when(winningNumberQueryService.findLatest()).thenReturn(Optional.of(dto));
 
         var response = controller.sitemap();

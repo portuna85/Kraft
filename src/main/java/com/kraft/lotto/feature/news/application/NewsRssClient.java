@@ -30,11 +30,13 @@ class NewsRssClient {
     private final RestClient restClient;
     private final String rssUrl;
     private final int maxArticles;
+    private final List<String> excludeKeywords;
 
-    NewsRssClient(RestClient restClient, String rssUrl, int maxArticles) {
+    NewsRssClient(RestClient restClient, String rssUrl, int maxArticles, List<String> excludeKeywords) {
         this.restClient = restClient;
         this.rssUrl = rssUrl;
         this.maxArticles = maxArticles;
+        this.excludeKeywords = excludeKeywords == null ? List.of() : List.copyOf(excludeKeywords);
     }
 
     List<NewsArticle> fetch() {
@@ -74,6 +76,9 @@ class NewsRssClient {
                 if (title == null || link == null || link.isBlank()) {
                     continue;
                 }
+                if (isExcluded(title)) {
+                    continue;
+                }
                 String description = stripHtml(text(item, "description"));
                 String source = sourceText(item);
                 LocalDateTime pubDate = parsePubDate(text(item, "pubDate"));
@@ -84,6 +89,19 @@ class NewsRssClient {
             log.warn("news rss parse failed url={} error={}", rssUrl, e.getMessage());
             return List.of();
         }
+    }
+
+    private boolean isExcluded(String title) {
+        if (excludeKeywords.isEmpty()) {
+            return false;
+        }
+        String lower = title.toLowerCase(Locale.KOREAN);
+        for (String keyword : excludeKeywords) {
+            if (lower.contains(keyword.toLowerCase(Locale.KOREAN))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String text(Element parent, String tag) {

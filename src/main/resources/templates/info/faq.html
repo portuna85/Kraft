@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('FAQ - 최고의 번호', '자주 묻는 질문과 답변입니다.', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">FAQ</p>
+    <h1>자주 묻는 질문</h1>
+    <p class="kraft-hero-description">이 서비스에 대해 자주 묻는 질문에 답변합니다.</p>
+  </header>
+
+  <div class="card mb-3 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 fw-semibold mb-2">Q1. 이 사이트가 당첨번호를 예측하나요?</h2>
+      <p class="small mb-0">아닙니다. 이 서비스는 당첨번호를 예측하지 않습니다.
+        과거 데이터와 조합 규칙을 참고해 흔한 선택 패턴을 피하도록 돕는 도구입니다.
+        어떤 방법으로도 로또 당첨번호를 미리 알거나 예측하는 것은 불가능합니다.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 fw-semibold mb-2">Q2. 추천 번호를 사면 당첨 확률이 올라가나요?</h2>
+      <p class="small mb-0">아닙니다. 로또 6/45에서 모든 6개 조합의 1등 당첨 확률은 동일합니다(1/8,145,060).
+        추천 번호를 사더라도 당첨 확률 자체는 변하지 않습니다.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 fw-semibold mb-2">Q3. 그러면 왜 추천 번호를 쓰나요?</h2>
+      <p class="small mb-0">생일 번호, 연속 번호, 상징적 조합처럼 많은 사람이 고를 가능성이 있는 번호를 피하면,
+        실제 당첨 시 공동 당첨자가 많아져 1인당 수령액이 줄어드는 상황을 일부 줄이는 데 도움이 될 수 있습니다.
+        이것이 이 도구의 유일한 목적입니다.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 fw-semibold mb-2">Q4. 과거에 많이 나온 번호가 더 유리한가요?</h2>
+      <p class="small mb-0">아닙니다. 로또 추첨은 매 회차 독립적인 무작위 사건입니다.
+        과거 출현 빈도는 미래 추첨 확률을 의미하지 않습니다.
+        "오랫동안 안 나온 번호가 곧 나올 것"이라는 생각은 도박사의 오류에 해당합니다.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 fw-semibold mb-2">Q5. 번호를 여러 번 생성하면 더 좋은 번호가 나오나요?</h2>
+      <p class="small mb-0">아닙니다. 여러 번 생성해도 당첨 확률 자체가 개선되지는 않습니다.
+        구매 수량이 늘어나면 지출도 함께 증가합니다.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 fw-semibold mb-2">Q6. 데이터는 어디서 가져오나요?</h2>
+      <p class="small mb-0">당첨번호는 동행복권 공식 API에서 수집합니다.
+        자세한 내용은 <a href="/data-source">데이터 출처</a> 페이지를 확인하세요.</p>
+    </div>
+  </div>
+
+  <div class="card mb-3 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 fw-semibold mb-2">Q7. 추천 알고리즘은 어떻게 작동하나요?</h2>
+      <p class="small mb-0"><a href="/methodology">알고리즘 설명</a> 페이지에서 상세히 확인하실 수 있습니다.</p>
+    </div>
+  </div>
+</section>
+</html>

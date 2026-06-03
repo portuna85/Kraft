@@ -60,7 +60,8 @@ public final class LottoTestFixtures {
                 10,
                 90_000_000_000L,
                 0L,
-                0
+                0,
+                null
         );
     }
 

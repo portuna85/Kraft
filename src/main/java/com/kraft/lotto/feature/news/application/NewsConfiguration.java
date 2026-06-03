@@ -23,7 +23,7 @@ class NewsConfiguration {
                     return execution.execute(request, body);
                 })
                 .build();
-        return new NewsRssClient(restClient, properties.rssUrl(), properties.maxArticlesPerRun());
+        return new NewsRssClient(restClient, properties.rssUrl(), properties.maxArticlesPerRun(), properties.excludeKeywords());
     }
 
     @Bean

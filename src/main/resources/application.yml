@@ -177,6 +177,13 @@ kraft:
     retention-days: ${KRAFT_NEWS_RETENTION_DAYS:30}
     connect-timeout-ms: ${KRAFT_NEWS_CONNECT_TIMEOUT_MS:5000}
     read-timeout-ms: ${KRAFT_NEWS_READ_TIMEOUT_MS:10000}
+    exclude-keywords:
+      - "아파트 로또"
+      - "분양 로또"
+      - "청약 로또"
+      - "선거 로또"
+      - "취업 로또"
+      - "입시 로또"
   recommend:
     max-attempts: ${KRAFT_RECOMMEND_MAX_ATTEMPTS:5000}
     initial-pick-max-attempts: ${KRAFT_RECOMMEND_INITIAL_PICK_MAX_ATTEMPTS:10000}

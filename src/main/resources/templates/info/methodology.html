@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('알고리즘 설명 - 최고의 번호', '번호 추천 알고리즘의 규칙과 한계를 투명하게 설명합니다.', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">알고리즘 설명</p>
+    <h1>번호 추천은 어떻게 작동하나요?</h1>
+    <p class="kraft-hero-description">추천 로직의 목적, 규칙, 한계를 투명하게 공개합니다.</p>
+  </header>
+
+  <div class="card mb-4 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">1. 목적</h2>
+      <p class="small">이 도구는 <strong>로또 당첨 확률을 높이는 번호를 예측하지 않습니다.</strong></p>
+      <p class="small">로또 6/45의 모든 6개 조합의 1등 당첨 확률은 동일합니다(1/8,145,060).
+        이 도구의 목적은 생일 번호, 연속 번호, 특정 패턴처럼 <strong>많은 사람이 자주 고르는 편향 조합을 피하도록 돕는 것</strong>입니다.
+        실제 당첨 시 이런 조합은 공동 당첨자가 많아져 1인당 수령액이 줄어들 수 있습니다.</p>
+    </div>
+  </div>
+
+  <div class="card mb-4 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">2. 적용 규칙</h2>
+      <p class="small text-secondary mb-3">다음 패턴에 해당하는 조합은 추천 후보에서 제외됩니다.</p>
+      <ul class="small ps-3 mb-0">
+        <li class="mb-2">
+          <strong>생일 번호 편향 (BirthdayBiasRule)</strong><br>
+          6개 번호가 모두 31 이하인 경우 제외합니다. 생일(1~31)에 해당하는 번호만 고르는 사람이 많기 때문입니다.
+        </li>
+        <li class="mb-2">
+          <strong>5개 이상 연속 번호 (LongRunRule)</strong><br>
+          5개 이상 연속된 번호가 포함된 경우 제외합니다(예: 1,2,3,4,5,10).
+        </li>
+        <li class="mb-2">
+          <strong>완전 등차수열 (ArithmeticSequenceRule)</strong><br>
+          6개 번호가 동일한 공차를 가진 등차수열을 이루는 경우 제외합니다(예: 1,8,15,22,29,36).
+        </li>
+        <li class="mb-2">
+          <strong>같은 십의 자리 과밀 (SingleDecadeRule)</strong><br>
+          동일한 십의 자리 그룹(1~9, 10~19, 20~29, 30~39, 40~45)에 5개 이상 번호가 집중된 경우 제외합니다.
+        </li>
+        <li class="mb-2">
+          <strong>과거 1등 조합 (PastWinningRule)</strong><br>
+          과거에 실제 1등 당첨된 조합과 완전히 동일한 경우 제외합니다.
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card mb-4 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">3. 사용하지 않는 요소</h2>
+      <ul class="small ps-3 mb-0">
+        <li class="mb-1">번호별 과거 출현 빈도 (많이 나온 번호를 더 추천하지 않음)</li>
+        <li class="mb-1">AI·머신러닝 예측 모델</li>
+        <li class="mb-1">홀짝 패턴 분석 (추천 확률에 반영하지 않음, 필터 선택 시 제외)</li>
+        <li class="mb-1">숫자론, 점술, 운세 등 비수학적 요소</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card mb-4 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">4. 당첨 확률을 높이지 않는 이유</h2>
+      <p class="small">로또 6/45는 45개 번호 중 6개를 무작위로 추첨합니다. 가능한 조합 수는 8,145,060가지이며,
+        어떤 조합을 선택하든 1등 확률은 동일하게 1/8,145,060입니다.
+        이 도구가 제외하는 조합도, 선택하는 조합도 모두 같은 확률을 갖습니다.</p>
+      <p class="small mb-0">단, 같은 조합을 선택한 사람이 많을수록 당첨 시 공동 당첨자가 늘어 1인당 수령액이 줄어듭니다.
+        이 도구는 그 위험을 <em>일부</em> 줄이는 데 도움이 될 수 있습니다.</p>
+    </div>
+  </div>
+
+  <div class="card mb-4 kraft-section">
+    <div class="card-body">
+      <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">5. 번호 생성 방식</h2>
+      <p class="small mb-0">1~45 범위에서 무작위로 6개 번호를 선택하고, 위의 규칙 중 하나라도 위반하면 재생성합니다.
+        이 과정을 조건을 만족하는 조합이 나올 때까지 반복합니다. 따라서 최종 결과는 규칙을 통과한 무작위 조합입니다.</p>
+    </div>
+  </div>
+</section>
+</html>

@@ -21,7 +21,7 @@ class NewsRssClientTest {
     @Test
     @DisplayName("유효한 RSS XML을 파싱하면 뉴스 목록을 반환한다")
     void parsesValidRssXml() {
-        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10);
+        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse(sampleRss());
 
         assertThat(articles).hasSize(2);
@@ -33,7 +33,7 @@ class NewsRssClientTest {
     @Test
     @DisplayName("maxArticles 제한이 적용된다")
     void maxArticlesLimitIsApplied() {
-        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 1);
+        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 1, List.of());
         List<NewsArticle> articles = client.parse(sampleRss());
 
         assertThat(articles).hasSize(1);
@@ -42,7 +42,7 @@ class NewsRssClientTest {
     @Test
     @DisplayName("link가 없는 item은 건너뛴다")
     void itemWithoutLinkIsSkipped() {
-        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10);
+        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse(rssWithoutLink());
 
         assertThat(articles).isEmpty();
@@ -51,7 +51,7 @@ class NewsRssClientTest {
     @Test
     @DisplayName("잘못된 XML이면 빈 목록을 반환한다")
     void malformedXmlReturnsEmptyList() {
-        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10);
+        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse("<invalid>xml<<</invalid>");
 
         assertThat(articles).isEmpty();
@@ -60,7 +60,7 @@ class NewsRssClientTest {
     @Test
     @DisplayName("description HTML 태그가 제거된다")
     void descriptionHtmlTagsAreStripped() {
-        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10);
+        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse(rssWithHtmlDescription());
 
         assertThat(articles).hasSize(1);
@@ -71,7 +71,7 @@ class NewsRssClientTest {
     @Test
     @DisplayName("pubDate가 없어도 파싱된다")
     void itemWithoutPubDateIsParsed() {
-        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10);
+        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse(rssWithoutPubDate());
 
         assertThat(articles).hasSize(1);
@@ -81,10 +81,35 @@ class NewsRssClientTest {
     @Test
     @DisplayName("fetch — 빈 응답이면 빈 목록을 반환한다")
     void emptyResponseReturnsEmptyList() {
-        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10);
+        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse("");
 
         assertThat(articles).isEmpty();
+    }
+
+    @Test
+    @DisplayName("제외 키워드가 포함된 제목은 필터링된다")
+    void excludeKeywordFiltersArticle() {
+        NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10,
+                List.of("아파트 로또", "분양 로또"));
+        String rss = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <rss version="2.0"><channel>
+                  <item>
+                    <title>아파트 로또 청약 경쟁률</title>
+                    <link>https://example.com/news/a</link>
+                  </item>
+                  <item>
+                    <title>로또 1등 당첨번호 발표</title>
+                    <link>https://example.com/news/b</link>
+                  </item>
+                </channel></rss>
+                """;
+
+        List<NewsArticle> articles = client.parse(rss);
+
+        assertThat(articles).hasSize(1);
+        assertThat(articles.get(0).title()).isEqualTo("로또 1등 당첨번호 발표");
     }
 
     private static String sampleRss() {

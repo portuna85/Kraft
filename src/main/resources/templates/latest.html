@@ -188,6 +188,20 @@
     </div>
 
 
+    <!-- 데이터 출처 -->
+    <div class="card mb-3 kraft-section">
+      <div class="card-body">
+        <p class="small text-secondary mb-0">
+          데이터 출처: 동행복권 공식 발표 기준
+          <span th:if="${latest.fetchedAt() != null}">
+            | 마지막 수집:
+            <time th:datetime="${latest.fetchedAt()}"
+                  th:text="${#temporals.format(latest.fetchedAt(), 'yyyy-MM-dd HH:mm')}">-</time>
+          </span>
+        </p>
+      </div>
+    </div>
+
   </div>
   <script th:src="@{/js/latest.js}" defer></script>
 </section>
