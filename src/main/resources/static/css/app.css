@@ -20,3 +20,11 @@ details[open] .set-card-analysis-toggle::before{content:'▾ ';}
 
 /* --- Theoretical percent badge --- */
 .stats-theoretical{color:var(--kraft-muted,#4f5e70);font-size:.72rem;opacity:.8;white-space:nowrap;}
+
+/* --- Advanced recommend rule settings --- */
+.recommend-rule-list{display:flex;flex-direction:column;gap:.4rem;}
+.recommend-rule-item{display:flex;}
+.recommend-rule-label{align-items:baseline;cursor:pointer;display:flex;gap:.5rem;}
+.recommend-rule-label input[type=checkbox]{flex-shrink:0;margin-top:.2rem;}
+.recommend-rule-name{font-size:.82rem;font-weight:600;white-space:nowrap;}
+.recommend-rule-reason{font-size:.75rem;}

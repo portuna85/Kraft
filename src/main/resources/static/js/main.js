@@ -58,4 +58,26 @@
       window.htmx.trigger(form, 'submit');
     }
   });
+
+  // 규칙 체크박스 변경 시 폼 재제출
+  document.addEventListener('change', function (e) {
+    if (!e.target.classList.contains('recommend-rule-checkbox')) { return; }
+    var form = document.getElementById('recommendForm');
+    if (form && window.htmx) {
+      window.htmx.trigger(form, 'submit');
+    }
+  });
+
+  // HTMX 요청 직전에 비활성 규칙을 파라미터에 추가
+  document.addEventListener('htmx:configRequest', function (e) {
+    if (!e.target || e.target.id !== 'recommendForm') { return; }
+    var checkboxes = document.querySelectorAll('.recommend-rule-checkbox');
+    var disabled = [];
+    checkboxes.forEach(function (cb) {
+      if (!cb.checked) { disabled.push(cb.dataset.ruleName); }
+    });
+    if (disabled.length > 0) {
+      e.detail.parameters['disabledRules'] = disabled;
+    }
+  });
 }());

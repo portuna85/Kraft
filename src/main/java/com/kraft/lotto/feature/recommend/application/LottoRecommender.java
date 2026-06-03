@@ -52,6 +52,53 @@ public class LottoRecommender {
         return recommend(count, List.of());
     }
 
+    /**
+     * 제공된 규칙 목록만 적용한다 (this.rules 무시).
+     * 사용자가 일부 규칙을 비활성화한 경우에 사용된다.
+     */
+    public List<LottoCombination> recommendWithRules(int count, List<ExclusionRule> effectiveRules) {
+        if (count <= 0) {
+            throw new IllegalArgumentException("count must be positive: " + count);
+        }
+        List<LottoCombination> result = new ArrayList<>(count);
+        Set<LottoCombination> emitted = new LinkedHashSet<>();
+        int attempts = 0;
+        int rejected = 0;
+        while (result.size() < count) {
+            if (attempts >= maxAttempts) {
+                recordRejectionRate(attempts, rejected);
+                recordTimeout();
+                throw new RecommendGenerationTimeoutException(
+                        "recommend generation attempts exceeded (max=" + maxAttempts + ")",
+                        RecommendGenerationTimeoutException.FailureReason.ATTEMPT_EXHAUSTED
+                );
+            }
+            attempts++;
+            LottoCombination candidate = numberGenerator.generate();
+            if (emitted.contains(candidate)) {
+                rejected++;
+                recordDuplicateRejection();
+                continue;
+            }
+            String excludedByRule = null;
+            for (ExclusionRule rule : effectiveRules) {
+                if (rule.shouldExclude(candidate)) {
+                    excludedByRule = rule.name();
+                    break;
+                }
+            }
+            if (excludedByRule != null) {
+                rejected++;
+                recordRuleRejection(excludedByRule);
+                continue;
+            }
+            emitted.add(candidate);
+            result.add(candidate);
+        }
+        recordRejectionRate(attempts, rejected);
+        return List.copyOf(result);
+    }
+
     public List<LottoCombination> recommend(int count, List<ExclusionRule> additionalRules) {
         if (count <= 0) {
             throw new IllegalArgumentException("count must be positive: " + count);
@@ -102,6 +149,7 @@ public class LottoRecommender {
         }
         return null;
     }
+
 
     private void recordRejectionRate(int attempts, int rejected) {
         if (attempts <= 0) {

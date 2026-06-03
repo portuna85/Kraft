@@ -84,9 +84,10 @@ public class HomeController {
             @RequestParam(required = false) Integer oddCount,
             @RequestParam(required = false) Integer sumMin,
             @RequestParam(required = false) Integer sumMax,
+            @RequestParam(required = false) List<String> disabledRules,
             Model model
     ) {
-        RecommendFilter filter = RecommendFilter.of(oddCount, sumMin, sumMax);
+        RecommendFilter filter = RecommendFilter.of(oddCount, sumMin, sumMax, disabledRules);
         addRecommendModel(PublicQueryParams.normalizeCount(count), filter, model);
         return RECOMMEND_FRAGMENT;
     }
@@ -174,6 +175,7 @@ public class HomeController {
         model.addAttribute("filterOddCount", filter.oddCount());
         model.addAttribute("filterSumMin", filter.sumMin());
         model.addAttribute("filterSumMax", filter.sumMax());
+        model.addAttribute("disabledRules", filter.disabledRules());
     }
 
 }

@@ -11,6 +11,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,9 +59,19 @@ public class RecommendService {
         int validatedCount = validateCount(count);
         metricsRecorder.recordRequestedCount(validatedCount);
         try {
+            List<ExclusionRule> activeRules = rules.stream()
+                    .filter(r -> !filter.isRuleDisabled(r.name()))
+                    .toList();
             List<ExclusionRule> filterRules = buildFilterRules(filter);
-            var combinations = recommender.recommend(validatedCount, filterRules).stream()
-                    .map(c -> new CombinationDto(c.numbers(), passedLabels))
+            List<ExclusionRule> effectiveRules = Stream.concat(activeRules.stream(), filterRules.stream()).toList();
+
+            List<String> activePassed = activeRules.stream().map(ExclusionRule::label).toList();
+            List<LottoCombination> generated = activeRules.size() == rules.size()
+                    ? recommender.recommend(validatedCount, filterRules)
+                    : recommender.recommendWithRules(validatedCount, effectiveRules);
+
+            var combinations = generated.stream()
+                    .map(c -> new CombinationDto(c.numbers(), activePassed))
                     .toList();
             return new RecommendResponse(combinations);
         } catch (RecommendGenerationTimeoutException ex) {
