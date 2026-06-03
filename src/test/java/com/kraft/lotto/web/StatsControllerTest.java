@@ -65,8 +65,8 @@ class StatsControllerTest {
     }
 
     private static PatternStatDto patternStatDto() {
-        OddEvenStatDto oddEven = new OddEvenStatDto(3, 3, 410L, 33.4, 410L);
-        SumRangeStatDto sumRange = new SumRangeStatDto(130, 139, 160L, 13.0, 160L);
+        OddEvenStatDto oddEven = new OddEvenStatDto(3, 3, 410L, 33.4, 410L, 33.5);
+        SumRangeStatDto sumRange = new SumRangeStatDto(130, 139, 160L, 13.0, 160L, 12.8);
         return new PatternStatDto(List.of(oddEven), List.of(sumRange), 1226L);
     }
 }

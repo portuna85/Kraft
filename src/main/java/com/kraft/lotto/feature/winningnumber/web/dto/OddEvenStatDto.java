@@ -5,5 +5,6 @@ public record OddEvenStatDto(
         int evenCount,
         long drawCount,
         double percent,
-        long maxDrawCount
+        long maxDrawCount,
+        double theoreticalPercent
 ) {}

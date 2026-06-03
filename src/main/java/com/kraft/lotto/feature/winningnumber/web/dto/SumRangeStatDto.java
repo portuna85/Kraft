@@ -5,5 +5,6 @@ public record SumRangeStatDto(
         int rangeEnd,
         long drawCount,
         double percent,
-        long maxDrawCount
+        long maxDrawCount,
+        double theoreticalPercent
 ) {}

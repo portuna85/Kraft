@@ -25,6 +25,9 @@
         </div>
         <span class="stats-count" th:text="${s.drawCount} + '회'">100회</span>
         <span class="stats-pct" th:text="${#numbers.formatDecimal(s.percent,1,1)} + '%'">10.0%</span>
+        <span class="stats-theoretical"
+              th:title="|이론값: ${#numbers.formatDecimal(s.theoreticalPercent,1,1)}%|"
+              th:text="|이론 ${#numbers.formatDecimal(s.theoreticalPercent,1,1)}%|">이론 10.0%</span>
       </div>
     </div>
 
@@ -47,6 +50,10 @@
         </div>
         <span class="stats-count" th:text="${s.drawCount} + '회'">100회</span>
         <span class="stats-pct" th:text="${#numbers.formatDecimal(s.percent,1,1)} + '%'">10.0%</span>
+        <span class="stats-theoretical"
+              th:if="${s.theoreticalPercent > 0}"
+              th:title="|이론값: ${#numbers.formatDecimal(s.theoreticalPercent,1,1)}%|"
+              th:text="|이론 ${#numbers.formatDecimal(s.theoreticalPercent,1,1)}%|">이론 10.0%</span>
       </div>
     </div>
 

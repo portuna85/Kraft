@@ -166,7 +166,8 @@ public class WinningStatisticsCacheService {
                 .mapToObj(odd -> {
                     long cnt = oddEvenMap.getOrDefault(odd, 0L);
                     double pct = totalDraws > 0 ? cnt * 100.0 / totalDraws : 0;
-                    return new OddEvenStatDto(odd, 6 - odd, cnt, pct, maxOddEven);
+                    double theoretical = LottoTheoreticalDistribution.oddEvenPercent(odd);
+                    return new OddEvenStatDto(odd, 6 - odd, cnt, pct, maxOddEven, theoretical);
                 })
                 .toList();
 
@@ -176,9 +177,11 @@ public class WinningStatisticsCacheService {
             sumBucketMap.merge(bucket, row.getDrawCount(), Long::sum);
         }
         long maxSum = sumBucketMap.values().stream().mapToLong(Long::longValue).max().orElse(1L);
+        Map<Integer, Double> theoreticalSumPercents = LottoTheoreticalDistribution.sumBucketPercents(10);
         List<SumRangeStatDto> sumRangeStats = sumBucketMap.entrySet().stream()
                 .map(e -> new SumRangeStatDto(e.getKey(), e.getKey() + 9, e.getValue(),
-                        totalDraws > 0 ? e.getValue() * 100.0 / totalDraws : 0, maxSum))
+                        totalDraws > 0 ? e.getValue() * 100.0 / totalDraws : 0, maxSum,
+                        theoreticalSumPercents.getOrDefault(e.getKey(), 0.0)))
                 .toList();
 
         return new PatternStatDto(oddEvenStats, sumRangeStats, totalDraws);
