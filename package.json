@@ -5,11 +5,6 @@
   "scripts": {
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:docker": "./scripts/e2e-docker.sh"
-  },
-  "scripts": {
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
     "test:e2e:docker": "./scripts/e2e-docker.sh",
     "build:css": "postcss src/main/resources/static/css/*.css --dir src/main/resources/static/css --no-map"
   },
