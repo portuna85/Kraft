@@ -23,6 +23,8 @@ env:
   GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true'
   TRIVY_VERSION: 'v0.70.0'
   SYFT_VERSION: 'v1.24.0'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/portuna85/kraft-lotto-app
 
 jobs:
   build-test:
@@ -33,6 +35,7 @@ jobs:
       contents: read
       id-token: write
       attestations: write
+      packages: write
 
     steps:
       - name: Checkout
@@ -43,7 +46,9 @@ jobs:
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
-          cache: gradle
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
@@ -73,6 +78,21 @@ jobs:
           name: app-jar-${{ github.run_id }}
           path: build/libs/app.jar
           retention-days: 1
+
+      # C-3: PR 공급망 보안 스캔 (머지 전 의존성 회귀 차단)
+      - name: PR dependency review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+
+      - name: PR Trivy filesystem scan
+        if: github.event_name == 'pull_request'
+        uses: aquasecurity/trivy-action@0.31.0
+        with:
+          scan-type: fs
+          scan-ref: build/libs/app.jar
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
 
       - name: Cache Trivy binary
         if: github.event_name != 'pull_request'
@@ -141,6 +161,25 @@ jobs:
           name: sbom-${{ github.run_id }}
           path: sbom.json
           retention-days: 14
+
+      # C-1: CI 빌드 산출물을 GHCR에 push (main push 시에만)
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image to GHCR
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
 
       - name: Upload test report
         if: always()

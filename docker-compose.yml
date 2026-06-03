@@ -89,12 +89,12 @@ services:
     pull_policy: missing
     container_name: kraft-lotto-prometheus
     restart: unless-stopped
-    profiles: [ "observability" ]
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=15d
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
       - kraft-lotto-prometheus:/prometheus
     ports:
       - "127.0.0.1:${KRAFT_PROMETHEUS_PORT:-9090}:9090"
@@ -114,12 +114,40 @@ services:
         max-size: 10m
         max-file: "3"
 
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    pull_policy: missing
+    container_name: kraft-lotto-alertmanager
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    environment:
+      ALERTMANAGER_DISCORD_WEBHOOK_URL: ${ALERTMANAGER_DISCORD_WEBHOOK_URL:-}
+    volumes:
+      - ./docker/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "127.0.0.1:${KRAFT_ALERTMANAGER_PORT:-9093}:9093"
+    networks:
+      - kraft-net
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: "0.10"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
   grafana:
     image: grafana/grafana:12.0.1
     pull_policy: missing
     container_name: kraft-lotto-grafana
     restart: unless-stopped
-    profiles: [ "observability" ]
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${KRAFT_GRAFANA_ADMIN_PASSWORD:-changeme}
       GF_USERS_ALLOW_SIGN_UP: "false"

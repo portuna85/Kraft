@@ -85,9 +85,29 @@ public class LottoApiClientConfig {
                                          ObjectProvider<WinningNumberRepository> winningNumberRepositoryProvider,
                                          ApiCircuitBreakerRegistry circuitBreakerRegistry) {
         ObjectMapper objectMapper = objectMapperProvider.getIfAvailable(ObjectMapper::new);
-        String client = properties.client() == null ? "" : properties.client().trim().toLowerCase();
+        MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new);
         int resolvedMockLatestRound = resolveMockLatestRound(properties, winningNumberRepositoryProvider.getIfAvailable());
-        if (DHLOTTERY_TOKENS.contains(client)) {
+
+        String primaryToken = properties.client() == null ? "" : properties.client().trim().toLowerCase();
+        LottoApiClient primaryClient = buildClient(primaryToken, properties, lottoRestClient, objectMapper,
+                meterRegistry, circuitBreakerRegistry, resolvedMockLatestRound);
+
+        String fallbackToken = properties.fallbackClient() == null ? null
+                : properties.fallbackClient().trim().toLowerCase();
+        if (fallbackToken != null && !fallbackToken.isBlank() && !fallbackToken.equals(primaryToken)) {
+            LottoApiClient fallbackClient = buildClient(fallbackToken, properties, lottoRestClient, objectMapper,
+                    meterRegistry, circuitBreakerRegistry, resolvedMockLatestRound);
+            return new CompositeLottoApiClient(primaryClient, primaryToken, fallbackClient, fallbackToken, meterRegistry);
+        }
+        return primaryClient;
+    }
+
+    private LottoApiClient buildClient(String token, KraftApiProperties properties,
+                                       RestClient lottoRestClient, ObjectMapper objectMapper,
+                                       MeterRegistry meterRegistry,
+                                       ApiCircuitBreakerRegistry circuitBreakerRegistry,
+                                       int resolvedMockLatestRound) {
+        if (DHLOTTERY_TOKENS.contains(token)) {
             ApiCircuitBreaker circuitBreaker = circuitBreakerRegistry.register("dhlottery", apiCircuitBreaker(properties));
             return new DhLotteryApiClient(
                     lottoRestClient,
@@ -96,11 +116,11 @@ public class LottoApiClientConfig {
                     properties.maxRetries(),
                     properties.retryBackoffMs(),
                     properties.requestTimeoutMs(),
-                    meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new),
+                    meterRegistry,
                     circuitBreaker
             );
         }
-        if (SMOK_TOKENS.contains(client)) {
+        if (SMOK_TOKENS.contains(token)) {
             ApiCircuitBreaker circuitBreaker = circuitBreakerRegistry.register("smok", apiCircuitBreaker(properties));
             return new SmokLottoApiClient(
                     lottoRestClient,
@@ -109,7 +129,7 @@ public class LottoApiClientConfig {
                     properties.maxRetries(),
                     properties.retryBackoffMs(),
                     properties.requestTimeoutMs(),
-                    meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new),
+                    meterRegistry,
                     circuitBreaker
             );
         }

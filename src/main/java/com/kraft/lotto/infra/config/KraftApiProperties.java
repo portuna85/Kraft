@@ -25,6 +25,7 @@ public record KraftApiProperties(
         @Positive @Max(10) int circuitBreakerHalfOpenMaxCalls,
         String userAgent,
         String referer,
-        String acceptLanguage
+        String acceptLanguage,
+        String fallbackClient
 ) {
 }

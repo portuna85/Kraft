@@ -40,6 +40,7 @@ class LottoApiClientConfigTest {
                 1,
                 null,
                 null,
+                null,
                 null
         );
         WinningNumberRepository repository = mock(WinningNumberRepository.class);

@@ -1,0 +1,54 @@
+groups:
+  - name: kraft-lotto
+    interval: 1m
+    rules:
+
+      # 앱 다운 — readiness 엔드포인트 미응답
+      - alert: AppDown
+        expr: up{job="kraft-lotto"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "kraft-lotto 앱 다운"
+          description: "{{ $labels.instance }} 인스턴스가 2분 이상 스크래프되지 않습니다."
+
+      # 자동 수집 오류 발생
+      - alert: AutoCollectError
+        expr: increase(kraft_collect_auto_error_total[1h]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "자동 수집 오류 발생"
+          description: "최근 1시간 동안 자동 수집 오류가 {{ $value | printf \"%.0f\" }}회 발생했습니다."
+
+      # 회로차단기 OPEN 상태 지속
+      - alert: CircuitBreakerOpen
+        expr: kraft_api_circuit_breaker_state == 2
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API 회로차단기 OPEN"
+          description: "kraft API 회로차단기가 5분 이상 OPEN 상태입니다. 외부 수집 소스가 차단되었을 가능성이 있습니다."
+
+      # 양쪽 수집 소스 모두 실패 (B-1 CompositeLottoApiClient 구현 후 활성화)
+      - alert: FallbackExhausted
+        expr: increase(kraft_api_fallback_exhausted_total[1h]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "수집 소스 전체 실패"
+          description: "최근 1시간 동안 primary + fallback 양쪽 수집 소스가 모두 실패했습니다. 즉시 확인이 필요합니다."
+
+      # 자동 수집 회차 연속 실패
+      - alert: AutoCollectRoundFailure
+        expr: increase(kraft_collect_auto_round_failure_total[3h]) > 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "자동 수집 회차 실패 반복"
+          description: "최근 3시간 동안 {{ $value | printf \"%.0f\" }}개 회차 수집에 실패했습니다."

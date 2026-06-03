@@ -14,6 +14,7 @@ on:
 permissions:
   contents: read
   actions: read
+  packages: read
 
 concurrency:
   group: cd-production
@@ -96,11 +97,19 @@ jobs:
       - name: Repair Flyway V1 checksum (migration squash)
         run: echo "Flyway V1 squash repair is handled by FlywayConfig.java on app startup."
 
-      - name: Build & restart services
+      # C-1: GHCR에서 CI가 빌드한 이미지를 pull한다 (prod 호스트 재빌드 없음)
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull & restart services
         env:
-          KRAFT_APP_IMAGE_REF: kraft-lotto-app
+          KRAFT_APP_IMAGE_REF: ghcr.io/portuna85/kraft-lotto-app
           KRAFT_APP_IMAGE_TAG: ${{ steps.ref.outputs.value }}
-        run: ./scripts/deploy/build-and-up.sh
+        run: ./scripts/deploy/pull-and-up.sh
 
       - name: Verify prod profile env in container
         run: |
