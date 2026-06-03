@@ -1,0 +1,16 @@
+{KRAFT_DOMAIN} {
+    # TLS는 Caddy가 Let's Encrypt / ZeroSSL에서 자동 발급·갱신
+    # origin(app)은 내부 네트워크로만 접근 가능
+
+    encode gzip br
+
+    # 헬스체크·actuator 직접 노출 차단 (내부망만 허용)
+    @blocked path /actuator* /ops*
+    respond @blocked 403
+
+    reverse_proxy app:8080 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}

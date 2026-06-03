@@ -207,16 +207,6 @@ jobs:
             build/test-results/
           retention-days: 14
 
-      - name: Upload static analysis report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: static-analysis-report-${{ github.run_id }}
-          path: |
-            build/reports/checkstyle/
-            build/reports/spotbugs/
-          retention-days: 14
-
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v7
@@ -225,6 +215,43 @@ jobs:
           path: |
             build/reports/jacoco/test/html/
             build/reports/jacoco/test/jacocoTestReport.xml
+          retention-days: 14
+
+  # C-6: 정적분석 병렬 잡 — build-test와 동시 실행해 신호 속도 개선
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Checkstyle + SpotBugs
+        run: ./gradlew checkstyleMain checkstyleTest spotbugsMain spotbugsTest -PstrictStatic=true --no-daemon
+
+      - name: Upload static analysis report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: static-analysis-report-${{ github.run_id }}
+          path: |
+            build/reports/checkstyle/
+            build/reports/spotbugs/
           retention-days: 14
 
   e2e-smoke:

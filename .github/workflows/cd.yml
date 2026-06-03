@@ -139,6 +139,13 @@ jobs:
             echo "- status: \`${{ job.status }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # C-7: self-hosted 디스크 정리 — 미사용 이미지/빌드 캐시 제거
+      - name: Prune unused Docker resources
+        if: always()
+        run: |
+          docker image prune -f || true
+          docker builder prune -f || true
+
       - name: Cleanup secrets artifacts
         if: always()
         run: rm -f .env .required-envs
