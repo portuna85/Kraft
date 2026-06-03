@@ -205,6 +205,30 @@ services:
         max-size: 10m
         max-file: "3"
 
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    pull_policy: missing
+    container_name: kraft-lotto-node-exporter
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - kraft-net
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: "0.10"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
 networks:
   kraft-net:
     name: kraft-lotto-net

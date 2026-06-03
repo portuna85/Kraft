@@ -111,6 +111,113 @@
           "legendFormat": "blocked/s"
         }
       ]
+    },
+    {
+      "id": 8,
+      "title": "추천 요청 세트 수 (평균, 5분)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 5 },
+      "targets": [
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "rate(kraft_recommend_request_count_sum[5m]) / rate(kraft_recommend_request_count_count[5m])",
+          "legendFormat": "avg requested sets"
+        },
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "rate(kraft_recommend_request_count_count[5m])",
+          "legendFormat": "req/s"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 9,
+      "title": "폴백 사용 현황 (5분)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 5 },
+      "targets": [
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "increase(kraft_api_fallback_used_total[5m])",
+          "legendFormat": "fallback used ({{from}}→{{to}})"
+        },
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "increase(kraft_api_fallback_exhausted_total[5m])",
+          "legendFormat": "fallback exhausted"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "호스트 디스크 사용률 (/)",
+      "type": "gauge",
+      "gridPos": { "x": 0, "y": 19, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "1 - (node_filesystem_avail_bytes{job=\"node\",mountpoint=\"/\"} / node_filesystem_size_bytes{job=\"node\",mountpoint=\"/\"})",
+          "legendFormat": "used"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.75 },
+              { "color": "red", "value": 0.90 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "호스트 메모리 사용률",
+      "type": "gauge",
+      "gridPos": { "x": 8, "y": 19, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "1 - (node_memory_MemAvailable_bytes{job=\"node\"} / node_memory_MemTotal_bytes{job=\"node\"})",
+          "legendFormat": "used"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.75 },
+              { "color": "red", "value": 0.90 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "호스트 CPU 사용률",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 19, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "1 - avg(rate(node_cpu_seconds_total{job=\"node\",mode=\"idle\"}[5m]))",
+          "legendFormat": "cpu used"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 } }
     }
   ]
 }

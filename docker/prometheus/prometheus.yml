@@ -17,3 +17,7 @@ scrape_configs:
       - targets: [ "app:8080" ]
     # actuator allowlist에 prometheus 컨테이너 네트워크 대역(172.x.x.x/16)을
     # KRAFT_SECURITY_ACTUATOR_ALLOWED_IPS에 포함해야 합니다.
+
+  - job_name: node
+    static_configs:
+      - targets: [ "node-exporter:9100" ]

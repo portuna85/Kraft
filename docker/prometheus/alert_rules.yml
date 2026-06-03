@@ -52,3 +52,23 @@ groups:
         annotations:
           summary: "자동 수집 회차 실패 반복"
           description: "최근 3시간 동안 {{ $value | printf \"%.0f\" }}개 회차 수집에 실패했습니다."
+
+      # 호스트 디스크 잔여 10% 미만
+      - alert: HostDiskAlmostFull
+        expr: (node_filesystem_avail_bytes{job="node",mountpoint="/"} / node_filesystem_size_bytes{job="node",mountpoint="/"}) < 0.10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "호스트 디스크 잔여 10% 미만"
+          description: "{{ $labels.instance }} 루트 파티션 잔여 공간이 {{ $value | humanizePercentage }} 입니다. 이미지·백업·로그 정리가 필요합니다."
+
+      # 호스트 메모리 잔여 10% 미만
+      - alert: HostMemoryAlmostFull
+        expr: (node_memory_MemAvailable_bytes{job="node"} / node_memory_MemTotal_bytes{job="node"}) < 0.10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "호스트 메모리 잔여 10% 미만"
+          description: "{{ $labels.instance }} 사용 가능 메모리가 {{ $value | humanizePercentage }} 입니다. 컨테이너 메모리 제한 및 프로세스 확인이 필요합니다."
