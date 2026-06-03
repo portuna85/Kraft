@@ -7,10 +7,19 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:docker": "./scripts/e2e-docker.sh"
   },
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:docker": "./scripts/e2e-docker.sh",
+    "build:css": "postcss src/main/resources/static/css/*.css --dir src/main/resources/static/css --no-map"
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.60.0",
     "chrome-launcher": "^1.2.1",
-    "lighthouse": "^13.3.0"
+    "lighthouse": "^13.3.0",
+    "postcss": "^8.5.4",
+    "postcss-cli": "^11.0.1",
+    "cssnano": "^7.0.7"
   }
 }
