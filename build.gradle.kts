@@ -48,6 +48,8 @@ dependencies {
     // bootstrap CSS는 src/main/resources/static/vendor/bootstrap/ 에서 직접 서빙
 
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
+    // H2는 prod에서 사용하지 않으나 E2E(playwright)가 JAR를 H2 모드로 기동하므로 runtimeOnly 유지
+    runtimeOnly("com.h2database:h2")
     compileOnly("org.projectlombok:lombok:$lombokVersion")
     compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.8")
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
