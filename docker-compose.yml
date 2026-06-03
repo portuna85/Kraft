@@ -12,7 +12,7 @@ services:
       - "443:443"
       - "443:443/udp"
     environment:
-      KRAFT_DOMAIN: ${KRAFT_DOMAIN:?KRAFT_DOMAIN is required (docker compose --profile tls up)}
+      KRAFT_DOMAIN: ${KRAFT_DOMAIN:-}
     volumes:
       - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - kraft-lotto-caddy-data:/data
