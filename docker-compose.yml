@@ -213,9 +213,11 @@ services:
     command:
       - --path.rootfs=/host
       - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+      - --collector.textfile.directory=/textfile
     pid: host
     volumes:
       - /:/host:ro,rslave
+      - /var/lib/node_exporter/textfile:/textfile:ro
     networks:
       - kraft-net
     deploy:

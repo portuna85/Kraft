@@ -1,0 +1,11 @@
+[Unit]
+Description=kraft-lotto DB backup timer (daily 03:00 KST)
+Requires=kraft-lotto-backup.service
+
+[Timer]
+OnCalendar=*-*-* 18:00:00 UTC
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

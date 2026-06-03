@@ -218,6 +218,81 @@
         }
       ],
       "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 } }
+    },
+    {
+      "id": 13,
+      "title": "마지막 백업 경과 시간",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 23, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "time() - kraft_backup_last_success_timestamp_seconds",
+          "legendFormat": "경과"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 86400 },
+              { "color": "red",    "value": 90000 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "백업 파일 크기",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 23, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "kraft_backup_size_bytes",
+          "legendFormat": "size"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "id": 15,
+      "title": "오프사이트 동기화",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 23, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "kraft_backup_offsite_success",
+          "legendFormat": "offsite"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "실패/미설정", "color": "yellow" } } },
+            { "type": "value", "options": { "1": { "text": "성공", "color": "green" } } }
+          ]
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "백업 소요 시간",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 23, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "uid": "prometheus" },
+          "expr": "kraft_backup_duration_seconds",
+          "legendFormat": "duration"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
     }
   ]
 }

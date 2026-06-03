@@ -72,3 +72,23 @@ groups:
         annotations:
           summary: "호스트 메모리 잔여 10% 미만"
           description: "{{ $labels.instance }} 사용 가능 메모리가 {{ $value | humanizePercentage }} 입니다. 컨테이너 메모리 제한 및 프로세스 확인이 필요합니다."
+
+      # 백업 25시간 이상 미실행 (daily 백업 기준 1시간 여유)
+      - alert: BackupNotRun
+        expr: (time() - kraft_backup_last_success_timestamp_seconds) > 90000
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "DB 백업 25시간 이상 미실행"
+          description: "마지막 성공 백업으로부터 {{ $value | humanizeDuration }} 경과했습니다. systemd timer 상태를 확인하세요."
+
+      # 오프사이트 동기화 실패
+      - alert: BackupOffsiteFailed
+        expr: kraft_backup_offsite_success == 0 and kraft_backup_last_success_timestamp_seconds > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "백업 오프사이트 동기화 실패"
+          description: "로컬 백업은 성공했으나 rclone 오프사이트 동기화가 실패했습니다. RCLONE_REMOTE 설정 및 rclone 설치를 확인하세요."
