@@ -16,6 +16,7 @@ public class NewsQueryService {
 
     static final int MAX_PAGE_SIZE = 50;
     private final NewsArticleRepository repository;
+    private final NewsSourceClassifier classifier;
 
     @Transactional(readOnly = true)
     public NewsPage list(int page, int size) {
@@ -35,7 +36,8 @@ public class NewsQueryService {
                 PageRequest.of(page, size));
         List<NewsArticleDto> articles = p.getContent().stream()
                 .map(e -> NewsArticleDto.of(e.getId(), e.getTitle(), e.getLink(),
-                        e.getDescription(), e.getSource(), e.getPubDate()))
+                        e.getDescription(), e.getSource(), e.getPubDate(),
+                        classifier.classify(e.getSource())))
                 .toList();
         return new NewsPage(articles, p.getNumber(), p.getSize(),
                 (int) p.getTotalElements(), p.getTotalPages());

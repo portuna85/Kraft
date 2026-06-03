@@ -27,6 +27,11 @@ class NewsConfiguration {
     }
 
     @Bean
+    NewsSourceClassifier newsSourceClassifier(KraftNewsProperties properties) {
+        return new NewsSourceClassifier(properties.officialSources(), properties.pressSources());
+    }
+
+    @Bean
     NewsArticlePersister newsArticlePersister(NewsArticleRepository repository) {
         return new NewsArticlePersister(repository);
     }

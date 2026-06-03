@@ -19,6 +19,11 @@
           <a class="news-link" th:href="${article.link()}" target="_blank" rel="noopener noreferrer">
             <div class="news-meta">
               <span class="news-source" th:text="${article.source()}" th:if="${article.source() != null}">출처</span>
+              <span class="news-tier-badge"
+                    th:if="${article.tier() != null}"
+                    th:classappend="${article.tier().cssClass()}"
+                    th:text="${article.tier().label()}"
+                    th:title="${article.tier().label() == '공식'} ? '동행복권 등 공공기관 출처' : (${article.tier().label() == '언론'} ? '등록 언론사 출처' : '블로그·커뮤니티 등 일반 출처')">등급</span>
               <span class="news-date" th:text="${article.pubDateFormatted()}">날짜</span>
             </div>
             <p class="news-title" th:text="${article.title()}">제목</p>

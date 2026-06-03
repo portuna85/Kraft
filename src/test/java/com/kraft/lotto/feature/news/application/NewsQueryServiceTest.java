@@ -27,6 +27,9 @@ class NewsQueryServiceTest {
     @Mock
     NewsArticleRepository repository;
 
+    @Mock
+    NewsSourceClassifier classifier;
+
     @InjectMocks
     NewsQueryService service;
 

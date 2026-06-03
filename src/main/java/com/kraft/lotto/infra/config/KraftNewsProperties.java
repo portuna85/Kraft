@@ -18,9 +18,13 @@ public record KraftNewsProperties(
         @Min(1) @Max(365) int retentionDays,
         @Positive @Max(60_000) int connectTimeoutMs,
         @Positive @Max(60_000) int readTimeoutMs,
-        List<String> excludeKeywords
+        List<String> excludeKeywords,
+        List<String> officialSources,
+        List<String> pressSources
 ) {
     public KraftNewsProperties {
-        excludeKeywords = excludeKeywords == null ? List.of() : List.copyOf(excludeKeywords);
+        excludeKeywords  = excludeKeywords  == null ? List.of() : List.copyOf(excludeKeywords);
+        officialSources  = officialSources  == null ? List.of() : List.copyOf(officialSources);
+        pressSources     = pressSources     == null ? List.of() : List.copyOf(pressSources);
     }
 }

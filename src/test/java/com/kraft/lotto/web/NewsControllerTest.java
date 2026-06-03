@@ -74,7 +74,7 @@ class NewsControllerTest {
     @DisplayName("뉴스 목록이 있을 때 모델에 articles가 포함된다")
     void newsPageIncludesArticles() throws Exception {
         NewsArticleDto article = new NewsArticleDto(1L, "로또 뉴스", "https://example.com",
-                "설명", "뉴스원", "2026.06.01 12:00");
+                "설명", "뉴스원", "2026.06.01 12:00", null);
         NewsQueryService.NewsPage page = new NewsQueryService.NewsPage(
                 List.of(article), 0, 20, 1, 1);
         when(newsQueryService.list(0, 20)).thenReturn(page);
