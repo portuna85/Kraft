@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("동행복권 API 클라이언트 테스트")
 class DhLotteryApiClientTest {
@@ -78,6 +80,47 @@ class DhLotteryApiClientTest {
             String body = successBody(1103);
             assertThatThrownBy(() -> client.parse(1102, body))
                     .isInstanceOf(LottoApiClientException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("응답 계약 — 필수 필드 부재 시 파싱 실패")
+    class Contract {
+
+        @ParameterizedTest(name = "필드 누락: {0}")
+        @DisplayName("필수 필드가 없으면 예외가 발생한다")
+        @ValueSource(strings = {
+                "\"returnValue\": \"success\",",
+                "\"drwNoDate\": \"2024-01-06\",",
+                "\"drwtNo1\": 6,",
+                "\"drwtNo2\": 13,",
+                "\"drwtNo3\": 23,",
+                "\"drwtNo4\": 24,",
+                "\"drwtNo5\": 28,",
+                "\"drwtNo6\": 33,",
+                "\"bnusNo\": 38,",
+                "\"firstWinamnt\": 2596477500,",
+                "\"firstPrzwnerCo\": 11,"
+        })
+        void parseThrowsWhenFieldIsAbsent(String fieldFragment) {
+            String body = successBody(1102).replace(fieldFragment, "");
+            assertThatThrownBy(() -> client.parse(1102, body))
+                    .isInstanceOf(LottoApiClientException.class);
+        }
+
+        @Test
+        @DisplayName("successBody 픽스처가 완전한 성공 응답으로 파싱된다")
+        void fixtureIsValidAndComplete() {
+            Optional<WinningNumber> result = client.parse(1102, successBody(1102));
+
+            assertThat(result).isPresent();
+            WinningNumber wn = result.get();
+            assertThat(wn.round()).isEqualTo(1102);
+            assertThat(wn.drawDate()).isEqualTo(LocalDate.of(2024, 1, 6));
+            assertThat(wn.combination().numbers()).containsExactly(6, 13, 23, 24, 28, 33);
+            assertThat(wn.bonusNumber()).isEqualTo(38);
+            assertThat(wn.firstPrize()).isEqualTo(2596477500L);
+            assertThat(wn.firstWinners()).isEqualTo(11);
         }
     }
 

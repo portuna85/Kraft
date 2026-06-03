@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("smok API 클라이언트 테스트")
 class SmokLottoApiClientTest {
@@ -67,6 +69,41 @@ class SmokLottoApiClientTest {
         void parseThrowsOnInvalidJson() {
             assertThatThrownBy(() -> client.parse(100, "not-json"))
                     .isInstanceOf(LottoApiClientException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("응답 계약 — 필수 필드 부재 시 파싱 실패")
+    class Contract {
+
+        @ParameterizedTest(name = "필드 누락: {0}")
+        @DisplayName("필수 필드가 없으면 예외가 발생한다")
+        @ValueSource(strings = {
+                "\"draw_no\": 100,",
+                "\"numbers\": [1, 2, 3, 4, 5, 6],",
+                "\"bonus_no\": 7,",
+                "\"date\": \"2020-01-01T09:00:00+09:00\",",
+                "\"divisions\": ["
+        })
+        void parseThrowsWhenFieldIsAbsent(String fieldFragment) {
+            String body = successBody(100).replace(fieldFragment, "");
+            assertThatThrownBy(() -> client.parse(100, body))
+                    .isInstanceOf(LottoApiClientException.class);
+        }
+
+        @Test
+        @DisplayName("successBody 픽스처가 완전한 성공 응답으로 파싱된다")
+        void fixtureIsValidAndComplete() {
+            Optional<WinningNumber> result = client.parse(100, successBody(100));
+
+            assertThat(result).isPresent();
+            WinningNumber wn = result.get();
+            assertThat(wn.round()).isEqualTo(100);
+            assertThat(wn.drawDate()).isEqualTo(LocalDate.of(2020, 1, 1));
+            assertThat(wn.combination().numbers()).containsExactly(1, 2, 3, 4, 5, 6);
+            assertThat(wn.bonusNumber()).isEqualTo(7);
+            assertThat(wn.firstPrize()).isEqualTo(1_500_000_000L);
+            assertThat(wn.firstWinners()).isEqualTo(3);
         }
     }
 
