@@ -44,6 +44,7 @@
   </script>
 </head>
 <body>
+<a class="skip-to-content" href="#main-content">본문으로 건너뛰기</a>
 <nav class="navbar navbar-expand-md border-bottom sticky-top">
   <div class="container kraft-container">
     <a class="navbar-brand fw-bold" href="/">최고의 번호</a>
@@ -103,7 +104,7 @@
     </button>
   </div>
 </nav>
-<main class="kraft-main" th:insert="${content}"></main>
+<main id="main-content" class="kraft-main" th:insert="${content}"></main>
 <div id="fragment-live-region" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 <nav class="kraft-bottom-nav d-md-none" aria-label="메뉴" th:if="${!isAdmin}">
   <a href="/" class="kraft-bottom-nav-item"

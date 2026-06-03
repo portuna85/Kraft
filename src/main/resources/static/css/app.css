@@ -1027,3 +1027,21 @@ body {
   gap: 12px;
   margin-top: 1rem;
 }
+
+/* === Accessibility === */
+.skip-to-content {
+  position: absolute;
+  top: -999px;
+  left: 0;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--kraft-nav-bg);
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0 0 var(--kraft-radius) 0;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
