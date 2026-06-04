@@ -3,7 +3,6 @@ package com.kraft.lotto.feature.news.application;
 import com.kraft.lotto.feature.news.domain.NewsArticle;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -13,6 +12,7 @@ import java.util.HexFormat;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 public class NewsCollectionService {
@@ -22,6 +22,7 @@ public class NewsCollectionService {
     private final NewsArticleRepository repository;
     private final NewsRssClient rssClient;
     private final NewsArticlePersister persister;
+    private final NewsSourceClassifier classifier;
     private final Clock clock;
     private final int retentionDays;
 
@@ -30,9 +31,19 @@ public class NewsCollectionService {
                           NewsArticlePersister persister,
                           Clock clock,
                           int retentionDays) {
+        this(repository, rssClient, persister, new NewsSourceClassifier(List.of(), List.of()), clock, retentionDays);
+    }
+
+    NewsCollectionService(NewsArticleRepository repository,
+                          NewsRssClient rssClient,
+                          NewsArticlePersister persister,
+                          NewsSourceClassifier classifier,
+                          Clock clock,
+                          int retentionDays) {
         this.repository = repository;
         this.rssClient = rssClient;
         this.persister = persister;
+        this.classifier = classifier;
         this.clock = clock;
         this.retentionDays = retentionDays;
     }
@@ -60,6 +71,7 @@ public class NewsCollectionService {
                         hash,
                         truncate(article.description(), 2000),
                         truncate(article.source(), 200),
+                        classifier.classify(article.source()),
                         article.pubDate(),
                         now
                 ));

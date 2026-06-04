@@ -1,6 +1,9 @@
 package com.kraft.lotto.web;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -8,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.kraft.lotto.feature.news.application.NewsQueryService;
+import com.kraft.lotto.feature.news.domain.NewsSourceTier;
 import com.kraft.lotto.feature.news.web.dto.NewsArticleDto;
 import com.kraft.lotto.support.GlobalExceptionHandler;
 import java.util.List;
@@ -45,7 +49,7 @@ class NewsControllerTest {
     @Test
     @DisplayName("/news 페이지를 렌더링한다")
     void newsPageRendersView() throws Exception {
-        when(newsQueryService.list(anyInt(), anyInt())).thenReturn(emptyPage());
+        when(newsQueryService.list(anyInt(), anyInt(), any())).thenReturn(emptyPage());
 
         mockMvc.perform(get("/news"))
                 .andExpect(status().isOk())
@@ -63,7 +67,7 @@ class NewsControllerTest {
     @Test
     @DisplayName("page 기본값은 0이다")
     void defaultPageIsZero() throws Exception {
-        when(newsQueryService.list(0, 20)).thenReturn(emptyPage());
+        when(newsQueryService.list(0, 20, null)).thenReturn(emptyPage());
 
         mockMvc.perform(get("/news"))
                 .andExpect(status().isOk())
@@ -77,11 +81,30 @@ class NewsControllerTest {
                 "설명", "뉴스원", "2026.06.01 12:00", null);
         NewsQueryService.NewsPage page = new NewsQueryService.NewsPage(
                 List.of(article), 0, 20, 1, 1);
-        when(newsQueryService.list(0, 20)).thenReturn(page);
+        when(newsQueryService.list(0, 20, null)).thenReturn(page);
 
         mockMvc.perform(get("/news"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("totalElements", 1));
+    }
+
+    @Test
+    @DisplayName("tier 파라미터가 있으면 등급 필터를 전달한다")
+    void newsPagePassesTierFilter() throws Exception {
+        when(newsQueryService.list(anyInt(), anyInt(), eq(NewsSourceTier.PRESS))).thenReturn(emptyPage());
+
+        mockMvc.perform(get("/news").param("tier", "press"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("currentTier", "press"));
+
+        verify(newsQueryService).list(0, 20, NewsSourceTier.PRESS);
+    }
+
+    @Test
+    @DisplayName("잘못된 tier 파라미터는 400을 반환한다")
+    void invalidTierReturns400() throws Exception {
+        mockMvc.perform(get("/news").param("tier", "invalid"))
+                .andExpect(status().isBadRequest());
     }
 
     private static NewsQueryService.NewsPage emptyPage() {

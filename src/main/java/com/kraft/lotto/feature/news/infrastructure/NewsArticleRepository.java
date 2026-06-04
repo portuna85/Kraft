@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.news.infrastructure;
 
+import com.kraft.lotto.feature.news.domain.NewsSourceTier;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,10 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticleEntity, 
     boolean existsByLinkHash(String linkHash);
 
     Page<NewsArticleEntity> findAllByOrderByPubDateDescCollectedAtDesc(Pageable pageable);
+
+    Page<NewsArticleEntity> findAllBySourceTierOrderByPubDateDescCollectedAtDesc(
+            NewsSourceTier sourceTier,
+            Pageable pageable);
 
     @Modifying
     @Query("delete from NewsArticleEntity n where n.collectedAt < :cutoff")

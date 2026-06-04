@@ -3,8 +3,10 @@ package com.kraft.lotto.feature.news.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.kraft.lotto.feature.news.domain.NewsSourceTier;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
 import com.kraft.lotto.support.BusinessException;
@@ -27,9 +29,6 @@ class NewsQueryServiceTest {
     @Mock
     NewsArticleRepository repository;
 
-    @Mock
-    NewsSourceClassifier classifier;
-
     @InjectMocks
     NewsQueryService service;
 
@@ -46,7 +45,29 @@ class NewsQueryServiceTest {
 
         assertThat(result.articles()).hasSize(1);
         assertThat(result.articles().get(0).title()).isEqualTo("로또 뉴스");
+        assertThat(result.articles().get(0).tier()).isEqualTo(NewsSourceTier.GENERAL);
         assertThat(result.totalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("등급이 지정되면 등급 필터로 조회한다")
+    void returnsPagedArticlesFilteredByTier() {
+        NewsArticleEntity entity = new NewsArticleEntity(
+                "공식 뉴스", "https://example.com/1", "abc123",
+                "설명", "동행복권", NewsSourceTier.OFFICIAL,
+                LocalDateTime.now(), LocalDateTime.now());
+        when(repository.findAllBySourceTierOrderByPubDateDescCollectedAtDesc(
+                org.mockito.ArgumentMatchers.eq(NewsSourceTier.OFFICIAL),
+                any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(entity)));
+
+        NewsQueryService.NewsPage result = service.list(0, 20, NewsSourceTier.OFFICIAL);
+
+        assertThat(result.articles()).hasSize(1);
+        assertThat(result.articles().get(0).tier()).isEqualTo(NewsSourceTier.OFFICIAL);
+        verify(repository).findAllBySourceTierOrderByPubDateDescCollectedAtDesc(
+                org.mockito.ArgumentMatchers.eq(NewsSourceTier.OFFICIAL),
+                any(Pageable.class));
     }
 
     @Test

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.news.domain.NewsArticle;
+import com.kraft.lotto.feature.news.domain.NewsSourceTier;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
 import java.time.Clock;
@@ -144,6 +145,29 @@ class NewsCollectionServiceTest {
         verify(persister).saveArticle(argThat(entity ->
                 LocalDateTime.ofInstant(FIXED_CLOCK.instant(), FIXED_CLOCK.getZone())
                         .equals(((NewsArticleEntity) entity).getCollectedAt())));
+    }
+
+    @Test
+    @DisplayName("수집 시 뉴스 출처 등급을 저장한다")
+    void collectStoresSourceTier() {
+        NewsArticle official = new NewsArticle(null, "테스트 제목", "https://example.com/official",
+                "설명", "동행복권", LocalDateTime.now(), null);
+        when(rssClient.fetch()).thenReturn(List.of(official));
+        when(repository.existsByLinkHash(anyString())).thenReturn(false);
+
+        NewsSourceClassifier classifier = new NewsSourceClassifier(List.of("동행복권"), List.of());
+        NewsCollectionService service = new NewsCollectionService(
+                repository,
+                rssClient,
+                persister,
+                classifier,
+                FIXED_CLOCK,
+                30
+        );
+        service.collect();
+
+        verify(persister).saveArticle(argThat(entity ->
+                ((NewsArticleEntity) entity).getSourceTier() == NewsSourceTier.OFFICIAL));
     }
 
     private static NewsArticle article(String link) {

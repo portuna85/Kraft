@@ -1,7 +1,10 @@
 package com.kraft.lotto.feature.news.infrastructure;
 
+import com.kraft.lotto.feature.news.domain.NewsSourceTier;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,6 +34,10 @@ public class NewsArticleEntity {
     @Column(name = "source", length = 200)
     private String source;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_tier", nullable = false, length = 20)
+    private NewsSourceTier sourceTier = NewsSourceTier.GENERAL;
+
     @Column(name = "pub_date")
     private LocalDateTime pubDate;
 
@@ -47,11 +54,23 @@ public class NewsArticleEntity {
                               String source,
                               LocalDateTime pubDate,
                               LocalDateTime collectedAt) {
+        this(title, link, linkHash, description, source, NewsSourceTier.GENERAL, pubDate, collectedAt);
+    }
+
+    public NewsArticleEntity(String title,
+                              String link,
+                              String linkHash,
+                              String description,
+                              String source,
+                              NewsSourceTier sourceTier,
+                              LocalDateTime pubDate,
+                              LocalDateTime collectedAt) {
         this.title = title;
         this.link = link;
         this.linkHash = linkHash;
         this.description = description;
         this.source = source;
+        this.sourceTier = sourceTier == null ? NewsSourceTier.GENERAL : sourceTier;
         this.pubDate = pubDate;
         this.collectedAt = collectedAt;
     }
@@ -62,6 +81,7 @@ public class NewsArticleEntity {
     public String getLinkHash() { return linkHash; }
     public String getDescription() { return description; }
     public String getSource() { return source; }
+    public NewsSourceTier getSourceTier() { return sourceTier == null ? NewsSourceTier.GENERAL : sourceTier; }
     public LocalDateTime getPubDate() { return pubDate; }
     public LocalDateTime getCollectedAt() { return collectedAt; }
 }
