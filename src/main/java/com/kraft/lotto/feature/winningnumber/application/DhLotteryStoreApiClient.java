@@ -19,17 +19,27 @@ public class DhLotteryStoreApiClient implements WinningStoreApiClient {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
+    private final String sessionSeedUrl;
+
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+            justification = "RestClient and ObjectMapper are shared application-scoped beans")
+    public DhLotteryStoreApiClient(RestClient restClient, ObjectMapper objectMapper,
+                                   String baseUrl, String sessionSeedUrl) {
+        this.restClient   = restClient;
+        this.objectMapper = objectMapper;
+        this.baseUrl      = baseUrl;
+        this.sessionSeedUrl = sessionSeedUrl;
+    }
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
             justification = "RestClient and ObjectMapper are shared application-scoped beans")
     public DhLotteryStoreApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl) {
-        this.restClient   = restClient;
-        this.objectMapper = objectMapper;
-        this.baseUrl      = baseUrl;
+        this(restClient, objectMapper, baseUrl, null);
     }
 
     @Override
     public List<WinningStore> fetchStores(int round, int grade) {
+        establishSession(round);
         URI uri = UriComponentsBuilder.fromUriString(baseUrl)
                 .queryParam("method", "searchStoreOfDraw")
                 .queryParam("drwNo", round)
@@ -39,16 +49,36 @@ public class DhLotteryStoreApiClient implements WinningStoreApiClient {
         try {
             String body = restClient.get()
                     .uri(uri)
+                    .header("Referer", sessionSeedUrl != null
+                            ? sessionSeedUrl + "&drwNoSelect=" + round
+                            : baseUrl)
                     .retrieve()
                     .body(String.class);
             if (body == null || body.isBlank()) {
                 log.warn("winning store API returned blank body: round={}, grade={}", round, grade);
                 return List.of();
             }
+            if (body.trim().startsWith("<")) {
+                log.warn("winning store API returned HTML (session may have failed): round={}, grade={}", round, grade);
+                return List.of();
+            }
             return parse(round, grade, body);
         } catch (Exception ex) {
             log.warn("winning store API call failed: round={}, grade={}, reason={}", round, grade, ex.getMessage());
             return List.of();
+        }
+    }
+
+    private void establishSession(int round) {
+        if (sessionSeedUrl == null || sessionSeedUrl.isBlank()) {
+            return;
+        }
+        try {
+            String pageUrl = sessionSeedUrl + "&drwNoSelect=" + round;
+            restClient.get().uri(URI.create(pageUrl)).retrieve().toBodilessEntity();
+            log.debug("store session established: round={}", round);
+        } catch (Exception ex) {
+            log.warn("store session establishment failed: round={}, reason={}", round, ex.getMessage());
         }
     }
 
