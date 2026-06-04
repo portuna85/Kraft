@@ -2,10 +2,16 @@ package com.kraft.lotto.infra.config;
 
 import com.kraft.lotto.feature.winningnumber.application.LottoApiClientConfig;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 class ProdConfigValidator {
+
+    private static final int OPS_TOKEN_MIN_LENGTH = 32;
+    private static final Set<String> WEAK_TOKEN_PATTERNS = Set.of(
+            "changeme", "change-me", "password", "secret", "test", "admin", "token"
+    );
 
     private ProdConfigValidator() {
     }
@@ -15,8 +21,7 @@ class ProdConfigValidator {
             return;
         }
         requireNonBlank(env, problems, "kraft.api.url", "External API URL (env: KRAFT_API_URL)");
-        requireNonBlank(env, problems, "kraft.security.ops.required-token",
-                "Ops API token (env: KRAFT_SECURITY_OPS_REQUIRED_TOKEN)");
+        requireStrongOpsToken(env, problems);
         requireIntInRange(env, problems, "kraft.recommend.max-attempts",
                 "Recommend max attempts (env: KRAFT_RECOMMEND_MAX_ATTEMPTS)", 1, 1_000_000);
         requireIntInRange(env, problems, "kraft.recommend.initial-pick-max-attempts",
@@ -39,6 +44,30 @@ class ProdConfigValidator {
                     "Lotto API client mode (env: KRAFT_API_CLIENT)",
                     "prod profile requires one of: " + allowedProdClients
             ));
+        }
+    }
+
+    private static void requireStrongOpsToken(ConfigurableEnvironment env, List<String> problems) {
+        String key = "kraft.security.ops.required-token";
+        String desc = "Ops API token (env: KRAFT_SECURITY_OPS_REQUIRED_TOKEN)";
+        String value = RequiredConfigValidator.safeGet(env, key);
+        if (value == null || value.isBlank()) {
+            problems.add(RequiredConfigValidator.format(key, desc, "required in prod profile but blank"));
+            return;
+        }
+        String trimmed = value.trim();
+        if (trimmed.length() < OPS_TOKEN_MIN_LENGTH) {
+            problems.add(RequiredConfigValidator.format(key, desc,
+                    "must be at least " + OPS_TOKEN_MIN_LENGTH + " characters in prod profile (actual: " + trimmed.length() + ")"));
+            return;
+        }
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        for (String weak : WEAK_TOKEN_PATTERNS) {
+            if (lower.contains(weak)) {
+                problems.add(RequiredConfigValidator.format(key, desc,
+                        "token looks like a placeholder — set a strong random token in prod profile"));
+                return;
+            }
         }
     }
 

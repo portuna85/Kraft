@@ -88,6 +88,69 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
+    @DisplayName("prod 프로필에서 32자 미만 ops token은 실패한다")
+    void addsProblemWhenOpsTokenTooShort() {
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("prod");
+        setValidProdOperationalConfig(env);
+        env.setProperty("kraft.api.client", "smok");
+        env.setProperty("kraft.security.ops.required-token", "short-token");
+        List<String> problems = new ArrayList<>();
+
+        ProdConfigValidator.validate(env, problems);
+
+        assertThat(problems).anyMatch(p -> p.contains("kraft.security.ops.required-token"));
+        assertThat(problems).anyMatch(p -> p.contains("at least 32 characters"));
+    }
+
+    @Test
+    @DisplayName("prod 프로필에서 약한 예시 값이 포함된 ops token은 실패한다")
+    void addsProblemWhenOpsTokenIsWeak() {
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("prod");
+        setValidProdOperationalConfig(env);
+        env.setProperty("kraft.api.client", "smok");
+        List<String> problems = new ArrayList<>();
+
+        for (String weak : List.of("changeme-prod-123456789012345678", "my-password-prod-1234567890123456",
+                "admintoken-prod-12345678901234567", "testvalue-prod-123456789012345678")) {
+            problems.clear();
+            env.setProperty("kraft.security.ops.required-token", weak);
+            ProdConfigValidator.validate(env, problems);
+            assertThat(problems)
+                    .as("weak token '%s' should be rejected", weak)
+                    .anyMatch(p -> p.contains("kraft.security.ops.required-token"));
+        }
+    }
+
+    @Test
+    @DisplayName("prod 프로필에서 32자 이상 강한 ops token은 통과한다")
+    void noProblemWhenOpsTokenIsStrong() {
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("prod");
+        setValidProdOperationalConfig(env);
+        env.setProperty("kraft.api.client", "smok");
+        List<String> problems = new ArrayList<>();
+
+        ProdConfigValidator.validate(env, problems);
+
+        assertThat(problems).noneMatch(p -> p.contains("kraft.security.ops.required-token"));
+    }
+
+    @Test
+    @DisplayName("prod가 아닌 프로필에서는 ops token 강도를 검증하지 않는다")
+    void doesNotValidateOpsTokenStrengthOutsideProd() {
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("local");
+        env.setProperty("kraft.security.ops.required-token", "short");
+        List<String> problems = new ArrayList<>();
+
+        ProdConfigValidator.validate(env, problems);
+
+        assertThat(problems).noneMatch(p -> p.contains("kraft.security.ops.required-token"));
+    }
+
+    @Test
     @DisplayName("운영 환경의 추천 범위 오류를 보고한다")
     void addsProblemsWhenProdRecommendValuesAreOutOfRange() {
         MockEnvironment env = new MockEnvironment();
@@ -149,7 +212,7 @@ class RequiredConfigValidatorTest {
 
     private static void setValidProdOperationalConfig(MockEnvironment env) {
         env.setProperty("kraft.api.url", "https://example.com");
-        env.setProperty("kraft.security.ops.required-token", "ops-token");
+        env.setProperty("kraft.security.ops.required-token", "x".repeat(32));
         env.setProperty("kraft.recommend.max-attempts", "5000");
         env.setProperty("kraft.recommend.initial-pick-max-attempts", "10000");
         env.setProperty("kraft.recommend.fixup-max-attempts", "1000");
