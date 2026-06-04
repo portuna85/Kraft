@@ -29,19 +29,20 @@ class LottoRangeCollector {
         int updated = 0;
         int skipped = 0;
         List<Integer> failedRounds = new ArrayList<>();
+        int latestRound = winningNumberRepository.findMaxRound().orElse(0);
         boolean firstCall = true;
         for (Integer round : rounds) {
             if (!firstCall && delayBetweenCalls) {
                 sleepBackfillDelay();
             }
             firstCall = false;
-            CollectResponse one = singleDrawCollector.collectOne(round, refresh);
+            CollectResponse one = singleDrawCollector.collectOne(round, refresh, latestRound);
             inserted += one.collected();
             updated += one.updated();
             skipped += one.skipped();
             failedRounds.addAll(one.failedRounds());
+            latestRound = Math.max(latestRound, one.latestRound());
         }
-        int latestRound = winningNumberRepository.findMaxRound().orElse(0);
         meterRegistry.summary("kraft.collect.range.rounds").record(rounds.size());
         meterRegistry.summary("kraft.collect.range.failed").record(failedRounds.size());
         return CollectResponse.of(inserted, updated, skipped, latestRound, failedRounds, false, null, false);

@@ -108,7 +108,7 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
             int newNumber = rng.nextInt(MAX_NUMBER) + 1;
             int oldBucket = bucketIndex(old);
             int newBucket = bucketIndex(newNumber);
-            if (shouldSkipFixup(numbers, decadeBuckets, newNumber, newBucket)) {
+            if (shouldSkipFixup(numbers, decadeBuckets, oldBucket, newNumber, newBucket)) {
                 continue;
             }
             numbers.set(replaceIndex, newNumber);
@@ -175,11 +175,19 @@ class ConstraintAwareLottoNumberGenerator implements LottoNumberGenerator {
         return exceedsDecadeThreshold(decadeBuckets, bucket);
     }
 
-    private boolean shouldSkipFixup(List<Integer> numbers, int[] decadeBuckets, int newNumber, int newBucket) {
+    private boolean shouldSkipFixup(List<Integer> numbers,
+                                    int[] decadeBuckets,
+                                    int oldBucket,
+                                    int newNumber,
+                                    int newBucket) {
         if (numbers.contains(newNumber)) {
             return true;
         }
-        return exceedsDecadeThreshold(decadeBuckets, newBucket);
+        int newBucketCountAfterReplacement = decadeBuckets[newBucket];
+        if (newBucket != oldBucket) {
+            newBucketCountAfterReplacement++;
+        }
+        return newBucketCountAfterReplacement >= decadeThreshold;
     }
 
     private boolean exceedsDecadeThreshold(int[] decadeBuckets, int bucket) {

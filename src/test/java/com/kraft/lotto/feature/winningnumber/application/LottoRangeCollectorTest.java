@@ -33,10 +33,10 @@ class LottoRangeCollectorTest {
     void aggregatesSingleRoundResults() {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         LottoRangeCollector collector = new LottoRangeCollector(singleDrawCollector, winningNumberRepository, 0, registry);
-        when(singleDrawCollector.collectOne(1, false)).thenReturn(CollectResponse.ofInserted(1, 10));
-        when(singleDrawCollector.collectOne(2, false)).thenReturn(CollectResponse.ofUpdated(1, 11));
-        when(singleDrawCollector.collectOne(3, false)).thenReturn(CollectResponse.ofFailed(List.of(3), 11, false));
-        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(11));
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(9));
+        when(singleDrawCollector.collectOne(1, false, 9)).thenReturn(CollectResponse.ofInserted(1, 10));
+        when(singleDrawCollector.collectOne(2, false, 10)).thenReturn(CollectResponse.ofUpdated(1, 11));
+        when(singleDrawCollector.collectOne(3, false, 11)).thenReturn(CollectResponse.ofFailed(List.of(3), 11, false));
 
         CollectResponse response = collector.collectRange(List.of(1, 2, 3), false, true);
 
@@ -54,7 +54,8 @@ class LottoRangeCollectorTest {
     void interruptedBackfillDelayThrowsBusinessException() {
         LottoRangeCollector collector = new LottoRangeCollector(
                 singleDrawCollector, winningNumberRepository, 60_000, new SimpleMeterRegistry());
-        when(singleDrawCollector.collectOne(1, false)).thenReturn(CollectResponse.ofSkipped(1, 1));
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1));
+        when(singleDrawCollector.collectOne(1, false, 1)).thenReturn(CollectResponse.ofSkipped(1, 1));
 
         Thread.currentThread().interrupt();
         try {
@@ -62,8 +63,8 @@ class LottoRangeCollectorTest {
                     .isThrownBy(() -> collector.collectRange(List.of(1, 2), false, true));
 
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
-            verify(singleDrawCollector).collectOne(1, false);
-            verify(singleDrawCollector, never()).collectOne(2, false);
+            verify(singleDrawCollector).collectOne(1, false, 1);
+            verify(singleDrawCollector, never()).collectOne(2, false, 1);
         } finally {
             Thread.interrupted();
         }

@@ -49,8 +49,9 @@ public class LottoCollectionCommandService {
 
     public CollectResponse collectNextIfNeeded() {
         return runExclusive("collect-next", () -> {
-            int nextRound = winningNumberRepository.findMaxRound().orElse(0) + 1;
-            CollectResponse response = singleDrawCollector.collectOne(nextRound, false);
+            int latestRound = winningNumberRepository.findMaxRound().orElse(0);
+            int nextRound = latestRound + 1;
+            CollectResponse response = singleDrawCollector.collectOne(nextRound, false, latestRound);
             eventNotifier.publishCollected(response);
             return response;
         });
@@ -64,7 +65,7 @@ public class LottoCollectionCommandService {
 
             for (int i = 0; i < maxCollectPerRun; i++) {
                 int targetRound = nextRound;
-                CollectResponse one = singleDrawCollector.collectOne(targetRound, false);
+                CollectResponse one = singleDrawCollector.collectOne(targetRound, false, batch.latestRound);
                 batch.accumulate(one);
                 if (one.notDrawn()) {
                     reachedEnd = true;
@@ -97,7 +98,7 @@ public class LottoCollectionCommandService {
             int nextRound = batch.latestRound + 1;
 
             for (int i = 0; i < maxHistoryCollect; i++) {
-                CollectResponse one = singleDrawCollector.collectOne(nextRound, false);
+                CollectResponse one = singleDrawCollector.collectOne(nextRound, false, batch.latestRound);
                 batch.accumulate(one);
                 nextRound = batch.latestRound + 1;
                 if (one.notDrawn() || one.failed() > 0) {

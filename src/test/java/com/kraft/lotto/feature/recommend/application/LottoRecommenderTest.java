@@ -131,6 +131,21 @@ class LottoRecommenderTest {
     }
 
     @Test
+    @DisplayName("명시 규칙 추천은 생성자 규칙 대신 전달된 규칙만 적용한다")
+    void recommendWithRulesUsesOnlyProvidedRules() {
+        LottoCombination allowedByProvidedRules = LottoCombination.of(2, 9, 17, 24, 35, 41);
+        LottoRecommender recommender = new LottoRecommender(
+                List.of(excludeAll()),
+                generator(allowedByProvidedRules),
+                1
+        );
+
+        List<LottoCombination> result = recommender.recommendWithRules(1, List.of());
+
+        assertThat(result).containsExactly(allowedByProvidedRules);
+    }
+
+    @Test
     @DisplayName("제외 지표를 기록한다")
     void recordsRejectionMetrics() {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();

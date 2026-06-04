@@ -50,14 +50,19 @@ class LottoSingleDrawCollector {
     }
 
     CollectResponse collectOne(int drwNo, boolean refresh) {
+        return collectOne(drwNo, refresh, null);
+    }
+
+    CollectResponse collectOne(int drwNo, boolean refresh, Integer latestRoundHint) {
+        int latestRoundBefore = resolveLatestRound(latestRoundHint);
         if (!refresh && winningNumberRepository.existsByRound(drwNo)) {
             saveLog(drwNo, LottoFetchStatus.SKIPPED, "already collected round", null, null);
             recordOutcome("skipped");
-            return CollectResponse.ofSkipped(1, winningNumberRepository.findMaxRound().orElse(0));
+            return CollectResponse.ofSkipped(1, Math.max(latestRoundBefore, drwNo));
         }
         long startedNanos = System.nanoTime();
         try {
-            return collectFetchedRound(drwNo);
+            return collectFetchedRound(drwNo, latestRoundBefore);
         } catch (LottoApiClientException ex) {
             log.warn("lotto draw collect failed: drwNo={}", drwNo, ex);
             saveLog(
@@ -68,7 +73,7 @@ class LottoSingleDrawCollector {
                     ex.getRawResponse()
             );
             recordOutcome("failed");
-            return CollectResponse.ofFailed(List.of(drwNo), winningNumberRepository.findMaxRound().orElse(0), false);
+            return CollectResponse.ofFailed(List.of(drwNo), latestRoundBefore, false);
         } catch (RuntimeException ex) {
             log.warn("lotto draw collect failed: drwNo={}", drwNo, ex);
             saveLog(
@@ -79,26 +84,30 @@ class LottoSingleDrawCollector {
                     null
             );
             recordOutcome("failed");
-            return CollectResponse.ofFailed(List.of(drwNo), winningNumberRepository.findMaxRound().orElse(0), false);
+            return CollectResponse.ofFailed(List.of(drwNo), latestRoundBefore, false);
         } finally {
             meterRegistry.timer("kraft.collect.fetch.latency")
                     .record(System.nanoTime() - startedNanos, TimeUnit.NANOSECONDS);
         }
     }
 
-    private CollectResponse collectFetchedRound(int drwNo) {
+    private int resolveLatestRound(Integer latestRoundHint) {
+        return latestRoundHint != null ? Math.max(0, latestRoundHint) : winningNumberRepository.findMaxRound().orElse(0);
+    }
+
+    private CollectResponse collectFetchedRound(int drwNo, int latestRoundBefore) {
         Optional<WinningNumber> fetched = lottoApiClient.fetch(drwNo);
         if (fetched.isEmpty()) {
             saveLog(drwNo, LottoFetchStatus.NOT_DRAWN, "round not drawn yet", null, null);
             recordOutcome("not_drawn");
-            return CollectResponse.ofNotDrawn(winningNumberRepository.findMaxRound().orElse(0));
+            return CollectResponse.ofNotDrawn(latestRoundBefore);
         }
 
         WinningNumber winningNumber = fetched.get();
         UpsertOutcome outcome = persister.upsert(winningNumber);
         saveOutcomeLog(drwNo, outcome, winningNumber.rawJson());
         recordOutcome(outcome.name().toLowerCase());
-        return toCollectResponse(drwNo, outcome);
+        return toCollectResponse(drwNo, outcome, latestRoundBefore);
     }
 
     private void recordOutcome(String result) {
@@ -116,8 +125,10 @@ class LottoSingleDrawCollector {
         saveLog(drwNo, status, message, null, rawJson);
     }
 
-    private CollectResponse toCollectResponse(int drwNo, UpsertOutcome outcome) {
-        int latestRound = winningNumberRepository.findMaxRound().orElse(0);
+    private CollectResponse toCollectResponse(int drwNo, UpsertOutcome outcome, int latestRoundBefore) {
+        int latestRound = outcome == UpsertOutcome.FAILED
+                ? latestRoundBefore
+                : Math.max(latestRoundBefore, drwNo);
         return switch (outcome) {
             case INSERTED -> CollectResponse.ofInserted(1, latestRound);
             case UPDATED -> CollectResponse.ofUpdated(1, latestRound);

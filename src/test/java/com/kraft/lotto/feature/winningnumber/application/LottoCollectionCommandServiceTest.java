@@ -52,7 +52,7 @@ class LottoCollectionCommandServiceTest {
     void collectNextIfNeededPublishesEvent() {
         LottoCollectionCommandService service = service();
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(10));
-        when(singleDrawCollector.collectOne(11, false)).thenReturn(CollectResponse.ofInserted(1, 11));
+        when(singleDrawCollector.collectOne(11, false, 10)).thenReturn(CollectResponse.ofInserted(1, 11));
 
         CollectResponse response = service.collectNextIfNeeded();
 
@@ -71,17 +71,17 @@ class LottoCollectionCommandServiceTest {
                 .thenReturn(Optional.of(0))
                 .thenReturn(Optional.of(0))
                 .thenReturn(Optional.of(1));
-        when(singleDrawCollector.collectOne(1, false)).thenReturn(CollectResponse.ofInserted(1, 1));
-        when(singleDrawCollector.collectOne(2, false)).thenReturn(CollectResponse.ofNotDrawn(1));
+        when(singleDrawCollector.collectOne(1, false, 0)).thenReturn(CollectResponse.ofInserted(1, 1));
+        when(singleDrawCollector.collectOne(2, false, 1)).thenReturn(CollectResponse.ofNotDrawn(1));
 
         CollectResponse response = service.collectAllUntilLatest();
 
         assertThat(response.collected()).isEqualTo(1);
         assertThat(response.failed()).isZero();
         assertThat(response.latestRound()).isEqualTo(1);
-        verify(singleDrawCollector).collectOne(1, false);
-        verify(singleDrawCollector).collectOne(2, false);
-        verify(singleDrawCollector, never()).collectOne(3, false);
+        verify(singleDrawCollector).collectOne(1, false, 0);
+        verify(singleDrawCollector).collectOne(2, false, 1);
+        verify(singleDrawCollector, never()).collectOne(3, false, 1);
         assertThat(publishedEvent().collected()).isEqualTo(1);
     }
 
@@ -128,12 +128,12 @@ class LottoCollectionCommandServiceTest {
                 true
         );
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(10));
-        when(singleDrawCollector.collectOne(11, false)).thenReturn(CollectResponse.ofInserted(1, 11));
+        when(singleDrawCollector.collectOne(11, false, 10)).thenReturn(CollectResponse.ofInserted(1, 11));
 
         CollectResponse response = service.collectAllUntilLatest();
 
         assertThat(response.collected()).isEqualTo(1);
-        verify(singleDrawCollector, times(1)).collectOne(11, false);
+        verify(singleDrawCollector, times(1)).collectOne(11, false, 10);
     }
 
     @Test
@@ -150,17 +150,17 @@ class LottoCollectionCommandServiceTest {
                 false
         );
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(10));
-        when(singleDrawCollector.collectOne(11, false)).thenReturn(CollectResponse.ofFailed(List.of(11), 10, false));
-        when(singleDrawCollector.collectOne(12, false)).thenReturn(CollectResponse.ofInserted(1, 12));
-        when(singleDrawCollector.collectOne(13, false)).thenReturn(CollectResponse.ofNotDrawn(12));
+        when(singleDrawCollector.collectOne(11, false, 10)).thenReturn(CollectResponse.ofFailed(List.of(11), 10, false));
+        when(singleDrawCollector.collectOne(12, false, 10)).thenReturn(CollectResponse.ofInserted(1, 12));
+        when(singleDrawCollector.collectOne(13, false, 12)).thenReturn(CollectResponse.ofNotDrawn(12));
 
         CollectResponse response = service.collectAllUntilLatest();
 
         assertThat(response.failedRounds()).contains(11);
         assertThat(response.collected()).isEqualTo(1);
-        verify(singleDrawCollector).collectOne(11, false);
-        verify(singleDrawCollector).collectOne(12, false);
-        verify(singleDrawCollector).collectOne(13, false);
+        verify(singleDrawCollector).collectOne(11, false, 10);
+        verify(singleDrawCollector).collectOne(12, false, 10);
+        verify(singleDrawCollector).collectOne(13, false, 12);
     }
 
     @Test
@@ -179,7 +179,7 @@ class LottoCollectionCommandServiceTest {
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(10));
         CountDownLatch started = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
-        when(singleDrawCollector.collectOne(11, false)).thenAnswer(invocation -> {
+        when(singleDrawCollector.collectOne(11, false, 10)).thenAnswer(invocation -> {
             started.countDown();
             if (!release.await(2, TimeUnit.SECONDS)) {
                 throw new AssertionError("test synchronization timeout");
@@ -203,7 +203,7 @@ class LottoCollectionCommandServiceTest {
             assertThat(completed.collected()).isEqualTo(1);
         }
 
-        verify(singleDrawCollector, times(1)).collectOne(11, false);
+        verify(singleDrawCollector, times(1)).collectOne(11, false, 10);
     }
 
     @Test
@@ -226,7 +226,7 @@ class LottoCollectionCommandServiceTest {
         CountDownLatch release = new CountDownLatch(1);
         AtomicReference<CollectStatusResponse> statusDuringRun = new AtomicReference<>();
 
-        when(singleDrawCollector.collectOne(11, false)).thenAnswer(invocation -> {
+        when(singleDrawCollector.collectOne(11, false, 10)).thenAnswer(invocation -> {
             statusDuringRun.set(service.getStatus());
             started.countDown();
             if (!release.await(2, TimeUnit.SECONDS)) {

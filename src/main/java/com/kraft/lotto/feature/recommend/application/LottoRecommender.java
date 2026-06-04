@@ -57,52 +57,25 @@ public class LottoRecommender {
      * 사용자가 일부 규칙을 비활성화한 경우에 사용된다.
      */
     public List<LottoCombination> recommendWithRules(int count, List<ExclusionRule> effectiveRules) {
-        if (count <= 0) {
-            throw new IllegalArgumentException("count must be positive: " + count);
-        }
-        List<LottoCombination> result = new ArrayList<>(count);
-        Set<LottoCombination> emitted = new LinkedHashSet<>();
-        int attempts = 0;
-        int rejected = 0;
-        while (result.size() < count) {
-            if (attempts >= maxAttempts) {
-                recordRejectionRate(attempts, rejected);
-                recordTimeout();
-                throw new RecommendGenerationTimeoutException(
-                        "recommend generation attempts exceeded (max=" + maxAttempts + ")",
-                        RecommendGenerationTimeoutException.FailureReason.ATTEMPT_EXHAUSTED
-                );
-            }
-            attempts++;
-            LottoCombination candidate = numberGenerator.generate();
-            if (emitted.contains(candidate)) {
-                rejected++;
-                recordDuplicateRejection();
-                continue;
-            }
-            String excludedByRule = null;
-            for (ExclusionRule rule : effectiveRules) {
-                if (rule.shouldExclude(candidate)) {
-                    excludedByRule = rule.name();
-                    break;
-                }
-            }
-            if (excludedByRule != null) {
-                rejected++;
-                recordRuleRejection(excludedByRule);
-                continue;
-            }
-            emitted.add(candidate);
-            result.add(candidate);
-        }
-        recordRejectionRate(attempts, rejected);
-        return List.copyOf(result);
+        return recommendInternal(count, effectiveRules);
     }
 
     public List<LottoCombination> recommend(int count, List<ExclusionRule> additionalRules) {
+        List<ExclusionRule> safeAdditionalRules = additionalRules == null ? List.of() : additionalRules;
+        List<ExclusionRule> effectiveRules = new ArrayList<>(rules.size() + safeAdditionalRules.size());
+        effectiveRules.addAll(rules);
+        effectiveRules.addAll(safeAdditionalRules);
+        return recommendInternal(count, effectiveRules);
+    }
+
+    private List<LottoCombination> recommendInternal(int count, List<ExclusionRule> effectiveRules) {
         if (count <= 0) {
             throw new IllegalArgumentException("count must be positive: " + count);
         }
+        if (effectiveRules == null) {
+            throw new IllegalArgumentException("effectiveRules must not be null");
+        }
+        List<ExclusionRule> rulesToApply = List.copyOf(effectiveRules);
         List<LottoCombination> result = new ArrayList<>(count);
         Set<LottoCombination> emitted = new LinkedHashSet<>();
         int attempts = 0;
@@ -123,7 +96,7 @@ public class LottoRecommender {
                 recordDuplicateRejection();
                 continue;
             }
-            String excludedRule = findExcludedRule(candidate, additionalRules);
+            String excludedRule = findExcludedRule(candidate, rulesToApply);
             if (excludedRule != null) {
                 rejected++;
                 recordRuleRejection(excludedRule);
@@ -136,13 +109,8 @@ public class LottoRecommender {
         return List.copyOf(result);
     }
 
-    private String findExcludedRule(LottoCombination candidate, List<ExclusionRule> additionalRules) {
-        for (ExclusionRule rule : rules) {
-            if (rule.shouldExclude(candidate)) {
-                return rule.name();
-            }
-        }
-        for (ExclusionRule rule : additionalRules) {
+    private String findExcludedRule(LottoCombination candidate, List<ExclusionRule> rulesToApply) {
+        for (ExclusionRule rule : rulesToApply) {
             if (rule.shouldExclude(candidate)) {
                 return rule.name();
             }
