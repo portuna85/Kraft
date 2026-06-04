@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.domain.WinningStore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.net.CookieManager;
+import java.net.HttpCookie;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,24 +17,34 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class DhLotteryStoreApiClient implements WinningStoreApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(DhLotteryStoreApiClient.class);
+    private static final URI DH_URI = URI.create("https://www.dhlottery.co.kr");
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
     private final String sessionSeedUrl;
+    private final CookieManager cookieManager;
+    private final DhLotteryTracerClient tracerClient;
+    private final String userAgent;
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
-            justification = "RestClient and ObjectMapper are shared application-scoped beans")
+            justification = "RestClient, ObjectMapper, CookieManager are shared application-scoped beans")
     public DhLotteryStoreApiClient(RestClient restClient, ObjectMapper objectMapper,
-                                   String baseUrl, String sessionSeedUrl) {
-        this.restClient   = restClient;
-        this.objectMapper = objectMapper;
-        this.baseUrl      = baseUrl;
+                                   String baseUrl, String sessionSeedUrl,
+                                   CookieManager cookieManager,
+                                   DhLotteryTracerClient tracerClient,
+                                   String userAgent) {
+        this.restClient     = restClient;
+        this.objectMapper   = objectMapper;
+        this.baseUrl        = baseUrl;
         this.sessionSeedUrl = sessionSeedUrl;
+        this.cookieManager  = cookieManager;
+        this.tracerClient   = tracerClient;
+        this.userAgent      = userAgent != null ? userAgent : "";
     }
 
     public DhLotteryStoreApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl) {
-        this(restClient, objectMapper, baseUrl, null);
+        this(restClient, objectMapper, baseUrl, null, null, null, null);
     }
 
     @Override
@@ -72,11 +84,49 @@ public class DhLotteryStoreApiClient implements WinningStoreApiClient {
             return;
         }
         try {
+            ensureWcCookie();
             String pageUrl = sessionSeedUrl + "&drwNoSelect=" + round;
             restClient.get().uri(URI.create(pageUrl)).retrieve().toBodilessEntity();
             log.debug("store session established: round={}", round);
+            if (tracerClient != null) {
+                tracerClient.performHandshake(pageUrl, getWcCookie(), userAgent);
+            }
         } catch (Exception ex) {
             log.warn("store session establishment failed: round={}, reason={}", round, ex.getMessage());
+        }
+    }
+
+    private void ensureWcCookie() {
+        if (cookieManager == null) {
+            return;
+        }
+        try {
+            boolean exists = cookieManager.getCookieStore().get(DH_URI)
+                    .stream().anyMatch(c -> "wcCookie".equals(c.getName()));
+            if (!exists) {
+                HttpCookie cookie = new HttpCookie("wcCookie", DhLotteryTracerClient.generateWcCookie());
+                cookie.setDomain(".dhlottery.co.kr");
+                cookie.setPath("/");
+                cookie.setMaxAge(365L * 24 * 60 * 60);
+                cookieManager.getCookieStore().add(DH_URI, cookie);
+                log.debug("wcCookie created: {}", cookie.getValue());
+            }
+        } catch (Exception e) {
+            log.debug("wcCookie setup failed: {}", e.getMessage());
+        }
+    }
+
+    private String getWcCookie() {
+        if (cookieManager == null) {
+            return "";
+        }
+        try {
+            return cookieManager.getCookieStore().get(DH_URI).stream()
+                    .filter(c -> "wcCookie".equals(c.getName()))
+                    .map(HttpCookie::getValue)
+                    .findFirst().orElse("");
+        } catch (Exception e) {
+            return "";
         }
     }
 
