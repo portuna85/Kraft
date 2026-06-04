@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -67,7 +68,8 @@ public class OpsCollectionController {
 
     @PostMapping("/stores")
     @Operation(summary = "Collect winning stores (1st/2nd prize) for a specific round")
-    public void collectStores(@RequestParam int round) {
-        winningStoreCollector.collectStores(round);
+    public Map<String, Object> collectStores(@RequestParam int round) {
+        boolean saved = winningStoreCollector.collectStores(round);
+        return Map.of("round", round, "saved", saved);
     }
 }

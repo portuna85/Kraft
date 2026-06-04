@@ -5,8 +5,6 @@ import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
-import com.kraft.lotto.support.BusinessException;
-import com.kraft.lotto.support.ErrorCode;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -44,10 +42,10 @@ public class WinningStoreCollector {
         collectStores(latestRound);
     }
 
-    public void collectStores(int round) {
+    public boolean collectStores(int round) {
         log.info("collecting winning stores: round={}", round);
         StoreFetchBatch batch = fetchAllGrades(round);
-        persist(batch);
+        return persist(batch);
     }
 
     private StoreFetchBatch fetchAllGrades(int round) {
@@ -69,18 +67,17 @@ public class WinningStoreCollector {
     }
 
     @Transactional
-    public void persist(StoreFetchBatch batch) {
+    public boolean persist(StoreFetchBatch batch) {
         if (!batch.complete()) {
-            throw new BusinessException(
-                    ErrorCode.EXTERNAL_API_FAILURE,
-                    "winning store fetch incomplete for round=" + batch.round()
-            );
+            log.warn("winning store fetch incomplete for round={}, skipping persist", batch.round());
+            return false;
         }
         storeRepository.deleteByRound(batch.round());
         if (!batch.entities().isEmpty()) {
             storeRepository.saveAll(batch.entities());
             log.info("winning stores saved: round={}, count={}", batch.round(), batch.entities().size());
         }
+        return true;
     }
 
     record StoreFetchBatch(int round, boolean complete, List<WinningStoreEntity> entities) {
