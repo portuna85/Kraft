@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -55,6 +56,19 @@ class LottoSingleDrawCollectorTest {
         assertThat(response.latestRound()).isEqualTo(1200);
         verifyNoInteractions(lottoApiClient, persister);
         assertSavedLog(LottoFetchStatus.SKIPPED, 1200, null, null);
+    }
+
+    @Test
+    @DisplayName("batch skip 시 logSkip=false이면 skip 로그를 저장하지 않는다")
+    void batchSkipDoesNotSaveLog() {
+        LottoSingleDrawCollector collector = collector();
+        when(winningNumberRepository.existsByRound(1200)).thenReturn(true);
+
+        var response = collector.collectOne(1200, false, 1200, false);
+
+        assertThat(response.skipped()).isEqualTo(1);
+        verify(fetchLogRepository, never()).save(any());
+        verifyNoInteractions(lottoApiClient, persister);
     }
 
     @Test

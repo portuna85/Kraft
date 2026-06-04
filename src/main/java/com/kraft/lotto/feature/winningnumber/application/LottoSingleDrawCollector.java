@@ -50,13 +50,19 @@ class LottoSingleDrawCollector {
     }
 
     CollectResponse collectOne(int drwNo, boolean refresh) {
-        return collectOne(drwNo, refresh, null);
+        return collectOne(drwNo, refresh, null, true);
     }
 
     CollectResponse collectOne(int drwNo, boolean refresh, Integer latestRoundHint) {
+        return collectOne(drwNo, refresh, latestRoundHint, true);
+    }
+
+    CollectResponse collectOne(int drwNo, boolean refresh, Integer latestRoundHint, boolean logSkip) {
         int latestRoundBefore = resolveLatestRound(latestRoundHint);
         if (!refresh && winningNumberRepository.existsByRound(drwNo)) {
-            saveLog(drwNo, LottoFetchStatus.SKIPPED, "already collected round", null, null);
+            if (logSkip) {
+                saveLog(drwNo, LottoFetchStatus.SKIPPED, "already collected round", null, null);
+            }
             recordOutcome("skipped");
             return CollectResponse.ofSkipped(1, Math.max(latestRoundBefore, drwNo));
         }

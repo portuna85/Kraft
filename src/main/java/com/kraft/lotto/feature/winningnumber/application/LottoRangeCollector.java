@@ -36,7 +36,7 @@ class LottoRangeCollector {
                 sleepBackfillDelay();
             }
             firstCall = false;
-            CollectResponse one = singleDrawCollector.collectOne(round, refresh, latestRound);
+            CollectResponse one = singleDrawCollector.collectOne(round, refresh, latestRound, false);
             inserted += one.collected();
             updated += one.updated();
             skipped += one.skipped();
