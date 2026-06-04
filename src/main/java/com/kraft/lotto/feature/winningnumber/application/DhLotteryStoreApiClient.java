@@ -31,8 +31,6 @@ public class DhLotteryStoreApiClient implements WinningStoreApiClient {
         this.sessionSeedUrl = sessionSeedUrl;
     }
 
-    @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
-            justification = "RestClient and ObjectMapper are shared application-scoped beans")
     public DhLotteryStoreApiClient(RestClient restClient, ObjectMapper objectMapper, String baseUrl) {
         this(restClient, objectMapper, baseUrl, null);
     }
