@@ -57,4 +57,43 @@ class FetchFailureReasonSupportTest {
 
         assertThat(FetchFailureReasonSupport.extractReason(normalized)).isEqualTo("timeout");
     }
+
+    @Test
+    @DisplayName("VALIDATION FailureReason이 있는 예외는 validation으로 정규화한다")
+    void normalizesValidationReasonFromException() {
+        LottoApiClientException ex = new LottoApiClientException(
+                "round mismatch: request=100, response=101",
+                LottoApiClientException.FailureReason.VALIDATION
+        );
+
+        String normalized = FetchFailureReasonSupport.normalizeFailureMessage(ex);
+
+        assertThat(FetchFailureReasonSupport.extractReason(normalized)).isEqualTo("validation");
+    }
+
+    @Test
+    @DisplayName("MISSING_FIELD FailureReason이 있는 예외는 missing_field로 정규화한다")
+    void normalizesMissingFieldReasonFromException() {
+        LottoApiClientException ex = new LottoApiClientException(
+                "missing required field: numbers",
+                LottoApiClientException.FailureReason.MISSING_FIELD
+        );
+
+        String normalized = FetchFailureReasonSupport.normalizeFailureMessage(ex);
+
+        assertThat(FetchFailureReasonSupport.extractReason(normalized)).isEqualTo("missing_field");
+    }
+
+    @Test
+    @DisplayName("FailureReason.OTHER일 때는 메시지 기반으로 분류한다")
+    void fallsBackToMessageClassificationWhenReasonIsOther() {
+        LottoApiClientException ex = new LottoApiClientException(
+                "invalid date field: date",
+                LottoApiClientException.FailureReason.OTHER
+        );
+
+        String normalized = FetchFailureReasonSupport.normalizeFailureMessage(ex);
+
+        assertThat(FetchFailureReasonSupport.extractReason(normalized)).isEqualTo("validation");
+    }
 }

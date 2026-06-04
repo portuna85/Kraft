@@ -7,7 +7,8 @@ import javax.net.ssl.SSLException;
 final class FetchFailureReasonSupport {
     private static final String[][] REASON_RULES = {
             {"missing_field", "missing_field", "field missing"},
-            {"validation", "validation:", "round mismatch", "field is not integral", "field out of"},
+            {"validation", "validation:", "round mismatch", "field is not integral", "field out of",
+                    "invalid numbers", "invalid date field"},
             {"transform", "transform:", "response transform failed"},
             {"unexpected_return_value", "unexpected_return_value", "unexpected returnvalue"},
             {"json_parse", "response parse failed", "parse failed"},

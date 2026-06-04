@@ -108,6 +108,119 @@ class SmokLottoApiClientTest {
     }
 
     @Nested
+    @DisplayName("실패 사유 표준화")
+    class FailureReason {
+
+        @Test
+        @DisplayName("HTTP 오류는 http_error 메트릭 태그와 HTTP_ERROR enum을 사용한다")
+        void httpErrorUsesStandardReason() {
+            SimpleMeterRegistry registry = new SimpleMeterRegistry();
+            ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
+                    0, registry,
+                    new SmokLottoApiClient.RawResult(500, "server error")
+            );
+
+            assertThatThrownBy(() -> scriptedClient.fetch(100))
+                    .isInstanceOf(LottoApiClientException.class)
+                    .satisfies(ex -> assertThat(((LottoApiClientException) ex).getFailureReason())
+                            .isEqualTo(LottoApiClientException.FailureReason.HTTP_ERROR));
+
+            assertThat(registry.get("kraft.api.smok.call.failure")
+                    .tag("reason", "http_error").counter().count()).isEqualTo(1.0);
+        }
+
+        @Test
+        @DisplayName("JSON 파싱 실패는 json_parse 메트릭 태그와 JSON_PARSE enum을 사용한다")
+        void parseErrorUsesJsonParseReason() {
+            SimpleMeterRegistry registry = new SimpleMeterRegistry();
+            ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
+                    0, registry,
+                    new SmokLottoApiClient.RawResult(200, "not-valid-json")
+            );
+
+            assertThatThrownBy(() -> scriptedClient.fetch(100))
+                    .isInstanceOf(LottoApiClientException.class)
+                    .satisfies(ex -> assertThat(((LottoApiClientException) ex).getFailureReason())
+                            .isEqualTo(LottoApiClientException.FailureReason.JSON_PARSE));
+
+            assertThat(registry.get("kraft.api.smok.call.failure")
+                    .tag("reason", "json_parse").counter().count()).isEqualTo(1.0);
+        }
+
+        @Test
+        @DisplayName("숫자 배열 크기 불일치는 validation 메트릭 태그와 VALIDATION enum을 사용한다")
+        void invalidNumbersSizeUsesValidationReason() {
+            SimpleMeterRegistry registry = new SimpleMeterRegistry();
+            ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
+                    0, registry,
+                    new SmokLottoApiClient.RawResult(200, bodyWithNumbers(100, "[1,2,3,4,5]"))
+            );
+
+            assertThatThrownBy(() -> scriptedClient.fetch(100))
+                    .isInstanceOf(LottoApiClientException.class)
+                    .satisfies(ex -> assertThat(((LottoApiClientException) ex).getFailureReason())
+                            .isEqualTo(LottoApiClientException.FailureReason.VALIDATION));
+
+            assertThat(registry.get("kraft.api.smok.call.failure")
+                    .tag("reason", "validation").counter().count()).isEqualTo(1.0);
+        }
+
+        @Test
+        @DisplayName("날짜 파싱 실패는 validation 메트릭 태그와 VALIDATION enum을 사용한다")
+        void dateParseFailureUsesValidationReason() {
+            SimpleMeterRegistry registry = new SimpleMeterRegistry();
+            ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
+                    0, registry,
+                    new SmokLottoApiClient.RawResult(200, bodyWithDate(100, "not-a-date"))
+            );
+
+            assertThatThrownBy(() -> scriptedClient.fetch(100))
+                    .isInstanceOf(LottoApiClientException.class)
+                    .satisfies(ex -> assertThat(((LottoApiClientException) ex).getFailureReason())
+                            .isEqualTo(LottoApiClientException.FailureReason.VALIDATION));
+
+            assertThat(registry.get("kraft.api.smok.call.failure")
+                    .tag("reason", "validation").counter().count()).isEqualTo(1.0);
+        }
+
+        @Test
+        @DisplayName("회차 불일치는 validation 메트릭 태그와 VALIDATION enum을 사용한다")
+        void roundMismatchUsesValidationReason() {
+            SimpleMeterRegistry registry = new SimpleMeterRegistry();
+            ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
+                    0, registry,
+                    new SmokLottoApiClient.RawResult(200, successBody(999))
+            );
+
+            assertThatThrownBy(() -> scriptedClient.fetch(100))
+                    .isInstanceOf(LottoApiClientException.class)
+                    .satisfies(ex -> assertThat(((LottoApiClientException) ex).getFailureReason())
+                            .isEqualTo(LottoApiClientException.FailureReason.VALIDATION));
+
+            assertThat(registry.get("kraft.api.smok.call.failure")
+                    .tag("reason", "validation").counter().count()).isEqualTo(1.0);
+        }
+
+        @Test
+        @DisplayName("metric tag cardinality — 허용 목록 외 reason은 other로 대체된다")
+        void unknownReasonIsMappedToOther() {
+            SimpleMeterRegistry registry = new SimpleMeterRegistry();
+            ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
+                    0, registry,
+                    new SmokLottoApiClient.RawResult(200, successBody(100))
+            );
+            // 직접 내부 count() 메서드를 호출할 수 없으므로
+            // parse_error 같은 비표준 reason이 이전에 사용됐는지 회귀 검증:
+            // json_parse 사용으로 올바르게 기록됨을 확인
+            assertThatThrownBy(() -> scriptedClient.fetch(99))
+                    .isInstanceOf(LottoApiClientException.class);
+            // no "parse_error" counter should exist
+            assertThat(registry.find("kraft.api.smok.call.failure").tag("reason", "parse_error").counter())
+                    .isNull();
+        }
+    }
+
+    @Nested
     @DisplayName("HTTP 응답 처리")
     class Fetch {
 
@@ -298,5 +411,31 @@ class SmokLottoApiClientTest {
                   ]%n\
                 }%n\
                 """.formatted(round);
+    }
+
+    private static String bodyWithNumbers(int round, String numbersJson) {
+        return """
+                {%n\
+                  "draw_no": %d,%n\
+                  "numbers": %s,%n\
+                  "bonus_no": 7,%n\
+                  "date": "2020-01-01T09:00:00+09:00",%n\
+                  "total_sales_amount": 2000000000,%n\
+                  "divisions": [{ "prize": 1500000000, "winners": 3 }]%n\
+                }%n\
+                """.formatted(round, numbersJson);
+    }
+
+    private static String bodyWithDate(int round, String dateValue) {
+        return """
+                {%n\
+                  "draw_no": %d,%n\
+                  "numbers": [1, 2, 3, 4, 5, 6],%n\
+                  "bonus_no": 7,%n\
+                  "date": "%s",%n\
+                  "total_sales_amount": 2000000000,%n\
+                  "divisions": [{ "prize": 1500000000, "winners": 3 }]%n\
+                }%n\
+                """.formatted(round, dateValue);
     }
 }

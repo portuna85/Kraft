@@ -15,6 +15,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,11 @@ public class SmokLottoApiClient implements LottoApiClient {
     private static final Logger log = LoggerFactory.getLogger(SmokLottoApiClient.class);
 
     static final String DEFAULT_BASE_URL = "https://smok95.github.io/lotto/results";
+
+    private static final Set<String> ALLOWED_FAILURE_REASONS = Set.of(
+            "http_error", "network", "timeout", "json_parse", "validation",
+            "missing_field", "circuit_open", "other"
+    );
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
@@ -109,10 +115,10 @@ public class SmokLottoApiClient implements LottoApiClient {
             return Optional.empty();
         }
         if (raw.statusCode() >= 400) {
-            count("kraft.api.smok.call.failure", "reason", "http_error");
+            count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.HTTP_ERROR.metricName());
             throw new LottoApiClientException(
                     "smok API HTTP error (round=" + round + ", status=" + raw.statusCode() + ")",
-                    raw.statusCode(), raw.body());
+                    raw.statusCode(), raw.body(), LottoApiClientException.FailureReason.HTTP_ERROR);
         }
         Optional<WinningNumber> parsed = parse(round, raw.body());
         count("kraft.api.smok.call.success");
@@ -125,8 +131,10 @@ public class SmokLottoApiClient implements LottoApiClient {
             JsonNode node = objectMapper.readTree(body);
             int drawNo = requiredInt(node, "draw_no");
             if (drawNo != round) {
+                count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.VALIDATION.metricName());
                 throw new LottoApiClientException(
-                        "round mismatch: request=" + round + ", response=" + drawNo);
+                        "round mismatch: request=" + round + ", response=" + drawNo,
+                        LottoApiClientException.FailureReason.VALIDATION);
             }
 
             List<Integer> mains = requiredMainNumbers(node);
@@ -150,21 +158,24 @@ public class SmokLottoApiClient implements LottoApiClient {
         } catch (LottoApiClientException ex) {
             throw ex;
         } catch (Exception ex) {
-            count("kraft.api.smok.call.failure", "reason", "parse_error");
+            count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.JSON_PARSE.metricName());
             throw new LottoApiClientException(
-                    "smok API parse failed (round=" + round + "): " + ex.getMessage(), ex);
+                    "smok API parse failed (round=" + round + "): " + ex.getMessage(), ex,
+                    LottoApiClientException.FailureReason.JSON_PARSE);
         }
     }
 
     private int requiredInt(JsonNode node, String fieldName) {
         JsonNode value = node.path(fieldName);
         if (value.isMissingNode() || value.isNull()) {
-            count("kraft.api.smok.call.failure", "reason", "missing_field");
-            throw new LottoApiClientException("missing required field: " + fieldName);
+            count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.MISSING_FIELD.metricName());
+            throw new LottoApiClientException("missing required field: " + fieldName,
+                    LottoApiClientException.FailureReason.MISSING_FIELD);
         }
         if (!value.canConvertToInt()) {
-            count("kraft.api.smok.call.failure", "reason", "missing_field");
-            throw new LottoApiClientException("invalid integer field: " + fieldName);
+            count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.VALIDATION.metricName());
+            throw new LottoApiClientException("field is not integral: " + fieldName,
+                    LottoApiClientException.FailureReason.VALIDATION);
         }
         return value.asInt();
     }
@@ -172,19 +183,22 @@ public class SmokLottoApiClient implements LottoApiClient {
     private List<Integer> requiredMainNumbers(JsonNode node) {
         JsonNode numbersNode = node.path("numbers");
         if (numbersNode.isMissingNode() || numbersNode.isNull() || !numbersNode.isArray()) {
-            count("kraft.api.smok.call.failure", "reason", "missing_field");
-            throw new LottoApiClientException("missing required field: numbers");
+            count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.MISSING_FIELD.metricName());
+            throw new LottoApiClientException("missing required field: numbers",
+                    LottoApiClientException.FailureReason.MISSING_FIELD);
         }
         if (numbersNode.size() != 6) {
-            count("kraft.api.smok.call.failure", "reason", "invalid_numbers");
-            throw new LottoApiClientException("invalid numbers size: " + numbersNode.size());
+            count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.VALIDATION.metricName());
+            throw new LottoApiClientException("invalid numbers size: " + numbersNode.size(),
+                    LottoApiClientException.FailureReason.VALIDATION);
         }
         List<Integer> mains = new ArrayList<>(6);
         for (int i = 0; i < numbersNode.size(); i++) {
             JsonNode value = numbersNode.get(i);
             if (value == null || !value.canConvertToInt()) {
-                count("kraft.api.smok.call.failure", "reason", "invalid_numbers");
-                throw new LottoApiClientException("invalid numbers[" + i + "]");
+                count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.VALIDATION.metricName());
+                throw new LottoApiClientException("invalid numbers[" + i + "]",
+                        LottoApiClientException.FailureReason.VALIDATION);
             }
             mains.add(value.asInt());
         }
@@ -194,14 +208,16 @@ public class SmokLottoApiClient implements LottoApiClient {
     private LocalDate requiredDate(JsonNode node, String fieldName) {
         JsonNode value = node.path(fieldName);
         if (value.isMissingNode() || value.isNull() || value.asText().isBlank()) {
-            count("kraft.api.smok.call.failure", "reason", "missing_field");
-            throw new LottoApiClientException("missing required field: " + fieldName);
+            count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.MISSING_FIELD.metricName());
+            throw new LottoApiClientException("missing required field: " + fieldName,
+                    LottoApiClientException.FailureReason.MISSING_FIELD);
         }
         try {
             return OffsetDateTime.parse(value.asText()).toLocalDate();
         } catch (Exception ex) {
-            count("kraft.api.smok.call.failure", "reason", "date_parse");
-            throw new LottoApiClientException("invalid date field: " + fieldName, ex);
+            count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.VALIDATION.metricName());
+            throw new LottoApiClientException("invalid date field: " + fieldName, ex,
+                    LottoApiClientException.FailureReason.VALIDATION);
         }
     }
 
@@ -214,11 +230,12 @@ public class SmokLottoApiClient implements LottoApiClient {
                                            int attempts,
                                            int attempt,
                                            RestClientException ex) {
-        count("kraft.api.smok.call.failure", "reason", "network");
+        count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.NETWORK.metricName());
         circuitBreaker.recordFailure();
         if (attempt >= attempts) {
             throw new LottoApiClientException(
-                    "smok API call failed (round=" + round + ", attempts=" + attempts + ")", ex);
+                    "smok API call failed (round=" + round + ", attempts=" + attempts + ")", ex,
+                    LottoApiClientException.FailureReason.NETWORK);
         }
         count("kraft.api.smok.call.retry");
         log.warn("smok call failed, retrying: round={}, attempt={}/{}, reason={}",
@@ -232,14 +249,15 @@ public class SmokLottoApiClient implements LottoApiClient {
                                        int attempt,
                                        LottoApiClientException ex) {
         if (ex instanceof ApiRequestTimeoutException) {
-            count("kraft.api.smok.call.failure", "reason", "timeout");
+            count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.TIMEOUT.metricName());
             circuitBreaker.recordFailure();
             throw ex;
         }
         circuitBreaker.recordFailure();
         if (attempt >= attempts || !isRetriable(ex)) {
             throw new LottoApiClientException(
-                    "smok API call failed (round=" + round + ", attempts=" + attempts + ")", ex);
+                    "smok API call failed (round=" + round + ", attempts=" + attempts + ")", ex,
+                    ex.getFailureReason());
         }
         count("kraft.api.smok.call.retry");
         log.warn("smok call failed, retrying: round={}, attempt={}/{}, reason={}",
@@ -248,6 +266,15 @@ public class SmokLottoApiClient implements LottoApiClient {
     }
 
     private void count(String metricName, String... tags) {
+        if ("kraft.api.smok.call.failure".equals(metricName) && tags.length >= 2 && "reason".equals(tags[0])) {
+            String reason = tags[1];
+            if (!ALLOWED_FAILURE_REASONS.contains(reason)) {
+                String[] t = tags.clone();
+                t[1] = "other";
+                meterRegistry.counter(metricName, t).increment();
+                return;
+            }
+        }
         meterRegistry.counter(metricName, tags).increment();
     }
 
