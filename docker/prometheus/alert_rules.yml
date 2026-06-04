@@ -92,3 +92,23 @@ groups:
         annotations:
           summary: "백업 오프사이트 동기화 실패"
           description: "로컬 백업은 성공했으나 rclone 오프사이트 동기화가 실패했습니다. RCLONE_REMOTE 설정 및 rclone 설치를 확인하세요."
+
+      # 호스트 CPU 90% 이상 10분 지속
+      - alert: HostCpuHigh
+        expr: (1 - avg by(instance) (rate(node_cpu_seconds_total{job="node", mode="idle"}[2m]))) > 0.90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "호스트 CPU 사용률 90% 초과"
+          description: "{{ $labels.instance }} CPU 사용률이 {{ $value | humanizePercentage }} 입니다. 10분 이상 지속되고 있습니다."
+
+      # JVM 힙 사용률 85% 이상 5분 지속
+      - alert: JvmMemoryHigh
+        expr: (jvm_memory_used_bytes{job="kraft-lotto", area="heap"} / jvm_memory_max_bytes{job="kraft-lotto", area="heap"}) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM 힙 사용률 85% 초과"
+          description: "kraft-lotto JVM 힙 사용률이 {{ $value | humanizePercentage }} 입니다. GC 빈도 및 메모리 누수 여부를 확인하세요."
