@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -54,8 +55,15 @@ class HomeControllerTest {
 
     @BeforeEach
     void setUp() {
-        HomeController controller = new HomeController(queryService, recommendService, statisticsService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+        RecommendModelSupport recommendModelSupport = new RecommendModelSupport(recommendService);
+        FrequencyModelSupport frequencyModelSupport = new FrequencyModelSupport(statisticsService);
+        RoundsModelSupport roundsModelSupport = new RoundsModelSupport(queryService);
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                        new HomeController(queryService, recommendModelSupport),
+                        new RecommendController(recommendModelSupport),
+                        new FrequencyController(frequencyModelSupport),
+                        new RoundsController(roundsModelSupport)
+                )
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -88,6 +96,26 @@ class HomeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments/frequency-card :: frequency-card"))
                 .andExpect(model().attribute("frequency", hasSize(2)));
+    }
+
+    @Test
+    @DisplayName("기간 빈도 프래그먼트는 전체 빈도 요약을 계산하지 않는다")
+    void frequencyFragmentForPeriodDoesNotLoadOverallSummary() throws Exception {
+        List<NumberFrequencyDto> freqs = List.of(
+                new NumberFrequencyDto(1, 3, 0.1),
+                new NumberFrequencyDto(2, 7, 0.2)
+        );
+        CombinationPrizeHistoryDto emptyHistory =
+                new CombinationPrizeHistoryDto(List.of(), 0, 0, List.of(), List.of());
+        when(statisticsService.frequencyForPeriod(100)).thenReturn(freqs);
+        when(statisticsService.combinationPrizeHistory(anyList())).thenReturn(emptyHistory);
+
+        mockMvc.perform(get("/fragments/frequency").param("period", "100"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments/frequency-card :: frequency-card"))
+                .andExpect(model().attribute("period", 100));
+
+        verify(statisticsService, never()).frequencySummary();
     }
 
     @Test

@@ -12,7 +12,6 @@ import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.recommend.application.RecommendFilter;
 import com.kraft.lotto.feature.recommend.application.RecommendService;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
-import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import com.kraft.lotto.support.GlobalExceptionHandler;
 import java.util.List;
@@ -25,8 +24,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(HomeController.class)
-@Import({GlobalExceptionHandler.class, TestCacheConfig.class, LottoBallHelper.class})
+@WebMvcTest({HomeController.class, RecommendController.class})
+@Import({GlobalExceptionHandler.class, TestCacheConfig.class, LottoBallHelper.class, RecommendModelSupport.class})
 @DisplayName("홈 컨트롤러 WebMvc 슬라이스 테스트")
 class HomeControllerWebMvcTest {
 
@@ -38,9 +37,6 @@ class HomeControllerWebMvcTest {
 
     @MockitoBean
     RecommendService recommendService;
-
-    @MockitoBean
-    WinningStatisticsService statisticsService;
 
     @Test
     @DisplayName("예상되는 모델 속성과 함께 홈 뷰를 렌더링한다")
