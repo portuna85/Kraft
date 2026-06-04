@@ -8,6 +8,10 @@
 .kraft-footer-nav a{font-size:.75rem;font-weight:600;text-decoration:none;}
 .kraft-footer-nav a:hover{text-decoration:underline;}
 
+/* --- Set card copy button --- */
+.set-card-copy-btn{display:inline-block;margin-top:.25rem;padding:.1rem .45rem;font-size:.72rem;line-height:1.4;border:1px solid var(--kraft-muted,#4f5e70);border-radius:3px;background:transparent;color:var(--kraft-muted,#4f5e70);cursor:pointer;}
+.set-card-copy-btn:hover{background:var(--kraft-muted,#4f5e70);color:#fff;}
+
 /* --- Set card bias analysis --- */
 .set-card-analysis{margin-top:.5rem;}
 .set-card-analysis-toggle{cursor:pointer;list-style:none;padding:.2rem 0;}

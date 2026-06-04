@@ -59,6 +59,7 @@
             <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
           </th:block>
         </div>
+        <button class="set-card-copy-btn" type="button" aria-label="번호 복사">복사</button>
         <details class="set-card-analysis" th:if="${not #lists.isEmpty(c.passedLabels)}">
           <summary class="set-card-analysis-toggle small text-secondary">편향 회피 분석</summary>
           <ul class="set-card-analysis-list">

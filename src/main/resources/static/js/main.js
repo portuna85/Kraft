@@ -68,6 +68,48 @@
     }
   });
 
+  // 추천 결과 복사 버튼 — HTMX outerHTML 스왑 후에도 위임으로 동작
+  var RECOMMEND_HISTORY_KEY = 'kraft-recommend-history';
+  var RECOMMEND_HISTORY_MAX = 10;
+
+  document.addEventListener('click', function (e) {
+    var copyBtn = e.target.closest('.set-card-copy-btn');
+    if (!copyBtn) { return; }
+    var card = copyBtn.closest('.set-card');
+    if (!card) { return; }
+    var numbers = Array.from(card.querySelectorAll('.ball-row .kraft-ball'))
+      .map(function (el) { return el.textContent.trim(); })
+      .join(', ');
+    if (!numbers) { return; }
+
+    var feedback = function (ok) {
+      copyBtn.textContent = ok ? '복사됨' : '실패';
+      setTimeout(function () { copyBtn.textContent = '복사'; }, 1500);
+      if (ok) {
+        try {
+          var hist = JSON.parse(localStorage.getItem(RECOMMEND_HISTORY_KEY) || '[]');
+          hist = hist.filter(function (item) { return item !== numbers; });
+          hist.unshift(numbers);
+          if (hist.length > RECOMMEND_HISTORY_MAX) { hist.length = RECOMMEND_HISTORY_MAX; }
+          localStorage.setItem(RECOMMEND_HISTORY_KEY, JSON.stringify(hist));
+        } catch (ignored) {}
+      }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(numbers).then(function () { feedback(true); }, function () { feedback(false); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = numbers;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); feedback(true); } catch (err) { feedback(false); }
+      document.body.removeChild(ta);
+    }
+  });
+
   // HTMX 요청 직전에 비활성 규칙을 파라미터에 추가
   document.addEventListener('htmx:configRequest', function (e) {
     if (!e.target || e.target.id !== 'recommendForm') { return; }
