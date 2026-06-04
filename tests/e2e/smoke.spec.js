@@ -68,6 +68,67 @@ test.describe('home smoke', () => {
     await page.goto('/');
     await expect(page.locator('#recommend .set-card').first()).toBeVisible();
   });
+
+  test('analysis picker fetches fragment without htmx', async ({ page }) => {
+    await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
+    await page.goto('/analysis');
+
+    for (const number of ['1', '7', '15', '23', '38', '45']) {
+      await page.locator(`#analysis-picker .ball-picker-item[data-number="${number}"]`).click();
+    }
+
+    await expect(page.locator('#analysis-result')).not.toBeEmpty();
+  });
+
+  test('companion picker fetches fragment without htmx', async ({ page }) => {
+    await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
+    await page.goto('/companion');
+    await page.locator('#companion-picker .ball-picker-item[data-number="7"]').click();
+
+    await expect(page.locator('#companion-result')).not.toBeEmpty();
+  });
+});
+
+test.describe('news tier smoke', () => {
+  test('renders news page with tier tabs', async ({ page }) => {
+    await page.goto('/news');
+    await expect(page.locator('.news-tier-tabs')).toBeVisible();
+    await expect(page.locator('.news-tier-tab')).toHaveCount(4); // 전체, official, press, general
+  });
+
+  test('/news 기본 접근 시 전체 탭이 active다', async ({ page }) => {
+    await page.goto('/news');
+    const allTab = page.locator('.news-tier-tab').first();
+    await expect(allTab).toHaveClass(/active/);
+  });
+
+  test('/news?tier=press 접근 시 press 탭이 active다', async ({ page }) => {
+    await page.goto('/news?tier=press');
+    const activeTab = page.locator('.news-tier-tab.active');
+    await expect(activeTab).toHaveCount(1);
+    await expect(activeTab).toContainText('언론');
+  });
+
+  test('/news?tier=official 접근 시 official 탭이 active다', async ({ page }) => {
+    await page.goto('/news?tier=official');
+    const activeTab = page.locator('.news-tier-tab.active');
+    await expect(activeTab).toHaveCount(1);
+    await expect(activeTab).toContainText('공식');
+  });
+
+  test('/news?tier=general 접근 시 general 탭이 active다', async ({ page }) => {
+    await page.goto('/news?tier=general');
+    const activeTab = page.locator('.news-tier-tab.active');
+    await expect(activeTab).toHaveCount(1);
+    await expect(activeTab).toContainText('일반');
+  });
+
+  test('tier 탭 클릭 시 tier query를 유지하며 이동한다', async ({ page }) => {
+    await page.goto('/news');
+    await page.locator('.news-tier-tab').filter({ hasText: '언론' }).click();
+    await expect(page).toHaveURL(/tier=press/);
+    await expect(page.locator('.news-tier-tab.active')).toContainText('언론');
+  });
 });
 
 test.describe('responsive smoke', () => {
