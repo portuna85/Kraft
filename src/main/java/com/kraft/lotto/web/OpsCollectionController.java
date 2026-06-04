@@ -1,6 +1,7 @@
 package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
+import com.kraft.lotto.feature.winningnumber.application.WinningStoreCollector;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @OpsApi
@@ -23,6 +25,7 @@ public class OpsCollectionController {
 
     private final LottoCollectionCommandService collectionCommandService;
     private final OpsCollectionFacade opsCollectionFacade;
+    private final WinningStoreCollector winningStoreCollector;
     private final KraftSecurityProperties securityProperties;
 
     @Autowired
@@ -32,9 +35,11 @@ public class OpsCollectionController {
     )
     public OpsCollectionController(LottoCollectionCommandService collectionCommandService,
                                    OpsCollectionFacade opsCollectionFacade,
+                                   WinningStoreCollector winningStoreCollector,
                                    KraftSecurityProperties securityProperties) {
         this.collectionCommandService = collectionCommandService;
         this.opsCollectionFacade = opsCollectionFacade;
+        this.winningStoreCollector = winningStoreCollector;
         this.securityProperties = securityProperties;
     }
 
@@ -58,5 +63,11 @@ public class OpsCollectionController {
         return opsCollectionFacade.collectMissing(
                 MDC.get("requestId"),
                 ClientIpResolver.resolve(request, securityProperties.getTrustedProxies()));
+    }
+
+    @PostMapping("/stores")
+    @Operation(summary = "Collect winning stores (1st/2nd prize) for a specific round")
+    public void collectStores(@RequestParam int round) {
+        winningStoreCollector.collectStores(round);
     }
 }
