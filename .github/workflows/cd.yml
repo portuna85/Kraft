@@ -88,6 +88,11 @@ jobs:
           KRAFT_APP_IMAGE_TAG: ${{ steps.ref.outputs.value }}
         run: ./scripts/deploy/render-env.sh
 
+      - name: Render Alertmanager config
+        env:
+          ALERTMANAGER_DISCORD_WEBHOOK_URL: ${{ secrets.ALERTMANAGER_DISCORD_WEBHOOK_URL }}
+        run: ./scripts/deploy/render-alertmanager.sh
+
       - name: Validate Docker Compose file
         run: docker compose config -q
 
@@ -148,4 +153,4 @@ jobs:
 
       - name: Cleanup secrets artifacts
         if: always()
-        run: rm -f .env .required-envs
+        run: rm -f .env .required-envs deploy-state/alertmanager.yml

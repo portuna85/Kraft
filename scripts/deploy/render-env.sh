@@ -38,6 +38,7 @@ umask 077
   printf 'KRAFT_LOG_PATH=/app/logs\n'
   printf 'KRAFT_HEALTHCHECK_URL=http://localhost:8080/actuator/health/readiness\n'
   printf 'KRAFT_HEALTHCHECK_TIMEOUT_SECONDS=3\n'
+  printf 'KRAFT_ALERTMANAGER_CONFIG_FILE=./deploy-state/alertmanager.yml\n'
 } > .env
 
 while IFS= read -r name; do

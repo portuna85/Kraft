@@ -66,6 +66,9 @@ jobs:
       - name: Minify CSS (F-2)
         run: npm run build:css
 
+      - name: Verify CSS build has no uncommitted diff
+        run: git diff --exit-code -- src/main/resources/static/css
+
       # check = test (incl. FlywayMigrationIntegrationTest) + checkstyle + spotbugs
       # test finalizedBy jacocoTestReport
       - name: Build + Test + Static analysis + Coverage

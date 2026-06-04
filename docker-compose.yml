@@ -157,7 +157,7 @@ services:
     environment:
       ALERTMANAGER_DISCORD_WEBHOOK_URL: ${ALERTMANAGER_DISCORD_WEBHOOK_URL:-}
     volumes:
-      - ./docker/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ${KRAFT_ALERTMANAGER_CONFIG_FILE:-./docker/alertmanager/alertmanager.yml}:/etc/alertmanager/alertmanager.yml:ro
     ports:
       - "127.0.0.1:${KRAFT_ALERTMANAGER_PORT:-9093}:9093"
     networks:
