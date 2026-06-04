@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
+import java.net.URI;
 import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ class DhLotteryTracerClient {
         return pollQueue(pageUrl, loginId, userAgent);
     }
 
-    private String checkBotIp(String pageUrl) {
+    String checkBotIp(String pageUrl) {
         try {
             MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
             form.add("host", DH_HOST);
@@ -49,7 +50,7 @@ class DhLotteryTracerClient {
             form.add("pageUrl", pageUrl);
 
             String body = client.post()
-                    .uri(TRACER_BASE + "/checkBotIp.do")
+                    .uri(URI.create(TRACER_BASE + "/checkBotIp.do"))
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .body(form)
                     .retrieve()
@@ -61,7 +62,7 @@ class DhLotteryTracerClient {
         }
     }
 
-    private boolean pollQueue(String pageUrl, String loginId, String userAgent) {
+    boolean pollQueue(String pageUrl, String loginId, String userAgent) {
         for (int i = 0; i < MAX_WAIT_ATTEMPTS; i++) {
             String isWait = inputQueue(pageUrl, loginId, userAgent);
             log.debug("tracer inputQueue attempt={} isWait={}", i + 1, isWait);
@@ -83,7 +84,7 @@ class DhLotteryTracerClient {
         return true;
     }
 
-    private String inputQueue(String pageUrl, String loginId, String userAgent) {
+    String inputQueue(String pageUrl, String loginId, String userAgent) {
         try {
             MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
             form.add("host", DH_HOST);
@@ -94,7 +95,7 @@ class DhLotteryTracerClient {
             form.add("userAgent", userAgent);
 
             String body = client.post()
-                    .uri(TRACER_BASE + "/inputQueue.do")
+                    .uri(URI.create(TRACER_BASE + "/inputQueue.do"))
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .body(form)
                     .retrieve()

@@ -96,7 +96,7 @@ public class DhLotteryStoreApiClient implements WinningStoreApiClient {
         }
     }
 
-    private void ensureWcCookie() {
+    void ensureWcCookie() {
         if (cookieManager == null) {
             return;
         }
@@ -116,7 +116,7 @@ public class DhLotteryStoreApiClient implements WinningStoreApiClient {
         }
     }
 
-    private String getWcCookie() {
+    String getWcCookie() {
         if (cookieManager == null) {
             return "";
         }

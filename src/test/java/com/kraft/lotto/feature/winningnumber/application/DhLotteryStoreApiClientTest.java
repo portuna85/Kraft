@@ -5,6 +5,8 @@ import static org.mockito.Mockito.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.domain.WinningStore;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -91,5 +93,45 @@ class DhLotteryStoreApiClientTest {
     void fetchStoresReturnsEmptyForBlankBody() {
         assertThat(client.parse(1226, 1, "")).isEmpty();
         assertThat(client.parse(1226, 1, "   ")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("ensureWcCookie: cookieManager가 null이면 아무것도 하지 않는다")
+    void ensureWcCookie_skipsWhenCookieManagerIsNull() {
+        var c = new DhLotteryStoreApiClient(
+                mock(RestClient.class), new ObjectMapper(),
+                "https://www.dhlottery.co.kr/store.do", null, null, null, null);
+
+        c.ensureWcCookie();
+
+        assertThat(c.getWcCookie()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("ensureWcCookie: wcCookie가 없으면 생성한다")
+    void ensureWcCookie_createsCookieWhenAbsent() {
+        CookieManager manager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        var c = new DhLotteryStoreApiClient(
+                mock(RestClient.class), new ObjectMapper(),
+                "https://www.dhlottery.co.kr/store.do", null, manager, null, "ua");
+
+        c.ensureWcCookie();
+
+        assertThat(c.getWcCookie()).matches("_T_\\d{5}_WC");
+    }
+
+    @Test
+    @DisplayName("ensureWcCookie: 이미 있으면 덮어쓰지 않는다")
+    void ensureWcCookie_doesNotOverwriteExisting() {
+        CookieManager manager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        var c = new DhLotteryStoreApiClient(
+                mock(RestClient.class), new ObjectMapper(),
+                "https://www.dhlottery.co.kr/store.do", null, manager, null, "ua");
+
+        c.ensureWcCookie();
+        String first = c.getWcCookie();
+        c.ensureWcCookie();
+
+        assertThat(c.getWcCookie()).isEqualTo(first);
     }
 }
