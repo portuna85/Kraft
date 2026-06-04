@@ -60,9 +60,11 @@ class DhLotteryResponseParser {
             int firstWinners = requiredInt(node, "firstPrzwnerCo", round);
             long totalSales = requiredLong(node, "totSellamnt", round);
             long firstAccumAmount = optionalLong(node, "firstAccumamnt", round, 0L);
+            long secondPrize = optionalLong(node, "secondWinamnt", round, 0L);
+            int secondWinners = (int) optionalLong(node, "secondPrzwnerCo", round, 0L);
             return Optional.of(new WinningNumber(
                     drwNo, drawDate, new LottoCombination(mains), bonus, firstPrize, firstWinners,
-                    totalSales, firstAccumAmount, body, LocalDateTime.now(clock)
+                    totalSales, firstAccumAmount, secondPrize, secondWinners, body, LocalDateTime.now(clock)
             ));
         } catch (DateTimeParseException | IllegalArgumentException ex) {
             throw new LottoApiClientException("transform: response transform failed (round=" + round + "): " + ex.getMessage(),
