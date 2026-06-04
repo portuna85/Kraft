@@ -96,6 +96,16 @@ public class WinningStatisticsService {
             log.error("frequency summary refresh failed, skipping cache eviction", e);
             return;
         }
+        try {
+            cacheService.refreshPatternStatsSummary();
+        } catch (Exception e) {
+            log.warn("pattern stats summary refresh failed, will recompute on next cache miss", e);
+        }
+        try {
+            cacheService.refreshCompanionPairSummary();
+        } catch (Exception e) {
+            log.warn("companion pair summary refresh failed, will recompute on next cache miss", e);
+        }
         evictAll("winningNumberFrequency");
         evictAll("winningNumberFrequencyPeriod");
         evictAll("combinationPrizeHistory");

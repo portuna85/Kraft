@@ -147,6 +147,45 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
             """, nativeQuery = true)
     List<CompanionRow> findCompanionNumbers(@Param("target") int target);
 
+    @Query(value = """
+            SELECT src_ball AS ball, other_ball AS otherBall, COUNT(*) AS hitCount
+            FROM (
+                SELECT n1 AS src_ball, n2 AS other_ball FROM winning_numbers
+                UNION ALL SELECT n1, n3 FROM winning_numbers
+                UNION ALL SELECT n1, n4 FROM winning_numbers
+                UNION ALL SELECT n1, n5 FROM winning_numbers
+                UNION ALL SELECT n1, n6 FROM winning_numbers
+                UNION ALL SELECT n2, n1 FROM winning_numbers
+                UNION ALL SELECT n2, n3 FROM winning_numbers
+                UNION ALL SELECT n2, n4 FROM winning_numbers
+                UNION ALL SELECT n2, n5 FROM winning_numbers
+                UNION ALL SELECT n2, n6 FROM winning_numbers
+                UNION ALL SELECT n3, n1 FROM winning_numbers
+                UNION ALL SELECT n3, n2 FROM winning_numbers
+                UNION ALL SELECT n3, n4 FROM winning_numbers
+                UNION ALL SELECT n3, n5 FROM winning_numbers
+                UNION ALL SELECT n3, n6 FROM winning_numbers
+                UNION ALL SELECT n4, n1 FROM winning_numbers
+                UNION ALL SELECT n4, n2 FROM winning_numbers
+                UNION ALL SELECT n4, n3 FROM winning_numbers
+                UNION ALL SELECT n4, n5 FROM winning_numbers
+                UNION ALL SELECT n4, n6 FROM winning_numbers
+                UNION ALL SELECT n5, n1 FROM winning_numbers
+                UNION ALL SELECT n5, n2 FROM winning_numbers
+                UNION ALL SELECT n5, n3 FROM winning_numbers
+                UNION ALL SELECT n5, n4 FROM winning_numbers
+                UNION ALL SELECT n5, n6 FROM winning_numbers
+                UNION ALL SELECT n6, n1 FROM winning_numbers
+                UNION ALL SELECT n6, n2 FROM winning_numbers
+                UNION ALL SELECT n6, n3 FROM winning_numbers
+                UNION ALL SELECT n6, n4 FROM winning_numbers
+                UNION ALL SELECT n6, n5 FROM winning_numbers
+            ) sub
+            GROUP BY src_ball, other_ball
+            ORDER BY ball ASC, hitCount DESC
+            """, nativeQuery = true)
+    List<CompanionPairRow> findAllCompanionPairs();
+
     interface BallFrequencyRow {
         Integer getBall();
         Long getHitCount();
@@ -178,6 +217,12 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
     }
 
     interface CompanionRow {
+        Integer getOtherBall();
+        Long getHitCount();
+    }
+
+    interface CompanionPairRow {
+        Integer getBall();
         Integer getOtherBall();
         Long getHitCount();
     }
