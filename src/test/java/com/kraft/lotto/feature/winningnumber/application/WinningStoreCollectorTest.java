@@ -1,17 +1,15 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.kraft.lotto.feature.winningnumber.domain.WinningStore;
 import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
-import com.kraft.lotto.support.BusinessException;
-import com.kraft.lotto.support.ErrorCode;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -79,31 +77,27 @@ class WinningStoreCollectorTest {
     }
 
     @Test
-    @DisplayName("collectStores: 빈 목록이면 기존 데이터 삭제를 시도하지 않는다")
+    @DisplayName("collectStores: 빈 목록이면 false를 반환하고 저장소를 건드리지 않는다")
     void persistWhenEntitiesEmptyShouldNotDelete() {
         when(storeApiClient.fetchStores(1226, 1)).thenReturn(List.of());
         when(storeApiClient.fetchStores(1226, 2)).thenReturn(List.of());
 
-        assertThatExceptionOfType(BusinessException.class)
-                .isThrownBy(() -> collector.collectStores(1226))
-                .extracting(BusinessException::getErrorCode)
-                .isEqualTo(ErrorCode.EXTERNAL_API_FAILURE);
+        boolean result = collector.collectStores(1226);
 
+        assertThat(result).isFalse();
         verify(storeRepository, never()).deleteByRound(1226);
         verify(storeRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
     }
 
     @Test
-    @DisplayName("persist: complete=false 배치는 예외를 던진다")
-    void persistWhenCompleteFalseShouldThrow() {
+    @DisplayName("persist: complete=false 배치는 false를 반환하고 저장소를 건드리지 않는다")
+    void persistWhenCompleteFalseShouldReturnFalse() {
         WinningStoreCollector.StoreFetchBatch batch =
                 new WinningStoreCollector.StoreFetchBatch(1226, false, List.of());
 
-        assertThatExceptionOfType(BusinessException.class)
-                .isThrownBy(() -> collector.persist(batch))
-                .extracting(BusinessException::getErrorCode)
-                .isEqualTo(ErrorCode.EXTERNAL_API_FAILURE);
+        boolean result = collector.persist(batch);
 
+        assertThat(result).isFalse();
         verify(storeRepository, never()).deleteByRound(1226);
     }
 }
