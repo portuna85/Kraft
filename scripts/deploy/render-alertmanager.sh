@@ -2,8 +2,8 @@
 set -euo pipefail
 
 if [[ -z "${ALERTMANAGER_DISCORD_WEBHOOK_URL:-}" ]]; then
-  echo "::warning::ALERTMANAGER_DISCORD_WEBHOOK_URL not set — skipping Alertmanager config render"
-  exit 0
+  echo "::error::ALERTMANAGER_DISCORD_WEBHOOK_URL GitHub Secret is required for production deploy"
+  exit 1
 fi
 
 mkdir -p deploy-state
@@ -15,8 +15,8 @@ import sys
 
 webhook = os.environ.get("ALERTMANAGER_DISCORD_WEBHOOK_URL", "").strip()
 if not webhook:
-    print("::warning::ALERTMANAGER_DISCORD_WEBHOOK_URL not set — skipping", file=sys.stderr)
-    raise SystemExit(0)
+    print("::error::ALERTMANAGER_DISCORD_WEBHOOK_URL is required", file=sys.stderr)
+    raise SystemExit(1)
 if "\n" in webhook or "\r" in webhook:
     print("::error::ALERTMANAGER_DISCORD_WEBHOOK_URL contains a newline", file=sys.stderr)
     raise SystemExit(1)
