@@ -11,12 +11,8 @@ import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonsResponse
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -42,15 +38,10 @@ public class LottoFetchLogQueryService {
     }
 
     public List<FetchFailureReasonDto> summarizeRecentFailureReasons(int limit, String reason, Integer drwNoFrom, Integer drwNoTo) {
-        List<LottoFetchLogEntity> failedLogs = fetchFailedLogs(limit, drwNoFrom, drwNoTo, reason);
-        Map<String, Long> grouped = failedLogs.stream()
-                .map(LottoFetchLogEntity::getMessage)
-                .map(FetchFailureReasonSupport::extractReason)
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-        return grouped.entrySet().stream()
-                .map(e -> new FetchFailureReasonDto(e.getKey(), e.getValue()))
-                .sorted(Comparator.comparingLong(FetchFailureReasonDto::count).reversed()
-                        .thenComparing(FetchFailureReasonDto::reason))
+        int safeLimit = Math.max(1, limit);
+        return fetchLogRepository.countFailureReasonsByFilter(toReasonFilter(reason), drwNoFrom, drwNoTo)
+                .stream()
+                .limit(safeLimit)
                 .toList();
     }
 

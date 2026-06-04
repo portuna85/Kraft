@@ -10,6 +10,7 @@ import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchLogRepository;
 import com.kraft.lotto.feature.winningnumber.infrastructure.LottoFetchStatus;
 import com.kraft.lotto.feature.winningnumber.web.dto.DataChangeLogDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureReasonDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import java.time.Clock;
 import java.time.Instant;
@@ -56,9 +57,9 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("reason 파라미터가 null이면 필터 없이 조회한다")
+    @DisplayName("reason 파라미터가 null이면 필터 없이 DB 집계를 조회한다")
     void nullReasonPassesNullFilter() {
-        lenient().when(fetchLogRepository.findRecentFailedFilteredByReason(isNull(), isNull(), isNull(), any()))
+        lenient().when(fetchLogRepository.countFailureReasonsByFilter(isNull(), isNull(), isNull()))
                 .thenReturn(List.of());
 
         var result = service().failureReasonsResponse(100, null, null, null);
@@ -70,7 +71,7 @@ class LottoFetchLogQueryServiceTest {
     @Test
     @DisplayName("reason 파라미터가 공백이면 null로 정규화된다")
     void blankReasonNormalizesToNull() {
-        lenient().when(fetchLogRepository.findRecentFailedFilteredByReason(isNull(), isNull(), isNull(), any()))
+        lenient().when(fetchLogRepository.countFailureReasonsByFilter(isNull(), isNull(), isNull()))
                 .thenReturn(List.of());
 
         var result = service().failureReasonsResponse(100, "   ", null, null);
@@ -79,14 +80,32 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("reason 파라미터가 있으면 소문자 변환 후 필터로 전달된다")
+    @DisplayName("reason 파라미터가 있으면 소문자 변환 후 DB 필터로 전달된다")
     void nonBlankReasonPassedAsLowercase() {
-        lenient().when(fetchLogRepository.findRecentFailedFilteredByReason(isNull(), isNull(), any(), any()))
-                .thenReturn(List.of());
+        lenient().when(fetchLogRepository.countFailureReasonsByFilter(any(), isNull(), isNull()))
+                .thenReturn(List.of(new FetchFailureReasonDto("timeout", 2L)));
 
         var result = service().failureReasonsResponse(100, "TIMEOUT", null, null);
 
-        assertThat(result.items()).isEmpty();
+        assertThat(result.items()).hasSize(1);
+        assertThat(result.items().get(0).reason()).isEqualTo("timeout");
+    }
+
+    @Test
+    @DisplayName("limit은 반환되는 reason 그룹 수를 제한한다")
+    void limitCapsReturnedReasonGroups() {
+        lenient().when(fetchLogRepository.countFailureReasonsByFilter(isNull(), isNull(), isNull()))
+                .thenReturn(List.of(
+                        new FetchFailureReasonDto("timeout", 5L),
+                        new FetchFailureReasonDto("network", 3L),
+                        new FetchFailureReasonDto("http_error", 1L)
+                ));
+
+        var result = service().summarizeRecentFailureReasons(2);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).reason()).isEqualTo("timeout");
+        assertThat(result.get(1).reason()).isEqualTo("network");
     }
 
     @Test
@@ -104,6 +123,8 @@ class LottoFetchLogQueryServiceTest {
     @Test
     @DisplayName("failureOverview는 reason·log 집계를 함께 반환한다")
     void failureOverviewCombinesBothSummaries() {
+        lenient().when(fetchLogRepository.countFailureReasonsByFilter(isNull(), isNull(), isNull()))
+                .thenReturn(List.of());
         lenient().when(fetchLogRepository.findRecentFailedFilteredByReason(isNull(), isNull(), isNull(), any()))
                 .thenReturn(List.of());
 
