@@ -9,17 +9,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
-import jakarta.servlet.http.HttpSession;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
-import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 
 @DisplayName("Admin 인증 핸들러 테스트")
 class AdminAuthHandlerTest {
@@ -32,47 +27,31 @@ class AdminAuthHandlerTest {
     }
 
     @Test
-    @DisplayName("SuccessHandler — 허용된 이메일이면 /admin/ops로 리다이렉트한다")
-    void successHandlerRedirectsAllowedEmail() throws Exception {
-        AdminAuthSuccessHandler handler =
-                new AdminAuthSuccessHandler(List.of("admin@example.com"), auditService);
+    @DisplayName("SuccessHandler — 인증 성공 시 /admin/ops로 리다이렉트한다")
+    void successHandlerRedirectsToOps() throws Exception {
+        AdminAuthSuccessHandler handler = new AdminAuthSuccessHandler(auditService);
 
-        Authentication auth = mockOAuth2Auth("admin@example.com");
+        Authentication auth = mock(Authentication.class);
+        when(auth.getName()).thenReturn("admin");
+
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         handler.onAuthenticationSuccess(request, response, auth);
 
         assertThat(response.getRedirectedUrl()).isEqualTo("/admin/ops");
-        verify(auditService).recordSuccess(eq("admin@example.com"), eq("LOGIN_SUCCESS"),
+        verify(auditService).recordSuccess(eq("admin"), eq("LOGIN_SUCCESS"),
                 isNull(), any(), any());
-    }
-
-    @Test
-    @DisplayName("SuccessHandler — 허용되지 않은 이메일이면 /admin/login?error=unauthorized로 리다이렉트한다")
-    void successHandlerRejectsUnauthorizedEmail() throws Exception {
-        AdminAuthSuccessHandler handler =
-                new AdminAuthSuccessHandler(List.of("admin@example.com"), auditService);
-
-        Authentication auth = mockOAuth2Auth("other@example.com");
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setSession(mock(HttpSession.class));
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        handler.onAuthenticationSuccess(request, response, auth);
-
-        assertThat(response.getRedirectedUrl()).isEqualTo("/admin/login?error=unauthorized");
-        verify(auditService).recordFailure(eq("other@example.com"), eq("LOGIN_DENIED"),
-                isNull(), any(), any(), any());
     }
 
     @Test
     @DisplayName("SuccessHandler — auditService가 null이어도 NPE 없이 동작한다")
     void successHandlerWorksWithoutAuditService() throws Exception {
-        AdminAuthSuccessHandler handler =
-                new AdminAuthSuccessHandler(List.of("admin@example.com"), null);
+        AdminAuthSuccessHandler handler = new AdminAuthSuccessHandler(null);
 
-        Authentication auth = mockOAuth2Auth("admin@example.com");
+        Authentication auth = mock(Authentication.class);
+        when(auth.getName()).thenReturn("admin");
+
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -111,14 +90,5 @@ class AdminAuthHandlerTest {
         handler.onAuthenticationFailure(request, response, ex);
 
         assertThat(response.getRedirectedUrl()).isEqualTo("/admin/login?error");
-    }
-
-    private static Authentication mockOAuth2Auth(String email) {
-        var attributes = Map.<String, Object>of("email", email, "sub", "12345");
-        var authority = new OAuth2UserAuthority(attributes);
-        var principal = new DefaultOAuth2User(List.of(authority), attributes, "email");
-        Authentication auth = mock(Authentication.class);
-        when(auth.getPrincipal()).thenReturn(principal);
-        return auth;
     }
 }

@@ -20,6 +20,11 @@ class ProdConfigValidator {
         if (!env.matchesProfiles("prod")) {
             return;
         }
+        boolean adminEnabled = Boolean.parseBoolean(RequiredConfigValidator.safeGet(env, "kraft.admin.enabled"));
+        if (adminEnabled) {
+            requireNonBlank(env, problems, "kraft.admin.admin-password",
+                    "Admin password (env: KRAFT_ADMIN_PASSWORD)");
+        }
         requireNonBlank(env, problems, "kraft.api.url", "External API URL (env: KRAFT_API_URL)");
         requireStrongOpsToken(env, problems);
         requireIntInRange(env, problems, "kraft.recommend.max-attempts",

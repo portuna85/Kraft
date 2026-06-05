@@ -54,18 +54,6 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: true
     ignore-missing-migrations: false
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${KRAFT_GOOGLE_CLIENT_ID:dummy-client-id}
-            client-secret: ${KRAFT_GOOGLE_CLIENT_SECRET:dummy-client-secret}
-            scope: openid,email,profile
-        provider:
-          google:
-            issuer-uri: https://accounts.google.com
-
 server:
   port: 8080
   forward-headers-strategy: native
@@ -102,8 +90,8 @@ otel:
 kraft:
   admin:
     enabled: ${KRAFT_ADMIN_ENABLED:false}
-    allowed-emails: ${KRAFT_ADMIN_ALLOWED_EMAILS:portuna85@gmail.com}
     admin-domain: ${KRAFT_ADMIN_DOMAIN:admin.kraft.io.kr}
+    admin-password: ${KRAFT_ADMIN_PASSWORD:}
   public-base-url: ${KRAFT_PUBLIC_BASE_URL:https://www.kraft.io.kr}
   web:
     apex-host: ${KRAFT_WEB_APEX_HOST:kraft.io.kr}

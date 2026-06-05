@@ -39,6 +39,8 @@ umask 077
   printf 'KRAFT_HEALTHCHECK_URL=http://localhost:8080/actuator/health/readiness\n'
   printf 'KRAFT_HEALTHCHECK_TIMEOUT_SECONDS=3\n'
   printf 'KRAFT_ALERTMANAGER_CONFIG_FILE=./deploy-state/alertmanager.yml\n'
+  printf 'KRAFT_ADMIN_ENABLED=%s\n' "${KRAFT_ADMIN_ENABLED:-false}"
+  printf 'KRAFT_ADMIN_PASSWORD=%s\n' "${KRAFT_ADMIN_PASSWORD:-}"
 } > .env
 
 while IFS= read -r name; do

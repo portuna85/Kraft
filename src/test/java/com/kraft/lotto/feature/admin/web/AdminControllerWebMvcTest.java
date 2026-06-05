@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -23,9 +23,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
@@ -40,7 +38,6 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest({AdminLoginController.class, AdminCollectionController.class,
              AdminAuditController.class, AdminNewsController.class})
 @Import({TestCacheConfig.class, AdminControllerWebMvcTest.SecurityMvcConfig.class})
-@ImportAutoConfiguration(exclude = {OAuth2ClientWebSecurityAutoConfiguration.class})
 @DisplayName("Admin 컨트롤러 WebMvc 테스트")
 class AdminControllerWebMvcTest {
 
@@ -104,7 +101,7 @@ class AdminControllerWebMvcTest {
 
         mockMvc.perform(post("/admin/ops/collection/latest")
                         .with(csrf())
-                        .with(oauth2Login()))
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/ops/collection"));
     }
@@ -116,7 +113,7 @@ class AdminControllerWebMvcTest {
 
         mockMvc.perform(post("/admin/ops/collection/stores")
                         .with(csrf())
-                        .with(oauth2Login())
+                        .with(user("admin").roles("ADMIN"))
                         .param("round", "1200"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/ops/collection"));
@@ -129,7 +126,7 @@ class AdminControllerWebMvcTest {
 
         mockMvc.perform(post("/admin/ops/news/42/approve")
                         .with(csrf())
-                        .with(oauth2Login()))
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/ops/news"));
     }
@@ -141,20 +138,20 @@ class AdminControllerWebMvcTest {
 
         mockMvc.perform(post("/admin/ops/news/42/reject")
                         .with(csrf())
-                        .with(oauth2Login()))
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/ops/news"));
     }
 
     @Test
-    @DisplayName("POST /admin/ops/news/{id}/block-domain — 차단 후 리다이렉트한다")
+    @DisplayName("POST /admin/ops/news/block-domain — 차단 후 리다이렉트한다")
     void blockDomainRedirects() throws Exception {
         doNothing().when(adminNewsService).blockDomain(anyLong(), anyString(), anyString(),
                 anyString(), anyString());
 
         mockMvc.perform(post("/admin/ops/news/42/block-domain")
                         .with(csrf())
-                        .with(oauth2Login())
+                        .with(user("admin").roles("ADMIN"))
                         .param("reason", "스팸"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/ops/news"));
@@ -168,7 +165,7 @@ class AdminControllerWebMvcTest {
 
         mockMvc.perform(post("/admin/ops/news/block-keyword")
                         .with(csrf())
-                        .with(oauth2Login())
+                        .with(user("admin").roles("ADMIN"))
                         .param("keyword", "아파트 로또"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/ops/news"));

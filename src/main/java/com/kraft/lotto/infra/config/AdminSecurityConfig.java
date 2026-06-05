@@ -2,12 +2,17 @@ package com.kraft.lotto.infra.config;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
+import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 
@@ -32,7 +37,7 @@ public class AdminSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/ops", "/admin/ops/**").authenticated()
                         .requestMatchers("/admin/login", "/admin/login/**").permitAll()
-                        .requestMatchers("/actuator/**").denyAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().permitAll()
                 )
                 .csrf(csrf -> csrf
@@ -46,13 +51,12 @@ public class AdminSecurityConfig {
                 );
 
         if (adminProperties.enabled()) {
-            AdminAuthSuccessHandler successHandler =
-                    new AdminAuthSuccessHandler(adminProperties.allowedEmails(), auditLogService);
-            AdminAuthFailureHandler failureHandler =
-                    new AdminAuthFailureHandler(auditLogService);
+            AdminAuthSuccessHandler successHandler = new AdminAuthSuccessHandler(auditLogService);
+            AdminAuthFailureHandler failureHandler = new AdminAuthFailureHandler(auditLogService);
 
-            http.oauth2Login(oauth -> oauth
+            http.formLogin(form -> form
                     .loginPage("/admin/login")
+                    .loginProcessingUrl("/admin/login")
                     .successHandler(successHandler)
                     .failureHandler(failureHandler)
             ).logout(logout -> logout
@@ -62,5 +66,21 @@ public class AdminSecurityConfig {
         }
 
         return http.build();
+    }
+
+    @Bean
+    public UserDetailsService adminUserDetailsService() {
+        String rawPassword = (adminProperties.enabled()
+                && adminProperties.adminPassword() != null
+                && !adminProperties.adminPassword().isBlank())
+                ? adminProperties.adminPassword()
+                : UUID.randomUUID().toString();
+
+        UserDetails admin = User.builder()
+                .username("admin")
+                .password("{noop}" + rawPassword)
+                .roles("ADMIN")
+                .build();
+        return new InMemoryUserDetailsManager(admin);
     }
 }
