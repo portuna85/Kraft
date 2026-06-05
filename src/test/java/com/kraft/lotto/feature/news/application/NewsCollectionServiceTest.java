@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainRepository;
 import com.kraft.lotto.feature.news.domain.NewsArticle;
 import com.kraft.lotto.feature.news.domain.NewsSourceTier;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
@@ -40,6 +41,9 @@ class NewsCollectionServiceTest {
 
     @Mock
     NewsArticlePersister persister;
+
+    @Mock
+    NewsBlockedDomainRepository blockedDomainRepository;
 
     @Test
     @DisplayName("새 기사는 저장된다")
@@ -169,6 +173,23 @@ class NewsCollectionServiceTest {
 
         verify(persister).saveArticle(argThat(entity ->
                 ((NewsArticleEntity) entity).getSourceTier() == NewsSourceTier.OFFICIAL));
+    }
+
+    @Test
+    @DisplayName("DB에 등록된 차단 도메인의 기사는 건너뛴다")
+    void dbBlockedDomainIsSkipped() {
+        when(rssClient.fetch()).thenReturn(List.of(article("https://blocked.example.com/news")));
+        when(blockedDomainRepository.findAllDomains()).thenReturn(List.of("blocked.example.com"));
+
+        NewsCollectionService service = new NewsCollectionService(
+                repository, rssClient, persister,
+                new NewsSourceClassifier(List.of(), List.of()),
+                FIXED_CLOCK, 30, List.of(), blockedDomainRepository);
+        NewsCollectionService.NewsCollectResult result = service.collect();
+
+        assertThat(result.saved()).isEqualTo(0);
+        assertThat(result.skipped()).isEqualTo(1);
+        verify(persister, never()).saveArticle(any());
     }
 
     private static NewsArticle article(String link) {

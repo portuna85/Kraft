@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.news.application;
 
+import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainRepository;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
 import com.kraft.lotto.infra.config.KraftNewsProperties;
 import java.time.Clock;
@@ -41,10 +42,12 @@ class NewsConfiguration {
                                                 NewsRssClient rssClient,
                                                 NewsArticlePersister persister,
                                                 NewsSourceClassifier classifier,
+                                                NewsBlockedDomainRepository blockedDomainRepository,
                                                 Clock clock,
                                                 KraftNewsProperties properties) {
         return new NewsCollectionService(
                 repository, rssClient, persister, classifier,
-                clock, properties.retentionDays(), properties.blockedDomains());
+                clock, properties.retentionDays(), properties.blockedDomains(),
+                blockedDomainRepository);
     }
 }

@@ -106,4 +106,5 @@ public class NewsArticleEntity {
     public LocalDateTime getPubDate() { return pubDate; }
     public LocalDateTime getCollectedAt() { return collectedAt; }
     public boolean isApproved() { return approved; }
+    public void setApproved(boolean approved) { this.approved = approved; }
 }

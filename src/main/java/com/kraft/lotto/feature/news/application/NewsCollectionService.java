@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.news.application;
 
+import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainRepository;
 import com.kraft.lotto.feature.news.domain.NewsArticle;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
@@ -28,13 +29,15 @@ public class NewsCollectionService {
     private final Clock clock;
     private final int retentionDays;
     private final List<String> blockedDomains;
+    private final NewsBlockedDomainRepository blockedDomainRepository;
 
     NewsCollectionService(NewsArticleRepository repository,
                           NewsRssClient rssClient,
                           NewsArticlePersister persister,
                           Clock clock,
                           int retentionDays) {
-        this(repository, rssClient, persister, new NewsSourceClassifier(List.of(), List.of()), clock, retentionDays, List.of());
+        this(repository, rssClient, persister, new NewsSourceClassifier(List.of(), List.of()),
+                clock, retentionDays, List.of(), null);
     }
 
     NewsCollectionService(NewsArticleRepository repository,
@@ -44,6 +47,17 @@ public class NewsCollectionService {
                           Clock clock,
                           int retentionDays,
                           List<String> blockedDomains) {
+        this(repository, rssClient, persister, classifier, clock, retentionDays, blockedDomains, null);
+    }
+
+    NewsCollectionService(NewsArticleRepository repository,
+                          NewsRssClient rssClient,
+                          NewsArticlePersister persister,
+                          NewsSourceClassifier classifier,
+                          Clock clock,
+                          int retentionDays,
+                          List<String> blockedDomains,
+                          NewsBlockedDomainRepository blockedDomainRepository) {
         this.repository = repository;
         this.rssClient = rssClient;
         this.persister = persister;
@@ -51,6 +65,7 @@ public class NewsCollectionService {
         this.clock = clock;
         this.retentionDays = retentionDays;
         this.blockedDomains = List.copyOf(blockedDomains);
+        this.blockedDomainRepository = blockedDomainRepository;
     }
 
     public NewsCollectResult collect() {
@@ -59,13 +74,17 @@ public class NewsCollectionService {
             return new NewsCollectResult(0, 0);
         }
 
+        List<String> dbBlockedDomains = blockedDomainRepository != null
+                ? blockedDomainRepository.findAllDomains()
+                : List.of();
+
         LocalDateTime now = LocalDateTime.now(clock);
         int saved = 0;
         int skipped = 0;
 
         for (NewsArticle article : articles) {
             String domain = extractDomain(article.link());
-            if (isBlockedDomain(domain)) {
+            if (isBlockedDomain(domain, dbBlockedDomains)) {
                 skipped++;
                 log.debug("news blocked domain, skipped: link={}", article.link());
                 continue;
@@ -117,11 +136,17 @@ public class NewsCollectionService {
         }
     }
 
-    private boolean isBlockedDomain(String domain) {
+    private boolean isBlockedDomain(String domain, List<String> dbDomains) {
         if (domain == null) {
             return true;
         }
-        return blockedDomains.stream()
+        boolean blockedByConfig = blockedDomains.stream()
+                .map(d -> d.toLowerCase(Locale.ROOT))
+                .anyMatch(domain::endsWith);
+        if (blockedByConfig) {
+            return true;
+        }
+        return dbDomains.stream()
                 .map(d -> d.toLowerCase(Locale.ROOT))
                 .anyMatch(domain::endsWith);
     }

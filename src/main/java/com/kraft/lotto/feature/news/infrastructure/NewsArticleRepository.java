@@ -24,6 +24,14 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticleEntity, 
             List<NewsSourceTier> tiers,
             Pageable pageable);
 
+    Page<NewsArticleEntity> findAllByApprovedFalseOrderByCollectedAtDesc(Pageable pageable);
+
+    long countByApprovedFalse();
+
+    @Modifying
+    @Query("update NewsArticleEntity n set n.approved = false where n.sourceDomain = :domain")
+    int rejectAllBySourceDomain(@Param("domain") String domain);
+
     @Modifying
     @Query("delete from NewsArticleEntity n where n.collectedAt < :cutoff")
     int deleteByCollectedAtBefore(@Param("cutoff") LocalDateTime cutoff);
