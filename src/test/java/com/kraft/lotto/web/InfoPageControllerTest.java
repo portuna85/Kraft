@@ -84,7 +84,8 @@ class InfoPageControllerTest {
         when(winningNumberQueryService.maxPossibleRound()).thenReturn(1230);
         when(winningStoreQueryService.hasGrade(1230, 1)).thenReturn(true);
         when(winningStoreQueryService.hasGrade(1230, 2)).thenReturn(false);
-        when(winningStoreQueryService.findLastCollectedAt(1230)).thenReturn(Optional.empty());
+        when(winningStoreQueryService.findLastCollectedAt(1230))
+                .thenReturn(Optional.of(LocalDateTime.of(2026, 6, 7, 22, 30)));
 
         mockMvc.perform(get("/data-source"))
                 .andExpect(status().isOk())
