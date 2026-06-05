@@ -24,7 +24,7 @@
   <link rel="manifest" th:href="@{/manifest.json}">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="최고의 번호">
+  <meta name="apple-mobile-web-app-title" content="KRAFT Lotto">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
   <meta name="htmx-config" content='{"includeIndicatorStyles":false}'>
@@ -32,14 +32,14 @@
   <link rel="stylesheet" th:href="@{/css/app.css}">
   <link rel="stylesheet" th:href="@{/css/kraft-redesign.css}">
   <link rel="stylesheet" th:href="@{/css/lotto-ball.css}">
-  <title th:text="${title}">최고의 번호</title>
+  <title th:text="${title}">KRAFT Lotto</title>
   <script type="application/ld+json" th:inline="text" th:attr="nonce=${cspNonce}" th:unless="${isAdmin}">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "최고의 번호",
+    "name": "KRAFT Lotto",
     "url": "[[${baseUrl}]]",
-    "description": "로또 당첨번호 조회, 번호 추천, 빈도·패턴 통계 서비스"
+    "description": "로또 당첨번호 조회, 빈도·패턴 통계, 편향 회피 번호 조합 도구"
   }
   </script>
 </head>
@@ -47,7 +47,7 @@
 <a class="skip-to-content" href="#main-content">본문으로 건너뛰기</a>
 <nav class="navbar navbar-expand-md border-bottom sticky-top">
   <div class="container kraft-container">
-    <a class="navbar-brand fw-bold" href="/">최고의 번호</a>
+    <a class="navbar-brand fw-bold" href="/">KRAFT Lotto</a>
     <div class="collapse navbar-collapse" id="navMain">
       <ul class="navbar-nav me-auto ms-2 gap-1">
         <li class="nav-item">

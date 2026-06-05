@@ -1,6 +1,6 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('데이터 출처 - 최고의 번호', '로또 당첨번호 데이터의 출처, 수집 방식, 갱신 주기를 설명합니다.', ~{::section})}">
+      th:replace="~{layout/base :: layout('데이터 출처 - KRAFT Lotto', '로또 당첨번호 데이터의 출처, 수집 방식, 갱신 주기를 설명합니다.', ~{::section})}">
 <section class="kraft-page">
   <header class="kraft-hero">
     <p class="eyebrow">데이터 출처</p>
@@ -92,12 +92,17 @@
   <div class="card mb-4 kraft-section">
     <div class="card-body">
       <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">데이터 정확성 안내</h2>
-      <p class="small mb-0">
+      <p class="small mb-2">
         이 서비스의 당첨번호 데이터는 동행복권 공식 API에서 수집됩니다.
+        수집 지연 또는 원본 페이지 변경에 따라 일부 정보가 늦게 표시될 수 있습니다.
         데이터 불일치나 오류가 있는 경우 항상 <a href="https://www.dhlottery.co.kr" target="_blank" rel="noopener noreferrer">동행복권 공식 사이트</a>의 발표를 우선합니다.
+      </p>
+      <p class="small mb-0">
         오류를 발견하신 경우 <a href="/contact">문의</a>를 통해 제보해 주세요.
+        제보 시 <strong>회차 번호, 오류가 발생한 페이지 주소, 오류 내용</strong>을 함께 알려주시면 빠르게 확인할 수 있습니다.
       </p>
     </div>
   </div>
 </section>
 </html>
+

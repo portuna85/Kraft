@@ -1,6 +1,6 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('문의 - 최고의 번호', '데이터 오류 제보 및 서비스 문의 안내입니다.', ~{::section})}">
+      th:replace="~{layout/base :: layout('문의 - KRAFT Lotto', '데이터 오류 제보 및 서비스 문의 안내입니다.', ~{::section})}">
 <section class="kraft-page">
   <header class="kraft-hero">
     <p class="eyebrow">문의</p>
@@ -31,6 +31,17 @@
 
   <div class="card mb-4 kraft-section">
     <div class="card-body">
+      <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">데이터 오류 제보 시 포함할 내용</h2>
+      <ul class="small ps-3 mb-0">
+        <li class="mb-1">오류가 발생한 <strong>회차 번호</strong></li>
+        <li class="mb-1">오류가 발생한 <strong>페이지 주소(URL)</strong></li>
+        <li class="mb-0">오류 내용 (예: 표시된 번호와 동행복권 공식 발표 번호가 다름)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card mb-4 kraft-section">
+    <div class="card-body">
       <p class="small mb-0 text-secondary">
         이 서비스의 번호 추천 결과는 당첨 확률 예측이 아닙니다.
         번호 추천 결과에 대한 당첨 보장이나 확률 관련 문의에는 답변드리기 어렵습니다.
@@ -39,3 +50,4 @@
   </div>
 </section>
 </html>
+

@@ -38,4 +38,17 @@ if docker compose ps alertmanager 2>/dev/null | grep -Eq '(running|Up|healthy)';
   docker compose exec -T alertmanager amtool check-config /etc/alertmanager/alertmanager.yml
 fi
 
+# 데이터 freshness 점검: DB 최신 회차가 예상 회차와 일치하는지 확인
+OPS_TOKEN="$(docker compose exec -T app sh -lc 'printenv KRAFT_SECURITY_OPS_REQUIRED_TOKEN' 2>/dev/null || true)"
+if [[ -n "$OPS_TOKEN" ]]; then
+  FRESHNESS=$(curl -fsS -H "X-Ops-Token: ${OPS_TOKEN}" http://localhost:8080/ops/data-freshness 2>/dev/null || true)
+  if [[ -n "$FRESHNESS" ]]; then
+    printf 'data-freshness: %s\n' "$FRESHNESS"
+    FRESHNESS_STATUS=$(printf '%s' "$FRESHNESS" | grep -oP '"status"\s*:\s*"\K[^"]+' || true)
+    if [[ "$FRESHNESS_STATUS" == "STALE" ]]; then
+      echo "::warning::데이터 freshness 경고: DB 최신 회차가 예상 회차와 불일치합니다. $FRESHNESS"
+    fi
+  fi
+fi
+
 echo "Smoke test passed"

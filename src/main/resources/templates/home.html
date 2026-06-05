@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('최고의 번호', '과거 당첨 데이터 분석 기반 로또 번호 추천과 최신 당첨번호 확인 서비스.', ~{::section})}">
+      th:replace="~{layout/base :: layout('KRAFT Lotto - 로또 번호 조합 분석 도구', 'KRAFT Lotto는 로또 당첨 예측 서비스가 아닙니다. 과거 당첨번호 통계, 번호 빈도, 패턴, 동반 출현 데이터를 기반으로 번호 조합을 점검하는 분석 도구입니다. 모든 조합의 1등 당첨 확률은 동일합니다.', ~{::section})}">
 <section class="kraft-page">
   <header class="kraft-hero">
-    <p class="eyebrow">로또 번호 추천</p>
-    <h1>최고의 번호</h1>
-    <p class="kraft-hero-description">과거 당첨 데이터를 분석해 규칙 기반 추천 조합을 제공합니다.</p>
+    <p class="eyebrow">통계 기반 번호 조합 도구</p>
+    <h1>로또 번호 조합 분석</h1>
+    <p class="kraft-hero-description">과거 당첨 데이터를 기반으로 편향을 줄인 번호 조합을 제안합니다. 당첨 예측이 아닌 조합 점검 도구입니다.</p>
   </header>
 
   <th:block th:replace="~{fragments/recommend-card :: recommend-card}"></th:block>
