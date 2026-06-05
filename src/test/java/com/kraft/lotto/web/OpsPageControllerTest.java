@@ -18,15 +18,19 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(OpsPageController.class)
 @Import({TestCacheConfig.class, OpsPageControllerTest.CollectPropertiesConfig.class})
+@ImportAutoConfiguration(exclude = {OAuth2ClientWebSecurityAutoConfiguration.class})
 @DisplayName("운영 페이지 컨트롤러 테스트")
 class OpsPageControllerTest {
 
@@ -51,6 +55,7 @@ class OpsPageControllerTest {
     }
 
     @Test
+    @WithMockUser
     @DisplayName("유효한 요청은 모델을 정상 바인딩한다")
     void bindsModelForValidRequest() throws Exception {
         int expectedTo = com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy.maxPossibleRound(java.time.LocalDate.now());
@@ -105,6 +110,7 @@ class OpsPageControllerTest {
     }
 
     @Test
+    @WithMockUser
     @DisplayName("범위를 벗어난 파라미터는 400을 반환한다")
     void invalidParamsReturnBadRequest() throws Exception {
         mockMvc.perform(get("/admin/ops")
@@ -116,6 +122,7 @@ class OpsPageControllerTest {
     }
 
     @Test
+    @WithMockUser
     @DisplayName("운영 페이지는 빠른 필터와 초기화 버튼을 렌더링한다")
     void rendersQuickReasonFiltersAndReset() throws Exception {
         when(fetchLogQueryService.failureOverview(200, 100, null, null, null))

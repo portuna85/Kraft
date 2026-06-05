@@ -41,7 +41,7 @@ class OpsAccessFilterTest {
         properties.getOps().setRequiredToken("expected-token");
         OpsAccessFilter filter = new OpsAccessFilter(properties);
 
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/admin/ops");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/ops/collect/status");
         request.setRemoteAddr("127.0.0.1");
         request.setParameter("opsToken", "expected-token");
 
@@ -62,7 +62,7 @@ class OpsAccessFilterTest {
         properties.getOps().setRequiredToken("expected-token");
         OpsAccessFilter filter = new OpsAccessFilter(properties);
 
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/admin/ops");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/ops/collect/status");
         request.setRemoteAddr("127.0.0.1");
         request.addHeader("Cookie", "KRAFT_OPS_TOKEN=expected-token");
 
@@ -147,7 +147,7 @@ class OpsAccessFilterTest {
         properties.getOps().setRequiredToken("expected-token");
         OpsAccessFilter filter = new OpsAccessFilter(properties);
 
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/admin/ops");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/ops/collect/status");
         request.setRemoteAddr("203.0.113.10");
         request.addHeader("X-Forwarded-For", "198.51.100.1, 203.0.113.10");
         request.addHeader("X-Ops-Token", "expected-token");
@@ -170,7 +170,7 @@ class OpsAccessFilterTest {
         properties.getOps().setRequiredToken("expected-token");
         OpsAccessFilter filter = new OpsAccessFilter(properties);
 
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/admin/ops");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/ops/collect/status");
         request.setRemoteAddr("203.0.113.11");
         request.addHeader("X-Forwarded-For", "198.51.100.1, 203.0.113.11");
         request.addHeader("X-Ops-Token", "expected-token");
@@ -205,8 +205,8 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("admin/ops 하위 경로는 필터 대상이다")
-    void adminOpsSubPathIsFiltered() throws Exception {
+    @DisplayName("/admin/ops 경로는 Spring Security에 위임하므로 OpsAccessFilter 대상이 아니다")
+    void adminOpsPathIsNotFilteredByOpsFilter() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
         properties.getOps().setRequiredToken("expected-token");
@@ -220,7 +220,7 @@ class OpsAccessFilterTest {
 
         filter.doFilter(request, response, chain);
 
-        assertThat(response.getStatus()).isEqualTo(401);
-        assertThat(chain.getRequest()).isNull();
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(chain.getRequest()).isNotNull();
     }
 }

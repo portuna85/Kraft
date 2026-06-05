@@ -19,6 +19,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest({HomeController.class, RecommendController.class})
 @Import({GlobalExceptionHandler.class, TestCacheConfig.class, LottoBallHelper.class, RecommendModelSupport.class})
+@ImportAutoConfiguration(exclude = {OAuth2ClientWebSecurityAutoConfiguration.class})
 @DisplayName("홈 컨트롤러 WebMvc 슬라이스 테스트")
 class HomeControllerWebMvcTest {
 

@@ -51,7 +51,7 @@ public class OpsAccessFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return !(isOpsApiPath(path) || isOpsAdminPath(path));
+        return !isOpsApiPath(path);
     }
 
     @Override
@@ -119,10 +119,6 @@ public class OpsAccessFilter extends OncePerRequestFilter {
 
     private static boolean isOpsApiPath(String path) {
         return "/ops".equals(path) || path.startsWith("/ops/");
-    }
-
-    private static boolean isOpsAdminPath(String path) {
-        return "/admin/ops".equals(path) || path.startsWith("/admin/ops/");
     }
 
     private static boolean tokensMatch(String expected, String actual) {
