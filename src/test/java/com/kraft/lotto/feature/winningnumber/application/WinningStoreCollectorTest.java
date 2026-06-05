@@ -10,18 +10,17 @@ import com.kraft.lotto.feature.winningnumber.domain.WinningStore;
 import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,12 +30,17 @@ class WinningStoreCollectorTest {
     @Mock WinningStoreApiClient storeApiClient;
     @Mock WinningStoreRepository storeRepository;
     @Mock WinningNumberRepository winningNumberRepository;
-    @Spy
-    @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "Injected into WinningStoreCollector via @InjectMocks")
-    Clock clock = Clock.fixed(Instant.parse("2026-06-05T12:00:00Z"), ZoneId.of("Asia/Seoul"));
 
-    @InjectMocks
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-06-05T12:00:00Z"), ZoneId.of("Asia/Seoul"));
+
     WinningStoreCollector collector;
+
+    @BeforeEach
+    void setUp() {
+        collector = new WinningStoreCollector(
+                storeApiClient, storeRepository, winningNumberRepository,
+                CLOCK, new SimpleMeterRegistry());
+    }
 
     @Test
     @DisplayName("dataChanged=false 이면 수집을 건너뛴다")

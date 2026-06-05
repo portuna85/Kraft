@@ -64,7 +64,8 @@ public class NewsCollectionService {
         int skipped = 0;
 
         for (NewsArticle article : articles) {
-            if (isBlockedDomain(article.link())) {
+            String domain = extractDomain(article.link());
+            if (isBlockedDomain(domain)) {
                 skipped++;
                 log.debug("news blocked domain, skipped: link={}", article.link());
                 continue;
@@ -81,6 +82,7 @@ public class NewsCollectionService {
                         hash,
                         truncate(article.description(), 2000),
                         truncate(article.source(), 200),
+                        domain,
                         classifier.classify(article.source()),
                         article.pubDate(),
                         now
@@ -106,19 +108,22 @@ public class NewsCollectionService {
         return deleted;
     }
 
-    private boolean isBlockedDomain(String link) {
+    private String extractDomain(String link) {
         try {
             String host = URI.create(link).getHost();
-            if (host == null) {
-                return true;
-            }
-            String normalized = host.toLowerCase(Locale.ROOT);
-            return blockedDomains.stream()
-                    .map(d -> d.toLowerCase(Locale.ROOT))
-                    .anyMatch(normalized::endsWith);
+            return host != null ? host.toLowerCase(Locale.ROOT) : null;
         } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private boolean isBlockedDomain(String domain) {
+        if (domain == null) {
             return true;
         }
+        return blockedDomains.stream()
+                .map(d -> d.toLowerCase(Locale.ROOT))
+                .anyMatch(domain::endsWith);
     }
 
     private static String sha256(String value) {

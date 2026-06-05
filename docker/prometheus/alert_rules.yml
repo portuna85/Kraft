@@ -112,3 +112,23 @@ groups:
         annotations:
           summary: "JVM 힙 사용률 85% 초과"
           description: "kraft-lotto JVM 힙 사용률이 {{ $value | humanizePercentage }} 입니다. GC 빈도 및 메모리 누수 여부를 확인하세요."
+
+      # 최신 회차 미반영 — 예상 회차보다 저장 회차가 낮은 상태가 2시간 이상 지속
+      - alert: LottoLatestRoundLag
+        expr: kraft_latest_round_expected - kraft_latest_round_stored > 0
+        for: 2h
+        labels:
+          severity: warning
+        annotations:
+          summary: "최신 회차 미반영"
+          description: "저장된 최신 회차({{ $value | printf \"%.0f\" }}회 차이)가 예상 회차보다 오래되었습니다. 수집 로그를 확인하세요."
+
+      # 판매점 수집 실패 — 6시간 내 발생
+      - alert: WinningStoreFetchFailure
+        expr: increase(kraft_winning_store_fetch_failure_total[6h]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "판매점 수집 실패"
+          description: "최근 6시간 동안 grade={{ $labels.grade }} 판매점 수집이 실패했습니다. API 응답 및 로그를 확인하세요."

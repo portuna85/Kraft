@@ -5,19 +5,21 @@ import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@RequiredArgsConstructor
 public class WinningStoreCollector {
 
     private static final Logger log = LoggerFactory.getLogger(WinningStoreCollector.class);
@@ -27,6 +29,29 @@ public class WinningStoreCollector {
     private final WinningStoreRepository storeRepository;
     private final WinningNumberRepository winningNumberRepository;
     private final Clock clock;
+    private final MeterRegistry meterRegistry;
+
+    @Autowired
+    public WinningStoreCollector(WinningStoreApiClient storeApiClient,
+                                 WinningStoreRepository storeRepository,
+                                 WinningNumberRepository winningNumberRepository,
+                                 Clock clock,
+                                 ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        this(storeApiClient, storeRepository, winningNumberRepository, clock,
+                meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new));
+    }
+
+    WinningStoreCollector(WinningStoreApiClient storeApiClient,
+                          WinningStoreRepository storeRepository,
+                          WinningNumberRepository winningNumberRepository,
+                          Clock clock,
+                          MeterRegistry meterRegistry) {
+        this.storeApiClient = storeApiClient;
+        this.storeRepository = storeRepository;
+        this.winningNumberRepository = winningNumberRepository;
+        this.clock = clock;
+        this.meterRegistry = meterRegistry;
+    }
 
     @Async
     @EventListener
@@ -54,6 +79,8 @@ public class WinningStoreCollector {
             List<WinningStore> stores = storeApiClient.fetchStores(round, grade);
             if (stores.isEmpty()) {
                 log.warn("no winning stores fetched: round={}, grade={}", round, grade);
+                meterRegistry.counter("kraft.winning_store.fetch.failure",
+                        "grade", String.valueOf(grade)).increment();
                 allSuccess = false;
                 continue;
             }
@@ -70,6 +97,8 @@ public class WinningStoreCollector {
                 .toList();
         storeRepository.deleteByRoundAndGrade(round, grade);
         storeRepository.saveAll(entities);
+        meterRegistry.counter("kraft.winning_store.collected",
+                "grade", String.valueOf(grade)).increment(entities.size());
         log.info("winning stores saved: round={}, grade={}, count={}", round, grade, entities.size());
     }
 }

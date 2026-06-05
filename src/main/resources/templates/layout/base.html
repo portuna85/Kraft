@@ -10,7 +10,7 @@
   <meta name="description" th:content="${description}">
   <link rel="canonical" th:href="${canonicalUrl}" th:if="${!isAdmin}">
   <meta name="naver-site-verification" content="2cee6588f949ded613ff945305c892d82c130eb8">
-  <meta name="robots" content="noindex,nofollow,noarchive" th:if="${isAdmin}">
+  <meta name="robots" content="noindex,nofollow,noarchive" th:if="${isAdmin or (noindex != null and noindex)}">
   <meta property="og:type" content="website">
   <meta property="og:title" th:content="${title}">
   <meta property="og:description" th:content="${description}">

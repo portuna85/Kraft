@@ -38,6 +38,7 @@ public class NewsController {
         model.addAttribute("totalPages", result.totalPages());
         model.addAttribute("tiers", NewsSourceTier.values());
         model.addAttribute("currentTier", selectedTier == null ? "" : selectedTier.paramValue());
+        model.addAttribute("noindex", selectedTier == NewsSourceTier.GENERAL);
         return "news";
     }
 

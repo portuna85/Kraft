@@ -34,6 +34,9 @@ public class NewsArticleEntity {
     @Column(name = "source", length = 200)
     private String source;
 
+    @Column(name = "source_domain", length = 253)
+    private String sourceDomain;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "source_tier", nullable = false, length = 20)
     private NewsSourceTier sourceTier = NewsSourceTier.GENERAL;
@@ -68,11 +71,24 @@ public class NewsArticleEntity {
                               NewsSourceTier sourceTier,
                               LocalDateTime pubDate,
                               LocalDateTime collectedAt) {
+        this(title, link, linkHash, description, source, null, sourceTier, pubDate, collectedAt);
+    }
+
+    public NewsArticleEntity(String title,
+                              String link,
+                              String linkHash,
+                              String description,
+                              String source,
+                              String sourceDomain,
+                              NewsSourceTier sourceTier,
+                              LocalDateTime pubDate,
+                              LocalDateTime collectedAt) {
         this.title = title;
         this.link = link;
         this.linkHash = linkHash;
         this.description = description;
         this.source = source;
+        this.sourceDomain = sourceDomain;
         this.sourceTier = sourceTier == null ? NewsSourceTier.GENERAL : sourceTier;
         this.pubDate = pubDate;
         this.collectedAt = collectedAt;
@@ -85,6 +101,7 @@ public class NewsArticleEntity {
     public String getLinkHash() { return linkHash; }
     public String getDescription() { return description; }
     public String getSource() { return source; }
+    public String getSourceDomain() { return sourceDomain; }
     public NewsSourceTier getSourceTier() { return sourceTier == null ? NewsSourceTier.GENERAL : sourceTier; }
     public LocalDateTime getPubDate() { return pubDate; }
     public LocalDateTime getCollectedAt() { return collectedAt; }
