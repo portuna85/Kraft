@@ -4,13 +4,32 @@
 
     encode gzip br
 
-    # 헬스체크·actuator·관리자 ops 직접 노출 차단 (내부망만 허용)
-    @blocked path /actuator* /ops* /admin/ops*
+    # 헬스체크·actuator·관리자 ops·admin 직접 노출 차단 (내부망만 허용)
+    @blocked path /actuator* /ops* /admin*
     respond @blocked 403
 
     reverse_proxy app:8080 {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
         header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+{$KRAFT_ADMIN_DOMAIN} {
+    encode gzip br
+
+    # 관리자 도메인에서 raw ops·actuator 직접 접근 차단
+    @rawBlocked path /ops* /actuator*
+    respond @rawBlocked 404
+
+    # /admin/* 및 정적 자원 이외 경로 차단
+    @notAdmin not path /admin* /css* /js* /vendor* /images* /manifest.json /favicon*
+    respond @notAdmin 404
+
+    reverse_proxy app:8080 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Admin-Entry admin-domain
     }
 }
