@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Admin Login - KRAFT Lotto</title>
+  <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center" style="min-height:100vh">
+<div class="card shadow" style="width:24rem">
+  <div class="card-body p-4">
+    <h4 class="card-title text-center mb-4">KRAFT 관리자 로그인</h4>
+
+    <div th:if="${error}" class="alert alert-danger" role="alert">
+      <span th:switch="${error}">
+        <span th:case="'unauthorized'">허용되지 않은 Google 계정입니다.</span>
+        <span th:case="*">로그인에 실패했습니다. 다시 시도해주세요.</span>
+      </span>
+    </div>
+    <div th:if="${logoutMessage}" class="alert alert-success" role="alert"
+         th:text="${logoutMessage}"></div>
+
+    <a th:href="@{/oauth2/authorization/google}"
+       class="btn btn-danger w-100">
+      Google 계정으로 로그인
+    </a>
+  </div>
+</div>
+</body>
+</html>

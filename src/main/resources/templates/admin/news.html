@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('뉴스 관리', '뉴스 기사 승인 관리', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">Admin</p>
+    <h1>뉴스 관리</h1>
+  </header>
+
+  <div class="container py-3">
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+    <div class="card mb-3">
+      <div class="card-header">키워드 차단 추가</div>
+      <div class="card-body">
+        <form th:action="@{/admin/ops/news/block-keyword}" method="post" class="row g-2">
+          <div class="col-5">
+            <input type="text" name="keyword" class="form-control form-control-sm" placeholder="차단할 키워드" required>
+          </div>
+          <div class="col-5">
+            <input type="text" name="reason" class="form-control form-control-sm" placeholder="사유 (선택)">
+          </div>
+          <div class="col-2">
+            <button type="submit" class="btn btn-warning btn-sm w-100">차단</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <h5>승인 대기 기사 (<span th:text="${pendingArticles.totalElements}">0</span>건)</h5>
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead class="table-secondary">
+          <tr>
+            <th>제목</th>
+            <th>출처</th>
+            <th>도메인</th>
+            <th>수집일시</th>
+            <th>액션</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="article : ${pendingArticles}">
+            <td>
+              <a th:href="${article.link}" target="_blank" rel="noopener"
+                 th:text="${#strings.abbreviate(article.title, 60)}"></a>
+            </td>
+            <td th:text="${article.source}"></td>
+            <td><small th:text="${article.sourceDomain}"></small></td>
+            <td><small th:text="${#temporals.format(article.collectedAt, 'MM-dd HH:mm')}"></small></td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <form th:action="@{/admin/ops/news/{id}/approve(id=${article.id})}" method="post" class="d-inline">
+                  <button type="submit" class="btn btn-success btn-sm">승인</button>
+                </form>
+                <form th:action="@{/admin/ops/news/{id}/reject(id=${article.id})}" method="post" class="d-inline ms-1">
+                  <button type="submit" class="btn btn-secondary btn-sm">거부</button>
+                </form>
+                <form th:action="@{/admin/ops/news/{id}/block-domain(id=${article.id})}" method="post" class="d-inline ms-1">
+                  <button type="submit" class="btn btn-danger btn-sm">도메인 차단</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <tr th:if="${pendingArticles.isEmpty()}">
+            <td colspan="5" class="text-center text-muted">승인 대기 기사가 없습니다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-3">
+      <a th:href="@{/admin/ops}" class="btn btn-secondary btn-sm">← 대시보드</a>
+    </div>
+  </div>
+</section>
+</html>
