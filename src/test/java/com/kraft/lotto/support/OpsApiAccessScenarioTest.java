@@ -14,6 +14,7 @@ import com.kraft.lotto.feature.recommend.application.RecommendMetricsQueryServic
 import com.kraft.lotto.feature.winningnumber.application.ApiCircuitBreakerRegistry;
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
+import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import com.kraft.lotto.feature.winningnumber.application.WinningStoreCollector;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
@@ -62,6 +63,9 @@ class OpsApiAccessScenarioTest {
     WinningStoreCollector winningStoreCollector;
 
     @Mock
+    WinningNumberQueryService winningNumberQueryService;
+
+    @Mock
     NewsCollectionService newsCollectionService;
 
     MockMvc mockMvc;
@@ -74,6 +78,7 @@ class OpsApiAccessScenarioTest {
                         new OpsMonitoringController(
                                 recommendMetricsQueryService,
                                 circuitBreakerRegistry,
+                                winningNumberQueryService,
                                 Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul"))
                         ),
                         new OpsNewsController(newsCollectionService)

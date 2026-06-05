@@ -244,13 +244,12 @@ jobs:
         run: echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 
       - name: Scan JAR for vulnerabilities (Trivy CLI)
-        continue-on-error: true
         run: |
           set -euo pipefail
           trivy fs build/libs/app.jar \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
-            --exit-code 0
+            --exit-code 1
 
       - name: Cache Syft binary
         id: syft-cache

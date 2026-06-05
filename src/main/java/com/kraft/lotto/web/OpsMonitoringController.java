@@ -3,12 +3,17 @@ package com.kraft.lotto.web;
 import com.kraft.lotto.feature.recommend.application.RecommendMetricsQueryService;
 import com.kraft.lotto.feature.recommend.web.dto.RecommendStatsDto;
 import com.kraft.lotto.feature.winningnumber.application.ApiCircuitBreakerRegistry;
+import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
+import com.kraft.lotto.feature.winningnumber.domain.LottoDrawSchedule;
 import com.kraft.lotto.feature.winningnumber.web.dto.OpsCircuitBreakerStatusDto;
+import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,13 +28,16 @@ public class OpsMonitoringController {
 
     private final RecommendMetricsQueryService recommendMetricsQueryService;
     private final ApiCircuitBreakerRegistry circuitBreakerRegistry;
+    private final WinningNumberQueryService winningNumberQueryService;
     private final Clock clock;
 
     public OpsMonitoringController(RecommendMetricsQueryService recommendMetricsQueryService,
                                    ApiCircuitBreakerRegistry circuitBreakerRegistry,
+                                   WinningNumberQueryService winningNumberQueryService,
                                    Clock clock) {
         this.recommendMetricsQueryService = recommendMetricsQueryService;
         this.circuitBreakerRegistry = circuitBreakerRegistry;
+        this.winningNumberQueryService = winningNumberQueryService;
         this.clock = clock;
     }
 
@@ -44,6 +52,24 @@ public class OpsMonitoringController {
     public OpsCircuitBreakerStatusDto circuitBreakers() {
         return new OpsCircuitBreakerStatusDto(LocalDateTime.now(clock), mapCircuitBreakerStates());
     }
+
+    @GetMapping("/data-freshness")
+    @Operation(summary = "DB 최신 회차와 예상 최신 회차 일치 여부를 확인한다")
+    public DataFreshnessDto dataFreshness() {
+        Optional<WinningNumberDto> latest = winningNumberQueryService.findLatest();
+        int dbLatestRound = latest.map(WinningNumberDto::round).orElse(0);
+        LocalDateTime lastCollectedAt = latest.map(WinningNumberDto::fetchedAt).orElse(null);
+        int expectedRound = LottoDrawSchedule.expectedRound(LocalDate.now(clock));
+        String status = (dbLatestRound == expectedRound) ? "OK" : "STALE";
+        return new DataFreshnessDto(dbLatestRound, expectedRound, lastCollectedAt, status);
+    }
+
+    public record DataFreshnessDto(
+            int dbLatestRound,
+            int expectedRound,
+            LocalDateTime lastCollectedAt,
+            String status
+    ) {}
 
     private Map<String, OpsCircuitBreakerStatusDto.CircuitBreakerState> mapCircuitBreakerStates() {
         return circuitBreakerRegistry.snapshots().entrySet()

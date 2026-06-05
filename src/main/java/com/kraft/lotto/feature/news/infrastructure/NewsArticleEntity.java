@@ -44,6 +44,9 @@ public class NewsArticleEntity {
     @Column(name = "collected_at", nullable = false)
     private LocalDateTime collectedAt;
 
+    @Column(name = "approved", nullable = false)
+    private boolean approved;
+
     protected NewsArticleEntity() {
     }
 
@@ -73,6 +76,7 @@ public class NewsArticleEntity {
         this.sourceTier = sourceTier == null ? NewsSourceTier.GENERAL : sourceTier;
         this.pubDate = pubDate;
         this.collectedAt = collectedAt;
+        this.approved = (this.sourceTier != NewsSourceTier.GENERAL);
     }
 
     public Long getId() { return id; }
@@ -84,4 +88,5 @@ public class NewsArticleEntity {
     public NewsSourceTier getSourceTier() { return sourceTier == null ? NewsSourceTier.GENERAL : sourceTier; }
     public LocalDateTime getPubDate() { return pubDate; }
     public LocalDateTime getCollectedAt() { return collectedAt; }
+    public boolean isApproved() { return approved; }
 }

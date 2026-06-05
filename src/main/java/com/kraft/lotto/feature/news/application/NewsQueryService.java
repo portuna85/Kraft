@@ -41,8 +41,8 @@ public class NewsQueryService {
         }
         PageRequest pageRequest = PageRequest.of(page, size);
         Page<NewsArticleEntity> p = tier == null
-                ? repository.findAllByOrderByPubDateDescCollectedAtDesc(pageRequest)
-                : repository.findAllBySourceTierOrderByPubDateDescCollectedAtDesc(tier, pageRequest);
+                ? repository.findAllByApprovedTrueOrderByPubDateDescCollectedAtDesc(pageRequest)
+                : repository.findAllByApprovedTrueAndSourceTierOrderByPubDateDescCollectedAtDesc(tier, pageRequest);
         List<NewsArticleDto> articles = p.getContent().stream()
                 .map(e -> NewsArticleDto.of(e.getId(), e.getTitle(), e.getLink(),
                         e.getDescription(), e.getSource(), e.getPubDate(),

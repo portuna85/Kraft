@@ -38,7 +38,7 @@ class NewsQueryServiceTest {
         NewsArticleEntity entity = new NewsArticleEntity(
                 "로또 뉴스", "https://example.com/1", "abc123",
                 "설명", "뉴스원", LocalDateTime.now(), LocalDateTime.now());
-        when(repository.findAllByOrderByPubDateDescCollectedAtDesc(any(Pageable.class)))
+        when(repository.findAllByApprovedTrueOrderByPubDateDescCollectedAtDesc(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(entity)));
 
         NewsQueryService.NewsPage result = service.list(0, 20);
@@ -56,7 +56,7 @@ class NewsQueryServiceTest {
                 "공식 뉴스", "https://example.com/1", "abc123",
                 "설명", "동행복권", NewsSourceTier.OFFICIAL,
                 LocalDateTime.now(), LocalDateTime.now());
-        when(repository.findAllBySourceTierOrderByPubDateDescCollectedAtDesc(
+        when(repository.findAllByApprovedTrueAndSourceTierOrderByPubDateDescCollectedAtDesc(
                 org.mockito.ArgumentMatchers.eq(NewsSourceTier.OFFICIAL),
                 any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(entity)));
@@ -65,7 +65,7 @@ class NewsQueryServiceTest {
 
         assertThat(result.articles()).hasSize(1);
         assertThat(result.articles().get(0).tier()).isEqualTo(NewsSourceTier.OFFICIAL);
-        verify(repository).findAllBySourceTierOrderByPubDateDescCollectedAtDesc(
+        verify(repository).findAllByApprovedTrueAndSourceTierOrderByPubDateDescCollectedAtDesc(
                 org.mockito.ArgumentMatchers.eq(NewsSourceTier.OFFICIAL),
                 any(Pageable.class));
     }
@@ -73,7 +73,7 @@ class NewsQueryServiceTest {
     @Test
     @DisplayName("결과가 없으면 빈 목록을 반환한다")
     void emptyRepositoryReturnsEmptyList() {
-        when(repository.findAllByOrderByPubDateDescCollectedAtDesc(any(Pageable.class)))
+        when(repository.findAllByApprovedTrueOrderByPubDateDescCollectedAtDesc(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         NewsQueryService.NewsPage result = service.list(0, 20);

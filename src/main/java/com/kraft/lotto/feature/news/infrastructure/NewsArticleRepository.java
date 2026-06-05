@@ -13,9 +13,9 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticleEntity, 
 
     boolean existsByLinkHash(String linkHash);
 
-    Page<NewsArticleEntity> findAllByOrderByPubDateDescCollectedAtDesc(Pageable pageable);
+    Page<NewsArticleEntity> findAllByApprovedTrueOrderByPubDateDescCollectedAtDesc(Pageable pageable);
 
-    Page<NewsArticleEntity> findAllBySourceTierOrderByPubDateDescCollectedAtDesc(
+    Page<NewsArticleEntity> findAllByApprovedTrueAndSourceTierOrderByPubDateDescCollectedAtDesc(
             NewsSourceTier sourceTier,
             Pageable pageable);
 

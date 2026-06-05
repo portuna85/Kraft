@@ -1,7 +1,6 @@
 package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
-import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -25,7 +24,7 @@ class RoundsModelSupport {
     }
 
     void addRoundSearchModel(Integer round, Model model) {
-        model.addAttribute("maxRound", LottoRoundPolicy.MAX_ROUND);
+        model.addAttribute("maxRound", queryService.maxPossibleRound());
         model.addAttribute("round", round);
         model.addAttribute("result", round == null ? null : queryService.findByRound(round).orElse(null));
     }

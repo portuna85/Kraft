@@ -49,6 +49,11 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
                 .build();
     }
 
+    private static final java.util.List<String> RATE_LIMITED_PREFIXES = java.util.List.of(
+            "/latest", "/rounds", "/stats", "/analysis",
+            "/companion", "/news", "/recommend", "/fragments/"
+    );
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         if (!securityProperties.getRateLimit().isEnabled()) {
@@ -58,7 +63,15 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
             return true;
         }
         String path = request.getRequestURI();
-        return !("/".equals(path) || path.startsWith("/fragments/"));
+        if ("/".equals(path)) {
+            return false;
+        }
+        for (String prefix : RATE_LIMITED_PREFIXES) {
+            if (path.startsWith(prefix)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

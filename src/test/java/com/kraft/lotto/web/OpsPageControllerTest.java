@@ -53,7 +53,9 @@ class OpsPageControllerTest {
     @Test
     @DisplayName("유효한 요청은 모델을 정상 바인딩한다")
     void bindsModelForValidRequest() throws Exception {
-        when(fetchLogQueryService.failureOverview(200, 100, "timeout", 1, 1500))
+        int expectedTo = com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy.maxPossibleRound(java.time.LocalDate.now());
+
+        when(fetchLogQueryService.failureOverview(200, 100, "timeout", 1, expectedTo))
                 .thenReturn(new FetchFailureOverviewDto(
                         LocalDateTime.of(2026, 5, 22, 12, 0),
                         200,
@@ -61,7 +63,7 @@ class OpsPageControllerTest {
                         List.of(),
                         List.of()
                 ));
-        when(fetchLogQueryService.listRecentFailuresPage(0, 20, "timeout", 1, 1500))
+        when(fetchLogQueryService.listRecentFailuresPage(0, 20, "timeout", 1, expectedTo))
                 .thenReturn(new LottoFetchLogQueryService.PagedFailures(List.of(), 0, 20, false));
         when(fetchLogQueryService.retentionStatus(true, 90, 1000, "0 30 3 * * *", "Asia/Seoul"))
                 .thenReturn(new FetchLogRetentionStatusDto(
@@ -94,11 +96,11 @@ class OpsPageControllerTest {
                 .andExpect(model().attribute("pageSize", 20))
                 .andExpect(model().attribute("reason", "timeout"))
                 .andExpect(model().attribute("drwNoFrom", 1))
-                .andExpect(model().attribute("drwNoTo", 1500))
+                .andExpect(model().attribute("drwNoTo", expectedTo))
                 .andExpect(model().attributeDoesNotExist("opsToken"));
 
-        verify(fetchLogQueryService).failureOverview(200, 100, "timeout", 1, 1500);
-        verify(fetchLogQueryService).listRecentFailuresPage(0, 20, "timeout", 1, 1500);
+        verify(fetchLogQueryService).failureOverview(200, 100, "timeout", 1, expectedTo);
+        verify(fetchLogQueryService).listRecentFailuresPage(0, 20, "timeout", 1, expectedTo);
         verify(fetchLogQueryService).retentionStatus(true, 90, 1000, "0 30 3 * * *", "Asia/Seoul");
     }
 

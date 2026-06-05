@@ -34,7 +34,7 @@ public class HomeController {
         model.addAttribute("expectedRound", queryService.expectedCurrentRound());
         model.addAttribute("latest", queryService.findLatest().orElse(null));
         model.addAttribute("result", round == null ? null : queryService.findByRound(round).orElse(null));
-        model.addAttribute("maxRound", LottoRoundPolicy.MAX_ROUND);
+        model.addAttribute("maxRound", queryService.maxPossibleRound());
     }
 
 }
