@@ -69,6 +69,36 @@ test.describe('home smoke', () => {
     await expect(page.locator('#recommend .set-card').first()).toBeVisible();
   });
 
+  test('recommend filters update without htmx', async ({ page }) => {
+    await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
+    await page.goto('/');
+
+    await page.locator('#filterOddBtns .filter-btn[data-value="3"]').click();
+
+    await expect(page.locator('#filterOddBtns .filter-btn.active')).toHaveAttribute('data-value', '3');
+    await expect(page.locator('#recommend .set-card').first()).toBeVisible();
+  });
+
+  test('frequency period tabs update without htmx', async ({ page }) => {
+    await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
+    await page.goto('/frequency');
+
+    await page.locator('.btn-period').filter({ hasText: '최근 50회' }).click();
+
+    await expect(page.locator('.btn-period.active')).toContainText('최근 50회');
+    await expect(page.locator('#freq-list .freq-item')).toHaveCount(45);
+  });
+
+  test('round page size updates without htmx', async ({ page }) => {
+    await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
+    await page.goto('/rounds');
+
+    await page.locator('.page-size-btn').filter({ hasText: '50' }).click();
+
+    await expect(page.locator('.page-size-btn.active')).toHaveText('50');
+    await expect(page.locator('#rounds .round-item').first()).toBeVisible();
+  });
+
   test('analysis picker fetches fragment without htmx', async ({ page }) => {
     await page.route('**/vendor/htmx/htmx.min.js', (route) => route.abort());
     await page.goto('/analysis');

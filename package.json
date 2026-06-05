@@ -6,7 +6,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:docker": "./scripts/e2e-docker.sh",
-    "build:css": "postcss \"src/main/frontend/css/*.css\" --dir src/main/resources/static/css --no-map"
+    "check:js": "node scripts/check-js-syntax.cjs",
+    "build:css": "postcss \"src/main/resources/static/css/*.css\" --replace --no-map"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",

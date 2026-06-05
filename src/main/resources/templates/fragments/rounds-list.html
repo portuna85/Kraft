@@ -4,15 +4,15 @@
       <h2 class="card-title h6 text-uppercase fw-semibold text-secondary mb-0">회차 목록</h2>
       <div class="page-size-group">
         <th:block th:each="s : ${pageSizes}">
-          <button type="button"
-                  class="page-size-btn"
-                  th:classappend="${currentSize == s ? ' active' : ''}"
-                  th:text="${s}"
-                  hx-target="#rounds"
-                  hx-swap="outerHTML"
-                  th:attr="hx-get=|/fragments/rounds?page=0&size=${s}|"
-                  aria-label="페이지 크기">
-          </button>
+          <a class="page-size-btn"
+             th:classappend="${currentSize == s ? ' active' : ''}"
+             th:text="${s}"
+             th:href="|/rounds?page=0&size=${s}|"
+             hx-target="#rounds"
+             hx-swap="outerHTML"
+             th:attr="hx-get=|/fragments/rounds?page=0&size=${s}|"
+             aria-label="페이지 크기">
+          </a>
         </th:block>
       </div>
     </div>

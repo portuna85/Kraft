@@ -1,125 +1,146 @@
 (function () {
   'use strict';
 
-  // 현재 URL 기반으로 상단 nav와 하단 nav의 active 클래스를 동기화
-  (function syncNavActive() {
-    var path = window.location.pathname;
-    var isHome = path === '/' || path === '/recommend';
-
-    document.querySelectorAll('.navbar-nav .nav-link').forEach(function (link) {
-      var href = link.getAttribute('href');
-      var shouldBeActive = href === path || (href === '/' && isHome);
-      link.classList.toggle('active', shouldBeActive);
-      if (shouldBeActive) {
-        link.setAttribute('aria-current', 'page');
-      } else {
-        link.removeAttribute('aria-current');
-      }
-    });
-
-    document.querySelectorAll('.kraft-bottom-nav-item').forEach(function (link) {
-      var href = link.getAttribute('href');
-      var shouldBeActive = href === path || (href === '/' && isHome);
-      link.classList.toggle('active', shouldBeActive);
-      if (shouldBeActive) {
-        link.setAttribute('aria-current', 'page');
-      } else {
-        link.removeAttribute('aria-current');
-      }
-    });
-  }());
-
-  // document에 단일 위임 리스너 — HTMX outerHTML 스왑 후에도 유지됨
-  document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.filter-btn');
-    if (!btn) { return; }
-
-    // 같은 그룹 내 active 해제 후 현재 버튼 활성화
-    btn.closest('.filter-btn-row').querySelectorAll('.filter-btn').forEach(function (b) {
-      b.classList.remove('active');
-    });
-    btn.classList.add('active');
-
-    // 홀짝 버튼: data-target="filterOddCount"
-    if (btn.dataset.target) {
-      var input = document.getElementById(btn.dataset.target);
-      if (input) { input.value = btn.dataset.value || ''; }
-    } else {
-      // 합산 버튼: data-sum-min / data-sum-max
-      var minInput = document.getElementById('filterSumMin');
-      var maxInput = document.getElementById('filterSumMax');
-      if (minInput) { minInput.value = btn.dataset.sumMin || ''; }
-      if (maxInput) { maxInput.value = btn.dataset.sumMax || ''; }
-    }
-
-    // 폼 재제출 (항상 현재 DOM에서 찾음)
-    var form = document.getElementById('recommendForm');
-    if (form && window.htmx) {
-      window.htmx.trigger(form, 'submit');
-    }
-  });
-
-  // 규칙 체크박스 변경 시 폼 재제출
-  document.addEventListener('change', function (e) {
-    if (!e.target.classList.contains('recommend-rule-checkbox')) { return; }
-    var form = document.getElementById('recommendForm');
-    if (form && window.htmx) {
-      window.htmx.trigger(form, 'submit');
-    }
-  });
-
-  // 추천 결과 복사 버튼 — HTMX outerHTML 스왑 후에도 위임으로 동작
   var RECOMMEND_HISTORY_KEY = 'kraft-recommend-history';
   var RECOMMEND_HISTORY_MAX = 10;
+  var GENERATED_RULE_INPUT = 'data-generated-disabled-rule';
 
-  document.addEventListener('click', function (e) {
-    var copyBtn = e.target.closest('.set-card-copy-btn');
-    if (!copyBtn) { return; }
+  function recommendForm() {
+    return document.getElementById('recommendForm');
+  }
+
+  function syncDisabledRuleInputs(form) {
+    if (!form) return;
+    Array.prototype.forEach.call(form.querySelectorAll('input[' + GENERATED_RULE_INPUT + ']'), function (input) {
+      input.remove();
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.recommend-rule-checkbox'), function (checkbox) {
+      if (checkbox.checked) return;
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'disabledRules';
+      input.value = checkbox.dataset.ruleName || '';
+      input.setAttribute(GENERATED_RULE_INPUT, 'true');
+      form.appendChild(input);
+    });
+  }
+
+  function submitRecommendForm(form) {
+    if (!form) return;
+    syncDisabledRuleInputs(form);
+    if (window.htmx && typeof window.htmx.trigger === 'function') {
+      window.htmx.trigger(form, 'submit');
+      return;
+    }
+    if (typeof form.requestSubmit === 'function') {
+      form.requestSubmit();
+      return;
+    }
+    form.submit();
+  }
+
+  function activateFilterButton(btn) {
+    var row = btn.closest('.filter-btn-row');
+    if (row) {
+      Array.prototype.forEach.call(row.querySelectorAll('.filter-btn'), function (item) {
+        item.classList.remove('active');
+      });
+    }
+    btn.classList.add('active');
+  }
+
+  function updateFilterInputs(btn) {
+    if (btn.dataset.target) {
+      var input = document.getElementById(btn.dataset.target);
+      if (input) {
+        input.value = btn.dataset.value || '';
+      }
+      return;
+    }
+
+    var minInput = document.getElementById('filterSumMin');
+    var maxInput = document.getElementById('filterSumMax');
+    if (minInput) {
+      minInput.value = btn.dataset.sumMin || '';
+    }
+    if (maxInput) {
+      maxInput.value = btn.dataset.sumMax || '';
+    }
+  }
+
+  document.addEventListener('submit', function (event) {
+    if (event.target && event.target.id === 'recommendForm') {
+      syncDisabledRuleInputs(event.target);
+    }
+  }, true);
+
+  document.addEventListener('click', function (event) {
+    var btn = event.target.closest('.filter-btn');
+    if (!btn) return;
+
+    activateFilterButton(btn);
+    updateFilterInputs(btn);
+    submitRecommendForm(recommendForm());
+  });
+
+  document.addEventListener('change', function (event) {
+    if (!event.target.classList.contains('recommend-rule-checkbox')) return;
+    submitRecommendForm(recommendForm());
+  });
+
+  document.addEventListener('click', function (event) {
+    var copyBtn = event.target.closest('.set-card-copy-btn');
+    if (!copyBtn) return;
     var card = copyBtn.closest('.set-card');
-    if (!card) { return; }
+    if (!card) return;
     var numbers = Array.from(card.querySelectorAll('.ball-row .kraft-ball'))
       .map(function (el) { return el.textContent.trim(); })
+      .filter(Boolean)
       .join(', ');
-    if (!numbers) { return; }
+    if (!numbers) return;
 
-    var feedback = function (ok) {
+    function remember() {
+      try {
+        var history = JSON.parse(localStorage.getItem(RECOMMEND_HISTORY_KEY) || '[]');
+        history = history.filter(function (item) { return item !== numbers; });
+        history.unshift(numbers);
+        if (history.length > RECOMMEND_HISTORY_MAX) {
+          history.length = RECOMMEND_HISTORY_MAX;
+        }
+        localStorage.setItem(RECOMMEND_HISTORY_KEY, JSON.stringify(history));
+      } catch (ignored) {}
+    }
+
+    function feedback(ok) {
       copyBtn.textContent = ok ? '복사됨' : '실패';
-      setTimeout(function () { copyBtn.textContent = '복사'; }, 1500);
+      copyBtn.disabled = true;
+      setTimeout(function () {
+        copyBtn.textContent = '복사';
+        copyBtn.disabled = false;
+      }, 1200);
       if (ok) {
-        try {
-          var hist = JSON.parse(localStorage.getItem(RECOMMEND_HISTORY_KEY) || '[]');
-          hist = hist.filter(function (item) { return item !== numbers; });
-          hist.unshift(numbers);
-          if (hist.length > RECOMMEND_HISTORY_MAX) { hist.length = RECOMMEND_HISTORY_MAX; }
-          localStorage.setItem(RECOMMEND_HISTORY_KEY, JSON.stringify(hist));
-        } catch (ignored) {}
+        remember();
       }
-    };
+    }
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(numbers).then(function () { feedback(true); }, function () { feedback(false); });
-    } else {
-      var ta = document.createElement('textarea');
-      ta.value = numbers;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand('copy'); feedback(true); } catch (err) { feedback(false); }
-      document.body.removeChild(ta);
+      return;
     }
-  });
 
-  // HTMX 요청 직전에 비활성 규칙을 파라미터에 추가
-  document.addEventListener('htmx:configRequest', function (e) {
-    if (!e.target || e.target.id !== 'recommendForm') { return; }
-    var checkboxes = document.querySelectorAll('.recommend-rule-checkbox');
-    var disabled = [];
-    checkboxes.forEach(function (cb) {
-      if (!cb.checked) { disabled.push(cb.dataset.ruleName); }
-    });
-    if (disabled.length > 0) {
-      e.detail.parameters['disabledRules'] = disabled;
+    var textarea = document.createElement('textarea');
+    textarea.value = numbers;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      feedback(true);
+    } catch (err) {
+      feedback(false);
     }
+    document.body.removeChild(textarea);
   });
 }());

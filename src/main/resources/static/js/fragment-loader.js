@@ -94,6 +94,25 @@
     return source;
   }
 
+  function resolveTargetFromSource(source) {
+    if (!source || source.nodeType !== 1) {
+      return null;
+    }
+    var selector = source.getAttribute('hx-target');
+    return selector ? document.querySelector(selector) : source;
+  }
+
+  function buildUrlWithFormData(baseUrl, form) {
+    var url = new URL(baseUrl, window.location.origin);
+    var data = new FormData(form);
+    data.forEach(function (value, key) {
+      if (value !== '') {
+        url.searchParams.append(key, value);
+      }
+    });
+    return url.pathname + url.search;
+  }
+
   function clearInFlight(target) {
     var key = targetKey(target);
     if (!key) return;
@@ -107,14 +126,16 @@
     return !!triggeringEvent;
   }
 
-  function loadFragmentFallback(target, focusAfterLoad) {
+  function loadFragmentFallback(target, focusAfterLoad, requestUrl, swapStyle) {
     if (!target) return Promise.resolve();
     var key = targetKey(target);
     if (!key) return Promise.resolve();
     if (inFlightByTarget[key]) return inFlightByTarget[key];
 
-    var url = target.getAttribute('hx-get');
+    var url = requestUrl || target.getAttribute('hx-get');
     if (!url) return Promise.resolve();
+    var targetId = target.id;
+    var swap = swapStyle || target.getAttribute('hx-swap') || 'innerHTML';
 
     setUiState(target, 'loading');
     inFlightByTarget[key] = fetch(url, { headers: { 'HX-Request': 'true' } })
@@ -127,8 +148,12 @@
         return response.text();
       })
       .then(function (fragmentHtml) {
-        target.outerHTML = fragmentHtml;
-        var updated = document.getElementById(target.id);
+        if (swap.indexOf('outerHTML') >= 0) {
+          target.outerHTML = fragmentHtml;
+        } else {
+          target.innerHTML = fragmentHtml;
+        }
+        var updated = targetId ? document.getElementById(targetId) : target;
         resetRetryState(updated || target);
         if (focusAfterLoad) {
           focusLoadedSection(updated);
@@ -145,6 +170,32 @@
       });
 
     return inFlightByTarget[key];
+  }
+
+  function bindFallbackInteractions() {
+    document.body.addEventListener('click', function (event) {
+      var source = event.target.closest('[hx-get]');
+      if (!source || source.tagName === 'FORM') return;
+      if (source.closest('.disabled,[aria-disabled="true"]')) {
+        event.preventDefault();
+        return;
+      }
+      var target = resolveTargetFromSource(source);
+      var url = source.getAttribute('hx-get');
+      if (!target || !url) return;
+      event.preventDefault();
+      loadFragmentFallback(target, true, url, source.getAttribute('hx-swap'));
+    });
+
+    document.body.addEventListener('submit', function (event) {
+      var form = event.target;
+      if (!form || !form.matches('form[hx-get]')) return;
+      var target = resolveTargetFromSource(form);
+      var url = buildUrlWithFormData(form.getAttribute('hx-get'), form);
+      if (!target || !url) return;
+      event.preventDefault();
+      loadFragmentFallback(target, true, url, form.getAttribute('hx-swap'));
+    });
   }
 
   if (window.htmx) {
@@ -184,6 +235,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('[hx-trigger="load"][hx-get]'), function (target) {
       loadFragmentFallback(target, false);
     });
+    bindFallbackInteractions();
   }
 
   document.body.addEventListener('click', function (event) {

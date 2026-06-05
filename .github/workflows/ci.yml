@@ -66,6 +66,9 @@ jobs:
       - name: Minify CSS (F-2)
         run: npm run build:css
 
+      - name: Validate frontend JavaScript syntax
+        run: npm run check:js
+
       - name: Verify CSS build has no uncommitted diff
         run: git diff --exit-code -- src/main/resources/static/css
 
