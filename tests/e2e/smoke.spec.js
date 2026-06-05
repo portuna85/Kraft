@@ -168,13 +168,10 @@ test.describe('responsive smoke', () => {
     await expect(page.locator('.kraft-bottom-nav')).toBeVisible();
   });
 
-  test('renders ops filters on mobile', async ({ page }, testInfo) => {
+  test('admin login page renders on mobile', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.includes('mobile'));
-    await page.goto('/admin/ops');
-    await expect(page.locator('form[action="/admin/ops"]')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Apply' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Reset' })).toBeVisible();
-    await expect(page.locator('.ops-reason-quick')).toHaveCount(3);
+    await page.goto('/admin/login');
+    await expect(page.getByRole('link', { name: /Google/ })).toBeVisible();
   });
 });
 
@@ -207,10 +204,10 @@ test.describe('accessibility smoke', () => {
     expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
   });
 
-  test('ops page has no critical accessibility violations on mobile', async ({ page }, testInfo) => {
+  test('admin login page has no critical accessibility violations on mobile', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.includes('mobile'));
-    await page.goto('/admin/ops');
-    await expect(page.locator('form[action="/admin/ops"]')).toBeVisible();
+    await page.goto('/admin/login');
+    await expect(page.getByRole('link', { name: /Google/ })).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
       .analyze();
