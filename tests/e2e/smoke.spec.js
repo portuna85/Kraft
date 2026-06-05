@@ -4,7 +4,7 @@ const AxeBuilder = require('@axe-core/playwright').default;
 test.describe('home smoke', () => {
   test('renders home page', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/kraft-lotto|최고의 번호/i);
+    await expect(page).toHaveTitle(/KRAFT Lotto/i);
   });
 
   test('shows latest card', async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe('home smoke', () => {
   });
 
   test('invalid out-of-range round query returns 400', async ({ page }) => {
-    const response = await page.goto('/?round=9999');
+    const response = await page.goto('/?round=10000');
     expect(response.status()).toBe(400);
   });
 
