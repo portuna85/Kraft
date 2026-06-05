@@ -10,6 +10,7 @@ import com.kraft.lotto.feature.winningnumber.domain.WinningStore;
 import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -30,7 +31,9 @@ class WinningStoreCollectorTest {
     @Mock WinningStoreApiClient storeApiClient;
     @Mock WinningStoreRepository storeRepository;
     @Mock WinningNumberRepository winningNumberRepository;
-    @Spy  Clock clock = Clock.fixed(Instant.parse("2026-06-05T12:00:00Z"), ZoneId.of("Asia/Seoul"));
+    @Spy
+    @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "Injected into WinningStoreCollector via @InjectMocks")
+    Clock clock = Clock.fixed(Instant.parse("2026-06-05T12:00:00Z"), ZoneId.of("Asia/Seoul"));
 
     @InjectMocks
     WinningStoreCollector collector;

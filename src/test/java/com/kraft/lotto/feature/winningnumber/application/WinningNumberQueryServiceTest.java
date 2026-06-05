@@ -103,4 +103,13 @@ class WinningNumberQueryServiceTest {
         assertThat(result.page()).isZero();
         assertThat(result.totalElements()).isEqualTo(2);
     }
+
+    @Test
+    @DisplayName("maxPossibleRound는 현재 날짜 기준으로 양수를 반환한다")
+    void maxPossibleRoundReturnsPositive() {
+        int max = service.maxPossibleRound();
+
+        assertThat(max).isPositive();
+        assertThat(max).isGreaterThan(1200);
+    }
 }

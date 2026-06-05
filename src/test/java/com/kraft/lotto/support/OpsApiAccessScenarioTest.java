@@ -73,7 +73,8 @@ class OpsApiAccessScenarioTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-                        new OpsCollectionController(collectionCommandService, opsCollectionFacade, winningStoreCollector, securityProperties()),
+                        new OpsCollectionController(
+                                collectionCommandService, opsCollectionFacade, winningStoreCollector, securityProperties()),
                         new OpsFetchLogController(fetchLogQueryService, collectProperties()),
                         new OpsMonitoringController(
                                 recommendMetricsQueryService,
@@ -273,6 +274,22 @@ class OpsApiAccessScenarioTest {
 
         verify(newsCollectionService).collect();
         verify(newsCollectionService).purgeOldArticles();
+    }
+
+    @Test
+    @DisplayName("GET /ops/data-freshness: 정상 토큰/허용 IP면 freshness 상태를 반환한다")
+    void dataFreshnessWithValidTokenReturnsOk() throws Exception {
+        when(winningNumberQueryService.findLatest()).thenReturn(java.util.Optional.empty());
+
+        mockMvc.perform(get("/ops/data-freshness")
+                        .header("X-Ops-Token", "expected-token")
+                        .with(request -> {
+                            request.setRemoteAddr("127.0.0.1");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dbLatestRound").value(0))
+                .andExpect(jsonPath("$.status").exists());
     }
 
     private static KraftSecurityProperties securityProperties() {

@@ -8,6 +8,7 @@ import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreReposito
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningStoreDto;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,5 +55,26 @@ class WinningStoreQueryServiceTest {
 
         assertThat(service.hasStores(1226)).isTrue();
         assertThat(service.hasStores(1225)).isFalse();
+    }
+
+    @Test
+    @DisplayName("특정 등급의 판매점 수집 여부를 확인한다")
+    void hasGrade() {
+        when(repository.existsByRoundAndGrade(1226, 1)).thenReturn(true);
+        when(repository.existsByRoundAndGrade(1226, 2)).thenReturn(false);
+
+        assertThat(service.hasGrade(1226, 1)).isTrue();
+        assertThat(service.hasGrade(1226, 2)).isFalse();
+    }
+
+    @Test
+    @DisplayName("해당 회차의 마지막 수집 시각을 반환한다")
+    void findLastCollectedAt() {
+        LocalDateTime now = LocalDateTime.of(2026, 6, 5, 12, 0);
+        when(repository.findLastCollectedAtByRound(1226)).thenReturn(Optional.of(now));
+        when(repository.findLastCollectedAtByRound(1225)).thenReturn(Optional.empty());
+
+        assertThat(service.findLastCollectedAt(1226)).contains(now);
+        assertThat(service.findLastCollectedAt(1225)).isEmpty();
     }
 }
