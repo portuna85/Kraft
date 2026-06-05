@@ -6,6 +6,7 @@ import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordEntity;
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordRepository;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ public class AdminNewsService {
     private final AdminAuditLogService auditLogService;
     private final Clock clock;
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public AdminNewsService(NewsArticleRepository articleRepository,
                             NewsBlockedDomainRepository blockedDomainRepository,
                             NewsBlockedKeywordRepository blockedKeywordRepository,
