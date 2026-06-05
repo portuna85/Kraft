@@ -5,6 +5,8 @@ import com.kraft.lotto.feature.winningnumber.event.WinningNumbersCollectedEvent;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,6 +26,7 @@ public class WinningStoreCollector {
     private final WinningStoreApiClient storeApiClient;
     private final WinningStoreRepository storeRepository;
     private final WinningNumberRepository winningNumberRepository;
+    private final Clock clock;
 
     @Async
     @EventListener
@@ -35,8 +38,10 @@ public class WinningStoreCollector {
         if (latestRound <= 0) {
             return;
         }
-        if (storeRepository.existsByRound(latestRound)) {
-            log.debug("winning stores already collected: round={}", latestRound);
+        boolean allCollected = java.util.Arrays.stream(GRADES)
+                .allMatch(g -> storeRepository.existsByRoundAndGrade(latestRound, g));
+        if (allCollected) {
+            log.debug("winning stores already fully collected: round={}", latestRound);
             return;
         }
         collectStores(latestRound);
@@ -44,42 +49,27 @@ public class WinningStoreCollector {
 
     public boolean collectStores(int round) {
         log.info("collecting winning stores: round={}", round);
-        StoreFetchBatch batch = fetchAllGrades(round);
-        return persist(batch);
-    }
-
-    private StoreFetchBatch fetchAllGrades(int round) {
-        List<WinningStoreEntity> result = new java.util.ArrayList<>();
-        boolean complete = true;
+        boolean allSuccess = true;
         for (int grade : GRADES) {
             List<WinningStore> stores = storeApiClient.fetchStores(round, grade);
             if (stores.isEmpty()) {
                 log.warn("no winning stores fetched: round={}, grade={}", round, grade);
-                complete = false;
+                allSuccess = false;
                 continue;
             }
-            stores.stream()
-                    .map(s -> new WinningStoreEntity(s.round(), s.grade(), s.name(), s.address(), s.winCount()))
-                    .forEach(result::add);
-            log.info("winning stores fetched: round={}, grade={}, count={}", round, grade, stores.size());
+            persistGrade(round, grade, stores);
         }
-        return new StoreFetchBatch(round, complete, List.copyOf(result));
+        return allSuccess;
     }
 
     @Transactional
-    public boolean persist(StoreFetchBatch batch) {
-        if (!batch.complete()) {
-            log.warn("winning store fetch incomplete for round={}, skipping persist", batch.round());
-            return false;
-        }
-        storeRepository.deleteByRound(batch.round());
-        if (!batch.entities().isEmpty()) {
-            storeRepository.saveAll(batch.entities());
-            log.info("winning stores saved: round={}, count={}", batch.round(), batch.entities().size());
-        }
-        return true;
-    }
-
-    record StoreFetchBatch(int round, boolean complete, List<WinningStoreEntity> entities) {
+    void persistGrade(int round, int grade, List<WinningStore> stores) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        List<WinningStoreEntity> entities = stores.stream()
+                .map(s -> new WinningStoreEntity(s.round(), s.grade(), s.name(), s.address(), s.winCount(), now))
+                .toList();
+        storeRepository.deleteByRoundAndGrade(round, grade);
+        storeRepository.saveAll(entities);
+        log.info("winning stores saved: round={}, grade={}, count={}", round, grade, entities.size());
     }
 }

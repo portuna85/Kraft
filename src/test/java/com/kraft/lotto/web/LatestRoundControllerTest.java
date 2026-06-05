@@ -55,7 +55,9 @@ class LatestRoundControllerTest {
         when(queryService.findLatest()).thenReturn(Optional.of(LottoTestFixtures.winningNumberDto(1200)));
         when(storeQueryService.findByRoundAndGrade(1200, 1)).thenReturn(List.of());
         when(storeQueryService.findByRoundAndGrade(1200, 2)).thenReturn(List.of());
-        when(storeQueryService.hasStores(1200)).thenReturn(false);
+        when(storeQueryService.hasGrade(1200, 1)).thenReturn(false);
+        when(storeQueryService.hasGrade(1200, 2)).thenReturn(false);
+        when(storeQueryService.findLastCollectedAt(1200)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/latest"))
                 .andExpect(status().isOk())

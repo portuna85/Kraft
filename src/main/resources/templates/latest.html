@@ -125,7 +125,12 @@
             </div>
             <div class="latest-prize-card latest-prize-card--empty" th:if="${latest.secondPrize == 0}">
               <div class="latest-prize-rank">2등</div>
-              <p class="text-secondary small mb-0">다음 수집 시 갱신됩니다.</p>
+              <p class="text-secondary small mb-1">2등 정보를 수집 중입니다.</p>
+              <p class="text-secondary small mb-0" th:if="${latest.fetchedAt() != null}">
+                마지막 수집:
+                <time th:datetime="${latest.fetchedAt()}"
+                      th:text="${#temporals.format(latest.fetchedAt(), 'MM-dd HH:mm')}">-</time>
+              </p>
             </div>
           </div>
         </div>
@@ -138,12 +143,27 @@
         <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">당첨 판매점</h2>
 
         <!-- 미수집 -->
-        <p class="text-secondary small mb-0" th:if="${!storesCollected}">
-          판매점 정보를 아직 수집하지 못했습니다.
-        </p>
+        <div th:if="${!storesCollected}" class="small text-secondary">
+          <p class="mb-1">판매점 정보를 수집 중입니다.</p>
+          <p class="mb-0" th:if="${latest.fetchedAt() != null}">
+            마지막 수집 시각:
+            <time th:datetime="${latest.fetchedAt()}"
+                  th:text="${#temporals.format(latest.fetchedAt(), 'yyyy-MM-dd HH:mm')} + ' KST'">-</time>
+          </p>
+        </div>
 
-        <!-- 수집됨 -->
+        <!-- 수집됨 (부분 또는 전체) -->
         <div th:if="${storesCollected}">
+
+          <!-- 수집 시각 -->
+          <p class="text-secondary small mb-2" th:if="${storeCollectedAt != null}">
+            수집 시각:
+            <time th:datetime="${storeCollectedAt}"
+                  th:text="${#temporals.format(storeCollectedAt, 'yyyy-MM-dd HH:mm')} + ' KST'">-</time>
+            <span th:if="${!store1Collected or !store2Collected}" class="ms-2 text-warning">
+              (일부 미수집)
+            </span>
+          </p>
 
           <!-- 탭 -->
           <div class="store-tab-row mb-3" id="storeTabs">

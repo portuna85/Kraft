@@ -24,6 +24,8 @@ public class LatestRoundController {
     private void addModel(WinningNumberDto wn, Model model) {
         long firstAfterTax  = LottoPrizeTaxCalculator.afterTax(wn.firstPrize());
         long secondAfterTax = LottoPrizeTaxCalculator.afterTax(wn.secondPrize());
+        boolean store1Collected = storeQueryService.hasGrade(wn.round(), 1);
+        boolean store2Collected = storeQueryService.hasGrade(wn.round(), 2);
         model.addAttribute("latest", wn);
         model.addAttribute("firstAfterTax",    firstAfterTax);
         model.addAttribute("secondAfterTax",   secondAfterTax);
@@ -35,6 +37,9 @@ public class LatestRoundController {
         model.addAttribute("secondTotalPrize", (long) wn.secondPrize() * wn.secondWinners());
         model.addAttribute("stores1",          storeQueryService.findByRoundAndGrade(wn.round(), 1));
         model.addAttribute("stores2",          storeQueryService.findByRoundAndGrade(wn.round(), 2));
-        model.addAttribute("storesCollected",  storeQueryService.hasStores(wn.round()));
+        model.addAttribute("storesCollected",  store1Collected || store2Collected);
+        model.addAttribute("store1Collected",  store1Collected);
+        model.addAttribute("store2Collected",  store2Collected);
+        model.addAttribute("storeCollectedAt", storeQueryService.findLastCollectedAt(wn.round()).orElse(null));
     }
 }

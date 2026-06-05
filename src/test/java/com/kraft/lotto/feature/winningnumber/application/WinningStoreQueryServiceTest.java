@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningStoreDto;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ class WinningStoreQueryServiceTest {
     @Test
     @DisplayName("회차와 등수로 판매점 목록을 조회한다")
     void findByRoundAndGrade() {
-        WinningStoreEntity entity = new WinningStoreEntity(1226, 1, "거봉마트", "대구 서구", 1);
+        WinningStoreEntity entity = new WinningStoreEntity(1226, 1, "거봉마트", "대구 서구", 1, LocalDateTime.now());
         when(repository.findByRoundAndGradeOrderByIdAsc(1226, 1)).thenReturn(List.of(entity));
 
         List<WinningStoreDto> result = service.findByRoundAndGrade(1226, 1);

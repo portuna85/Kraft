@@ -2,7 +2,9 @@ package com.kraft.lotto.feature.winningnumber.application;
 
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningStoreDto;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,5 +25,13 @@ public class WinningStoreQueryService {
 
     public boolean hasStores(int round) {
         return repository.existsByRound(round);
+    }
+
+    public boolean hasGrade(int round, int grade) {
+        return repository.existsByRoundAndGrade(round, grade);
+    }
+
+    public Optional<LocalDateTime> findLastCollectedAt(int round) {
+        return repository.findLastCollectedAtByRound(round);
     }
 }
