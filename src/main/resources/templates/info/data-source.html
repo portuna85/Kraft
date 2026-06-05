@@ -58,6 +58,41 @@
     </div>
   </div>
 
+  <!-- 현재 데이터 상태 -->
+  <div class="card mb-4 kraft-section" th:if="${latestStoredRound != null}">
+    <div class="card-body">
+      <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">현재 데이터 상태</h2>
+      <dl class="small mb-0">
+        <div class="mb-2">
+          <dt class="fw-semibold d-inline">저장된 최신 회차:</dt>
+          <dd class="d-inline ms-1" th:text="${latestStoredRound} + '회 (' + ${latestStoredDate} + ')'">-</dd>
+        </div>
+        <div class="mb-2">
+          <dt class="fw-semibold d-inline">현재 예상 최신 회차:</dt>
+          <dd class="d-inline ms-1" th:text="${expectedRound} + '회'">-</dd>
+          <span class="ms-1 text-success small" th:if="${expectedRound != null and latestStoredRound != null and expectedRound <= latestStoredRound}">✓ 최신 상태</span>
+          <span class="ms-1 text-warning small" th:if="${expectedRound != null and latestStoredRound != null and expectedRound > latestStoredRound}">미반영 회차 있음</span>
+        </div>
+        <div class="mb-2">
+          <dt class="fw-semibold d-inline">1등 판매점 수집:</dt>
+          <dd class="d-inline ms-1">
+            <span th:if="${store1Collected}" class="text-success">수집 완료</span>
+            <span th:unless="${store1Collected}" class="text-warning">미수집</span>
+          </dd>
+        </div>
+        <div class="mb-0">
+          <dt class="fw-semibold d-inline">2등 판매점 수집:</dt>
+          <dd class="d-inline ms-1">
+            <span th:if="${store2Collected}" class="text-success">수집 완료</span>
+            <span th:unless="${store2Collected}" class="text-warning">미수집</span>
+          </dd>
+          <span class="ms-2 text-secondary small" th:if="${storeCollectedAt != null}"
+                th:text="'(마지막 수집: ' + ${#temporals.format(storeCollectedAt, 'yyyy-MM-dd HH:mm')} + ' KST)'">-</span>
+        </div>
+      </dl>
+    </div>
+  </div>
+
   <!-- 최근 수집 이력 -->
   <div class="card mb-4 kraft-section">
     <div class="card-body">

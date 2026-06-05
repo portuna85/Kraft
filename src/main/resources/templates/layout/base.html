@@ -42,6 +42,8 @@
     "description": "로또 당첨번호 조회, 빈도·패턴 통계, 편향 회피 번호 조합 도구"
   }
   </script>
+  <script type="application/ld+json" th:attr="nonce=${cspNonce}"
+          th:if="${pageJsonLd != null}" th:utext="${pageJsonLd}"></script>
 </head>
 <body>
 <a class="skip-to-content" href="#main-content">본문으로 건너뛰기</a>
