@@ -184,6 +184,14 @@ kraft:
       - "선거 로또"
       - "취업 로또"
       - "입시 로또"
+      - "전세 로또"
+      - "공익신고"
+      - "해외 로또"
+      - "캐나다 로또"
+      - "파워볼"
+      - "복권 당첨 비법"
+    blocked-domains:
+      - "kmrk.ru"
     official-sources:
       - "동행복권"
       - "dhlottery"

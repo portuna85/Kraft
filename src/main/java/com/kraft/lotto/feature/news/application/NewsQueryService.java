@@ -40,9 +40,13 @@ public class NewsQueryService {
             );
         }
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<NewsArticleEntity> p = tier == null
-                ? repository.findAllByApprovedTrueOrderByPubDateDescCollectedAtDesc(pageRequest)
-                : repository.findAllByApprovedTrueAndSourceTierOrderByPubDateDescCollectedAtDesc(tier, pageRequest);
+        Page<NewsArticleEntity> p;
+        if (tier == null) {
+            p = repository.findAllByApprovedTrueAndSourceTierInOrderByPubDateDescCollectedAtDesc(
+                    List.of(NewsSourceTier.OFFICIAL, NewsSourceTier.PRESS), pageRequest);
+        } else {
+            p = repository.findAllByApprovedTrueAndSourceTierOrderByPubDateDescCollectedAtDesc(tier, pageRequest);
+        }
         List<NewsArticleDto> articles = p.getContent().stream()
                 .map(e -> NewsArticleDto.of(e.getId(), e.getTitle(), e.getLink(),
                         e.getDescription(), e.getSource(), e.getPubDate(),

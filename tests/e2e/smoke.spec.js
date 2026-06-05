@@ -178,6 +178,25 @@ test.describe('responsive smoke', () => {
   });
 });
 
+test.describe('brand copy regression', () => {
+  test('does not show overclaiming brand copy', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('body')).not.toContainText('최고의 번호');
+    await expect(page.locator('body')).not.toContainText('당첨 보장');
+    await expect(page.locator('body')).not.toContainText('확률 높은 번호');
+  });
+
+  test('/news default does not expose general tier articles', async ({ page }) => {
+    await page.goto('/news');
+    await expect(page.locator('[data-source-tier="GENERAL"]')).toHaveCount(0);
+  });
+
+  test('/latest shows store-collection-status', async ({ page }) => {
+    await page.goto('/latest');
+    await expect(page.locator('[data-testid="store-collection-status"]')).toBeVisible();
+  });
+});
+
 test.describe('accessibility smoke', () => {
   test('home has no critical accessibility violations', async ({ page }) => {
     await page.goto('/');

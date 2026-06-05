@@ -2,6 +2,7 @@ package com.kraft.lotto.feature.news.infrastructure;
 
 import com.kraft.lotto.feature.news.domain.NewsSourceTier;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +18,10 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticleEntity, 
 
     Page<NewsArticleEntity> findAllByApprovedTrueAndSourceTierOrderByPubDateDescCollectedAtDesc(
             NewsSourceTier sourceTier,
+            Pageable pageable);
+
+    Page<NewsArticleEntity> findAllByApprovedTrueAndSourceTierInOrderByPubDateDescCollectedAtDesc(
+            List<NewsSourceTier> tiers,
             Pageable pageable);
 
     @Modifying

@@ -2,7 +2,7 @@
   "id": "/",
   "name": "kraft-lotto",
   "short_name": "kLo",
-  "description": "Lotto 6/45 collection, analysis, and recommendation service",
+  "description": "로또 6/45 과거 당첨 데이터 기반 편향 회피 번호 조합 도구. 당첨을 예측하거나 보장하지 않습니다.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -162,7 +162,8 @@ class NewsCollectionServiceTest {
                 persister,
                 classifier,
                 FIXED_CLOCK,
-                30
+                30,
+                List.of()
         );
         service.collect();
 

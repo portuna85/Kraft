@@ -43,6 +43,8 @@ class NewsConfiguration {
                                                 NewsSourceClassifier classifier,
                                                 Clock clock,
                                                 KraftNewsProperties properties) {
-        return new NewsCollectionService(repository, rssClient, persister, classifier, clock, properties.retentionDays());
+        return new NewsCollectionService(
+                repository, rssClient, persister, classifier,
+                clock, properties.retentionDays(), properties.blockedDomains());
     }
 }

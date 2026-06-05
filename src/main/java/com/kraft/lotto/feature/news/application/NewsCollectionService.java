@@ -3,6 +3,7 @@ package com.kraft.lotto.feature.news.application;
 import com.kraft.lotto.feature.news.domain.NewsArticle;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -10,6 +11,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,13 +27,14 @@ public class NewsCollectionService {
     private final NewsSourceClassifier classifier;
     private final Clock clock;
     private final int retentionDays;
+    private final List<String> blockedDomains;
 
     NewsCollectionService(NewsArticleRepository repository,
                           NewsRssClient rssClient,
                           NewsArticlePersister persister,
                           Clock clock,
                           int retentionDays) {
-        this(repository, rssClient, persister, new NewsSourceClassifier(List.of(), List.of()), clock, retentionDays);
+        this(repository, rssClient, persister, new NewsSourceClassifier(List.of(), List.of()), clock, retentionDays, List.of());
     }
 
     NewsCollectionService(NewsArticleRepository repository,
@@ -39,13 +42,15 @@ public class NewsCollectionService {
                           NewsArticlePersister persister,
                           NewsSourceClassifier classifier,
                           Clock clock,
-                          int retentionDays) {
+                          int retentionDays,
+                          List<String> blockedDomains) {
         this.repository = repository;
         this.rssClient = rssClient;
         this.persister = persister;
         this.classifier = classifier;
         this.clock = clock;
         this.retentionDays = retentionDays;
+        this.blockedDomains = List.copyOf(blockedDomains);
     }
 
     public NewsCollectResult collect() {
@@ -59,6 +64,11 @@ public class NewsCollectionService {
         int skipped = 0;
 
         for (NewsArticle article : articles) {
+            if (isBlockedDomain(article.link())) {
+                skipped++;
+                log.debug("news blocked domain, skipped: link={}", article.link());
+                continue;
+            }
             String hash = sha256(article.link());
             if (repository.existsByLinkHash(hash)) {
                 skipped++;
@@ -94,6 +104,21 @@ public class NewsCollectionService {
             log.info("news retention purged count={} cutoff={}", deleted, cutoff);
         }
         return deleted;
+    }
+
+    private boolean isBlockedDomain(String link) {
+        try {
+            String host = URI.create(link).getHost();
+            if (host == null) {
+                return true;
+            }
+            String normalized = host.toLowerCase(Locale.ROOT);
+            return blockedDomains.stream()
+                    .map(d -> d.toLowerCase(Locale.ROOT))
+                    .anyMatch(normalized::endsWith);
+        } catch (IllegalArgumentException e) {
+            return true;
+        }
     }
 
     private static String sha256(String value) {

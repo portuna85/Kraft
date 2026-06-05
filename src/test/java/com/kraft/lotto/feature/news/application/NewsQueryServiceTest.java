@@ -33,19 +33,20 @@ class NewsQueryServiceTest {
     NewsQueryService service;
 
     @Test
-    @DisplayName("뉴스 목록을 페이지 단위로 반환한다")
+    @DisplayName("tier 미지정 시 official·press 기사만 반환한다")
     void returnsPagedArticles() {
         NewsArticleEntity entity = new NewsArticleEntity(
                 "로또 뉴스", "https://example.com/1", "abc123",
-                "설명", "뉴스원", LocalDateTime.now(), LocalDateTime.now());
-        when(repository.findAllByApprovedTrueOrderByPubDateDescCollectedAtDesc(any(Pageable.class)))
+                "설명", "연합뉴스", NewsSourceTier.PRESS, LocalDateTime.now(), LocalDateTime.now());
+        when(repository.findAllByApprovedTrueAndSourceTierInOrderByPubDateDescCollectedAtDesc(
+                any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(entity)));
 
         NewsQueryService.NewsPage result = service.list(0, 20);
 
         assertThat(result.articles()).hasSize(1);
         assertThat(result.articles().get(0).title()).isEqualTo("로또 뉴스");
-        assertThat(result.articles().get(0).tier()).isEqualTo(NewsSourceTier.GENERAL);
+        assertThat(result.articles().get(0).tier()).isEqualTo(NewsSourceTier.PRESS);
         assertThat(result.totalElements()).isEqualTo(1);
     }
 
@@ -73,7 +74,8 @@ class NewsQueryServiceTest {
     @Test
     @DisplayName("결과가 없으면 빈 목록을 반환한다")
     void emptyRepositoryReturnsEmptyList() {
-        when(repository.findAllByApprovedTrueOrderByPubDateDescCollectedAtDesc(any(Pageable.class)))
+        when(repository.findAllByApprovedTrueAndSourceTierInOrderByPubDateDescCollectedAtDesc(
+                any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         NewsQueryService.NewsPage result = service.list(0, 20);
