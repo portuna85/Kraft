@@ -15,12 +15,19 @@ public record KraftAdminProperties(
         String adminPassword,
         List<@Valid AdminUser> users
 ) {
+    public KraftAdminProperties {
+        users = users != null ? List.copyOf(users) : null;
+    }
 
     public record AdminUser(
             @NotBlank String username,
             @NotBlank String password,
             @NotEmpty List<String> roles
-    ) {}
+    ) {
+        public AdminUser {
+            roles = roles != null ? List.copyOf(roles) : List.of();
+        }
+    }
 
     public boolean hasConfiguredUsers() {
         return users != null && !users.isEmpty();

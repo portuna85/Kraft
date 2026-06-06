@@ -42,7 +42,9 @@ class WinningNumberUpsertExecutor {
                 now, now
         );
 
-        if (before.isEmpty()) return UpsertOutcome.INSERTED;
+        if (before.isEmpty()) {
+            return UpsertOutcome.INSERTED;
+        }
 
         return isSameBusinessData(before.get(), incoming)
                 ? UpsertOutcome.UNCHANGED
@@ -50,20 +52,28 @@ class WinningNumberUpsertExecutor {
     }
 
     private boolean isSameBusinessData(WinningNumberEntity stored, WinningNumberEntity incoming) {
-        return Objects.equals(stored.getDrawDate(),         incoming.getDrawDate())
-            && Objects.equals(stored.getN1(),               incoming.getN1())
-            && Objects.equals(stored.getN2(),               incoming.getN2())
-            && Objects.equals(stored.getN3(),               incoming.getN3())
-            && Objects.equals(stored.getN4(),               incoming.getN4())
-            && Objects.equals(stored.getN5(),               incoming.getN5())
-            && Objects.equals(stored.getN6(),               incoming.getN6())
-            && Objects.equals(stored.getBonusNumber(),      incoming.getBonusNumber())
-            && Objects.equals(stored.getFirstPrize(),       incoming.getFirstPrize())
+        return isSameLotteryNumbers(stored, incoming)
+            && isSamePrizeData(stored, incoming)
+            && Objects.equals(stored.getRawJson(), incoming.getRawJson());
+    }
+
+    private boolean isSameLotteryNumbers(WinningNumberEntity stored, WinningNumberEntity incoming) {
+        return Objects.equals(stored.getDrawDate(),    incoming.getDrawDate())
+            && Objects.equals(stored.getN1(),          incoming.getN1())
+            && Objects.equals(stored.getN2(),          incoming.getN2())
+            && Objects.equals(stored.getN3(),          incoming.getN3())
+            && Objects.equals(stored.getN4(),          incoming.getN4())
+            && Objects.equals(stored.getN5(),          incoming.getN5())
+            && Objects.equals(stored.getN6(),          incoming.getN6())
+            && Objects.equals(stored.getBonusNumber(), incoming.getBonusNumber());
+    }
+
+    private boolean isSamePrizeData(WinningNumberEntity stored, WinningNumberEntity incoming) {
+        return Objects.equals(stored.getFirstPrize(),       incoming.getFirstPrize())
             && Objects.equals(stored.getFirstWinners(),     incoming.getFirstWinners())
             && Objects.equals(stored.getTotalSales(),       incoming.getTotalSales())
             && Objects.equals(stored.getFirstAccumAmount(), incoming.getFirstAccumAmount())
             && Objects.equals(stored.getSecondPrize(),      incoming.getSecondPrize())
-            && Objects.equals(stored.getSecondWinners(),    incoming.getSecondWinners())
-            && Objects.equals(stored.getRawJson(),          incoming.getRawJson());
+            && Objects.equals(stored.getSecondWinners(),    incoming.getSecondWinners());
     }
 }
