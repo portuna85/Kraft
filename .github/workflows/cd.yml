@@ -71,6 +71,8 @@ jobs:
       - name: Validate & mask production secrets
         env:
           ALL_SECRETS_JSON: ${{ toJson(secrets) }}
+          KRAFT_ADMIN_ENABLED: ${{ vars.KRAFT_ADMIN_ENABLED }}
+          KRAFT_ADMIN_PASSWORD: ${{ secrets.KRAFT_ADMIN_PASSWORD }}
         run: |
           set -euo pipefail
           ./scripts/deploy/validate-env.sh
@@ -86,6 +88,8 @@ jobs:
           ALL_SECRETS_JSON: ${{ toJson(secrets) }}
           KRAFT_DB_NAME: ${{ secrets.KRAFT_DB_NAME }}
           KRAFT_APP_IMAGE_TAG: ${{ steps.ref.outputs.value }}
+          KRAFT_ADMIN_ENABLED: ${{ vars.KRAFT_ADMIN_ENABLED }}
+          KRAFT_ADMIN_PASSWORD: ${{ secrets.KRAFT_ADMIN_PASSWORD }}
         run: ./scripts/deploy/render-env.sh
 
       - name: Render Alertmanager config

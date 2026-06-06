@@ -24,3 +24,12 @@ while IFS= read -r name; do
     exit 1
   fi
 done < .required-envs
+
+admin_enabled="${KRAFT_ADMIN_ENABLED:-false}"
+admin_enabled="${admin_enabled,,}"
+if [[ "$admin_enabled" == "true" ]]; then
+  if [[ -z "${KRAFT_ADMIN_PASSWORD:-}" ]]; then
+    echo "::error::KRAFT_ADMIN_PASSWORD GitHub Secret is required when KRAFT_ADMIN_ENABLED=true"
+    exit 1
+  fi
+fi
