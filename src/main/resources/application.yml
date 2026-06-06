@@ -132,6 +132,7 @@ kraft:
         saturday-22-30: ${KRAFT_COLLECT_AUTO_CRON_SATURDAY_22_30:0 0 22 ? * SAT}
         saturday-23-30: ${KRAFT_COLLECT_AUTO_CRON_SATURDAY_23_30:0 30 23 ? * SAT}
         sunday-07-00: ${KRAFT_COLLECT_AUTO_CRON_SUNDAY_07_00:0 0 7 ? * SUN}
+        store-sunday-09-00: ${KRAFT_COLLECT_AUTO_CRON_STORE_SUNDAY_09_00:0 0 9 ? * SUN}
     log-retention:
       enabled: ${KRAFT_COLLECT_LOG_RETENTION_ENABLED:true}
       days: ${KRAFT_COLLECT_LOG_RETENTION_DAYS:90}

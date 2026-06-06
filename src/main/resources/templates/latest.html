@@ -144,7 +144,10 @@
 
         <!-- 미수집 -->
         <div th:if="${!storesCollected}" class="small text-secondary">
-          <p class="mb-1">판매점 정보를 수집 중입니다.</p>
+          <p class="mb-1">
+            <span th:text="${#temporals.format(latest.drawDate, 'yyyy년 MM월 dd일')} + ' 추첨'">-</span>
+            판매점 정보를 수집 중입니다.
+          </p>
           <p class="mb-0" th:if="${latest.fetchedAt() != null}">
             마지막 수집 시각:
             <time th:datetime="${latest.fetchedAt()}"
@@ -155,11 +158,14 @@
         <!-- 수집됨 (부분 또는 전체) -->
         <div th:if="${storesCollected}">
 
-          <!-- 수집 시각 -->
-          <p class="text-secondary small mb-2" th:if="${storeCollectedAt != null}">
-            수집 시각:
-            <time th:datetime="${storeCollectedAt}"
-                  th:text="${#temporals.format(storeCollectedAt, 'yyyy-MM-dd HH:mm')} + ' KST'">-</time>
+          <!-- 추첨일 + 수집 시각 -->
+          <p class="text-secondary small mb-2">
+            <span th:text="${#temporals.format(latest.drawDate, 'yyyy년 MM월 dd일')} + ' 추첨'">-</span>
+            <span th:if="${storeCollectedAt != null}">
+              · 수집 시각:
+              <time th:datetime="${storeCollectedAt}"
+                    th:text="${#temporals.format(storeCollectedAt, 'yyyy-MM-dd HH:mm')} + ' KST'">-</time>
+            </span>
             <span th:if="${!store1Collected or !store2Collected}" class="ms-2 text-warning">
               (일부 미수집)
             </span>
