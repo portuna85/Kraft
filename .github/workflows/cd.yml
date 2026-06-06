@@ -108,7 +108,7 @@ jobs:
 
       # C-1: GHCR에서 CI가 빌드한 이미지를 pull한다 (prod 호스트 재빌드 없음)
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

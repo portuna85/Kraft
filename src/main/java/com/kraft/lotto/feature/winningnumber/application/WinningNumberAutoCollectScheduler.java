@@ -3,9 +3,12 @@ package com.kraft.lotto.feature.winningnumber.application;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
 import com.kraft.lotto.support.LogSanitizer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,15 @@ public class WinningNumberAutoCollectScheduler {
                                              ObjectProvider<MeterRegistry> meterRegistryProvider) {
         this.collectionService = collectionService;
         this.meterRegistry = meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new);
+    }
+
+    @PostConstruct
+    void preRegisterMetrics() {
+        List.of("sat-22-30", "sun-07-00", "mon-10-10").forEach(trigger ->
+                List.of("success", "failure").forEach(status ->
+                        Counter.builder("kraft.collect.auto.run")
+                                .tags("trigger", trigger, "status", status)
+                                .register(meterRegistry)));
     }
 
     @Scheduled(

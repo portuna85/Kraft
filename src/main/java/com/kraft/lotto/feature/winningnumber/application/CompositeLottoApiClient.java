@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -28,6 +29,7 @@ final class CompositeLottoApiClient implements LottoApiClient {
         this.fallback = fallback;
         this.fallbackName = fallbackName;
         this.meterRegistry = meterRegistry;
+        Counter.builder("kraft.api.fallback.exhausted").register(meterRegistry);
     }
 
     @Override
