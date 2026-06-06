@@ -51,7 +51,7 @@ class AdminNewsServiceTest {
     void listPendingDelegates() {
         var pageable = PageRequest.of(0, 10);
         service.listPending(pageable);
-        verify(articleRepository).findAllByApprovedFalseOrderByCollectedAtDesc(pageable);
+        verify(articleRepository).findAllByApprovedFalseAndRejectedFalseOrderByCollectedAtDesc(pageable);
     }
 
     @Test
@@ -68,7 +68,7 @@ class AdminNewsServiceTest {
     }
 
     @Test
-    @DisplayName("뉴스 거절 — 미승인 상태로 변경하고 감사 로그를 기록한다")
+    @DisplayName("뉴스 거절 — 미승인 및 거절 상태로 변경하고 감사 로그를 기록한다")
     void rejectUpdatesApprovedAndAudits() {
         NewsArticleEntity article = makeArticle(2L, "news.com");
         article.setApproved(true);
@@ -77,6 +77,7 @@ class AdminNewsServiceTest {
         service.reject(2L, "admin@example.com", "127.0.0.1", "curl/7.x");
 
         assertThat(article.isApproved()).isFalse();
+        assertThat(article.isRejected()).isTrue();
         verify(auditLogService).recordSuccess(eq("admin@example.com"), eq("NEWS_REJECT"),
                 contains("2"), any(), any());
     }

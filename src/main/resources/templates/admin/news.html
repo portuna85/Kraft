@@ -28,47 +28,133 @@
       </div>
     </div>
 
-    <h5>승인 대기 기사 (<span th:text="${pendingArticles.totalElements}">0</span>건)</h5>
-    <div class="table-responsive">
-      <table class="table table-sm">
-        <thead class="table-secondary">
-          <tr>
-            <th>제목</th>
-            <th>출처</th>
-            <th>도메인</th>
-            <th>수집일시</th>
-            <th>작업</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr th:each="article : ${pendingArticles}">
-            <td>
-              <a th:href="${article.link}" target="_blank" rel="noopener"
-                 th:text="${#strings.abbreviate(article.title, 60)}"></a>
-            </td>
-            <td th:text="${article.source}"></td>
-            <td><small th:text="${article.sourceDomain}"></small></td>
-            <td><small th:text="${#temporals.format(article.collectedAt, 'MM-dd HH:mm')}"></small></td>
-            <td>
-              <div class="btn-group btn-group-sm">
-                <form th:action="@{/admin/ops/news/{id}/approve(id=${article.id})}" method="post" class="d-inline">
-                  <button type="submit" class="btn btn-success btn-sm">승인</button>
-                </form>
-                <form th:action="@{/admin/ops/news/{id}/reject(id=${article.id})}" method="post" class="d-inline ms-1">
-                  <button type="submit" class="btn btn-secondary btn-sm">거부</button>
-                </form>
-                <form th:action="@{/admin/ops/news/{id}/block-domain(id=${article.id})}" method="post" class="d-inline ms-1">
-                  <button type="submit" class="btn btn-danger btn-sm"
-                          th:onclick="|return confirm('[[${article.sourceDomain}]] 도메인을 차단합니다.\n해당 도메인의 모든 기사가 거부됩니다. 계속하시겠습니까?')|">도메인 차단</button>
-                </form>
-              </div>
-            </td>
-          </tr>
-          <tr th:if="${pendingArticles.isEmpty()}">
-            <td colspan="5" class="text-center text-muted">승인 대기 기사가 없습니다.</td>
-          </tr>
-        </tbody>
-      </table>
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item">
+        <a class="nav-link" th:classappend="${tab == 'pending' or tab == null} ? 'active'"
+           th:href="@{/admin/ops/news(tab='pending')}">대기</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" th:classappend="${tab == 'approved'} ? 'active'"
+           th:href="@{/admin/ops/news(tab='approved')}">승인</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" th:classappend="${tab == 'rejected'} ? 'active'"
+           th:href="@{/admin/ops/news(tab='rejected')}">거부</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" th:classappend="${tab == 'blocked'} ? 'active'"
+           th:href="@{/admin/ops/news(tab='blocked')}">차단 규칙</a>
+      </li>
+    </ul>
+
+    <!-- 대기 / 승인 / 거부 탭 -->
+    <div th:if="${tab != 'blocked'}">
+      <p class="text-muted small mb-2">
+        총 <span th:text="${articles != null ? articles.totalElements : 0}">0</span>건
+      </p>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead class="table-secondary">
+            <tr>
+              <th>제목</th>
+              <th>출처</th>
+              <th>도메인</th>
+              <th>수집일시</th>
+              <th th:if="${tab == 'pending' or tab == null}">작업</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="article : ${articles}">
+              <td>
+                <a th:href="${article.link}" target="_blank" rel="noopener"
+                   th:text="${#strings.abbreviate(article.title, 60)}"></a>
+              </td>
+              <td th:text="${article.source}"></td>
+              <td><small th:text="${article.sourceDomain}"></small></td>
+              <td><small th:text="${#temporals.format(article.collectedAt, 'MM-dd HH:mm')}"></small></td>
+              <td th:if="${tab == 'pending' or tab == null}">
+                <div class="btn-group btn-group-sm">
+                  <form th:action="@{/admin/ops/news/{id}/approve(id=${article.id})}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-success btn-sm">승인</button>
+                  </form>
+                  <form th:action="@{/admin/ops/news/{id}/reject(id=${article.id})}" method="post" class="d-inline ms-1">
+                    <button type="submit" class="btn btn-secondary btn-sm">거부</button>
+                  </form>
+                  <form th:action="@{/admin/ops/news/{id}/block-domain(id=${article.id})}" method="post" class="d-inline ms-1">
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            th:onclick="|return confirm('[[${article.sourceDomain}]] 도메인을 차단합니다.\n해당 도메인의 모든 기사가 거부됩니다. 계속하시겠습니까?')|">도메인 차단</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <tr th:if="${articles == null or articles.isEmpty()}">
+              <td th:colspan="${tab == 'pending' or tab == null} ? 5 : 4"
+                  class="text-center text-muted">기사가 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 페이지네이션 -->
+      <nav th:if="${articles != null and articles.totalPages > 1}">
+        <ul class="pagination pagination-sm">
+          <li class="page-item" th:classappend="${page == 0} ? 'disabled'">
+            <a class="page-link"
+               th:href="@{/admin/ops/news(tab=${tab},page=${page - 1},pageSize=${pageSize})}">이전</a>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link"
+                  th:text="${page + 1} + ' / ' + ${articles.totalPages}"></span>
+          </li>
+          <li class="page-item" th:classappend="${page + 1 >= articles.totalPages} ? 'disabled'">
+            <a class="page-link"
+               th:href="@{/admin/ops/news(tab=${tab},page=${page + 1},pageSize=${pageSize})}">다음</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- 차단 규칙 탭 -->
+    <div th:if="${tab == 'blocked'}">
+      <h6>차단 도메인 (<span th:text="${blockedDomains != null ? blockedDomains.size() : 0}">0</span>건)</h6>
+      <div class="table-responsive mb-4">
+        <table class="table table-sm">
+          <thead class="table-secondary">
+            <tr><th>도메인</th><th>사유</th><th>등록자</th><th>등록일시</th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="d : ${blockedDomains}">
+              <td th:text="${d.domain}"></td>
+              <td><small th:text="${d.reason}"></small></td>
+              <td><small th:text="${d.createdBy}"></small></td>
+              <td><small th:text="${#temporals.format(d.createdAt, 'MM-dd HH:mm')}"></small></td>
+            </tr>
+            <tr th:if="${blockedDomains == null or blockedDomains.isEmpty()}">
+              <td colspan="4" class="text-center text-muted">차단된 도메인이 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h6>차단 키워드 (<span th:text="${blockedKeywords != null ? blockedKeywords.size() : 0}">0</span>건)</h6>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead class="table-secondary">
+            <tr><th>키워드</th><th>사유</th><th>등록자</th><th>등록일시</th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="k : ${blockedKeywords}">
+              <td th:text="${k.keyword}"></td>
+              <td><small th:text="${k.reason}"></small></td>
+              <td><small th:text="${k.createdBy}"></small></td>
+              <td><small th:text="${#temporals.format(k.createdAt, 'MM-dd HH:mm')}"></small></td>
+            </tr>
+            <tr th:if="${blockedKeywords == null or blockedKeywords.isEmpty()}">
+              <td colspan="4" class="text-center text-muted">차단된 키워드가 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="mt-3">

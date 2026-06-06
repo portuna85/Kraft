@@ -33,11 +33,21 @@ public class AdminNewsController {
     public String newsList(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(5) @Max(100) int pageSize,
+            @RequestParam(defaultValue = "pending") String tab,
             Model model) {
         var pageable = PageRequest.of(page, pageSize);
-        model.addAttribute("pendingArticles", adminNewsService.listPending(pageable));
+        model.addAttribute("tab", tab);
         model.addAttribute("page", page);
         model.addAttribute("pageSize", pageSize);
+        switch (tab) {
+            case "approved" -> model.addAttribute("articles", adminNewsService.listApproved(pageable));
+            case "rejected" -> model.addAttribute("articles", adminNewsService.listRejected(pageable));
+            case "blocked" -> {
+                model.addAttribute("blockedDomains", adminNewsService.listBlockedDomains());
+                model.addAttribute("blockedKeywords", adminNewsService.listBlockedKeywords());
+            }
+            default -> model.addAttribute("articles", adminNewsService.listPending(pageable));
+        }
         return "admin/news";
     }
 

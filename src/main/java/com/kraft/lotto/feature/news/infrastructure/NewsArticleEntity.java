@@ -50,6 +50,9 @@ public class NewsArticleEntity {
     @Column(name = "approved", nullable = false)
     private boolean approved;
 
+    @Column(name = "rejected", nullable = false)
+    private boolean rejected;
+
     protected NewsArticleEntity() {
     }
 
@@ -107,4 +110,6 @@ public class NewsArticleEntity {
     public LocalDateTime getCollectedAt() { return collectedAt; }
     public boolean isApproved() { return approved; }
     public void setApproved(boolean approved) { this.approved = approved; }
+    public boolean isRejected() { return rejected; }
+    public void setRejected(boolean rejected) { this.rejected = rejected; }
 }

@@ -8,6 +8,8 @@ public interface NewsBlockedKeywordRepository extends JpaRepository<NewsBlockedK
 
     boolean existsByKeyword(String keyword);
 
+    List<NewsBlockedKeywordEntity> findAllByOrderByCreatedAtDesc();
+
     @Query("select k.keyword from NewsBlockedKeywordEntity k")
     List<String> findAllKeywords();
 }

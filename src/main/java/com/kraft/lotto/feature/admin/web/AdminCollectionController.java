@@ -1,12 +1,15 @@
 package com.kraft.lotto.feature.admin.web;
 
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
+import com.kraft.lotto.feature.admin.application.AdminAuditLogService.AuditFilter;
 import com.kraft.lotto.feature.winningnumber.application.WinningStoreCollector;
 import com.kraft.lotto.support.ClientIpResolver;
 import com.kraft.lotto.web.OpsCollectionFacade;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +33,9 @@ public class AdminCollectionController {
     }
 
     @GetMapping
-    public String collectionPage() {
+    public String collectionPage(Model model) {
+        var filter = new AuditFilter("COLLECT", null, null, null);
+        model.addAttribute("recentHistory", auditLogService.list(filter, PageRequest.of(0, 15)));
         return "admin/collection";
     }
 

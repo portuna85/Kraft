@@ -76,6 +76,7 @@ class AdminControllerWebMvcTest {
     @WithMockUser(roles = "ADMIN_OPERATOR")
     @DisplayName("운영 도구 페이지 조회 — ADMIN_OPERATOR 역할 사용자에게 200을 반환한다")
     void collectionPageIsOk() throws Exception {
+        when(auditLogService.list(any(), any())).thenReturn(Page.empty());
         mockMvc.perform(get("/admin/ops/collection"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/collection"));
@@ -96,7 +97,7 @@ class AdminControllerWebMvcTest {
     @DisplayName("뉴스 관리 페이지 조회 — ADMIN_NEWS_MANAGER 역할 사용자에게 200을 반환한다")
     void newsPageIsOk() throws Exception {
         when(adminNewsService.listPending(any(Pageable.class))).thenReturn(Page.empty());
-        mockMvc.perform(get("/admin/ops/news"))
+        mockMvc.perform(get("/admin/ops/news").param("tab", "pending"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/news"));
     }

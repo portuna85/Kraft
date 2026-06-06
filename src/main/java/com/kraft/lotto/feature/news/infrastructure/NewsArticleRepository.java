@@ -24,12 +24,14 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticleEntity, 
             List<NewsSourceTier> tiers,
             Pageable pageable);
 
-    Page<NewsArticleEntity> findAllByApprovedFalseOrderByCollectedAtDesc(Pageable pageable);
+    Page<NewsArticleEntity> findAllByApprovedFalseAndRejectedFalseOrderByCollectedAtDesc(Pageable pageable);
+
+    Page<NewsArticleEntity> findAllByRejectedTrueOrderByCollectedAtDesc(Pageable pageable);
 
     long countByApprovedFalse();
 
     @Modifying
-    @Query("update NewsArticleEntity n set n.approved = false where n.sourceDomain = :domain")
+    @Query("update NewsArticleEntity n set n.approved = false, n.rejected = true where n.sourceDomain = :domain")
     int rejectAllBySourceDomain(@Param("domain") String domain);
 
     @Modifying

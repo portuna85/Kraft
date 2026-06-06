@@ -9,6 +9,7 @@ import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,27 @@ public class AdminNewsService {
 
     @Transactional(readOnly = true)
     public Page<NewsArticleEntity> listPending(Pageable pageable) {
-        return articleRepository.findAllByApprovedFalseOrderByCollectedAtDesc(pageable);
+        return articleRepository.findAllByApprovedFalseAndRejectedFalseOrderByCollectedAtDesc(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<NewsArticleEntity> listApproved(Pageable pageable) {
+        return articleRepository.findAllByApprovedTrueOrderByPubDateDescCollectedAtDesc(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<NewsArticleEntity> listRejected(Pageable pageable) {
+        return articleRepository.findAllByRejectedTrueOrderByCollectedAtDesc(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<NewsBlockedDomainEntity> listBlockedDomains() {
+        return blockedDomainRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<NewsBlockedKeywordEntity> listBlockedKeywords() {
+        return blockedKeywordRepository.findAllByOrderByCreatedAtDesc();
     }
 
     @Transactional
@@ -58,6 +79,7 @@ public class AdminNewsService {
         try {
             NewsArticleEntity article = findOrThrow(id);
             article.setApproved(false);
+            article.setRejected(true);
             auditLogService.recordSuccess(actor, "NEWS_REJECT", "articleId:" + id, ip, ua);
         } catch (Exception e) {
             auditLogService.recordFailure(actor, "NEWS_REJECT", "articleId:" + id, ip, ua, e.getMessage());

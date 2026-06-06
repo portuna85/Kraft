@@ -8,6 +8,8 @@ public interface NewsBlockedDomainRepository extends JpaRepository<NewsBlockedDo
 
     boolean existsByDomain(String domain);
 
+    List<NewsBlockedDomainEntity> findAllByOrderByCreatedAtDesc();
+
     @Query("select d.domain from NewsBlockedDomainEntity d")
     List<String> findAllDomains();
 }
