@@ -2,7 +2,6 @@ package com.kraft.lotto.feature.winningnumber.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -18,8 +17,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.OptimisticLockingFailureException;
 
 @DisplayName("당첨번호 저장기 테스트")
 class WinningNumberPersisterTest {
@@ -57,41 +54,6 @@ class WinningNumberPersisterTest {
         UpsertOutcome outcome = persister.upsert(sample(1201));
 
         assertThat(outcome).isEqualTo(UpsertOutcome.INSERTED);
-    }
-
-    @Test
-    @DisplayName("upsert는 신규 저장 충돌 시 UNCHANGED를 반환한다")
-    void upsertReturnsUnchangedOnInsertConflict() {
-        doThrow(new DataIntegrityViolationException("dup")).when(executor).upsertOnce(any());
-
-        UpsertOutcome outcome = persister.upsert(sample(1202));
-
-        assertThat(outcome).isEqualTo(UpsertOutcome.UNCHANGED);
-    }
-
-    @Test
-    @DisplayName("upsert는 낙관적 락 충돌 시 재시도 후 성공하면 UPDATED를 반환한다")
-    void upsertRetriesOnOptimisticLockAndSucceeds() {
-        when(executor.upsertOnce(any()))
-                .thenThrow(new OptimisticLockingFailureException("conflict"))
-                .thenReturn(UpsertOutcome.UPDATED);
-
-        UpsertOutcome outcome = persister.upsert(changedSample(1200));
-
-        assertThat(outcome).isEqualTo(UpsertOutcome.UPDATED);
-    }
-
-    @Test
-    @DisplayName("upsert는 낙관적 락 충돌이 재시도 한도를 넘으면 FAILED를 반환한다")
-    void upsertReturnsFailedWhenOptimisticLockRetriesExhausted() {
-        when(executor.upsertOnce(any()))
-                .thenThrow(new OptimisticLockingFailureException("conflict-1"))
-                .thenThrow(new OptimisticLockingFailureException("conflict-2"));
-
-        UpsertOutcome outcome = persister.upsert(sample(1200));
-
-        assertThat(outcome).isEqualTo(UpsertOutcome.FAILED);
-        assertThat(meterRegistry.get("kraft.winningnumber.optimistic_lock.failure").counter().count()).isEqualTo(1.0);
     }
 
     private WinningNumber sample(int round) {

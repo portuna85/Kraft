@@ -1,12 +1,14 @@
 package com.kraft.lotto.feature.winningnumber.infrastructure;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,6 +23,94 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
     Set<Integer> findRoundsBetween(int from, int to);
 
     boolean existsByRound(int round);
+
+    /**
+     * 회차를 원자적으로 upsert한다. 동일 회차 동시 INSERT 경쟁 조건을 DB 레벨에서 제거.
+     *
+     * <p>MariaDB ROW_COUNT 반환값: 1=INSERT, 2=UPDATE(값 변경), 0=UNCHANGED(값 동일)</p>
+     *
+     * <p>데이터 필드(n1~n6, bonus_number 등) 비교 기준으로 version/updated_at 변경 여부를 결정한다.
+     * created_at은 UPDATE 시 갱신하지 않는다.</p>
+     */
+    @Modifying
+    @Query(nativeQuery = true, value = """
+            INSERT INTO winning_numbers
+                (round, draw_date, n1, n2, n3, n4, n5, n6, bonus_number,
+                 first_prize, first_winners, total_sales, first_accum_amount,
+                 second_prize, second_winners, raw_json, fetched_at, created_at, updated_at, version)
+            VALUES
+                (:round, :drawDate, :n1, :n2, :n3, :n4, :n5, :n6, :bonusNumber,
+                 :firstPrize, :firstWinners, :totalSales, :firstAccumAmount,
+                 :secondPrize, :secondWinners, :rawJson, :fetchedAt, :createdAt, :updatedAt, 0)
+            ON DUPLICATE KEY UPDATE
+                draw_date          = VALUES(draw_date),
+                n1                 = VALUES(n1),
+                n2                 = VALUES(n2),
+                n3                 = VALUES(n3),
+                n4                 = VALUES(n4),
+                n5                 = VALUES(n5),
+                n6                 = VALUES(n6),
+                bonus_number       = VALUES(bonus_number),
+                first_prize        = VALUES(first_prize),
+                first_winners      = VALUES(first_winners),
+                total_sales        = VALUES(total_sales),
+                first_accum_amount = VALUES(first_accum_amount),
+                second_prize       = VALUES(second_prize),
+                second_winners     = VALUES(second_winners),
+                raw_json           = VALUES(raw_json),
+                fetched_at         = VALUES(fetched_at),
+                updated_at         = IF(
+                    draw_date = VALUES(draw_date)
+                    AND n1 = VALUES(n1) AND n2 = VALUES(n2) AND n3 = VALUES(n3)
+                    AND n4 = VALUES(n4) AND n5 = VALUES(n5) AND n6 = VALUES(n6)
+                    AND bonus_number = VALUES(bonus_number)
+                    AND first_prize = VALUES(first_prize)
+                    AND first_winners = VALUES(first_winners)
+                    AND total_sales = VALUES(total_sales)
+                    AND first_accum_amount = VALUES(first_accum_amount)
+                    AND second_prize = VALUES(second_prize)
+                    AND second_winners = VALUES(second_winners)
+                    AND (raw_json <=> VALUES(raw_json)),
+                    updated_at,
+                    VALUES(updated_at)
+                ),
+                version            = IF(
+                    draw_date = VALUES(draw_date)
+                    AND n1 = VALUES(n1) AND n2 = VALUES(n2) AND n3 = VALUES(n3)
+                    AND n4 = VALUES(n4) AND n5 = VALUES(n5) AND n6 = VALUES(n6)
+                    AND bonus_number = VALUES(bonus_number)
+                    AND first_prize = VALUES(first_prize)
+                    AND first_winners = VALUES(first_winners)
+                    AND total_sales = VALUES(total_sales)
+                    AND first_accum_amount = VALUES(first_accum_amount)
+                    AND second_prize = VALUES(second_prize)
+                    AND second_winners = VALUES(second_winners)
+                    AND (raw_json <=> VALUES(raw_json)),
+                    version,
+                    version + 1
+                )
+            """)
+    int nativeUpsert(
+            @Param("round") Integer round,
+            @Param("drawDate") java.time.LocalDate drawDate,
+            @Param("n1") Integer n1,
+            @Param("n2") Integer n2,
+            @Param("n3") Integer n3,
+            @Param("n4") Integer n4,
+            @Param("n5") Integer n5,
+            @Param("n6") Integer n6,
+            @Param("bonusNumber") Integer bonusNumber,
+            @Param("firstPrize") Long firstPrize,
+            @Param("firstWinners") Integer firstWinners,
+            @Param("totalSales") Long totalSales,
+            @Param("firstAccumAmount") Long firstAccumAmount,
+            @Param("secondPrize") Long secondPrize,
+            @Param("secondWinners") Integer secondWinners,
+            @Param("rawJson") String rawJson,
+            @Param("fetchedAt") LocalDateTime fetchedAt,
+            @Param("createdAt") LocalDateTime createdAt,
+            @Param("updatedAt") LocalDateTime updatedAt
+    );
 
     Page<WinningNumberEntity> findAllByOrderByRoundDesc(Pageable pageable);
 
