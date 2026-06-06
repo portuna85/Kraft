@@ -40,7 +40,7 @@ public class WinningNumberAutoCollectScheduler {
 
     @PostConstruct
     void preRegisterMetrics() {
-        List.of("sat-22-30", "sun-07-00", "mon-10-10").forEach(trigger ->
+        List.of("sat-22-30", "sat-23-30", "sun-07-00", "mon-10-10").forEach(trigger ->
                 List.of("success", "failure").forEach(status ->
                         Counter.builder("kraft.collect.auto.run")
                                 .tags("trigger", trigger, "status", status)
@@ -54,6 +54,15 @@ public class WinningNumberAutoCollectScheduler {
     @SchedulerLock(name = COLLECT_ALL_LOCK_NAME, lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
     public void collectSaturday2230() {
         runCollectAll("sat-22-30");
+    }
+
+    @Scheduled(
+            cron = "${kraft.collect.auto.cron.saturday-23-30:0 30 23 ? * SAT}",
+            zone = "${kraft.collect.auto.zone:Asia/Seoul}"
+    )
+    @SchedulerLock(name = COLLECT_ALL_LOCK_NAME, lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
+    public void collectSaturday2330() {
+        runCollectAll("sat-23-30");
     }
 
     @Scheduled(
