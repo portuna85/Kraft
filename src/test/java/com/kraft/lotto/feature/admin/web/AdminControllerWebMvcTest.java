@@ -28,12 +28,12 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest({AdminLoginController.class, AdminCollectionController.class,
              AdminAuditController.class, AdminNewsController.class})
@@ -49,12 +49,20 @@ class AdminControllerWebMvcTest {
         }
     }
 
-    @Autowired MockMvc mockMvc;
+    @Autowired
+    MockMvc mockMvc;
 
-    @MockitoBean OpsCollectionFacade opsCollectionFacade;
-    @MockitoBean WinningStoreCollector winningStoreCollector;
-    @MockitoBean AdminAuditLogService auditLogService;
-    @MockitoBean AdminNewsService adminNewsService;
+    @MockitoBean
+    OpsCollectionFacade opsCollectionFacade;
+
+    @MockitoBean
+    WinningStoreCollector winningStoreCollector;
+
+    @MockitoBean
+    AdminAuditLogService auditLogService;
+
+    @MockitoBean
+    AdminNewsService adminNewsService;
 
     @Test
     @DisplayName("GET /admin/login — 인증 없이 200을 반환한다")
@@ -166,7 +174,7 @@ class AdminControllerWebMvcTest {
         mockMvc.perform(post("/admin/ops/news/block-keyword")
                         .with(csrf())
                         .with(user("admin").roles("ADMIN"))
-                        .param("keyword", "아파트 로또"))
+                        .param("keyword", "파워볼 로또"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/ops/news"));
     }

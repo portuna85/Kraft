@@ -1,40 +1,40 @@
 <div xmlns:th="http://www.thymeleaf.org" class="card" th:fragment="failure-logs">
   <div class="card-body">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="h5 mb-0">Recent Failure Logs</h2>
-      <small class="text-body-secondary" th:text="'Generated at: ' + ${#temporals.format(overview.generatedAt, 'yyyy-MM-dd HH:mm:ss')}">Generated at</small>
+      <h2 class="h5 mb-0">최근 실패 로그</h2>
+      <small class="text-body-secondary" th:text="'생성 시각: ' + ${#temporals.format(overview.generatedAt, 'yyyy-MM-dd HH:mm:ss')}">생성 시각</small>
     </div>
-    <div th:if="${#lists.isEmpty(pagedFailures)}" class="kraft-state kraft-state-empty">No failure logs found.</div>
-    <div th:unless="${#lists.isEmpty(pagedFailures)}" class="ops-mobile-list d-md-none" aria-label="Failure logs mobile list">
+    <div th:if="${#lists.isEmpty(pagedFailures)}" class="kraft-state kraft-state-empty">실패 로그가 없습니다.</div>
+    <div th:unless="${#lists.isEmpty(pagedFailures)}" class="ops-mobile-list d-md-none" aria-label="실패 로그 모바일 목록">
       <article class="ops-mobile-card" th:each="row : ${pagedFailures}">
         <div class="ops-mobile-row"><span class="ops-mobile-key">ID</span><span class="ops-mobile-value" th:text="${row.id}">1</span></div>
-        <div class="ops-mobile-row"><span class="ops-mobile-key">Round</span><span class="ops-mobile-value" th:text="${row.drwNo}">1000</span></div>
-        <div class="ops-mobile-row"><span class="ops-mobile-key">Reason</span><span class="ops-mobile-value"><code th:text="${row.reason}">reason</code></span></div>
-        <div class="ops-mobile-row"><span class="ops-mobile-key">Code</span><span class="ops-mobile-value" th:text="${row.responseCode}">500</span></div>
+        <div class="ops-mobile-row"><span class="ops-mobile-key">회차</span><span class="ops-mobile-value" th:text="${row.drwNo}">1000</span></div>
+        <div class="ops-mobile-row"><span class="ops-mobile-key">사유</span><span class="ops-mobile-value"><code th:text="${row.reason}">reason</code></span></div>
+        <div class="ops-mobile-row"><span class="ops-mobile-key">응답 코드</span><span class="ops-mobile-value" th:text="${row.responseCode}">500</span></div>
         <div class="ops-mobile-row">
-          <span class="ops-mobile-key">Message</span>
+          <span class="ops-mobile-key">메시지</span>
           <span class="ops-mobile-value text-break">
             <span class="ops-msg-short" th:text="${#strings.abbreviate(row.message, 120)}">message</span>
             <span class="ops-msg-full d-none" th:id="${'ops-mobile-msg-' + row.id}" th:text="${row.message}">message</span>
             <button type="button" class="btn btn-sm btn-link p-0 ms-1 ops-msg-toggle"
                     th:if="${row.message != null and #strings.length(row.message) > 120}"
-                    th:attr="aria-controls=${'ops-mobile-msg-' + row.id},aria-expanded='false'">Show</button>
+                    th:attr="aria-controls=${'ops-mobile-msg-' + row.id},aria-expanded='false'">보기</button>
           </span>
         </div>
-        <div class="ops-mobile-row"><span class="ops-mobile-key">Fetched</span><span class="ops-mobile-value" th:text="${#temporals.format(row.fetchedAt, 'yyyy-MM-dd HH:mm:ss')}">time</span></div>
+        <div class="ops-mobile-row"><span class="ops-mobile-key">수집 시각</span><span class="ops-mobile-value" th:text="${#temporals.format(row.fetchedAt, 'yyyy-MM-dd HH:mm:ss')}">time</span></div>
       </article>
     </div>
     <div th:unless="${#lists.isEmpty(pagedFailures)}" class="table-responsive">
-      <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="Failure logs table">
-        <caption class="visually-hidden">정렬은 현재 페이지에 보이는 행에만 적용됩니다.</caption>
+      <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="실패 로그 테이블">
+        <caption class="visually-hidden">정렬은 현재 페이지에 보이는 항목에만 적용됩니다.</caption>
         <thead>
         <tr>
           <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">ID</button></th>
-          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Round</button></th>
-          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Reason</button></th>
-          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Code</button></th>
-          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Message</button></th>
-          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Fetched At</button></th>
+          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">회차</button></th>
+          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">사유</button></th>
+          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">응답 코드</button></th>
+          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">메시지</button></th>
+          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">수집 시각</button></th>
         </tr>
         </thead>
         <tbody>
@@ -48,7 +48,7 @@
             <span class="ops-msg-full d-none" th:id="${'ops-msg-' + row.id}" th:text="${row.message}">message</span>
             <button type="button" class="btn btn-sm btn-link p-0 ms-1 ops-msg-toggle"
                     th:if="${row.message != null and #strings.length(row.message) > 120}"
-                    th:attr="aria-controls=${'ops-msg-' + row.id},aria-expanded='false'">Show</button>
+                    th:attr="aria-controls=${'ops-msg-' + row.id},aria-expanded='false'">보기</button>
           </td>
           <td th:text="${#temporals.format(row.fetchedAt, 'yyyy-MM-dd HH:mm:ss')}">time</td>
         </tr>

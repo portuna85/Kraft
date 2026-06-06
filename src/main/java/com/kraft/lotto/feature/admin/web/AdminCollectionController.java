@@ -5,8 +5,7 @@ import com.kraft.lotto.feature.winningnumber.application.WinningStoreCollector;
 import com.kraft.lotto.support.ClientIpResolver;
 import com.kraft.lotto.web.OpsCollectionFacade;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import java.security.Principal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,10 +35,10 @@ public class AdminCollectionController {
     }
 
     @PostMapping("/latest")
-    public String collectLatest(@AuthenticationPrincipal OAuth2User user,
+    public String collectLatest(Principal principal,
                                 HttpServletRequest request,
                                 RedirectAttributes redirectAttributes) {
-        String actor = extractEmail(user);
+        String actor = extractActor(principal);
         String ip = ClientIpResolver.resolve(request, java.util.List.of());
         var result = opsCollectionFacade.collectLatest(null, ip);
         auditLogService.recordSuccess(actor, "COLLECT_LATEST",
@@ -51,10 +50,10 @@ public class AdminCollectionController {
 
     @PostMapping("/stores")
     public String collectStores(@RequestParam int round,
-                                @AuthenticationPrincipal OAuth2User user,
+                                Principal principal,
                                 HttpServletRequest request,
                                 RedirectAttributes redirectAttributes) {
-        String actor = extractEmail(user);
+        String actor = extractActor(principal);
         String ip = ClientIpResolver.resolve(request, java.util.List.of());
         boolean saved = winningStoreCollector.collectStores(round);
         auditLogService.recordSuccess(actor, "COLLECT_STORES",
@@ -64,11 +63,7 @@ public class AdminCollectionController {
         return "redirect:/admin/ops/collection";
     }
 
-    private static String extractEmail(OAuth2User user) {
-        if (user == null) {
-            return "unknown";
-        }
-        Object email = user.getAttributes().get("email");
-        return email != null ? email.toString() : "unknown";
+    private static String extractActor(Principal principal) {
+        return principal != null ? principal.getName() : "unknown";
     }
 }

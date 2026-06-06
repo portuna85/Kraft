@@ -1,30 +1,30 @@
 <div xmlns:th="http://www.thymeleaf.org" class="card mb-4" th:fragment="failure-reasons">
   <div class="card-body">
-    <h2 class="h5 mb-3">Failure Reasons</h2>
+    <h2 class="h5 mb-3">실패 사유 집계</h2>
     <div th:if="${#lists.isEmpty(overview.reasons)}" class="kraft-state kraft-state-empty">
-      No failure reasons found.
+      실패 사유가 없습니다.
     </div>
-    <div th:unless="${#lists.isEmpty(overview.reasons)}" class="ops-mobile-list d-md-none" aria-label="Failure reasons mobile list">
+    <div th:unless="${#lists.isEmpty(overview.reasons)}" class="ops-mobile-list d-md-none" aria-label="실패 사유 모바일 목록">
       <article class="ops-mobile-card" th:each="row : ${overview.reasons}">
         <div class="ops-mobile-row">
-          <span class="ops-mobile-key">Reason</span>
+          <span class="ops-mobile-key">사유</span>
           <a class="ops-mobile-value" th:href="@{/admin/ops(reason=${row.reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit},pageSize=${pageSize})}">
             <code th:text="${row.reason}">reason</code>
           </a>
         </div>
         <div class="ops-mobile-row">
-          <span class="ops-mobile-key">Count</span>
+          <span class="ops-mobile-key">건수</span>
           <span class="ops-mobile-value fw-semibold" th:text="${row.count}">0</span>
         </div>
       </article>
     </div>
     <div th:unless="${#lists.isEmpty(overview.reasons)}" class="table-responsive">
-      <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="Failure reasons table">
-        <caption class="visually-hidden">정렬은 현재 페이지에 보이는 행에만 적용됩니다.</caption>
+      <table class="table table-sm align-middle mb-0 ops-sortable-table" aria-label="실패 사유 테이블">
+        <caption class="visually-hidden">정렬은 현재 페이지에 보이는 항목에만 적용됩니다.</caption>
         <thead>
         <tr>
-          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Reason</button></th>
-          <th scope="col" class="text-end" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">Count</button></th>
+          <th scope="col" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">사유</button></th>
+          <th scope="col" class="text-end" aria-sort="none"><button type="button" class="btn btn-link p-0 text-decoration-none ops-sort-btn">건수</button></th>
         </tr>
         </thead>
         <tbody>

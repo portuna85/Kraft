@@ -15,8 +15,8 @@
     <div th:if="${param.error}" class="alert alert-danger" role="alert">
       비밀번호가 올바르지 않습니다.
     </div>
-    <div th:if="${param.logout}" class="alert alert-success" role="alert">
-      로그아웃 되었습니다.
+    <div th:if="${logoutMessage}" class="alert alert-success" role="alert" th:text="${logoutMessage}">
+      로그아웃되었습니다.
     </div>
 
     <form th:action="@{/admin/login}" method="post">

@@ -171,7 +171,8 @@ test.describe('responsive smoke', () => {
   test('admin login page renders on mobile', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.includes('mobile'));
     await page.goto('/admin/login');
-    await expect(page.getByRole('link', { name: /Google/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: '로그인' })).toBeVisible();
+    await expect(page.locator('input[name="username"]')).toHaveValue('admin');
   });
 });
 
@@ -207,7 +208,7 @@ test.describe('accessibility smoke', () => {
   test('admin login page has no critical accessibility violations on mobile', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.includes('mobile'));
     await page.goto('/admin/login');
-    await expect(page.getByRole('link', { name: /Google/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: '로그인' })).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
       .analyze();

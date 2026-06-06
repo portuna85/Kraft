@@ -1,142 +1,293 @@
-# KRAFT Lotto — 로또 번호 조합 분석 도구
+# KRAFT Lotto
 
-로또 6/45 과거 당첨 데이터 기반 편향 회피 번호 조합 도구입니다.  
-당첨 확률을 예측하거나 높인다고 주장하지 않습니다.  
-모든 6개 번호 조합의 1등 당첨 확률은 동일합니다.
+KRAFT Lotto는 로또 6/45 데이터를 수집하고, 회차 이력 조회, 통계 분석, 번호 추천, 뉴스 검수 기능을 제공하는 Spring Boot 기반 웹 애플리케이션이다.
 
-> 서비스 주소: [www.kraft.io.kr](https://www.kraft.io.kr)
+이 프로젝트는 당첨 보장을 주장하지 않는다. 과거 데이터와 명시적인 제외 규칙을 바탕으로 탐색형 도구를 제공한다.
 
----
+## 개요
+
+- 공개 웹 기능
+  - 최신 회차 조회
+  - 전체 회차 조회
+  - 번호 빈도 통계
+  - 번호 조합 분석
+  - 동반 출현 분석
+  - 추천 번호 생성
+  - 뉴스 목록
+  - 방법론, 데이터 출처, FAQ, 책임 있는 이용 안내
+- 운영 기능
+  - `/ops/**` 운영 API
+  - `/admin/login`, `/admin/ops/**` 관리자 화면
+  - 수집 실패 로그 조회
+  - 뉴스 승인, 거부, 차단
+  - 최신 회차 및 판매점 수집 실행
+- 운영 보조 기능
+  - Flyway 마이그레이션
+  - Prometheus, Grafana, Alertmanager
+  - Caddy 리버스 프록시
+  - Playwright E2E
 
 ## 기술 스택
 
-| 영역 | 기술 |
-|------|------|
-| 언어 / 런타임 | Java 25 |
-| 프레임워크 | Spring Boot 4, Spring MVC, Spring Data JPA |
-| 템플릿 | Thymeleaf 3, HTMX |
-| 프론트엔드 | Bootstrap, 정적 CSS/JS |
-| DB (운영) | MariaDB 11.7 |
-| DB (테스트) | H2, Testcontainers |
+| 영역 | 사용 기술 |
+| --- | --- |
+| 언어 | Java 25 |
+| 프레임워크 | Spring Boot 4.0.6 |
+| 웹 | Spring MVC, Thymeleaf, HTMX |
+| 보안 | Spring Security |
+| 데이터 | Spring Data JPA, Flyway, MariaDB |
 | 캐시 | Caffeine |
-| 스케줄링 | ShedLock (JDBC) |
-| 빌드 | Gradle (Kotlin DSL) |
-| 테스트 | JUnit 5, Playwright E2E, JaCoCo, Checkstyle, SpotBugs |
-| 모니터링 | Micrometer, Prometheus |
+| 스케줄/락 | ShedLock |
+| 관측성 | Micrometer, Prometheus, OpenTelemetry |
+| 테스트 | JUnit 5, Spring Test, Testcontainers, Playwright |
+| 빌드 | Gradle Kotlin DSL |
+| 프런트 자산 | Bootstrap, 정적 CSS/JS, PostCSS |
 
----
+## 주요 경로
 
-## 주요 기능
+### 공개 페이지
 
-| 페이지 | 설명 |
-|--------|------|
-| `/` | 편향 회피 번호 추천 (홀짝·합산 필터, 규칙 on/off) |
-| `/latest` | 최신 회차 당첨번호, 세후 수령액 계산 |
-| `/rounds` | 전체 회차 조회·검색 |
-| `/frequency` | 번호별 과거 출현 빈도 (기간 필터) |
-| `/stats` | 홀짝·합산 패턴 통계 + 이론적 조합 비율 비교 |
-| `/analysis` | 직접 입력한 조합의 과거 당첨 이력·빈도 분석 |
-| `/companion` | 동반 출현 기록 조회 |
-| `/news` | 로또 관련 뉴스 (비복권 은유 표현 자동 필터) |
-| `/methodology` | 추천 알고리즘 공개 |
-| `/data-source` | 데이터 출처 및 수집 방식 안내 |
-| `/faq` | 자주 묻는 질문 |
-| `/responsible-play` | 책임 있는 복권 이용 안내 |
+| 경로 | 설명 |
+| --- | --- |
+| `/` | 홈, 추천 카드 포함 |
+| `/latest` | 최신 회차 정보 |
+| `/rounds` | 회차 목록과 회차별 조회 |
+| `/frequency` | 번호 빈도 통계 |
+| `/stats` | 통계 요약 |
+| `/analysis` | 번호 조합 분석 |
+| `/companion` | 동반 출현 분석 |
+| `/news` | 로또 관련 뉴스 |
+| `/methodology` | 추천 규칙 설명 |
+| `/data-source` | 데이터 수집 현황과 출처 |
+| `/faq` | FAQ |
+| `/responsible-play` | 책임 있는 이용 안내 |
+| `/privacy` | 개인정보 처리방침 |
+| `/terms` | 이용약관 |
+| `/contact` | 문의 |
 
----
+### 관리자 및 운영 경로
 
-## 편향 회피 규칙
+| 경로 | 설명 |
+| --- | --- |
+| `/admin/login` | 관리자 로그인 페이지 |
+| `/admin/ops` | 수집 실패 대시보드 |
+| `/admin/ops/collection` | 회차/판매점 수집 실행 |
+| `/admin/ops/news` | 뉴스 승인/거부/차단 |
+| `/admin/ops/audit` | 관리자 감사 로그 |
+| `/ops/collect/**` | 운영 수집 API |
+| `/ops/fetch-logs/**` | 수집 실패 로그 API |
+| `/ops/data-freshness` | 최신 데이터 신선도 API |
+| `/ops/circuit-breakers` | 외부 API 상태 API |
+| `/ops/recommend/stats` | 추천 통계 API |
+| `/ops/news/collect` | 뉴스 수집 트리거 API |
 
-번호 생성 시 아래 규칙에 해당하는 조합을 제외합니다. 각 규칙은 고급 설정에서 개별로 on/off 할 수 있습니다.
+## 번호 추천 규칙
 
-| 규칙 | 제외 기준 |
-|------|-----------|
-| BirthdayBiasRule | 6개 번호 전부 31 이하 (생일 편향) |
-| LongRunRule | 5개 이상 연속 번호 포함 |
-| ArithmeticSequenceRule | 완전 등차수열 (예: 1,8,15,22,29,36) |
-| SingleDecadeRule | 동일 십의 자리에 5개 이상 집중 |
-| PastWinningRule | 과거 1등 당첨 조합과 완전 일치 |
+추천 엔진은 조합을 생성한 뒤 아래 규칙을 바탕으로 제외 필터를 적용한다.
 
----
+- `BirthdayBiasRule`
+  - 모든 숫자가 31 이하인 조합 제외
+- `LongRunRule`
+  - 5개 이상 연속 숫자가 포함된 조합 제외
+- `ArithmeticSequenceRule`
+  - 등차수열 패턴 조합 제외
+- `SingleDecadeRule`
+  - 같은 십의 자리 숫자가 과도하게 몰린 조합 제외
+- `PastWinningRule`
+  - 과거 당첨 번호와 완전히 같은 조합 제외
 
-## 로컬 실행
+규칙은 코드와 설정을 통해 조정되며, 예측 정확도를 보장하는 기능이 아니다.
 
-### 사전 준비
+## 저장소 구조
+
+```text
+src/main/java/com/kraft/lotto
+  feature/
+    admin/          관리자 뉴스/감사 기능
+    news/           뉴스 수집, 분류, 조회
+    recommend/      추천 엔진과 규칙
+    statistics/     통계 집계 및 캐시
+    winningnumber/  당첨번호/판매점 수집과 조회
+  infra/config/     설정 바인딩, 검증, 시큐리티 구성
+  support/          공통 필터, 예외 처리, IP/토큰 보안
+  web/              공개 컨트롤러와 운영 API
+
+src/main/resources
+  templates/        Thymeleaf 템플릿
+  static/           CSS, JS, 이미지, vendor 자산
+  db/migration/     Flyway SQL
+
+src/test
+  java/             단위/통합 테스트
+  resources/        테스트 설정
+
+tests/e2e
+  Playwright E2E
+```
+
+## 실행 환경
+
+기본 프로필은 `local`이다.
+
+주요 파일:
+
+- `.env.local.example`
+- `.env.prod.example`
+- `docker-compose.local.yml`
+- `docker-compose.yml`
+- `src/main/resources/application.yml`
+- `src/main/resources/application-local.yml`
+- `src/main/resources/application-prod.yml`
+
+### 필수 준비물
 
 - Java 25
 - Docker, Docker Compose
+- Node.js 20 이상 권장
 
-### 환경 파일 생성
+## 로컬 실행
+
+### 1. 환경 파일 준비
+
+PowerShell:
+
+```powershell
+Copy-Item .env.local.example .env
+```
+
+Bash:
 
 ```bash
 cp .env.local.example .env
 ```
 
-`.env`의 DB 접속 정보를 수정한 뒤 MariaDB 컨테이너를 실행합니다.
+`.env`에서 최소한 아래 값을 채운다.
+
+- `KRAFT_DB_USER`
+- `KRAFT_DB_PASSWORD`
+- `KRAFT_DB_ROOT_PASSWORD`
+
+기본 로컬 예시는 외부 API 없이 개발할 수 있도록 `KRAFT_API_CLIENT=mock`를 사용한다.
+
+### 2. 로컬 MariaDB 실행
+
+PowerShell:
+
+```powershell
+docker compose -f docker-compose.local.yml up -d
+```
+
+Bash:
 
 ```bash
 docker compose -f docker-compose.local.yml up -d
 ```
 
-### 애플리케이션 실행
+### 3. 애플리케이션 실행
+
+PowerShell:
+
+```powershell
+.\gradlew.bat bootRun
+```
+
+Bash:
 
 ```bash
 ./gradlew bootRun
 ```
 
-| 주소 | 설명 |
-|------|------|
-| `http://localhost:8080` | 공개 화면 |
-| `http://localhost:8080/actuator/health` | 헬스 체크 |
-| `http://localhost:8080/swagger-ui/index.html` | Swagger UI (local 프로파일) |
+### 4. 접속 확인
 
-> 로컬에서는 `KRAFT_API_CLIENT=mock`으로 설정하면 외부 API 호출 없이 개발할 수 있습니다.
+- 앱: `http://localhost:8080`
+- 헬스체크: `http://localhost:8080/actuator/health`
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 
----
+Swagger는 `local` 프로필에서만 활성화된다.
 
 ## 테스트
 
-```bash
-# 전체 테스트
-./gradlew test
+### 백엔드 테스트
 
-# 정적 분석 포함
-./gradlew check
+PowerShell:
 
-# 엄격 모드 (커버리지 + 정적 분석 임계값 적용)
-./gradlew check -PstrictStatic=true -PstrictCoverage=true
-
-# E2E (Playwright)
-npm ci && npx playwright install chromium && npm run test:e2e
+```powershell
+.\gradlew.bat test
 ```
 
----
+정적 분석 포함:
 
-## 프로젝트 구조
-
-```
-src/main/java/com/kraft/lotto
-├── feature/
-│   ├── recommend/      # 편향 회피 번호 추천
-│   ├── statistics/     # 빈도·패턴·이론 분포 통계
-│   ├── winningnumber/  # 당첨번호 수집·조회
-│   └── news/           # 뉴스 수집·필터링
-├── infra/              # 보안·캐시·DB·스케줄 설정
-├── support/            # 공통 필터·예외·IP 제한
-└── web/                # 공개 컨트롤러, 운영 API
+```powershell
+.\gradlew.bat check
 ```
 
----
+엄격 모드:
 
-## 주요 환경 변수
+```powershell
+.\gradlew.bat check -PstrictStatic=true -PstrictCoverage=true
+```
 
-| 변수 | 설명 |
-|------|------|
-| `SPRING_PROFILES_ACTIVE` | `local` / `prod` |
-| `KRAFT_DB_HOST` | DB 호스트 |
-| `KRAFT_DB_USER` | DB 사용자 |
-| `KRAFT_DB_PASSWORD` | DB 비밀번호 |
-| `KRAFT_API_CLIENT` | `mock` / `smok` / `real` |
-| `KRAFT_COLLECT_AUTO_ENABLED` | 자동 수집 on/off |
-| `KRAFT_SECURITY_OPS_REQUIRED_TOKEN` | 운영 API 토큰 |
-| `KRAFT_NEWS_EXCLUDE_KEYWORDS` | 뉴스 제외 키워드 목록 |
+성능 스모크 테스트:
+
+```powershell
+.\gradlew.bat performanceSmokeTest
+```
+
+### 프런트 자산 및 E2E
+
+```powershell
+npm ci
+npm run check:js
+npm run test:e2e
+```
+
+Playwright는 기본적으로 로컬 서버를 `18080` 포트에서 띄워 H2 메모리 DB로 테스트한다.
+
+## 관리자 페이지 접속
+
+현재 구현 기준 관리자 페이지는 폼 로그인 방식이다.
+
+- 로그인 URL: `/admin/login`
+- 보호 경로: `/admin/ops`, `/admin/ops/**`
+- 계정 ID: `admin`
+- 비밀번호: `KRAFT_ADMIN_PASSWORD`
+- 활성화 조건: `KRAFT_ADMIN_ENABLED=true`
+
+운영 환경에서는 공개 도메인에서 관리자 경로를 직접 열지 않고, 관리자 도메인 또는 SSH 터널을 통해 접근한다.
+
+상세 절차는 [docs/admin-access.md](docs/admin-access.md)를 참고한다.
+
+## 운영 배포 개요
+
+`docker-compose.yml`은 아래 서비스를 포함한다.
+
+- `app`
+- `mariadb`
+- `caddy`
+- `prometheus`
+- `alertmanager`
+- `grafana`
+- `node-exporter`
+
+특징:
+
+- `app`, `mariadb`는 localhost 바인딩으로 직접 노출을 줄인다.
+- 공개 도메인에서는 `/actuator*`, `/ops*`, `/admin*`를 Caddy가 차단한다.
+- 관리자 도메인에서는 `/admin*`와 정적 자산만 허용한다.
+- 프로덕션 프로필에서는 Swagger가 비활성화된다.
+
+## 보안 메모
+
+- 운영 API `/ops/**`는 IP allowlist와 토큰 검증을 사용한다.
+- 관리자 화면 `/admin/ops/**`는 Spring Security 인증을 사용한다.
+- `robots.txt`는 `/admin`을 차단한다.
+- 관리자 로그인 페이지는 `noindex, nofollow, noarchive` 메타를 포함한다.
+
+자세한 내용은 [SECURITY.md](SECURITY.md)를 참고한다.
+
+## 문서
+
+- [SECURITY.md](SECURITY.md)
+- [docs/admin-access.md](docs/admin-access.md)
+- [docs/improvement.md](docs/improvement.md)
+- [CLAUDE.md](CLAUDE.md)

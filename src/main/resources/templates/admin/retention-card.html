@@ -1,19 +1,19 @@
 <div xmlns:th="http://www.thymeleaf.org" class="card mb-4" th:fragment="retention-card" th:if="${retentionStatus != null}">
   <div class="card-body">
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <h2 class="h5 mb-0">Log Retention</h2>
-      <span class="badge text-bg-secondary" th:text="${retentionStatus.enabled} ? 'Enabled' : 'Disabled'">Enabled</span>
+      <h2 class="h5 mb-0">로그 보관 정책</h2>
+      <span class="badge text-bg-secondary" th:text="${retentionStatus.enabled} ? '활성' : '비활성'">활성</span>
     </div>
     <div class="small text-body-secondary mb-2">
-      <span th:text="'Days: ' + ${retentionStatus.retentionDays}">Days</span>
+      <span th:text="'보관 일수: ' + ${retentionStatus.retentionDays}">보관 일수</span>
       <span class="mx-2">|</span>
-      <span th:text="'Batch: ' + ${retentionStatus.deleteBatchSize}">Batch</span>
+      <span th:text="'삭제 배치: ' + ${retentionStatus.deleteBatchSize}">삭제 배치</span>
     </div>
     <div class="small">
-      <div th:text="'Cutoff: ' + ${#temporals.format(retentionStatus.cutoff, 'yyyy-MM-dd HH:mm:ss')}">Cutoff</div>
-      <div th:text="'Eligible: ' + ${retentionStatus.purgeEligibleLogs} + ' / Total: ' + ${retentionStatus.totalLogs}">Eligible / Total</div>
-      <div th:text="${retentionStatus.oldestFetchedAt == null ? 'Oldest: -' : 'Oldest: ' + #temporals.format(retentionStatus.oldestFetchedAt, 'yyyy-MM-dd HH:mm:ss')}">Oldest</div>
-      <div th:text="${retentionStatus.newestFetchedAt == null ? 'Newest: -' : 'Newest: ' + #temporals.format(retentionStatus.newestFetchedAt, 'yyyy-MM-dd HH:mm:ss')}">Newest</div>
+      <div th:text="'기준 시각: ' + ${#temporals.format(retentionStatus.cutoff, 'yyyy-MM-dd HH:mm:ss')}">기준 시각</div>
+      <div th:text="'삭제 대상: ' + ${retentionStatus.purgeEligibleLogs} + ' / 전체: ' + ${retentionStatus.totalLogs}">삭제 대상 / 전체</div>
+      <div th:text="${retentionStatus.oldestFetchedAt == null ? '최오래된 로그: -' : '최오래된 로그: ' + #temporals.format(retentionStatus.oldestFetchedAt, 'yyyy-MM-dd HH:mm:ss')}">최오래된 로그</div>
+      <div th:text="${retentionStatus.newestFetchedAt == null ? '최신 로그: -' : '최신 로그: ' + #temporals.format(retentionStatus.newestFetchedAt, 'yyyy-MM-dd HH:mm:ss')}">최신 로그</div>
     </div>
   </div>
 </div>

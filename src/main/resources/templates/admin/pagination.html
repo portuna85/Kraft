@@ -1,9 +1,9 @@
 <div xmlns:th="http://www.thymeleaf.org" class="d-flex justify-content-between align-items-center mt-3" th:fragment="pagination">
   <a class="btn btn-sm btn-outline-secondary"
      th:classappend="${page <= 0} ? ' disabled'"
-     th:href="@{/admin/ops(page=${page - 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">Prev</a>
-  <span class="small text-body-secondary" th:text="'Page ' + (${page} + 1)">Page 1</span>
+     th:href="@{/admin/ops(page=${page - 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">이전</a>
+  <span class="small text-body-secondary" th:text="'페이지 ' + (${page} + 1)">페이지 1</span>
   <a class="btn btn-sm btn-outline-secondary"
      th:classappend="${!hasNext} ? ' disabled'"
-     th:href="@{/admin/ops(page=${page + 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">Next</a>
+     th:href="@{/admin/ops(page=${page + 1},pageSize=${pageSize},reason=${reason},drwNoFrom=${drwNoFrom},drwNoTo=${drwNoTo},reasonLimit=${reasonLimit},logLimit=${logLimit})}">다음</a>
 </div>

@@ -3,10 +3,10 @@ package com.kraft.lotto.web;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
@@ -152,9 +152,9 @@ class OpsPageControllerTest {
 
         mockMvc.perform(get("/admin/ops"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Quick reason filters")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("빠른 사유 필터")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("data-reason=\"timeout\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString(">Reset<")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Log Retention")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(">초기화<")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("로그 보관 정책")));
     }
 }
