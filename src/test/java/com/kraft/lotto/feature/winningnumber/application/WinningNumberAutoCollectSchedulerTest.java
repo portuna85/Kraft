@@ -29,15 +29,15 @@ class WinningNumberAutoCollectSchedulerTest {
                 provider(registry)
         );
 
-        scheduler.collectSaturday2230();
+        scheduler.collectSaturday2200();
 
         assertThat(registry.get("kraft.collect.auto.run")
-                .tag("trigger", "sat-22-30")
+                .tag("trigger", "sat-22-00")
                 .tag("status", "success")
                 .counter()
                 .count()).isEqualTo(1.0);
         assertThat(registry.get("kraft.collect.auto.latency")
-                .tag("trigger", "sat-22-30")
+                .tag("trigger", "sat-22-00")
                 .tag("status", "success")
                 .timer()
                 .count()).isEqualTo(1L);
@@ -55,23 +55,23 @@ class WinningNumberAutoCollectSchedulerTest {
                 provider(registry)
         );
 
-        scheduler.collectSunday0700();
+        scheduler.collectSunday0600();
 
         assertThat(registry.get("kraft.collect.auto.run")
-                .tag("trigger", "sun-07-00")
+                .tag("trigger", "sun-06-00")
                 .tag("status", "failure")
                 .counter()
                 .count()).isEqualTo(1.0);
         assertThat(registry.get("kraft.collect.auto.error")
-                .tag("trigger", "sun-07-00")
+                .tag("trigger", "sun-06-00")
                 .tag("exception", "illegalstateexception")
                 .counter()
                 .count()).isEqualTo(1.0);
     }
 
     @Test
-    @DisplayName("월요일 10:10 트리거로 수집 성공 시 메트릭을 기록한다")
-    void recordsSuccessMetricsForMonday1010() {
+    @DisplayName("일요일 06:00 트리거로 수집 성공 시 메트릭을 기록한다")
+    void recordsSuccessMetricsForSunday0600() {
         LottoCollectionCommandService service = mock(LottoCollectionCommandService.class);
         when(service.collectAllUntilLatest()).thenReturn(CollectResponse.ofInserted(1, 1227));
 
@@ -81,10 +81,10 @@ class WinningNumberAutoCollectSchedulerTest {
                 provider(registry)
         );
 
-        scheduler.collectMonday1010();
+        scheduler.collectSunday0600();
 
         assertThat(registry.get("kraft.collect.auto.run")
-                .tag("trigger", "mon-10-10")
+                .tag("trigger", "sun-06-00")
                 .tag("status", "success")
                 .counter()
                 .count()).isEqualTo(1.0);
@@ -109,14 +109,14 @@ class WinningNumberAutoCollectSchedulerTest {
                 provider(registry)
         );
 
-        Thread first = new Thread(scheduler::collectSaturday2230);
+        Thread first = new Thread(scheduler::collectSaturday2200);
         first.start();
         assertThat(started.await(3, TimeUnit.SECONDS)).isTrue();
 
-        scheduler.collectSaturday2230();
+        scheduler.collectSaturday2200();
 
         assertThat(registry.get("kraft.collect.auto.run")
-                .tag("trigger", "sat-22-30")
+                .tag("trigger", "sat-22-00")
                 .tag("status", "skipped_overlap")
                 .counter()
                 .count()).isEqualTo(1.0);

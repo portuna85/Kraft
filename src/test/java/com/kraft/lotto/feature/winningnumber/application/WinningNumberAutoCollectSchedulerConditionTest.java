@@ -69,14 +69,14 @@ class WinningNumberAutoCollectSchedulerConditionTest {
         when(service.collectAllUntilLatest()).thenReturn(CollectResponse.ofFailed(List.of(1, 2), 1200, false));
         WinningNumberAutoCollectScheduler scheduler = new WinningNumberAutoCollectScheduler(service, fixedProvider(meterRegistry));
 
-        scheduler.collectSaturday2230();
+        scheduler.collectSaturday2200();
 
         assertThat(meterRegistry.get("kraft.collect.auto.run")
-                .tag("trigger", "sat-22-30")
+                .tag("trigger", "sat-22-00")
                 .tag("status", "success")
                 .counter().count()).isEqualTo(1.0d);
         assertThat(meterRegistry.get("kraft.collect.auto.round.failure")
-                .tag("trigger", "sat-22-30")
+                .tag("trigger", "sat-22-00")
                 .counter().count()).isEqualTo(2.0d);
     }
 
@@ -88,10 +88,10 @@ class WinningNumberAutoCollectSchedulerConditionTest {
         when(service.collectAllUntilLatest()).thenThrow(new IllegalStateException("boom"));
         WinningNumberAutoCollectScheduler scheduler = new WinningNumberAutoCollectScheduler(service, fixedProvider(meterRegistry));
 
-        scheduler.collectSunday0700();
+        scheduler.collectSunday0600();
 
         assertThat(meterRegistry.get("kraft.collect.auto.run")
-                .tag("trigger", "sun-07-00")
+                .tag("trigger", "sun-06-00")
                 .tag("status", "failure")
                 .counter().count()).isEqualTo(1.0d);
     }
