@@ -55,7 +55,9 @@ class WinningNumberPersisterIntegrationTest {
 
         UpsertOutcome outcome = persister.upsert(wn);
 
-        assertThat(outcome).isEqualTo(UpsertOutcome.UNCHANGED);
+        assertThat(outcome)
+                .as("동일 데이터 두 번째 upsert — actual: %s", outcome)
+                .isEqualTo(UpsertOutcome.UNCHANGED);
     }
 
     @Test
