@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,9 +27,10 @@ class WinningNumberUpsertExecutorTest {
     private final WinningNumberUpsertExecutor executor = new WinningNumberUpsertExecutor(repository, clock);
 
     @Test
-    @DisplayName("nativeUpsert가 1을 반환하면 INSERTED를 반환한다")
-    void returnsInsertedWhenAffectedIsOne() {
-        stubNativeUpsert(1);
+    @DisplayName("행이 없으면 INSERTED를 반환한다")
+    void returnsInsertedWhenRowNotExisted() {
+        when(repository.existsByRound(1201)).thenReturn(false);
+        stubNativeUpsert();
 
         UpsertOutcome outcome = executor.upsertOnce(sample(1201));
 
@@ -36,9 +38,11 @@ class WinningNumberUpsertExecutorTest {
     }
 
     @Test
-    @DisplayName("nativeUpsert가 2를 반환하면 UPDATED를 반환한다")
-    void returnsUpdatedWhenAffectedIsTwo() {
-        stubNativeUpsert(2);
+    @DisplayName("행이 있고 version > 0 이면 UPDATED를 반환한다")
+    void returnsUpdatedWhenVersionIncreased() {
+        when(repository.existsByRound(1200)).thenReturn(true);
+        stubNativeUpsert();
+        when(repository.findVersionByRound(1200)).thenReturn(Optional.of(1));
 
         UpsertOutcome outcome = executor.upsertOnce(changedSample(1200));
 
@@ -46,20 +50,22 @@ class WinningNumberUpsertExecutorTest {
     }
 
     @Test
-    @DisplayName("nativeUpsert가 0을 반환하면 UNCHANGED를 반환한다")
-    void returnsUnchangedWhenAffectedIsZero() {
-        stubNativeUpsert(0);
+    @DisplayName("행이 있고 version = 0 이면 UNCHANGED를 반환한다")
+    void returnsUnchangedWhenVersionIsZero() {
+        when(repository.existsByRound(1200)).thenReturn(true);
+        stubNativeUpsert();
+        when(repository.findVersionByRound(1200)).thenReturn(Optional.of(0));
 
         UpsertOutcome outcome = executor.upsertOnce(sample(1200));
 
         assertThat(outcome).isEqualTo(UpsertOutcome.UNCHANGED);
     }
 
-    private void stubNativeUpsert(int returnValue) {
+    private void stubNativeUpsert() {
         when(repository.nativeUpsert(
                 any(), any(), any(), any(), any(), any(), any(), any(), any(),
                 any(), any(), any(), any(), any(), any(), any(), any(), any(), any()
-        )).thenReturn(returnValue);
+        )).thenReturn(0);
     }
 
     private WinningNumber sample(int round) {

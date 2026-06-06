@@ -24,6 +24,9 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
 
     boolean existsByRound(int round);
 
+    @Query("select w.version from WinningNumberEntity w where w.round = :round")
+    Optional<Integer> findVersionByRound(@Param("round") int round);
+
     /**
      * 회차를 원자적으로 upsert한다. 동일 회차 동시 INSERT 경쟁 조건을 DB 레벨에서 제거.
      *
@@ -32,7 +35,7 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
      * <p>데이터 필드(n1~n6, bonus_number 등) 비교 기준으로 version/updated_at 변경 여부를 결정한다.
      * created_at은 UPDATE 시 갱신하지 않는다.</p>
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query(nativeQuery = true, value = """
             INSERT INTO winning_numbers
                 (round, draw_date, n1, n2, n3, n4, n5, n6, bonus_number,
