@@ -58,7 +58,21 @@ public interface WinningNumberRepository extends JpaRepository<WinningNumberEnti
                 second_prize       = VALUES(second_prize),
                 second_winners     = VALUES(second_winners),
                 raw_json           = VALUES(raw_json),
-                fetched_at         = VALUES(fetched_at),
+                fetched_at         = IF(
+                    draw_date = VALUES(draw_date)
+                    AND n1 = VALUES(n1) AND n2 = VALUES(n2) AND n3 = VALUES(n3)
+                    AND n4 = VALUES(n4) AND n5 = VALUES(n5) AND n6 = VALUES(n6)
+                    AND bonus_number = VALUES(bonus_number)
+                    AND first_prize = VALUES(first_prize)
+                    AND first_winners = VALUES(first_winners)
+                    AND total_sales = VALUES(total_sales)
+                    AND first_accum_amount = VALUES(first_accum_amount)
+                    AND second_prize = VALUES(second_prize)
+                    AND second_winners = VALUES(second_winners)
+                    AND (raw_json <=> VALUES(raw_json)),
+                    fetched_at,
+                    VALUES(fetched_at)
+                ),
                 updated_at         = IF(
                     draw_date = VALUES(draw_date)
                     AND n1 = VALUES(n1) AND n2 = VALUES(n2) AND n3 = VALUES(n3)
