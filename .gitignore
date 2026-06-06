@@ -52,7 +52,7 @@ deploy-state/
 !.env.prod.example
 
 # Documentation policy
-docs/*.md
+# docs/*.md  — 문서 파일 추적 허용으로 변경
 
 # Local agent instruction files
 AGENTS.md
