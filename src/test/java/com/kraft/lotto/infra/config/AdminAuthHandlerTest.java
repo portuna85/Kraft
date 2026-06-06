@@ -45,22 +45,6 @@ class AdminAuthHandlerTest {
     }
 
     @Test
-    @DisplayName("SuccessHandler — auditService가 null이어도 NPE 없이 동작한다")
-    void successHandlerWorksWithoutAuditService() throws Exception {
-        AdminAuthSuccessHandler handler = new AdminAuthSuccessHandler(null);
-
-        Authentication auth = mock(Authentication.class);
-        when(auth.getName()).thenReturn("admin");
-
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        handler.onAuthenticationSuccess(request, response, auth);
-
-        assertThat(response.getRedirectedUrl()).isEqualTo("/admin/ops");
-    }
-
-    @Test
     @DisplayName("FailureHandler — /admin/login?error로 리다이렉트하고 감사 로그를 기록한다")
     void failureHandlerRedirectsAndAudits() throws Exception {
         AdminAuthFailureHandler handler = new AdminAuthFailureHandler(auditService);
@@ -77,18 +61,5 @@ class AdminAuthHandlerTest {
                 isNull(), any(), any(), eq("bad"));
     }
 
-    @Test
-    @DisplayName("FailureHandler — auditService가 null이어도 NPE 없이 동작한다")
-    void failureHandlerWorksWithoutAuditService() throws Exception {
-        AdminAuthFailureHandler handler = new AdminAuthFailureHandler(null);
 
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        org.springframework.security.core.AuthenticationException ex =
-                new org.springframework.security.authentication.BadCredentialsException("bad");
-
-        handler.onAuthenticationFailure(request, response, ex);
-
-        assertThat(response.getRedirectedUrl()).isEqualTo("/admin/login?error");
-    }
 }

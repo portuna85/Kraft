@@ -1,6 +1,9 @@
 package com.kraft.lotto.infra.config;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -9,6 +12,17 @@ import org.springframework.validation.annotation.Validated;
 public record KraftAdminProperties(
         boolean enabled,
         @NotBlank String adminDomain,
-        String adminPassword
+        String adminPassword,
+        List<@Valid AdminUser> users
 ) {
+
+    public record AdminUser(
+            @NotBlank String username,
+            @NotBlank String password,
+            @NotEmpty List<String> roles
+    ) {}
+
+    public boolean hasConfiguredUsers() {
+        return users != null && !users.isEmpty();
+    }
 }

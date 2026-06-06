@@ -8,6 +8,38 @@
   </header>
 
   <div class="container py-3">
+
+    <form th:action="@{/admin/ops/audit}" method="get" class="row g-2 mb-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label form-label-sm mb-1">작업 유형</label>
+        <input type="text" name="action" class="form-control form-control-sm"
+               placeholder="예: COLLECT, NEWS_APPROVE"
+               th:value="${filterAction}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label form-label-sm mb-1">결과</label>
+        <select name="result" class="form-select form-select-sm">
+          <option value="" th:selected="${filterResult == ''}">전체</option>
+          <option value="SUCCESS" th:selected="${filterResult == 'SUCCESS'}">SUCCESS</option>
+          <option value="FAILURE" th:selected="${filterResult == 'FAILURE'}">FAILURE</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label form-label-sm mb-1">시작일</label>
+        <input type="date" name="from" class="form-control form-control-sm"
+               th:value="${filterFrom != null} ? ${#temporals.format(filterFrom, 'yyyy-MM-dd')} : ''">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label form-label-sm mb-1">종료일</label>
+        <input type="date" name="to" class="form-control form-control-sm"
+               th:value="${filterTo != null} ? ${#temporals.format(filterTo, 'yyyy-MM-dd')} : ''">
+      </div>
+      <div class="col-md-auto">
+        <button type="submit" class="btn btn-primary btn-sm">조회</button>
+        <a th:href="@{/admin/ops/audit}" class="btn btn-outline-secondary btn-sm ms-1">초기화</a>
+      </div>
+    </form>
+
     <div class="table-responsive">
       <table class="table table-sm table-hover">
         <thead class="table-dark">
@@ -35,10 +67,26 @@
             <td><small th:text="${log.errorMessage}"></small></td>
           </tr>
           <tr th:if="${logs.isEmpty()}">
-            <td colspan="7" class="text-center text-muted">감사 로그가 없습니다.</td>
+            <td colspan="7" class="text-center text-muted">조회된 감사 로그가 없습니다.</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <small class="text-muted">
+        전체 <strong th:text="${logs.totalElements}">0</strong>건
+        (페이지 <span th:text="${logs.number + 1}">1</span> /
+        <span th:text="${logs.totalPages}">1</span>)
+      </small>
+      <div>
+        <a th:if="${logs.hasPrevious()}"
+           th:href="@{/admin/ops/audit(page=${logs.number - 1}, pageSize=${pageSize}, action=${filterAction}, result=${filterResult}, from=${filterFrom}, to=${filterTo})}"
+           class="btn btn-outline-secondary btn-sm">이전</a>
+        <a th:if="${logs.hasNext()}"
+           th:href="@{/admin/ops/audit(page=${logs.number + 1}, pageSize=${pageSize}, action=${filterAction}, result=${filterResult}, from=${filterFrom}, to=${filterTo})}"
+           class="btn btn-outline-secondary btn-sm ms-1">다음</a>
+      </div>
     </div>
 
     <div class="mt-3">

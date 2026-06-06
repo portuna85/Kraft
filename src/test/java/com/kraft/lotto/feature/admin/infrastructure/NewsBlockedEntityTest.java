@@ -12,7 +12,7 @@ class NewsBlockedEntityTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 6, 5, 12, 0);
 
     @Test
-    @DisplayName("NewsBlockedDomainEntity — 빌더로 생성 후 필드를 반환한다")
+    @DisplayName("도메인 차단 엔티티 — 빌더로 생성 후 필드 값을 검증한다")
     void newsBlockedDomainEntityBuilderAndGetters() {
         NewsBlockedDomainEntity entity = NewsBlockedDomainEntity.builder()
                 .domain("spam.example.com")
@@ -29,7 +29,7 @@ class NewsBlockedEntityTest {
     }
 
     @Test
-    @DisplayName("NewsBlockedKeywordEntity — 빌더로 생성 후 필드를 반환한다")
+    @DisplayName("키워드 차단 엔티티 — 빌더로 생성 후 필드 값을 검증한다")
     void newsBlockedKeywordEntityBuilderAndGetters() {
         NewsBlockedKeywordEntity entity = NewsBlockedKeywordEntity.builder()
                 .keyword("아파트 로또")

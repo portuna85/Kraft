@@ -13,7 +13,8 @@
     <div class="card mb-3">
       <div class="card-header">키워드 차단 추가</div>
       <div class="card-body">
-        <form th:action="@{/admin/ops/news/block-keyword}" method="post" class="row g-2">
+        <form th:action="@{/admin/ops/news/block-keyword}" method="post" class="row g-2"
+              onsubmit="return confirm('이 키워드를 차단합니다.\n이후 해당 키워드를 포함한 기사는 수집되지 않습니다. 계속하시겠습니까?')">
           <div class="col-5">
             <input type="text" name="keyword" class="form-control form-control-sm" placeholder="차단할 키워드" required>
           </div>
@@ -57,7 +58,8 @@
                   <button type="submit" class="btn btn-secondary btn-sm">거부</button>
                 </form>
                 <form th:action="@{/admin/ops/news/{id}/block-domain(id=${article.id})}" method="post" class="d-inline ms-1">
-                  <button type="submit" class="btn btn-danger btn-sm">도메인 차단</button>
+                  <button type="submit" class="btn btn-danger btn-sm"
+                          th:onclick="|return confirm('[[${article.sourceDomain}]] 도메인을 차단합니다.\n해당 도메인의 모든 기사가 거부됩니다. 계속하시겠습니까?')|">도메인 차단</button>
                 </form>
               </div>
             </td>

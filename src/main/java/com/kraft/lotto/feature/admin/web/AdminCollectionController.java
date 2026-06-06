@@ -40,11 +40,17 @@ public class AdminCollectionController {
                                 RedirectAttributes redirectAttributes) {
         String actor = extractActor(principal);
         String ip = ClientIpResolver.resolve(request, java.util.List.of());
-        var result = opsCollectionFacade.collectLatest(null, ip);
-        auditLogService.recordSuccess(actor, "COLLECT_LATEST",
-                "collected:" + result.collected(), ip, request.getHeader("User-Agent"));
-        redirectAttributes.addFlashAttribute("message",
-                "수집 완료: " + result.collected() + "건");
+        String ua = request.getHeader("User-Agent");
+        try {
+            var result = opsCollectionFacade.collectLatest(null, ip);
+            auditLogService.recordSuccess(actor, "COLLECT_LATEST",
+                    "collected:" + result.collected(), ip, ua);
+            redirectAttributes.addFlashAttribute("message",
+                    "수집 완료: " + result.collected() + "건");
+        } catch (Exception e) {
+            auditLogService.recordFailure(actor, "COLLECT_LATEST", "latest", ip, ua, e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "수집 실패: " + e.getMessage());
+        }
         return "redirect:/admin/ops/collection";
     }
 
@@ -55,11 +61,17 @@ public class AdminCollectionController {
                                 RedirectAttributes redirectAttributes) {
         String actor = extractActor(principal);
         String ip = ClientIpResolver.resolve(request, java.util.List.of());
-        boolean saved = winningStoreCollector.collectStores(round);
-        auditLogService.recordSuccess(actor, "COLLECT_STORES",
-                "round:" + round + ",saved:" + saved, ip, request.getHeader("User-Agent"));
-        redirectAttributes.addFlashAttribute("message",
-                round + "회차 판매점 수집 " + (saved ? "완료" : "스킵(이미 존재)"));
+        String ua = request.getHeader("User-Agent");
+        try {
+            boolean saved = winningStoreCollector.collectStores(round);
+            auditLogService.recordSuccess(actor, "COLLECT_STORES",
+                    "round:" + round + ",saved:" + saved, ip, ua);
+            redirectAttributes.addFlashAttribute("message",
+                    round + "회차 판매점 수집 " + (saved ? "완료" : "스킵(이미 존재)"));
+        } catch (Exception e) {
+            auditLogService.recordFailure(actor, "COLLECT_STORES", "round:" + round, ip, ua, e.getMessage());
+            redirectAttributes.addFlashAttribute("error", round + "회차 수집 실패: " + e.getMessage());
+        }
         return "redirect:/admin/ops/collection";
     }
 

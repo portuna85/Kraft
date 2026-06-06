@@ -129,7 +129,7 @@ kraft:
       enabled: ${KRAFT_COLLECT_AUTO_ENABLED:true}
       zone: ${KRAFT_COLLECT_AUTO_ZONE:Asia/Seoul}
       cron:
-        saturday-22-30: ${KRAFT_COLLECT_AUTO_CRON_SATURDAY_22_30:0 30 22 ? * SAT}
+        saturday-22-30: ${KRAFT_COLLECT_AUTO_CRON_SATURDAY_22_30:0 0 22 ? * SAT}
         sunday-07-00: ${KRAFT_COLLECT_AUTO_CRON_SUNDAY_07_00:0 0 7 ? * SUN}
     log-retention:
       enabled: ${KRAFT_COLLECT_LOG_RETENTION_ENABLED:true}

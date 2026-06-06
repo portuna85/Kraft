@@ -22,10 +22,8 @@ public class AdminAuthFailureHandler implements AuthenticationFailureHandler {
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
         String ip = ClientIpResolver.resolve(request, List.of());
-        if (auditLogService != null) {
-            auditLogService.recordFailure("unknown", "LOGIN_FAILED", null,
-                    ip, request.getHeader("User-Agent"), exception.getMessage());
-        }
+        auditLogService.recordFailure("unknown", "LOGIN_FAILED", null,
+                ip, request.getHeader("User-Agent"), exception.getMessage());
         response.sendRedirect(request.getContextPath() + "/admin/login?error");
     }
 }

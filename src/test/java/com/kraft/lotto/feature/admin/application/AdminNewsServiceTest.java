@@ -27,7 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("AdminNewsService")
+@DisplayName("관리자 뉴스 서비스 테스트")
 class AdminNewsServiceTest {
 
     private static final Clock CLOCK =
@@ -47,7 +47,7 @@ class AdminNewsServiceTest {
     }
 
     @Test
-    @DisplayName("listPending — repository에 위임 호출한다")
+    @DisplayName("대기 중인 뉴스 목록 조회 — 리포지토리에 위임 호출한다")
     void listPendingDelegates() {
         var pageable = PageRequest.of(0, 10);
         service.listPending(pageable);
@@ -55,7 +55,7 @@ class AdminNewsServiceTest {
     }
 
     @Test
-    @DisplayName("approve — approved=true로 변경하고 감사 로그를 기록한다")
+    @DisplayName("뉴스 승인 — 승인 상태로 변경하고 감사 로그를 기록한다")
     void approveUpdatesApprovedAndAudits() {
         NewsArticleEntity article = makeArticle(1L, "news.com");
         when(articleRepository.findById(1L)).thenReturn(Optional.of(article));
@@ -68,7 +68,7 @@ class AdminNewsServiceTest {
     }
 
     @Test
-    @DisplayName("reject — approved=false로 변경하고 감사 로그를 기록한다")
+    @DisplayName("뉴스 거절 — 미승인 상태로 변경하고 감사 로그를 기록한다")
     void rejectUpdatesApprovedAndAudits() {
         NewsArticleEntity article = makeArticle(2L, "news.com");
         article.setApproved(true);
@@ -82,7 +82,7 @@ class AdminNewsServiceTest {
     }
 
     @Test
-    @DisplayName("approve — 기사가 없으면 IllegalArgumentException을 던진다")
+    @DisplayName("뉴스 승인 실패 — 기사가 없으면 예외를 던진다")
     void approveThrowsWhenArticleNotFound() {
         when(articleRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -92,7 +92,7 @@ class AdminNewsServiceTest {
     }
 
     @Test
-    @DisplayName("blockDomain — 신규 도메인이면 DB에 저장하고 해당 도메인 기사를 거부한다")
+    @DisplayName("도메인 차단 — 신규 도메인이면 저장하고 해당 도메인 기사들을 거절한다")
     void blockDomainSavesAndRejectsArticles() {
         NewsArticleEntity article = makeArticle(3L, "spam.com");
         when(articleRepository.findById(3L)).thenReturn(Optional.of(article));
@@ -107,7 +107,7 @@ class AdminNewsServiceTest {
     }
 
     @Test
-    @DisplayName("blockDomain — 이미 차단된 도메인이면 저장을 건너뛴다")
+    @DisplayName("도메인 차단 건너뛰기 — 이미 차단된 도메인이면 저장을 수행하지 않는다")
     void blockDomainSkipsIfAlreadyBlocked() {
         NewsArticleEntity article = makeArticle(4L, "spam.com");
         when(articleRepository.findById(4L)).thenReturn(Optional.of(article));
@@ -120,7 +120,7 @@ class AdminNewsServiceTest {
     }
 
     @Test
-    @DisplayName("blockKeyword — 신규 키워드이면 DB에 저장한다")
+    @DisplayName("키워드 차단 — 신규 키워드이면 저장한다")
     void blockKeywordSavesNewKeyword() {
         when(blockedKeywordRepository.existsByKeyword("아파트 로또")).thenReturn(false);
 
@@ -132,7 +132,7 @@ class AdminNewsServiceTest {
     }
 
     @Test
-    @DisplayName("blockKeyword — 이미 등록된 키워드이면 저장을 건너뛴다")
+    @DisplayName("키워드 차단 건너뛰기 — 이미 등록된 키워드이면 저장을 수행하지 않는다")
     void blockKeywordSkipsIfExists() {
         when(blockedKeywordRepository.existsByKeyword("로또")).thenReturn(true);
 

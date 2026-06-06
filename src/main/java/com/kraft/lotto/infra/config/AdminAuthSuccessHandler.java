@@ -24,10 +24,8 @@ public class AdminAuthSuccessHandler implements AuthenticationSuccessHandler {
         String actor = authentication.getName();
         String ip = ClientIpResolver.resolve(request, List.of());
 
-        if (auditLogService != null) {
-            auditLogService.recordSuccess(actor, "LOGIN_SUCCESS", null, ip,
-                    request.getHeader("User-Agent"));
-        }
+        auditLogService.recordSuccess(actor, "LOGIN_SUCCESS", null, ip,
+                request.getHeader("User-Agent"));
         response.sendRedirect(request.getContextPath() + "/admin/ops");
     }
 }

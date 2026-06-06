@@ -43,45 +43,65 @@ public class AdminNewsService {
 
     @Transactional
     public void approve(long id, String actor, String ip, String ua) {
-        NewsArticleEntity article = findOrThrow(id);
-        article.setApproved(true);
-        auditLogService.recordSuccess(actor, "NEWS_APPROVE", "articleId:" + id, ip, ua);
+        try {
+            NewsArticleEntity article = findOrThrow(id);
+            article.setApproved(true);
+            auditLogService.recordSuccess(actor, "NEWS_APPROVE", "articleId:" + id, ip, ua);
+        } catch (Exception e) {
+            auditLogService.recordFailure(actor, "NEWS_APPROVE", "articleId:" + id, ip, ua, e.getMessage());
+            throw e;
+        }
     }
 
     @Transactional
     public void reject(long id, String actor, String ip, String ua) {
-        NewsArticleEntity article = findOrThrow(id);
-        article.setApproved(false);
-        auditLogService.recordSuccess(actor, "NEWS_REJECT", "articleId:" + id, ip, ua);
+        try {
+            NewsArticleEntity article = findOrThrow(id);
+            article.setApproved(false);
+            auditLogService.recordSuccess(actor, "NEWS_REJECT", "articleId:" + id, ip, ua);
+        } catch (Exception e) {
+            auditLogService.recordFailure(actor, "NEWS_REJECT", "articleId:" + id, ip, ua, e.getMessage());
+            throw e;
+        }
     }
 
     @Transactional
     public void blockDomain(long articleId, String reason, String actor, String ip, String ua) {
-        NewsArticleEntity article = findOrThrow(articleId);
-        String domain = article.getSourceDomain();
-        if (domain != null && !blockedDomainRepository.existsByDomain(domain)) {
-            blockedDomainRepository.save(NewsBlockedDomainEntity.builder()
-                    .domain(domain)
-                    .reason(reason)
-                    .createdBy(actor)
-                    .createdAt(LocalDateTime.now(clock))
-                    .build());
-            articleRepository.rejectAllBySourceDomain(domain);
+        try {
+            NewsArticleEntity article = findOrThrow(articleId);
+            String domain = article.getSourceDomain();
+            if (domain != null && !blockedDomainRepository.existsByDomain(domain)) {
+                blockedDomainRepository.save(NewsBlockedDomainEntity.builder()
+                        .domain(domain)
+                        .reason(reason)
+                        .createdBy(actor)
+                        .createdAt(LocalDateTime.now(clock))
+                        .build());
+                articleRepository.rejectAllBySourceDomain(domain);
+            }
+            auditLogService.recordSuccess(actor, "NEWS_BLOCK_DOMAIN", "domain:" + domain, ip, ua);
+        } catch (Exception e) {
+            auditLogService.recordFailure(actor, "NEWS_BLOCK_DOMAIN", "articleId:" + articleId, ip, ua, e.getMessage());
+            throw e;
         }
-        auditLogService.recordSuccess(actor, "NEWS_BLOCK_DOMAIN", "domain:" + domain, ip, ua);
     }
 
     @Transactional
     public void blockKeyword(String keyword, String reason, String actor, String ip, String ua) {
-        if (!blockedKeywordRepository.existsByKeyword(keyword)) {
-            blockedKeywordRepository.save(NewsBlockedKeywordEntity.builder()
-                    .keyword(keyword)
-                    .reason(reason)
-                    .createdBy(actor)
-                    .createdAt(LocalDateTime.now(clock))
-                    .build());
+        try {
+            if (!blockedKeywordRepository.existsByKeyword(keyword)) {
+                blockedKeywordRepository.save(NewsBlockedKeywordEntity.builder()
+                        .keyword(keyword)
+                        .reason(reason)
+                        .createdBy(actor)
+                        .createdAt(LocalDateTime.now(clock))
+                        .build());
+            }
+            auditLogService.recordSuccess(actor, "NEWS_BLOCK_KEYWORD", "keyword:" + keyword, ip, ua);
+        } catch (Exception e) {
+            auditLogService.recordFailure(actor, "NEWS_BLOCK_KEYWORD", "keyword:" + keyword, ip, ua, e.getMessage());
+            throw e;
         }
-        auditLogService.recordSuccess(actor, "NEWS_BLOCK_KEYWORD", "keyword:" + keyword, ip, ua);
     }
 
     private NewsArticleEntity findOrThrow(long id) {

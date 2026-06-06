@@ -1,9 +1,11 @@
 package com.kraft.lotto.infra.config;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
+import java.util.List;
 import java.util.UUID;
-import org.springframework.beans.factory.ObjectProvider;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -21,21 +23,30 @@ import org.springframework.security.web.savedrequest.NullRequestCache;
 @EnableMethodSecurity(prePostEnabled = true)
 public class AdminSecurityConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminSecurityConfig.class);
+
     private final KraftAdminProperties adminProperties;
     private final AdminAuditLogService auditLogService;
 
-    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public AdminSecurityConfig(KraftAdminProperties adminProperties,
-                               ObjectProvider<AdminAuditLogService> auditLogServiceProvider) {
+                               AdminAuditLogService auditLogService) {
         this.adminProperties = adminProperties;
-        this.auditLogService = auditLogServiceProvider.getIfAvailable();
+        this.auditLogService = auditLogService;
     }
 
     @Bean
     public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/admin/ops", "/admin/ops/**").authenticated()
+                        .requestMatchers("/admin/ops/collection", "/admin/ops/collection/**")
+                            .hasAnyRole("ADMIN_OPERATOR", "ADMIN_SUPER_ADMIN")
+                        .requestMatchers("/admin/ops/news", "/admin/ops/news/**")
+                            .hasAnyRole("ADMIN_NEWS_MANAGER", "ADMIN_SUPER_ADMIN")
+                        .requestMatchers("/admin/ops/audit", "/admin/ops/audit/**")
+                            .hasAnyRole("ADMIN_AUDITOR", "ADMIN_SUPER_ADMIN")
+                        .requestMatchers("/admin/ops", "/admin/ops/**")
+                            .hasAnyRole("ADMIN_VIEWER", "ADMIN_OPERATOR",
+                                        "ADMIN_NEWS_MANAGER", "ADMIN_AUDITOR", "ADMIN_SUPER_ADMIN")
                         .requestMatchers("/admin/login", "/admin/login/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().permitAll()
@@ -70,16 +81,35 @@ public class AdminSecurityConfig {
 
     @Bean
     public UserDetailsService adminUserDetailsService() {
-        String rawPassword = (adminProperties.enabled()
+        if (adminProperties.hasConfiguredUsers()) {
+            List<UserDetails> users = adminProperties.users().stream()
+                    .map(u -> User.builder()
+                            .username(u.username())
+                            .password("{noop}" + u.password())
+                            .roles(u.roles().toArray(new String[0]))
+                            .build())
+                    .collect(Collectors.toList());
+            log.info("[ADMIN] {}명의 관리자 계정을 설정에서 로드합니다.", users.size());
+            return new InMemoryUserDetailsManager(users);
+        }
+
+        boolean hasExplicitPassword = adminProperties.enabled()
                 && adminProperties.adminPassword() != null
-                && !adminProperties.adminPassword().isBlank())
+                && !adminProperties.adminPassword().isBlank();
+
+        if (adminProperties.enabled() && !hasExplicitPassword) {
+            log.warn("[ADMIN] KRAFT_ADMIN_PASSWORD 미설정 — 랜덤 패스워드로 기동합니다. "
+                    + "운영 환경에서는 반드시 명시적으로 설정하세요.");
+        }
+
+        String rawPassword = hasExplicitPassword
                 ? adminProperties.adminPassword()
                 : UUID.randomUUID().toString();
 
         UserDetails admin = User.builder()
                 .username("admin")
                 .password("{noop}" + rawPassword)
-                .roles("ADMIN")
+                .roles("ADMIN_SUPER_ADMIN")
                 .build();
         return new InMemoryUserDetailsManager(admin);
     }

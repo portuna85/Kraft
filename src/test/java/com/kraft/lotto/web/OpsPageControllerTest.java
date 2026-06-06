@@ -10,11 +10,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
+import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchFailureOverviewDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import com.kraft.lotto.infra.config.KraftCollectProperties;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +43,9 @@ class OpsPageControllerTest {
     @MockitoBean
     LottoFetchLogQueryService fetchLogQueryService;
 
+    @MockitoBean
+    WinningNumberRepository winningNumberRepository;
+
     @TestConfiguration
     static class CollectPropertiesConfig {
         @Bean
@@ -52,6 +58,11 @@ class OpsPageControllerTest {
                     new KraftCollectProperties.LogRetention(true, 90, 1000, "0 30 3 * * *")
             );
         }
+
+        @Bean
+        Clock clock() {
+            return Clock.systemUTC();
+        }
     }
 
     @Test
@@ -60,6 +71,7 @@ class OpsPageControllerTest {
     void bindsModelForValidRequest() throws Exception {
         int expectedTo = com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy.maxPossibleRound(java.time.LocalDate.now());
 
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1234));
         when(fetchLogQueryService.failureOverview(200, 100, "timeout", 1, expectedTo))
                 .thenReturn(new FetchFailureOverviewDto(
                         LocalDateTime.of(2026, 5, 22, 12, 0),
@@ -125,6 +137,7 @@ class OpsPageControllerTest {
     @WithMockUser
     @DisplayName("운영 페이지는 빠른 필터와 초기화 버튼을 렌더링한다")
     void rendersQuickReasonFiltersAndReset() throws Exception {
+        when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1234));
         when(fetchLogQueryService.failureOverview(200, 100, null, null, null))
                 .thenReturn(new FetchFailureOverviewDto(
                         LocalDateTime.of(2026, 5, 22, 12, 0),

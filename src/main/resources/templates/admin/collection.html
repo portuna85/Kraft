@@ -9,6 +9,7 @@
 
   <div class="container py-3">
     <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
     <div class="row g-3">
       <div class="col-md-6">
@@ -17,7 +18,8 @@
           <div class="card-body">
             <p class="card-text">API에서 최신 회차까지 누락된 데이터를 수집합니다.</p>
             <form th:action="@{/admin/ops/collection/latest}" method="post">
-              <button type="submit" class="btn btn-primary">수집 실행</button>
+              <button type="submit" class="btn btn-primary"
+                      onclick="return confirm('최신 회차 수집을 실행하시겠습니까?\n외부 API를 호출합니다.')">수집 실행</button>
             </form>
           </div>
         </div>
@@ -28,7 +30,8 @@
           <div class="card-header">판매점 수집</div>
           <div class="card-body">
             <p class="card-text">특정 회차의 판매점 정보를 수집합니다.</p>
-            <form th:action="@{/admin/ops/collection/stores}" method="post" class="row g-2">
+            <form th:action="@{/admin/ops/collection/stores}" method="post" class="row g-2"
+                  onsubmit="return confirm('판매점 수집을 실행하시겠습니까?\n외부 API를 호출합니다.')">
               <div class="col-8">
                 <input type="number" name="round" class="form-control" placeholder="회차 번호" required min="1">
               </div>
