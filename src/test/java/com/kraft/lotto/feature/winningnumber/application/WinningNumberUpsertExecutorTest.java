@@ -9,6 +9,8 @@ import static com.kraft.lotto.support.fixtures.LottoTestFixtures.winningNumber;
 
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
+import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberEntity;
+import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberMapper;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import java.time.Clock;
 import java.time.Instant;
@@ -27,9 +29,9 @@ class WinningNumberUpsertExecutorTest {
     private final WinningNumberUpsertExecutor executor = new WinningNumberUpsertExecutor(repository, clock);
 
     @Test
-    @DisplayName("행이 없으면 INSERTED를 반환한다")
-    void returnsInsertedWhenRowNotExisted() {
-        when(repository.existsByRound(1201)).thenReturn(false);
+    @DisplayName("저장된 행이 없으면 INSERTED를 반환한다")
+    void returnsInsertedWhenRowAbsent() {
+        stubFindById(1201, Optional.empty());
         stubNativeUpsert();
 
         UpsertOutcome outcome = executor.upsertOnce(sample(1201));
@@ -38,27 +40,30 @@ class WinningNumberUpsertExecutorTest {
     }
 
     @Test
-    @DisplayName("행이 있고 version > 0 이면 UPDATED를 반환한다")
-    void returnsUpdatedWhenVersionIncreased() {
-        when(repository.existsByRound(1200)).thenReturn(true);
+    @DisplayName("저장된 행이 있고 데이터가 동일하면 UNCHANGED를 반환한다")
+    void returnsUnchangedWhenDataIsSame() {
+        WinningNumber wn = sample(1200);
+        stubFindById(1200, Optional.of(toEntity(wn)));
         stubNativeUpsert();
-        when(repository.findVersionByRound(1200)).thenReturn(Optional.of(1));
+
+        UpsertOutcome outcome = executor.upsertOnce(wn);
+
+        assertThat(outcome).isEqualTo(UpsertOutcome.UNCHANGED);
+    }
+
+    @Test
+    @DisplayName("저장된 행이 있고 데이터가 다르면 UPDATED를 반환한다")
+    void returnsUpdatedWhenDataDiffers() {
+        stubFindById(1200, Optional.of(toEntity(sample(1200))));
+        stubNativeUpsert();
 
         UpsertOutcome outcome = executor.upsertOnce(changedSample(1200));
 
         assertThat(outcome).isEqualTo(UpsertOutcome.UPDATED);
     }
 
-    @Test
-    @DisplayName("행이 있고 version = 0 이면 UNCHANGED를 반환한다")
-    void returnsUnchangedWhenVersionIsZero() {
-        when(repository.existsByRound(1200)).thenReturn(true);
-        stubNativeUpsert();
-        when(repository.findVersionByRound(1200)).thenReturn(Optional.of(0));
-
-        UpsertOutcome outcome = executor.upsertOnce(sample(1200));
-
-        assertThat(outcome).isEqualTo(UpsertOutcome.UNCHANGED);
+    private void stubFindById(int round, Optional<WinningNumberEntity> result) {
+        when(repository.findById(round)).thenReturn(result);
     }
 
     private void stubNativeUpsert() {
@@ -66,6 +71,10 @@ class WinningNumberUpsertExecutorTest {
                 any(), any(), any(), any(), any(), any(), any(), any(), any(),
                 any(), any(), any(), any(), any(), any(), any(), any(), any(), any()
         )).thenReturn(0);
+    }
+
+    private WinningNumberEntity toEntity(WinningNumber wn) {
+        return WinningNumberMapper.toEntity(wn, clock.instant().atZone(ZoneOffset.UTC).toLocalDateTime());
     }
 
     private WinningNumber sample(int round) {
