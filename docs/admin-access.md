@@ -42,6 +42,3 @@ curl -s -H "X-Ops-Token: <토큰값>" http://localhost:8080/ops/circuit-breakers
 
 ---
 
-## 미완료
-
-- [ ] Ops API 토큰을 관리자 UI에서 확인하거나 갱신하는 기능 없음 — 현재는 GitHub Secrets 교체 후 CD 재실행 필요
