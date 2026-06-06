@@ -2,7 +2,9 @@ package com.kraft.lotto.feature.winningnumber.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -93,5 +95,34 @@ class ApiCircuitBreakerRegistryTest {
         breaker.recordFailure();
 
         assertThat(breaker.stateName()).isEqualTo("open");
+    }
+
+    @Test
+    @DisplayName("startup 시 meter registry가 늦게 준비되어도 gauge를 나중에 바인딩한다")
+    void bindsGaugeAfterSingletonInitializationWhenRegistryArrivesLate() {
+        AtomicReference<MeterRegistry> registryRef = new AtomicReference<>();
+        ObjectProvider<MeterRegistry> provider = new ObjectProvider<>() {
+            @Override
+            public MeterRegistry getObject(Object... args) {
+                return registryRef.get();
+            }
+
+            @Override
+            public MeterRegistry getIfAvailable() {
+                return registryRef.get();
+            }
+        };
+        ApiCircuitBreakerRegistry reg = new ApiCircuitBreakerRegistry(provider);
+        ApiCircuitBreaker breaker = ApiCircuitBreaker.disabled();
+
+        reg.register("dhlottery", breaker);
+
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        registryRef.set(meterRegistry);
+        reg.afterSingletonsInstantiated();
+
+        assertThat(meterRegistry.find("kraft.api.circuit_breaker.state")
+                .tag("client", "dhlottery")
+                .gauge()).isNotNull();
     }
 }
