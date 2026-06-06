@@ -10,6 +10,22 @@
 
   <th:block th:replace="~{admin/ops-filter :: ops-filter}"></th:block>
   <th:block th:replace="~{admin/status-card :: status-card}"></th:block>
+
+  <div class="container mb-3">
+    <div class="card">
+      <div class="card-header">관리 메뉴</div>
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+          <a th:href="@{/admin/ops/collection}" class="btn btn-outline-primary btn-sm">수집 관리</a>
+          <a th:href="@{/admin/ops/news}" class="btn btn-outline-primary btn-sm">뉴스 관리</a>
+          <a th:href="@{/admin/ops/audit}" class="btn btn-outline-primary btn-sm">감사 로그</a>
+          <a th:href="@{/admin/ops/cache}" class="btn btn-outline-secondary btn-sm">캐시 관리</a>
+          <a th:href="@{/admin/ops/system}" class="btn btn-outline-secondary btn-sm">시스템 상태</a>
+          <a th:href="@{/admin/ops/seo}" class="btn btn-outline-secondary btn-sm">SEO 점검</a>
+        </div>
+      </div>
+    </div>
+  </div>
   <th:block th:replace="~{admin/retention-card :: retention-card}"></th:block>
   <th:block th:replace="~{admin/failure-reasons :: failure-reasons}"></th:block>
   <th:block th:replace="~{admin/failure-logs :: failure-logs}"></th:block>

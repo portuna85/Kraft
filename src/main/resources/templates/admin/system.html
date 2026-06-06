@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('시스템 상태', '서버 시스템 상태 정보', ~{::section})}">
+<section class="kraft-page">
+  <header class="kraft-hero">
+    <p class="eyebrow">Admin</p>
+    <h1>시스템 상태</h1>
+  </header>
+
+  <div class="container py-3">
+    <div class="row g-3">
+
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-header">JVM 메모리</div>
+          <div class="card-body">
+            <div class="mb-2">
+              <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>Heap</span>
+                <span th:text="${heapUsedMb} + ' MB / ' + ${heapMaxMb} + ' MB'"></span>
+              </div>
+              <div class="progress" style="height: 10px;">
+                <div class="progress-bar"
+                     th:classappend="${heapUsedPct >= 80 ? 'bg-danger' : (heapUsedPct >= 60 ? 'bg-warning' : 'bg-success')}"
+                     role="progressbar"
+                     th:style="'width: ' + ${heapUsedPct} + '%'"
+                     th:attr="aria-valuenow=${heapUsedPct},aria-valuemin=0,aria-valuemax=100"></div>
+              </div>
+              <div class="small text-muted mt-1" th:text="${heapUsedPct} + '% 사용 중'"></div>
+            </div>
+            <div class="d-flex justify-content-between small">
+              <span class="text-muted">Non-Heap</span>
+              <span th:text="${nonHeapMb} + ' MB'"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-header">스레드</div>
+          <div class="card-body">
+            <dl class="row mb-0 small">
+              <dt class="col-6 text-muted">현재 스레드</dt>
+              <dd class="col-6" th:text="${threadCount}"></dd>
+              <dt class="col-6 text-muted">피크 스레드</dt>
+              <dd class="col-6" th:text="${peakThreadCount}"></dd>
+              <dt class="col-6 text-muted">데몬 스레드</dt>
+              <dd class="col-6" th:text="${daemonThreadCount}"></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-header">런타임</div>
+          <div class="card-body">
+            <dl class="row mb-0 small">
+              <dt class="col-5 text-muted">업타임</dt>
+              <dd class="col-7" th:text="${uptimeMs / 3600000} + 'h ' + ${(uptimeMs % 3600000) / 60000} + 'm'"></dd>
+              <dt class="col-5 text-muted">Java 버전</dt>
+              <dd class="col-7" th:text="${javaVersion}"></dd>
+              <dt class="col-5 text-muted">OS</dt>
+              <dd class="col-7" th:text="${osName}"></dd>
+              <dt class="col-5 text-muted">CPU 코어</dt>
+              <dd class="col-7" th:text="${availableProcessors}"></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="mt-3">
+      <a th:href="@{/admin/ops}" class="btn btn-secondary btn-sm">대시보드로</a>
+    </div>
+  </div>
+</section>
+</html>

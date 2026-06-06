@@ -44,6 +44,8 @@ public class AdminSecurityConfig {
                             .hasAnyRole("ADMIN_NEWS_MANAGER", "ADMIN_SUPER_ADMIN")
                         .requestMatchers("/admin/ops/audit", "/admin/ops/audit/**")
                             .hasAnyRole("ADMIN_AUDITOR", "ADMIN_SUPER_ADMIN")
+                        .requestMatchers("/admin/ops/cache", "/admin/ops/cache/**")
+                            .hasAnyRole("ADMIN_OPERATOR", "ADMIN_SUPER_ADMIN")
                         .requestMatchers("/admin/ops", "/admin/ops/**")
                             .hasAnyRole("ADMIN_VIEWER", "ADMIN_OPERATOR",
                                         "ADMIN_NEWS_MANAGER", "ADMIN_AUDITOR", "ADMIN_SUPER_ADMIN")

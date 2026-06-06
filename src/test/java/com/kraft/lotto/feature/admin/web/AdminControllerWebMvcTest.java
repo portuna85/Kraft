@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +37,8 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @WebMvcTest({AdminLoginController.class, AdminCollectionController.class,
-             AdminAuditController.class, AdminNewsController.class})
+             AdminAuditController.class, AdminNewsController.class,
+             AdminSystemController.class, AdminCacheController.class, AdminSeoController.class})
 @Import({TestCacheConfig.class, AdminControllerWebMvcTest.SecurityMvcConfig.class})
 @DisplayName("Admin 컨트롤러 WebMvc 테스트")
 class AdminControllerWebMvcTest {
@@ -63,6 +65,9 @@ class AdminControllerWebMvcTest {
 
     @MockitoBean
     AdminNewsService adminNewsService;
+
+    @MockitoBean
+    CacheManager cacheManager;
 
     @Test
     @DisplayName("로그인 페이지 조회 — 인증 없이 200을 반환한다")
@@ -164,6 +169,34 @@ class AdminControllerWebMvcTest {
                         .param("reason", "스팸"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/ops/news"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN_VIEWER")
+    @DisplayName("시스템 상태 페이지 조회 — ADMIN_VIEWER 역할 사용자에게 200을 반환한다")
+    void systemPageIsOk() throws Exception {
+        mockMvc.perform(get("/admin/ops/system"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/system"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN_OPERATOR")
+    @DisplayName("캐시 관리 페이지 조회 — ADMIN_OPERATOR 역할 사용자에게 200을 반환한다")
+    void cachePageIsOk() throws Exception {
+        when(cacheManager.getCache(any())).thenReturn(null);
+        mockMvc.perform(get("/admin/ops/cache"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/cache"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN_VIEWER")
+    @DisplayName("SEO 점검 페이지 조회 — ADMIN_VIEWER 역할 사용자에게 200을 반환한다")
+    void seoPageIsOk() throws Exception {
+        mockMvc.perform(get("/admin/ops/seo"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/seo"));
     }
 
     @Test
