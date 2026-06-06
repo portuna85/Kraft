@@ -40,7 +40,7 @@ public class WinningNumberAutoCollectScheduler {
 
     @PostConstruct
     void preRegisterMetrics() {
-        List.of("sat-22-30", "sat-23-30", "sun-07-00", "mon-10-10").forEach(trigger ->
+        List.of("sat-22-00", "sun-06-00").forEach(trigger ->
                 List.of("success", "failure").forEach(status ->
                         Counter.builder("kraft.collect.auto.run")
                                 .tags("trigger", trigger, "status", status)
@@ -48,39 +48,21 @@ public class WinningNumberAutoCollectScheduler {
     }
 
     @Scheduled(
-            cron = "${kraft.collect.auto.cron.saturday-22-30:0 30 22 ? * SAT}",
+            cron = "${kraft.collect.auto.cron.saturday-22-00:0 0 22 ? * SAT}",
             zone = "${kraft.collect.auto.zone:Asia/Seoul}"
     )
     @SchedulerLock(name = COLLECT_ALL_LOCK_NAME, lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
-    public void collectSaturday2230() {
-        runCollectAll("sat-22-30");
+    public void collectSaturday2200() {
+        runCollectAll("sat-22-00");
     }
 
     @Scheduled(
-            cron = "${kraft.collect.auto.cron.saturday-23-30:0 30 23 ? * SAT}",
+            cron = "${kraft.collect.auto.cron.sunday-06-00:0 0 6 ? * SUN}",
             zone = "${kraft.collect.auto.zone:Asia/Seoul}"
     )
     @SchedulerLock(name = COLLECT_ALL_LOCK_NAME, lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
-    public void collectSaturday2330() {
-        runCollectAll("sat-23-30");
-    }
-
-    @Scheduled(
-            cron = "${kraft.collect.auto.cron.sunday-07-00:0 0 7 ? * SUN}",
-            zone = "${kraft.collect.auto.zone:Asia/Seoul}"
-    )
-    @SchedulerLock(name = COLLECT_ALL_LOCK_NAME, lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
-    public void collectSunday0700() {
-        runCollectAll("sun-07-00");
-    }
-
-    @Scheduled(
-            cron = "${kraft.collect.auto.cron.monday-10-10:0 10 10 ? * MON}",
-            zone = "${kraft.collect.auto.zone:Asia/Seoul}"
-    )
-    @SchedulerLock(name = COLLECT_ALL_LOCK_NAME, lockAtMostFor = "PT3M", lockAtLeastFor = "PT30S")
-    public void collectMonday1010() {
-        runCollectAll("mon-10-10");
+    public void collectSunday0600() {
+        runCollectAll("sun-06-00");
     }
 
     private void runCollectAll(String trigger) {
