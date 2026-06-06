@@ -79,11 +79,11 @@ public class AdminCacheController {
     private CacheStat buildStat(String name) {
         org.springframework.cache.Cache springCache = cacheManager.getCache(name);
         if (springCache instanceof CaffeineCache caffeineCache) {
-            com.github.benmanes.caffeine.cache.Cache<Object, Object> native_ = caffeineCache.getNativeCache();
-            com.github.benmanes.caffeine.cache.stats.CacheStats stats = native_.stats();
+            com.github.benmanes.caffeine.cache.Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
+            com.github.benmanes.caffeine.cache.stats.CacheStats stats = nativeCache.stats();
             long total = stats.hitCount() + stats.missCount();
             int hitRatePct = total > 0 ? (int) (stats.hitCount() * 100L / total) : 0;
-            return new CacheStat(name, native_.estimatedSize(),
+            return new CacheStat(name, nativeCache.estimatedSize(),
                     stats.hitCount(), stats.missCount(), hitRatePct, stats.evictionCount());
         }
         return new CacheStat(name, -1L, -1L, -1L, -1, -1L);

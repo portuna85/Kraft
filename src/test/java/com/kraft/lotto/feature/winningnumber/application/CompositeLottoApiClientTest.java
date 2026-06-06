@@ -7,8 +7,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,15 +34,60 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("primary 성공 시 fallback을 호출하지 않는다")
-    void primarySuccessNoFallbackCall() {
-        WinningNumber result = mock(WinningNumber.class);
+    @DisplayName("primary가 secondPrize > 0으로 성공하면 fallback을 호출하지 않는다")
+    void primarySuccessWithSecondPrizeNoFallbackCall() {
+        WinningNumber result = winningNumberWithSecondPrize(1_000_000L);
         when(primary.fetch(1)).thenReturn(Optional.of(result));
 
         Optional<WinningNumber> actual = composite.fetch(1);
 
         assertThat(actual).contains(result);
         verify(fallback, never()).fetch(1);
+        assertThat(meterRegistry.counter("kraft.api.fallback.used", "from", "dhlottery", "to", "smok").count()).isZero();
+    }
+
+    @Test
+    @DisplayName("primary가 secondPrize=0으로 성공하면 fallback으로 2등 보충(enrich)을 시도한다")
+    void primarySuccessSecondPrizeZeroEnrichFromFallback() {
+        WinningNumber primaryResult = winningNumberWithSecondPrize(0L);
+        WinningNumber enrichResult = winningNumberWithSecondPrize(70_054_508L);
+        when(primary.fetch(1)).thenReturn(Optional.of(primaryResult));
+        when(fallback.fetch(1)).thenReturn(Optional.of(enrichResult));
+
+        Optional<WinningNumber> actual = composite.fetch(1);
+
+        assertThat(actual).isPresent();
+        assertThat(actual.get().secondPrize()).isEqualTo(70_054_508L);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.success",
+                "from", "dhlottery", "to", "smok").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("kraft.api.fallback.used", "from", "dhlottery", "to", "smok").count()).isZero();
+    }
+
+    @Test
+    @DisplayName("primary secondPrize=0이고 fallback도 secondPrize=0이면 primary 결과를 그대로 반환한다")
+    void primaryAndFallbackBothSecondPrizeZeroReturnsPrimary() {
+        WinningNumber primaryResult = winningNumberWithSecondPrize(0L);
+        WinningNumber fallbackResult = winningNumberWithSecondPrize(0L);
+        when(primary.fetch(1)).thenReturn(Optional.of(primaryResult));
+        when(fallback.fetch(1)).thenReturn(Optional.of(fallbackResult));
+
+        Optional<WinningNumber> actual = composite.fetch(1);
+
+        assertThat(actual).contains(primaryResult);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.success",
+                "from", "dhlottery", "to", "smok").count()).isZero();
+    }
+
+    @Test
+    @DisplayName("primary secondPrize=0이고 fallback 보충 실패해도 primary 결과를 반환한다")
+    void primarySecondPrizeZeroEnrichFailReturnsOriginal() {
+        WinningNumber primaryResult = winningNumberWithSecondPrize(0L);
+        when(primary.fetch(1)).thenReturn(Optional.of(primaryResult));
+        when(fallback.fetch(1)).thenThrow(new LottoApiClientException("smok unavailable"));
+
+        Optional<WinningNumber> actual = composite.fetch(1);
+
+        assertThat(actual).contains(primaryResult);
         assertThat(meterRegistry.counter("kraft.api.fallback.used", "from", "dhlottery", "to", "smok").count()).isZero();
     }
 
@@ -103,5 +151,14 @@ class CompositeLottoApiClientTest {
         // fallbackClient=null → Composite 미생성 검증은 LottoApiClientConfigTest에서 담당.
         // 여기서는 Composite 자체의 동작만 검증하므로 이 케이스는 설정 레이어 테스트로 위임.
         assertThat(composite).isNotNull();
+    }
+
+    private static WinningNumber winningNumberWithSecondPrize(long secondPrize) {
+        return new WinningNumber(
+                1, LocalDate.of(2026, 6, 6),
+                new LottoCombination(List.of(1, 2, 3, 4, 5, 6)), 7,
+                1_000_000L, 5, 100_000_000L, 5_000_000L,
+                secondPrize, secondPrize > 0 ? 10 : 0,
+                null, null);
     }
 }
