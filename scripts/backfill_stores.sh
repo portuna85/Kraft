@@ -9,7 +9,7 @@ FROM="${1:?사용법: $0 <from_round> <to_round> <ops_token>}"
 TO="${2:?사용법: $0 <from_round> <to_round> <ops_token>}"
 TOKEN="${3:?사용법: $0 <from_round> <to_round> <ops_token>}"
 BASE_URL="${BASE_URL:-http://localhost:8080}"
-DELAY_SEC="${DELAY_SEC:-2}"
+DELAY_SEC="${DELAY_SEC:-10}"
 
 total=$(( TO - FROM + 1 ))
 success=0
