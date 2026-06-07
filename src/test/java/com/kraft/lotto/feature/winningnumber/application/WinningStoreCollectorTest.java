@@ -119,4 +119,24 @@ class WinningStoreCollectorTest {
         verify(storeRepository, never()).deleteByRoundAndGrade(anyInt(), anyInt());
         verify(storeRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
     }
+
+    @Test
+    @DisplayName("saveManual: 판매점 목록을 저장한다")
+    void saveManualPersistsStores() {
+        List<WinningStore> stores = List.of(new WinningStore(1227, 1, "행운복권방", "서울 강남구", 1));
+
+        collector.saveManual(1227, 1, stores);
+
+        verify(storeRepository).deleteByRoundAndGrade(1227, 1);
+        verify(storeRepository).saveAll(org.mockito.ArgumentMatchers.anyList());
+    }
+
+    @Test
+    @DisplayName("saveManual: 빈 목록이면 저장소를 건드리지 않는다")
+    void saveManualSkipsEmptyList() {
+        collector.saveManual(1227, 1, List.of());
+
+        verify(storeRepository, never()).deleteByRoundAndGrade(anyInt(), anyInt());
+        verify(storeRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
+    }
 }

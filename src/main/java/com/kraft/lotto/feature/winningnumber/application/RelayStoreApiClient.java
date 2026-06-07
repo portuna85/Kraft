@@ -43,7 +43,7 @@ class RelayStoreApiClient implements WinningStoreApiClient {
         }
     }
 
-    private List<WinningStore> parse(int round, int grade, String body) {
+    List<WinningStore> parse(int round, int grade, String body) {
         try {
             JsonNode root = objectMapper.readTree(body);
             JsonNode arr = root.path("stores");
