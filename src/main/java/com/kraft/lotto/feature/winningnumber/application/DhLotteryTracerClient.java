@@ -70,8 +70,9 @@ class DhLotteryTracerClient {
                 return true;
             }
             if (!"W".equals(isWait)) {
-                log.warn("tracer queue rejected: isWait={}", isWait);
-                return false;
+                // 예상 외 응답(XML 등) — 대기실 포맷 변경 가능성, 경고 후 진행
+                log.warn("tracer queue unexpected response (proceeding): isWait={}", isWait);
+                return true;
             }
             try {
                 Thread.sleep(WAIT_MS);

@@ -94,11 +94,11 @@ class DhLotteryTracerClientTest {
     }
 
     @Test
-    @DisplayName("pollQueue: inputQueue=R(차단) 이면 false를 반환한다")
-    void pollQueue_returnsFalseWhenRejected() {
+    @DisplayName("pollQueue: inputQueue가 예상 외 응답(R 등)이면 진행(true)을 반환한다")
+    void pollQueue_returnsTrueOnUnexpectedResponse() {
         doReturn("R").when(tracerSpy).inputQueue(anyString(), anyString(), anyString());
 
-        assertThat(tracerSpy.pollQueue("/page", "login", "ua")).isFalse();
+        assertThat(tracerSpy.pollQueue("/page", "login", "ua")).isTrue();
     }
 
     // ── performHandshake (spy로 하위 메서드 스텁) ─────────────────
