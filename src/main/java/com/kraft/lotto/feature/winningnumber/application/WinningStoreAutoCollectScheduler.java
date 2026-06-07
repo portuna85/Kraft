@@ -54,6 +54,15 @@ class WinningStoreAutoCollectScheduler {
     }
 
     @Scheduled(
+            cron = "${kraft.collect.auto.cron.store-daily-00-10:0 10 0 * * *}",
+            zone = "${kraft.collect.auto.zone:Asia/Seoul}"
+    )
+    @SchedulerLock(name = STORE_COLLECT_LOCK_NAME, lockAtMostFor = "PT5M", lockAtLeastFor = "PT1M")
+    public void collectStoreDaily0010() {
+        runStoreCollect("store-daily-00-10");
+    }
+
+    @Scheduled(
             cron = "${kraft.collect.auto.cron.store-sunday-06-00:0 0 6 ? * SUN}",
             zone = "${kraft.collect.auto.zone:Asia/Seoul}"
     )
