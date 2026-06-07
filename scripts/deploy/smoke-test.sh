@@ -32,7 +32,6 @@ optional_metric() {
 require_metric '^kraft_api_circuit_breaker_state\{' 'kraft_api_circuit_breaker_state'
 require_metric '^cache_size\{.*cache="winningNumberFrequency"' 'cache_size{cache="winningNumberFrequency"}'
 optional_metric '^kraft_collect_auto_run_total\{' 'kraft_collect_auto_run_total'
-optional_metric '^kraft_api_fallback_exhausted_total' 'kraft_api_fallback_exhausted_total'
 
 if docker compose ps alertmanager 2>/dev/null | grep -Eq '(running|Up|healthy)'; then
   docker compose exec -T alertmanager amtool check-config /etc/alertmanager/alertmanager.yml
