@@ -1,5 +1,4 @@
 name: CI
-# test push
 
 on:
   push:
