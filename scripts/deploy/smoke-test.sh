@@ -15,7 +15,7 @@ METRICS=$(curl -fsS http://localhost:8080/actuator/prometheus)
 require_metric() {
   local pattern="$1"
   local label="$2"
-  if ! printf '%s' "$METRICS" | grep -Eq "$pattern"; then
+  if ! grep -Eq "$pattern" <<< "$METRICS"; then
     echo "::error::Prometheus metric missing: $label"
     exit 1
   fi
@@ -24,7 +24,7 @@ require_metric() {
 optional_metric() {
   local pattern="$1"
   local label="$2"
-  if ! printf '%s' "$METRICS" | grep -Eq "$pattern"; then
+  if ! grep -Eq "$pattern" <<< "$METRICS"; then
     echo "::warning::Prometheus event metric not present yet: $label"
   fi
 }
