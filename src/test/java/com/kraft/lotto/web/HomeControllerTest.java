@@ -21,6 +21,7 @@ import com.kraft.lotto.feature.recommend.web.dto.RecommendResponse;
 import com.kraft.lotto.feature.recommend.web.dto.RuleDto;
 import com.kraft.lotto.feature.statistics.application.WinningStatisticsService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
+import com.kraft.lotto.feature.winningnumber.application.WinningStoreQueryService;
 import com.kraft.lotto.feature.winningnumber.web.dto.CombinationPrizeHistoryDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.FrequencySummaryDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
@@ -51,13 +52,16 @@ class HomeControllerTest {
     @Mock
     WinningStatisticsService statisticsService;
 
+    @Mock
+    WinningStoreQueryService storeQueryService;
+
     MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         RecommendModelSupport recommendModelSupport = new RecommendModelSupport(recommendService);
         FrequencyModelSupport frequencyModelSupport = new FrequencyModelSupport(statisticsService);
-        RoundsModelSupport roundsModelSupport = new RoundsModelSupport(queryService);
+        RoundsModelSupport roundsModelSupport = new RoundsModelSupport(queryService, storeQueryService);
         mockMvc = MockMvcBuilders.standaloneSetup(
                         new HomeController(queryService, recommendModelSupport),
                         new RecommendController(recommendModelSupport),

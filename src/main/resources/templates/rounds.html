@@ -27,7 +27,7 @@
           <dt class="col-5 col-sm-3 fw-normal text-secondary">당첨자 수</dt>
           <dd class="col-7 col-sm-9 mb-0" th:text="${result.firstWinners + '명'}">0명</dd>
         </dl>
-        <div class="kraft-balls">
+        <div class="kraft-balls mb-3">
           <th:block th:each="n : ${result.numbers}">
             <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
           </th:block>
@@ -36,9 +36,73 @@
             <span th:replace="~{fragments/lotto-ball :: ball(${result.bonusNumber}, 'bonus ')}">0</span>
           </span>
         </div>
+
+        <!-- 당첨 판매점 -->
+        <div th:if="${searchStoresCollected}">
+          <!-- 지역 집계 -->
+          <div class="row g-2 mb-3"
+               th:if="${!#lists.isEmpty(searchRegions1) or !#lists.isEmpty(searchRegions2)}">
+            <div class="col-12 col-sm-6" th:if="${!#lists.isEmpty(searchRegions1)}">
+              <div class="region-summary">
+                <h3 class="region-summary-title">1등 당첨지역</h3>
+                <ul class="region-summary-list">
+                  <li th:each="r : ${searchRegions1}" class="region-summary-item">
+                    <span class="region-name"
+                          th:text="${r.sido} + (${r.sigungu} != null ? ' ' + ${r.sigungu} : '')">-</span>
+                    <span class="region-count" th:text="${r.count} + '곳'">-</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6" th:if="${!#lists.isEmpty(searchRegions2)}">
+              <div class="region-summary">
+                <h3 class="region-summary-title">2등 당첨지역</h3>
+                <ul class="region-summary-list">
+                  <li th:each="r : ${searchRegions2}" class="region-summary-item">
+                    <span class="region-name"
+                          th:text="${r.sido} + (${r.sigungu} != null ? ' ' + ${r.sigungu} : '')">-</span>
+                    <span class="region-count" th:text="${r.count} + '곳'">-</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 탭 + 판매점 목록 -->
+          <div class="store-tab-row mb-2" id="searchStoreTabs">
+            <button class="store-tab active" data-target="search-store-list-1">1등 배출점</button>
+            <button class="store-tab" data-target="search-store-list-2">2등 배출점</button>
+          </div>
+          <ul class="store-list" id="search-store-list-1">
+            <li class="store-item" th:each="s : ${searchStores1}">
+              <div class="store-info">
+                <span class="store-name" th:text="${s.name}">-</span>
+                <span class="store-address" th:text="${s.address}">-</span>
+              </div>
+              <a class="store-map-link" th:href="${s.naverMapUrl}"
+                 target="_blank" rel="noopener noreferrer">지도 →</a>
+            </li>
+            <li class="store-empty" th:if="${#lists.isEmpty(searchStores1)}">데이터 없음</li>
+          </ul>
+          <ul class="store-list d-none" id="search-store-list-2">
+            <li class="store-item" th:each="s : ${searchStores2}">
+              <div class="store-info">
+                <span class="store-name" th:text="${s.name}">-</span>
+                <span class="store-address" th:text="${s.address}">-</span>
+              </div>
+              <a class="store-map-link" th:href="${s.naverMapUrl}"
+                 target="_blank" rel="noopener noreferrer">지도 →</a>
+            </li>
+            <li class="store-empty" th:if="${#lists.isEmpty(searchStores2)}">데이터 없음</li>
+          </ul>
+        </div>
+        <p class="text-secondary small mt-2 mb-0" th:if="${!searchStoresCollected}">
+          판매점 데이터가 수집되지 않은 회차입니다.
+        </p>
       </div>
     </div>
   </div>
   <th:block th:replace="~{fragments/rounds-list :: rounds-list}"></th:block>
+  <script th:src="@{/js/rounds.js}" defer></script>
 </section>
 </html>
