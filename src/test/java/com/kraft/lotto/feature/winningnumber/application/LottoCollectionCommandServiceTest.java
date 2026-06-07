@@ -250,6 +250,22 @@ class LottoCollectionCommandServiceTest {
         assertThat(idle.operation()).isNull();
     }
 
+    @Test
+    @DisplayName("특정 회차를 refresh=true로 재수집하고 이벤트를 발행한다")
+    void collectOneRefreshFetchesWithRefreshAndPublishesEvent() {
+        LottoCollectionCommandService service = service();
+        when(singleDrawCollector.collectOne(1227, true)).thenReturn(CollectResponse.ofUpdated(1, 1227));
+
+        CollectResponse response = service.collectOneRefresh(1227);
+
+        assertThat(response.updated()).isEqualTo(1);
+        assertThat(response.latestRound()).isEqualTo(1227);
+        verify(singleDrawCollector).collectOne(1227, true);
+        WinningNumbersCollectedEvent event = publishedEvent();
+        assertThat(event.updated()).isEqualTo(1);
+        assertThat(event.dataChanged()).isTrue();
+    }
+
     private LottoCollectionCommandService service() {
         return new LottoCollectionCommandService(
                 winningNumberRepository,
