@@ -207,35 +207,67 @@
 
           <!-- 1등 목록 -->
           <ul class="store-list" id="store-list-1">
-            <li class="store-item" th:each="s : ${stores1}">
-              <div class="store-info">
-                <span class="store-name" th:text="${s.name}">-</span>
-                <span class="store-address" th:text="${s.address}">-</span>
-                <span class="store-meta">
-                  <span th:text="'1등 당첨게임 수 ' + ${s.winCount} + '개'">-</span>
-                </span>
+            <li class="store-card" th:each="s : ${stores1}">
+              <div class="store-card-thumb" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="3"/>
+                  <path d="M6 9h4M6 12h3M14 9h4M14 12h2"/>
+                  <circle cx="17" cy="15" r="1.5" fill="currentColor" stroke="none"/>
+                </svg>
+              </div>
+              <div class="store-card-body">
+                <p class="store-card-name" th:text="${s.name}">-</p>
+                <p class="store-card-row">
+                  <span class="store-card-label">장소</span>
+                  <span class="store-card-value" th:text="${s.address}">-</span>
+                </p>
+                <p class="store-card-row">
+                  <span class="store-card-label">당첨</span>
+                  <span class="store-card-value" th:text="'1등 당첨게임 수 ' + ${s.winCount} + '개'">-</span>
+                </p>
               </div>
               <a class="store-map-link" th:href="${s.naverMapUrl}"
                  target="_blank" rel="noopener noreferrer">지도 →</a>
             </li>
             <li class="store-empty" th:if="${#lists.isEmpty(stores1)}">데이터 없음</li>
           </ul>
+          <div class="store-pagination" id="store-pagination-1">
+            <button class="store-page-btn" data-dir="prev">이전</button>
+            <span class="store-page-info">현재<span class="store-page-current">1</span>&nbsp;전체<span class="store-page-total">1</span></span>
+            <button class="store-page-btn" data-dir="next">다음</button>
+          </div>
 
           <!-- 2등 목록 -->
           <ul class="store-list d-none" id="store-list-2">
-            <li class="store-item" th:each="s : ${stores2}">
-              <div class="store-info">
-                <span class="store-name" th:text="${s.name}">-</span>
-                <span class="store-address" th:text="${s.address}">-</span>
-                <span class="store-meta">
-                  <span th:text="'2등 당첨게임 수 ' + ${s.winCount} + '개'">-</span>
-                </span>
+            <li class="store-card" th:each="s : ${stores2}">
+              <div class="store-card-thumb" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="3"/>
+                  <path d="M6 9h4M6 12h3M14 9h4M14 12h2"/>
+                  <circle cx="17" cy="15" r="1.5" fill="currentColor" stroke="none"/>
+                </svg>
+              </div>
+              <div class="store-card-body">
+                <p class="store-card-name" th:text="${s.name}">-</p>
+                <p class="store-card-row">
+                  <span class="store-card-label">장소</span>
+                  <span class="store-card-value" th:text="${s.address}">-</span>
+                </p>
+                <p class="store-card-row">
+                  <span class="store-card-label">당첨</span>
+                  <span class="store-card-value" th:text="'2등 당첨게임 수 ' + ${s.winCount} + '개'">-</span>
+                </p>
               </div>
               <a class="store-map-link" th:href="${s.naverMapUrl}"
                  target="_blank" rel="noopener noreferrer">지도 →</a>
             </li>
             <li class="store-empty" th:if="${#lists.isEmpty(stores2)}">데이터 없음</li>
           </ul>
+          <div class="store-pagination d-none" id="store-pagination-2">
+            <button class="store-page-btn" data-dir="prev">이전</button>
+            <span class="store-page-info">현재<span class="store-page-current">1</span>&nbsp;전체<span class="store-page-total">1</span></span>
+            <button class="store-page-btn" data-dir="next">다음</button>
+          </div>
 
         </div>
       </div>
