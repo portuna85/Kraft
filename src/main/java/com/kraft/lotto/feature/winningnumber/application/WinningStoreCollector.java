@@ -101,7 +101,12 @@ public class WinningStoreCollector {
     void persistGrade(int round, int grade, List<WinningStore> stores) {
         LocalDateTime now = LocalDateTime.now(clock);
         List<WinningStoreEntity> entities = stores.stream()
-                .map(s -> new WinningStoreEntity(s.round(), s.grade(), s.name(), s.address(), s.winCount(), now))
+                .map(s -> {
+                    KoreanAddressParser.ParsedAddress parsed = KoreanAddressParser.parse(s.address());
+                    return new WinningStoreEntity(
+                            s.round(), s.grade(), s.name(), s.address(), s.winCount(), now,
+                            parsed.sido(), parsed.sigungu(), s.purchaseMethod());
+                })
                 .toList();
         storeRepository.deleteByRoundAndGrade(round, grade);
         storeRepository.saveAll(entities);

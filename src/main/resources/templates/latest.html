@@ -171,6 +171,34 @@
             </span>
           </p>
 
+          <!-- 지역 집계 -->
+          <div class="row g-3 mb-3" th:if="${!#lists.isEmpty(regions1) or !#lists.isEmpty(regions2)}">
+            <div class="col-12 col-md-6" th:if="${!#lists.isEmpty(regions1)}">
+              <div class="region-summary">
+                <h3 class="region-summary-title">1등 당첨지역</h3>
+                <ul class="region-summary-list">
+                  <li th:each="r : ${regions1}" class="region-summary-item">
+                    <span class="region-name"
+                          th:text="${r.sido} + (${r.sigungu} != null ? ' ' + ${r.sigungu} : '')">-</span>
+                    <span class="region-count" th:text="${r.count} + '곳'">-</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-12 col-md-6" th:if="${!#lists.isEmpty(regions2)}">
+              <div class="region-summary">
+                <h3 class="region-summary-title">2등 당첨지역</h3>
+                <ul class="region-summary-list">
+                  <li th:each="r : ${regions2}" class="region-summary-item">
+                    <span class="region-name"
+                          th:text="${r.sido} + (${r.sigungu} != null ? ' ' + ${r.sigungu} : '')">-</span>
+                    <span class="region-count" th:text="${r.count} + '곳'">-</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <!-- 탭 -->
           <div class="store-tab-row mb-3" id="storeTabs">
             <button class="store-tab active" data-grade="1">1등 배출점</button>

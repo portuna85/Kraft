@@ -124,7 +124,7 @@ public class AdminCollectionController {
                     if (parts.length > 2) {
                         try { winCount = Integer.parseInt(parts[2].trim()); } catch (NumberFormatException ignored) {}
                     }
-                    return new WinningStore(round, grade, name, address, winCount);
+                    return WinningStore.of(round, grade, name, address, winCount);
                 })
                 .filter(s -> !s.name().isBlank())
                 .toList();

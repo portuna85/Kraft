@@ -29,4 +29,20 @@ public interface WinningStoreRepository extends JpaRepository<WinningStoreEntity
     @Modifying
     @Query("DELETE FROM WinningStoreEntity w WHERE w.round = :round AND w.grade = :grade")
     void deleteByRoundAndGrade(@Param("round") int round, @Param("grade") int grade);
+
+    @Query("""
+            SELECT w.grade AS grade, w.sido AS sido, w.sigungu AS sigungu, COUNT(w) AS count
+            FROM WinningStoreEntity w
+            WHERE w.round = :round AND w.sido IS NOT NULL
+            GROUP BY w.grade, w.sido, w.sigungu
+            ORDER BY w.grade ASC, count DESC, w.sido ASC
+            """)
+    List<RegionSummaryRow> findRegionSummaryByRound(@Param("round") int round);
+
+    interface RegionSummaryRow {
+        Integer getGrade();
+        String getSido();
+        String getSigungu();
+        Long getCount();
+    }
 }

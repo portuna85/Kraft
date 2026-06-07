@@ -5,5 +5,12 @@ public record WinningStore(
         int grade,
         String name,
         String address,
-        int winCount
-) {}
+        int winCount,
+        String sido,
+        String sigungu,
+        String purchaseMethod
+) {
+    public static WinningStore of(int round, int grade, String name, String address, int winCount) {
+        return new WinningStore(round, grade, name, address, winCount, null, null, null);
+    }
+}

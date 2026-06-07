@@ -9,7 +9,9 @@ public record WinningStoreDto(
         String name,
         String address,
         int winCount,
-        String naverMapUrl
+        String naverMapUrl,
+        String sido,
+        String sigungu
 ) {
     private static final String NAVER_MAP_SEARCH = "https://map.naver.com/v5/search/";
 
@@ -19,7 +21,9 @@ public record WinningStoreDto(
                 store.name(),
                 store.address(),
                 store.winCount(),
-                naverMapUrl(store.name(), store.address())
+                naverMapUrl(store.name(), store.address()),
+                store.sido(),
+                store.sigungu()
         );
     }
 

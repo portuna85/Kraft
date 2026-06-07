@@ -12,7 +12,7 @@ class WinningStoreDtoTest {
     @Test
     @DisplayName("WinningStore 도메인으로부터 DTO를 생성한다")
     void fromDomain() {
-        WinningStore store = new WinningStore(1226, 1, "거봉마트", "대구 서구 북비산로 310", 1);
+        WinningStore store = WinningStore.of(1226, 1, "거봉마트", "대구 서구 북비산로 310", 1);
 
         WinningStoreDto dto = WinningStoreDto.from(store);
 
@@ -27,7 +27,7 @@ class WinningStoreDtoTest {
     @Test
     @DisplayName("주소가 빈 문자열이어도 naverMapUrl을 생성한다")
     void fromDomainWithEmptyAddress() {
-        WinningStore store = new WinningStore(1226, 2, "온라인판매점", "", 3);
+        WinningStore store = WinningStore.of(1226, 2, "온라인판매점", "", 3);
 
         WinningStoreDto dto = WinningStoreDto.from(store);
 

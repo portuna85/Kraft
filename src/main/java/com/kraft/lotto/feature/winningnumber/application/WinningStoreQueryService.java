@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
+import com.kraft.lotto.feature.winningnumber.web.dto.WinningRegionSummaryDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.WinningStoreDto;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,5 +34,11 @@ public class WinningStoreQueryService {
 
     public Optional<LocalDateTime> findLastCollectedAt(int round) {
         return repository.findLastCollectedAtByRound(round);
+    }
+
+    public List<WinningRegionSummaryDto> findRegionSummary(int round) {
+        return repository.findRegionSummaryByRound(round).stream()
+                .map(r -> new WinningRegionSummaryDto(round, r.getGrade(), r.getSido(), r.getSigungu(), r.getCount()))
+                .toList();
     }
 }

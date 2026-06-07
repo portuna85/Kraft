@@ -77,8 +77,8 @@ class WinningStoreCollectorTest {
     @Test
     @DisplayName("collectStores: 1등·2등 판매점을 grade별로 독립 저장한다")
     void collectStoresSavesBothGradesIndependently() {
-        List<WinningStore> stores1 = List.of(new WinningStore(1226, 1, "상점A", "주소A", 1));
-        List<WinningStore> stores2 = List.of(new WinningStore(1226, 2, "상점B", "주소B", 1));
+        List<WinningStore> stores1 = List.of(WinningStore.of(1226, 1, "상점A", "주소A", 1));
+        List<WinningStore> stores2 = List.of(WinningStore.of(1226, 2, "상점B", "주소B", 1));
         when(storeApiClient.fetchStores(1226, 1)).thenReturn(stores1);
         when(storeApiClient.fetchStores(1226, 2)).thenReturn(stores2);
 
@@ -94,7 +94,7 @@ class WinningStoreCollectorTest {
     @Test
     @DisplayName("collectStores: 한 등급 실패 시 false를 반환하지만 성공 등급은 저장된다")
     void collectStoresReturnsFalseOnPartialFailure() {
-        List<WinningStore> stores1 = List.of(new WinningStore(1226, 1, "상점A", "주소A", 1));
+        List<WinningStore> stores1 = List.of(WinningStore.of(1226, 1, "상점A", "주소A", 1));
         when(storeApiClient.fetchStores(1226, 1)).thenReturn(stores1);
         when(storeApiClient.fetchStores(1226, 2)).thenReturn(List.of());
 
@@ -123,7 +123,7 @@ class WinningStoreCollectorTest {
     @Test
     @DisplayName("saveManual: 판매점 목록을 저장한다")
     void saveManualPersistsStores() {
-        List<WinningStore> stores = List.of(new WinningStore(1227, 1, "행운복권방", "서울 강남구", 1));
+        List<WinningStore> stores = List.of(WinningStore.of(1227, 1, "행운복권방", "서울 강남구", 1));
 
         collector.saveManual(1227, 1, stores);
 

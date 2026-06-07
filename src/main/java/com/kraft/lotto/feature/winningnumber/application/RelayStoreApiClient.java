@@ -59,7 +59,7 @@ class RelayStoreApiClient implements WinningStoreApiClient {
                 if (name == null || name.isBlank()) {
                     continue;
                 }
-                stores.add(new WinningStore(round, grade, name.trim(), address.trim(), winCount));
+                stores.add(WinningStore.of(round, grade, name.trim(), address.trim(), winCount));
             }
             return List.copyOf(stores);
         } catch (Exception e) {
