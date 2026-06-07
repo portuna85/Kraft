@@ -134,6 +134,14 @@ public class LottoCollectionCommandService {
         });
     }
 
+    public CollectResponse collectOneRefresh(int round) {
+        return runExclusive("collect-refresh", () -> {
+            CollectResponse response = singleDrawCollector.collectOne(round, true);
+            eventNotifier.publishCollected(response);
+            return response;
+        });
+    }
+
     public CollectStatusResponse getStatus() {
         return runState.status();
     }

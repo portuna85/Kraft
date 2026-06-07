@@ -72,4 +72,10 @@ public class OpsCollectionController {
         boolean saved = winningStoreCollector.collectStores(round);
         return Map.of("round", round, "saved", saved);
     }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Re-fetch a specific round from API even if already collected (refresh=true)")
+    public CollectResponse refreshRound(@RequestParam int round) {
+        return collectionCommandService.collectOneRefresh(round);
+    }
 }

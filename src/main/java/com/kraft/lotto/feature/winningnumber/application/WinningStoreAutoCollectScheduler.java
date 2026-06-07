@@ -1,7 +1,9 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
+import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberEntity;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningStoreRepository;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
@@ -21,13 +23,16 @@ class WinningStoreAutoCollectScheduler {
     private final WinningStoreCollector storeCollector;
     private final WinningNumberRepository winningNumberRepository;
     private final WinningStoreRepository storeRepository;
+    private final LottoCollectionCommandService collectionService;
 
     WinningStoreAutoCollectScheduler(WinningStoreCollector storeCollector,
                                      WinningNumberRepository winningNumberRepository,
-                                     WinningStoreRepository storeRepository) {
+                                     WinningStoreRepository storeRepository,
+                                     LottoCollectionCommandService collectionService) {
         this.storeCollector = storeCollector;
         this.winningNumberRepository = winningNumberRepository;
         this.storeRepository = storeRepository;
+        this.collectionService = collectionService;
     }
 
     @Scheduled(
@@ -40,11 +45,19 @@ class WinningStoreAutoCollectScheduler {
     }
 
     private void runStoreCollect(String trigger) {
-        int latestRound = winningNumberRepository.findMaxRound().orElse(0);
-        if (latestRound <= 0) {
+        Optional<WinningNumberEntity> latestOpt = winningNumberRepository.findTopByOrderByRoundDesc();
+        if (latestOpt.isEmpty()) {
             log.debug("store auto-collect skip: no rounds in DB, trigger={}", trigger);
             return;
         }
+        WinningNumberEntity latest = latestOpt.get();
+        int latestRound = latest.getRound();
+
+        if (latest.getSecondPrize() == 0) {
+            log.info("store auto-collect: secondPrize=0 detected, refreshing round={}, trigger={}", latestRound, trigger);
+            collectionService.collectOneRefresh(latestRound);
+        }
+
         boolean alreadyComplete = IntStream.of(GRADES)
                 .allMatch(g -> storeRepository.existsByRoundAndGrade(latestRound, g));
         if (alreadyComplete) {
