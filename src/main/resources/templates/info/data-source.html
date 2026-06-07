@@ -73,22 +73,6 @@
           <span class="ms-1 text-success small" th:if="${expectedRound != null and latestStoredRound != null and expectedRound <= latestStoredRound}">✓ 최신 상태</span>
           <span class="ms-1 text-warning small" th:if="${expectedRound != null and latestStoredRound != null and expectedRound > latestStoredRound}">미반영 회차 있음</span>
         </div>
-        <div class="mb-2">
-          <dt class="fw-semibold d-inline">1등 판매점 수집:</dt>
-          <dd class="d-inline ms-1">
-            <span th:if="${store1Collected}" class="text-success">수집 완료</span>
-            <span th:unless="${store1Collected}" class="text-warning">미수집</span>
-          </dd>
-        </div>
-        <div class="mb-0">
-          <dt class="fw-semibold d-inline">2등 판매점 수집:</dt>
-          <dd class="d-inline ms-1">
-            <span th:if="${store2Collected}" class="text-success">수집 완료</span>
-            <span th:unless="${store2Collected}" class="text-warning">미수집</span>
-          </dd>
-          <span class="ms-2 text-secondary small" th:if="${storeCollectedAt != null}"
-                th:text="'(마지막 수집: ' + ${#temporals.format(storeCollectedAt, 'yyyy-MM-dd HH:mm')} + ' KST)'">-</span>
-        </div>
       </dl>
     </div>
   </div>

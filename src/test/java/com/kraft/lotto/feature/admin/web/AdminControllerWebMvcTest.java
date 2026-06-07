@@ -1,8 +1,6 @@
 package com.kraft.lotto.feature.admin.web;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -18,7 +16,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.kraft.lotto.TestCacheConfig;
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
 import com.kraft.lotto.feature.admin.application.AdminNewsService;
-import com.kraft.lotto.feature.winningnumber.application.WinningStoreCollector;
 import com.kraft.lotto.web.OpsCollectionFacade;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -57,9 +54,6 @@ class AdminControllerWebMvcTest {
 
     @MockitoBean
     OpsCollectionFacade opsCollectionFacade;
-
-    @MockitoBean
-    WinningStoreCollector winningStoreCollector;
 
     @MockitoBean
     AdminAuditLogService auditLogService;
@@ -117,19 +111,6 @@ class AdminControllerWebMvcTest {
         mockMvc.perform(post("/admin/ops/collection/latest")
                         .with(csrf())
                         .with(user("admin").roles("ADMIN_OPERATOR")))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/ops/collection"));
-    }
-
-    @Test
-    @DisplayName("판매점 정보 수집 실행 — 수집 후 운영 도구 페이지로 리다이렉트한다")
-    void collectStoresRedirects() throws Exception {
-        when(winningStoreCollector.collectStores(anyInt())).thenReturn(true);
-
-        mockMvc.perform(post("/admin/ops/collection/stores")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN_OPERATOR"))
-                        .param("round", "1200"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/ops/collection"));
     }
@@ -198,21 +179,6 @@ class AdminControllerWebMvcTest {
         mockMvc.perform(get("/admin/ops/seo"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/seo"));
-    }
-
-    @Test
-    @DisplayName("수동 판매점 저장 — 저장 후 운영 도구 페이지로 리다이렉트한다")
-    void saveManualStoresRedirects() throws Exception {
-        doNothing().when(winningStoreCollector).saveManual(anyInt(), anyInt(), anyList());
-
-        mockMvc.perform(post("/admin/ops/collection/stores/manual")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN_OPERATOR"))
-                        .param("round", "1227")
-                        .param("grade", "1")
-                        .param("storesText", "행운복권방|서울 강남구|1"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/admin/ops/collection"));
     }
 
     @Test

@@ -8,10 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
-import com.kraft.lotto.feature.winningnumber.application.WinningStoreQueryService;
 import com.kraft.lotto.support.GlobalExceptionHandler;
 import com.kraft.lotto.support.fixtures.LottoTestFixtures;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,9 +30,6 @@ class LatestRoundControllerTest {
     @Mock
     WinningNumberQueryService queryService;
 
-    @Mock
-    WinningStoreQueryService storeQueryService;
-
     MockMvc mockMvc;
 
     @BeforeEach
@@ -43,7 +38,7 @@ class LatestRoundControllerTest {
         viewResolver.setPrefix("/WEB-INF/views/");
         viewResolver.setSuffix(".html");
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new LatestRoundController(queryService, storeQueryService))
+                .standaloneSetup(new LatestRoundController(queryService))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setViewResolvers(viewResolver)
                 .build();
@@ -53,16 +48,11 @@ class LatestRoundControllerTest {
     @DisplayName("최신 회차가 있으면 latest 뷰와 모델을 반환한다")
     void latestPageWithData() throws Exception {
         when(queryService.findLatest()).thenReturn(Optional.of(LottoTestFixtures.winningNumberDto(1200)));
-        when(storeQueryService.findByRoundAndGrade(1200, 1)).thenReturn(List.of());
-        when(storeQueryService.findByRoundAndGrade(1200, 2)).thenReturn(List.of());
-        when(storeQueryService.hasGrade(1200, 1)).thenReturn(false);
-        when(storeQueryService.hasGrade(1200, 2)).thenReturn(false);
-        when(storeQueryService.findLastCollectedAt(1200)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/latest"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("latest"))
-                .andExpect(model().attributeExists("latest", "firstAfterTax", "secondAfterTax", "stores1", "stores2"));
+                .andExpect(model().attributeExists("latest", "firstAfterTax", "secondAfterTax"));
     }
 
     @Test

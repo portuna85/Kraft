@@ -15,7 +15,6 @@ import com.kraft.lotto.feature.winningnumber.application.ApiCircuitBreakerRegist
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
-import com.kraft.lotto.feature.winningnumber.application.WinningStoreCollector;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
 import com.kraft.lotto.feature.winningnumber.web.dto.FetchLogRetentionStatusDto;
 import com.kraft.lotto.infra.config.KraftCollectProperties;
@@ -60,9 +59,6 @@ class OpsApiAccessScenarioTest {
     OpsCollectionFacade opsCollectionFacade;
 
     @Mock
-    WinningStoreCollector winningStoreCollector;
-
-    @Mock
     WinningNumberQueryService winningNumberQueryService;
 
     @Mock
@@ -74,7 +70,7 @@ class OpsApiAccessScenarioTest {
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
                         new OpsCollectionController(
-                                collectionCommandService, opsCollectionFacade, winningStoreCollector, securityProperties()),
+                                collectionCommandService, opsCollectionFacade, securityProperties()),
                         new OpsFetchLogController(fetchLogQueryService, collectProperties()),
                         new OpsMonitoringController(
                                 recommendMetricsQueryService,

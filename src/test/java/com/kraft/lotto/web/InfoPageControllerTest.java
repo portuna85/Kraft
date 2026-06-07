@@ -9,11 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
-import com.kraft.lotto.feature.winningnumber.application.WinningStoreQueryService;
 import com.kraft.lotto.support.GlobalExceptionHandler;
-import com.kraft.lotto.feature.winningnumber.web.dto.WinningNumberDto;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,8 +30,6 @@ class InfoPageControllerTest {
     LottoFetchLogQueryService fetchLogQueryService;
     @Mock
     WinningNumberQueryService winningNumberQueryService;
-    @Mock
-    WinningStoreQueryService winningStoreQueryService;
 
     MockMvc mockMvc;
 
@@ -46,7 +40,7 @@ class InfoPageControllerTest {
         viewResolver.setSuffix(".html");
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new InfoPageController(
-                        fetchLogQueryService, winningNumberQueryService, winningStoreQueryService))
+                        fetchLogQueryService, winningNumberQueryService))
                 .setViewResolvers(viewResolver)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -71,26 +65,6 @@ class InfoPageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("info/data-source"))
                 .andExpect(model().attributeExists("changeLog"));
-    }
-
-    @Test
-    @DisplayName("/data-source 페이지 — 최신 회차 존재 시 판매점 상태 모델을 포함한다")
-    void dataSourceIncludesStoreStatusWhenLatestExists() throws Exception {
-        WinningNumberDto latest = new WinningNumberDto(
-                1230, LocalDate.of(2026, 6, 7), List.of(1, 2, 3, 4, 5, 6),
-                7, 0L, 0, 0L, 0L, 0, LocalDateTime.now());
-        when(fetchLogQueryService.recentCollectionLogs(anyInt())).thenReturn(List.of());
-        when(winningNumberQueryService.findLatest()).thenReturn(Optional.of(latest));
-        when(winningNumberQueryService.maxPossibleRound()).thenReturn(1230);
-        when(winningStoreQueryService.hasGrade(1230, 1)).thenReturn(true);
-        when(winningStoreQueryService.hasGrade(1230, 2)).thenReturn(false);
-        when(winningStoreQueryService.findLastCollectedAt(1230))
-                .thenReturn(Optional.of(LocalDateTime.of(2026, 6, 7, 22, 30)));
-
-        mockMvc.perform(get("/data-source"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("info/data-source"))
-                .andExpect(model().attributeExists("latestStoredRound", "changeLog"));
     }
 
     @Test

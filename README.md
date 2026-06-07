@@ -1,323 +1,450 @@
-# KRAFT Lotto
+<div align="center">
 
-KRAFT Lotto는 한국 로또 6/45 데이터를 수집, 저장, 분석, 조회하는 Spring Boot 기반 웹 애플리케이션입니다. 최신 회차, 회차별 이력, 번호 통계, 조합 분석, 추천 보조 기능, 뉴스, 관리자 운영 기능을 제공합니다.
+# 🎯 KRAFT Lotto
 
-이 프로젝트는 당첨을 보장하지 않습니다. 추천 기능은 과거 데이터와 명시적인 제외 규칙을 기반으로 한 분석 도구입니다.
+### 한국 로또 6/45 데이터 수집 · 분석 · 조회 서비스
 
-## 주요 기능
+<p>
+  <strong>당첨번호 자동 수집</strong>부터 <strong>번호 빈도 통계</strong>, <strong>조합 분석</strong>,
+  <strong>동반 번호</strong>, <strong>추천 엔진</strong>, <strong>뉴스 수집</strong>까지 제공하는
+  프로덕션 지향 로또 데이터 서비스입니다.
+</p>
 
-- 외부 원천에서 로또 당첨번호를 수집합니다.
-- MariaDB에 회차별 당첨번호와 당첨 판매점 정보를 저장합니다.
-- Flyway로 운영 DB 스키마를 관리합니다.
-- 1등/2등 당첨 판매점을 수집하고 출처를 기록합니다.
-- 판매점 출처는 `dhlottery`, `relay`, `public-data`, `manual` 중 하나로 저장됩니다.
-- 최신 회차, 회차 목록, 번호 빈도, 통계, 조합 분석, 동반 번호, 뉴스 페이지를 제공합니다.
-- 관리자 화면과 Ops API로 수집, 모니터링, 캐시, 뉴스 검수, 감사 로그를 관리합니다.
-- Actuator readiness/health 엔드포인트로 컨테이너 상태를 확인합니다.
-- GitHub Actions로 테스트, 정적 분석, 커버리지, Docker 이미지 발행, 보안 스캔, 배포를 자동화합니다.
+<p>
+  <a href="https://www.kraft.io.kr"><strong>🌐 서비스 바로가기</strong></a>
+  ·
+  <a href="#-주요-기능"><strong>주요 기능</strong></a>
+  ·
+  <a href="#-로컬-개발"><strong>로컬 개발</strong></a>
+  ·
+  <a href="#-배포"><strong>배포</strong></a>
+  ·
+  <a href="#-보안"><strong>보안</strong></a>
+</p>
 
-## 기술 스택
+<p>
+  <img alt="Java" src="https://img.shields.io/badge/Java-25-007396?logo=openjdk&logoColor=white">
+  <img alt="Spring Boot" src="https://img.shields.io/badge/Spring%20Boot-4.0.6-6DB33F?logo=springboot&logoColor=white">
+  <img alt="MariaDB" src="https://img.shields.io/badge/MariaDB-11.7-003545?logo=mariadb&logoColor=white">
+  <img alt="Gradle" src="https://img.shields.io/badge/Gradle-8-02303A?logo=gradle&logoColor=white">
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white">
+  <img alt="Monitoring" src="https://img.shields.io/badge/Monitoring-Prometheus%20%2B%20Grafana-E6522C?logo=prometheus&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/License-See%20LICENSE-lightgrey">
+</p>
 
-| 영역 | 기술 |
+</div>
+
+---
+
+## 📌 개요
+
+**KRAFT Lotto**는 동행복권 공식 API를 기반으로 로또 6/45 당첨번호를 자동 수집하고, 수집된 데이터를 분석해 웹에서 조회할 수 있도록 구성한 서비스입니다.
+
+단순한 당첨번호 조회를 넘어 다음 영역을 하나의 서비스에서 제공합니다.
+
+| 번호 데이터 | 통계 분석 | 운영 관리 | 관측성 |
+|:---:|:---:|:---:|:---:|
+| 최신 회차 수집 | 빈도·패턴 분석 | Ops API | Prometheus |
+| 누락 회차 보정 | 동반 번호 분석 | 관리자 콘솔 | Grafana |
+| 특정 회차 재수집 | 추천 번호 | 감사 로그 | Discord 알림 |
+
+> 운영 URL: **https://www.kraft.io.kr**
+
+---
+
+## 🧭 목차
+
+| 구분 | 바로가기 |
 |---|---|
-| 언어 | Java 25 |
-| 프레임워크 | Spring Boot 4.0.6 |
-| 웹 | Spring MVC, Thymeleaf, HTMX, 정적 CSS/JS |
-| 보안 | Spring Security, Ops 토큰 필터, IP allowlist, 보안 헤더 |
-| 데이터 | MariaDB, Spring Data JPA, Flyway |
-| 캐시 | Caffeine |
-| 스케줄 | Spring Scheduler, ShedLock |
-| 관측성 | Actuator, Micrometer, Prometheus, Grafana, Alertmanager, OpenTelemetry bridge |
-| 테스트 | JUnit 5, Spring Test, H2, Testcontainers, Playwright, axe-core |
-| 빌드 | Gradle Kotlin DSL, npm, PostCSS |
-| 배포 | Docker Compose, GHCR 이미지, GitHub Actions CI/CD |
+| 서비스 기능 | [주요 기능](#-주요-기능), [공개 페이지](#-공개-페이지) |
+| 운영 기능 | [Operations API](#-operations-api), [관리자 콘솔](#-관리자-콘솔) |
+| 개발 환경 | [기술 스택](#-기술-스택), [프로젝트 구조](#-프로젝트-구조), [로컬 개발](#-로컬-개발) |
+| 품질 관리 | [테스트](#-테스트), [커버리지 기준](#커버리지-기준) |
+| 운영 배포 | [배포](#-배포), [환경 변수](#-환경-변수), [모니터링](#-모니터링) |
+| 보안·DB | [보안](#-보안), [데이터베이스 마이그레이션](#-데이터베이스-마이그레이션) |
 
-## 공개 페이지
+---
+
+## ✨ 주요 기능
+
+| 영역 | 제공 기능 |
+|:---|:---|
+| **당첨번호 수집** | 최신 회차 자동 수집, 누락 회차 보정, 특정 회차 강제 재수집 |
+| **번호 분석** | 번호별 빈도, 패턴 통계, 조합 분석, 동반 출현 번호 분석 |
+| **추천 엔진** | 제외 규칙 기반 번호 추천 |
+| **뉴스** | Google News RSS 기반 로또 관련 뉴스 수집·분류 |
+| **운영 관리** | Ops API, 수집 상태 조회, Circuit Breaker 상태 확인 |
+| **관리자 기능** | 뉴스 검수, 캐시 관리, 감사 로그, 시스템 정보 확인 |
+| **관측성** | Prometheus, Grafana, Alertmanager, OpenTelemetry |
+| **품질 관리** | 단위·통합 테스트, E2E 테스트, 정적 분석, 커버리지 검증 |
+
+---
+
+## 🧱 기술 스택
+
+| 분류 | 기술 |
+|:---|:---|
+| **Language / Runtime** | Java 25 |
+| **Framework** | Spring Boot 4.0.6 |
+| **Build** | Gradle 8, Kotlin DSL |
+| **Database** | MariaDB 11.7, H2 |
+| **ORM** | Spring Data JPA, Hibernate |
+| **Migration** | Flyway |
+| **Cache** | Caffeine |
+| **Scheduler** | Spring Scheduler, ShedLock |
+| **Template** | Thymeleaf |
+| **Frontend** | Bootstrap 5, HTMX |
+| **CSS Pipeline** | PostCSS, cssnano |
+| **API Docs** | SpringDoc OpenAPI 3 |
+| **Metrics** | Micrometer, Prometheus |
+| **Tracing** | OpenTelemetry, OTLP |
+| **Container** | Docker, Docker Compose |
+| **Reverse Proxy** | Caddy |
+| **Monitoring** | Grafana, Alertmanager |
+| **E2E Test** | Playwright, axe-core |
+| **Static Analysis** | Checkstyle 10, SpotBugs |
+| **Coverage** | JaCoCo |
+
+---
+
+## 🗂️ 프로젝트 구조
+
+```text
+src/main/java/com/kraft/lotto/
+├── feature/
+│   ├── admin/          관리자 기능: 감사 로그, 뉴스 검수
+│   ├── news/           로또 뉴스 수집·분류
+│   ├── recommend/      제외 규칙 기반 번호 추천 엔진
+│   ├── statistics/     빈도·패턴·동반 번호 통계
+│   └── winningnumber/  당첨번호 수집·저장·조회
+├── infra/config/       설정 바인딩 및 검증
+├── support/            필터, IP 제어, 공통 응답, 예외 처리
+└── web/                공개·Ops·관리자 컨트롤러
+
+src/main/resources/
+├── application.yml             공통 설정
+├── application-local.yml       로컬 개발 프로필
+├── application-prod.yml        운영 프로필
+├── db/migration/               Flyway 마이그레이션
+├── static/                     CSS, JS, 이미지, Bootstrap
+└── templates/                  Thymeleaf 템플릿
+```
+
+---
+
+## 🌐 공개 페이지
 
 | 경로 | 설명 |
-|---|---|
-| `/` | 홈 화면, 추천/최신 회차/빈도/회차 카드 |
-| `/latest` | 최신 회차 상세와 판매점 수집 상태 |
-| `/rounds` | 회차 목록과 회차 검색 |
-| `/frequency` | 번호 빈도 통계 |
+|:---|:---|
+| `/` | 홈: 추천 번호, 최신 회차, 빈도 카드 |
+| `/latest` | 최신 회차 당첨번호 및 세후 수령액 |
+| `/rounds` | 전체 회차 목록 및 회차 검색 |
+| `/frequency` | 번호별 출현 빈도 통계 |
 | `/stats` | 통계 요약 |
 | `/analysis` | 번호 조합 분석 |
 | `/companion` | 동반 출현 번호 분석 |
 | `/news` | 로또 관련 뉴스 |
-| `/methodology` | 추천 방식과 규칙 설명 |
-| `/data-source` | 데이터 출처 설명 |
-| `/faq` | FAQ |
-| `/responsible-play` | 책임 있는 이용 안내 |
-| `/privacy` | 개인정보 처리방침 |
-| `/terms` | 이용약관 |
-| `/contact` | 문의 |
+| `/methodology` | 추천 방식 설명 |
+| `/data-source` | 데이터 출처 및 수집 이력 |
+| `/faq` | 자주 묻는 질문 |
 
-## 공개 API
+---
 
-| 엔드포인트 | 설명 |
-|---|---|
-| `GET /api/lotto/draws/{drawNo}/winning-stores` | 회차별 당첨 판매점 목록. `grade`로 1등/2등 필터 가능 |
-| `GET /api/lotto/draws/{drawNo}/winning-regions` | 회차별 당첨 판매점 지역 집계 |
+## 🔐 Operations API
 
-## 관리자 및 Ops 기능
+`/ops/**` 경로는 운영 전용 API입니다. 접근 시 **IP allowlist**와 **운영 토큰** 검증을 모두 통과해야 합니다.
 
-| 경로 | 설명 |
-|---|---|
-| `/admin/login` | 관리자 로그인 |
-| `/admin/ops` | 관리자 대시보드 |
-| `/admin/ops/collection` | 회차/판매점 수집과 판매점 수동 입력 |
-| `/admin/ops/news` | 뉴스 승인, 거부, 도메인/키워드 차단 |
-| `/admin/ops/cache` | 캐시 관리 |
-| `/admin/ops/audit` | 관리자 감사 로그 |
-| `/admin/ops/system` | 시스템 정보 |
-| `/ops/collect` | 최신 회차까지 당첨번호 수집 |
-| `/ops/collect/missing` | 누락 회차 수집 |
-| `/ops/collect/refresh?round={n}` | 특정 회차 강제 재수집 |
-| `/ops/collect/stores?round={n}` | 특정 회차 당첨 판매점 수집 |
-| `/ops/collect/stores/backfill-regions` | 기존 판매점 주소에서 시도/시군구 재파싱 |
-| `/ops/fetch-logs/**` | 수집 실패 로그 API |
-| `/ops/circuit-breakers` | 외부 API Circuit Breaker 상태 |
-| `/ops/data-freshness` | 데이터 최신성 상태 |
-| `/ops/recommend/stats` | 추천 기능 통계 |
-| `/ops/news/collect` | 뉴스 수집 트리거 |
+| 인증 방식 | Header |
+|:---|:---|
+| Ops Token | `X-Ops-Token: <token>` |
+| Bearer Token | `Authorization: Bearer <token>` |
 
-`/ops/**`는 IP allowlist와 `X-Ops-Token` 헤더로 보호됩니다. `KRAFT_SECURITY_OPS_REQUIRED_TOKEN`이 설정되어 있으면 토큰 검증이 활성화됩니다.
+### 엔드포인트
 
-## 데이터 수집 구조
+| Method | Endpoint | 설명 |
+|:---:|:---|:---|
+| `POST` | `/ops/collect` | 최신 회차까지 당첨번호 수집 |
+| `POST` | `/ops/collect/missing` | 누락 회차만 수집 |
+| `POST` | `/ops/collect/refresh?round=N` | 특정 회차 강제 재수집 |
+| `GET` | `/ops/collect/status` | 수집 작업 현황 |
+| `GET` | `/ops/circuit-breakers` | API Circuit Breaker 상태 |
+| `GET` | `/ops/data-freshness` | 최신 데이터 동기화 상태 |
+| `POST` | `/ops/news/collect` | 뉴스 수집 트리거 |
+| `GET` | `/ops/fetch-logs/**` | 수집 실패 로그 조회 |
 
-### 당첨번호 수집
+---
 
-당첨번호 클라이언트는 `kraft.api.client` 값으로 선택됩니다.
+## 🛠️ 관리자 콘솔
 
-| 값 | 설명 |
-|---|---|
-| `mock` | 로컬 개발용 mock 클라이언트 |
-| `dhlottery`, `real` | 동행복권 API 클라이언트 |
-| `smok` | Smok API 클라이언트 |
-| `public-data` | 공공데이터포털 API 클라이언트 |
+관리자 페이지는 Spring Security 폼 로그인을 사용합니다.
 
-`kraft.api.fallback-client`를 설정하면 `CompositeLottoApiClient`가 primary/fallback 체인을 구성합니다. primary 실패 시 fallback을 시도하고, primary 응답의 2등 정보가 비어 있으면 fallback 데이터로 보충할 수 있습니다.
-
-### 당첨 판매점 수집
-
-판매점 수집 우선순위는 다음과 같습니다.
-
-1. `KRAFT_API_STORE_RELAY_URL`이 있으면 `RelayStoreApiClient`를 primary로 사용합니다.
-2. 없으면 `DhLotteryStoreApiClient`가 동행복권을 직접 호출합니다.
-3. `PUBLIC_DATA_API_KEY`가 있으면 primary를 `CompositeWinningStoreApiClient`로 감싸고 `PublicDataStoreApiClient`를 fallback으로 사용합니다.
-
-운영 서버에서 relay를 사용하지 않는다면 `PUBLIC_DATA_API_KEY` 설정이 중요합니다. 동행복권이 JSON 대신 HTML을 반환하면 판매점 수집 결과가 `saved:false`가 될 수 있고, 이때 공공데이터포털 fallback이 필요합니다.
-
-자동 수집 스케줄:
-
-| 대상 | 기본 스케줄 |
-|---|---|
-| 당첨번호 | 토요일 22:00, 일요일 06:00 |
-| 당첨 판매점 | 토요일 21:15, 토요일 22:00, 일요일 06:00, 매일 00:10 |
-
-## 저장소 구조
-
-```text
-src/main/java/com/kraft/lotto
-  feature/
-    admin/          관리자 화면, 감사 로그, 뉴스 검수
-    news/           뉴스 수집, 분류, 조회
-    recommend/      번호 추천 엔진과 제외 규칙
-    statistics/     빈도, 패턴, 동반 번호 통계
-    winningnumber/  당첨번호/판매점 수집, 저장, 조회
-  infra/config/     설정 바인딩, 시작 검증, Flyway, 보안 구성
-  support/          공통 필터, 예외 처리, IP allowlist, 로그 유틸리티
-  web/              공개 컨트롤러와 Ops API 컨트롤러
-
-src/main/resources
-  db/migration/     Flyway 마이그레이션
-  static/           CSS, JavaScript, 이미지, vendor 자산
-  templates/        Thymeleaf 템플릿
-
-src/test/java        단위, 슬라이스, 통합, 도메인 테스트
-tests/e2e            Playwright 스모크/접근성 테스트
-scripts              운영, 배포, 백업, 검증 스크립트
-docker               Prometheus, Grafana, Caddy, Alertmanager 설정
+```env
+KRAFT_ADMIN_ENABLED=true
 ```
 
-## 로컬 개발
+| 경로 | 설명 |
+|:---|:---|
+| `/admin/ops` | 관리자 대시보드 |
+| `/admin/ops/collection` | 회차 수집 실행 |
+| `/admin/ops/news` | 뉴스 승인·거부·도메인 차단 |
+| `/admin/ops/cache` | 캐시 관리 |
+| `/admin/ops/audit` | 감사 로그 조회 |
+| `/admin/ops/system` | 시스템 정보 |
+
+---
+
+## 📥 데이터 수집
+
+### 당첨번호 수집 클라이언트
+
+`kraft.api.client` 값에 따라 당첨번호 수집 클라이언트를 선택합니다.
+
+| 값 | 설명 |
+|:---:|:---|
+| `mock` | 로컬 개발용 Mock 클라이언트 |
+| `dhlottery` / `real` | 동행복권 공식 API |
+| `smok` | Smok API |
+| `public-data` | 공공데이터포털 API |
+
+Primary 클라이언트 실패 시 `kraft.api.fallback-client`를 통해 Fallback 클라이언트로 자동 전환할 수 있습니다.
+
+> Circuit Breaker 기본 정책: **5회 실패 → OPEN 30초**
+
+### 자동 수집 스케줄
+
+| 대상 | 기본 실행 시각 |
+|:---|:---|
+| 당첨번호 | 토요일 22:00, 일요일 06:00 |
+| 뉴스 | 매 6시간 |
+| 수집 로그 정리 | 매일 03:30, 기본 90일 보관 |
+
+---
+
+## 💻 로컬 개발
 
 ### 요구 사항
 
-- Java 25
-- Docker 및 Docker Compose
-- Node.js 22 권장
-- Windows는 PowerShell 기준, Linux/macOS는 Bash 기준
+| 항목 | 버전 |
+|:---|:---|
+| Java | 25 |
+| Docker | Docker & Docker Compose |
+| Node.js | 22+ |
 
 ### 환경 파일 준비
 
-PowerShell:
-
-```powershell
-Copy-Item .env.local.example .env
-```
-
-Bash:
+`.env.local.example` 파일이 있다면 `.env`로 복사합니다.
 
 ```bash
 cp .env.local.example .env
 ```
 
-최소한 아래 값을 채웁니다.
+최소 필수 설정:
 
-```text
-KRAFT_DB_NAME
-KRAFT_DB_USER
-KRAFT_DB_PASSWORD
-KRAFT_DB_ROOT_PASSWORD
-```
-
-로컬 개발에서는 보통 외부 API 없이 실행할 수 있도록 다음 값을 사용합니다.
-
-```text
+```env
+KRAFT_DB_NAME=kraft_lotto
+KRAFT_DB_USER=lotto_user
+KRAFT_DB_PASSWORD=<password>
+KRAFT_DB_ROOT_PASSWORD=<root_password>
 KRAFT_API_CLIENT=mock
 ```
 
-### 로컬 DB 실행
-
-PowerShell 또는 Bash:
+### 실행
 
 ```bash
+# 1. DB 시작
 docker compose -f docker-compose.local.yml up -d
+
+# 2. 애플리케이션 실행
+./gradlew bootRun
+
+# 3. 서비스 접속
+open http://localhost:8080
+
+# 4. Swagger UI 접속, 로컬 전용
+open http://localhost:8080/swagger-ui/index.html
 ```
 
-### 애플리케이션 실행
+---
 
-PowerShell:
-
-```powershell
-.\gradlew.bat bootRun
-```
-
-Bash:
+## ✅ 테스트
 
 ```bash
-./gradlew bootRun
-```
+# 단위 + 통합 테스트
+./gradlew test
 
-접속:
+# 정적 분석 포함 전체 검증
+./gradlew check
 
-```text
-http://localhost:8080
-```
-
-헬스 체크:
-
-```text
-http://localhost:8080/actuator/health
-```
-
-Swagger UI는 `local` 프로필에서만 활성화됩니다.
-
-```text
-http://localhost:8080/swagger-ui/index.html
-```
-
-## 테스트
-
-백엔드 테스트:
-
-```powershell
-.\gradlew.bat test
-```
-
-전체 백엔드 검증:
-
-```powershell
-.\gradlew.bat check
-```
-
-엄격 정적 분석 및 커버리지 검증:
-
-```powershell
-.\gradlew.bat check -PstrictStatic=true -PstrictCoverage=true
-```
-
-JavaScript 구문 검사:
-
-```powershell
+# JavaScript 구문 검사
 npm run check:js
-```
 
-Playwright E2E:
+# CSS 빌드
+npm run build:css
 
-```powershell
+# E2E 스모크 테스트
 npm run test:e2e
 ```
 
-CSS 빌드:
+### 커버리지 기준
 
-```powershell
-npm run build:css
-```
+| 지표 | 최솟값 |
+|:---|---:|
+| Line | 82% |
+| Branch | 65% |
+| Method | 88% |
+| Class | 97% |
 
-## 운영 설정
+---
 
-운영은 `docker-compose.yml` 기반으로 실행됩니다.
+## 🚀 배포
 
-주요 서비스:
+### Docker Compose 서비스
 
-- `app`
-- `mariadb`
-- `prometheus`
-- `alertmanager`
-- `grafana`
-- `node-exporter`
-- 선택적 `caddy` TLS reverse proxy profile
+| 서비스 | 역할 | 메모리 |
+|:---|:---|---:|
+| `app` | Spring Boot 애플리케이션 | 1 GB |
+| `mariadb` | MariaDB 11.7 | 512 MB |
+| `caddy` | TLS 리버스 프록시 | 64 MB |
+| `prometheus` | 메트릭 수집, 15일 보관 | 256 MB |
+| `grafana` | 대시보드 | 256 MB |
+| `alertmanager` | Discord 알림 | 64 MB |
+| `node-exporter` | 호스트 메트릭 | 64 MB |
 
-필수 운영 Secret:
-
-```text
-KRAFT_DB_NAME
-KRAFT_DB_USER
-KRAFT_DB_PASSWORD
-KRAFT_DB_ROOT_PASSWORD
-KRAFT_SECURITY_OPS_REQUIRED_TOKEN
-ALERTMANAGER_DISCORD_WEBHOOK_URL
-```
-
-권장 운영 Secret/변수:
+### CI/CD 흐름
 
 ```text
-KRAFT_ADMIN_ENABLED=true
-KRAFT_ADMIN_PASSWORD=<관리자 비밀번호>
-PUBLIC_DATA_API_KEY=<공공데이터포털 서비스키>
-KRAFT_PUBLIC_DATA_BASE_URL=https://apis.data.go.kr
+main push
+  └─ CI: ci.yml
+       ├─ build-test        compile, test, coverage, Docker verification
+       ├─ static-analysis   SpotBugs, Checkstyle
+       ├─ e2e-smoke         Playwright, Chromium, Mobile Chrome
+       ├─ docker-publish    GHCR image publish, sha + latest
+       └─ security-scan     Trivy, Syft SBOM
+  └─ CD: cd.yml
+       └─ self-hosted runner
+            ├─ render .env
+            ├─ docker compose pull & up
+            ├─ wait for readiness, max 5 minutes
+            ├─ smoke test
+            └─ rollback on failure
 ```
 
-배포 스크립트는 GitHub Environment Secrets에서 서버 `.env`를 렌더링합니다. 새 Secret을 컨테이너 안에서 사용해야 한다면 배포 스크립트가 해당 값을 `.env`에 쓰는지 반드시 확인해야 합니다.
+---
 
-## CI/CD
+## ⚙️ 환경 변수
 
-GitHub Actions workflow:
+### 필수 환경 변수
 
-- `CI`: Java 빌드, 테스트, 커버리지, CSS 빌드 검증, JavaScript 구문 검사, Playwright 스모크 테스트, 정적 분석, Docker 이미지 발행, 보안 스캔.
-- `CD - Deploy to kraft-server`: `main`의 CI 성공 후 GHCR 이미지를 받아 Docker Compose 서비스를 재시작하고 readiness/smoke test를 수행합니다.
-- `CodeQL`: 코드 스캔.
+| 변수 | 설명 |
+|:---|:---|
+| `KRAFT_DB_NAME` | 데이터베이스 이름 |
+| `KRAFT_DB_USER` | DB 사용자 |
+| `KRAFT_DB_PASSWORD` | DB 비밀번호 |
+| `KRAFT_DB_ROOT_PASSWORD` | DB root 비밀번호 |
+| `KRAFT_SECURITY_OPS_REQUIRED_TOKEN` | Ops API 인증 토큰 |
+| `ALERTMANAGER_DISCORD_WEBHOOK_URL` | Discord 알림 웹훅 |
 
-CI는 `README.md` 또는 `docs/**`만 변경된 push는 무시합니다.
+<details>
+<summary><strong>선택 환경 변수 보기</strong></summary>
 
-## 보안 메모
+<br>
 
-- `.env`와 비밀값은 커밋하지 않습니다.
-- 관리자 화면은 Spring Security로 보호됩니다.
-- Ops API는 IP allowlist와 토큰 검증으로 보호됩니다.
-- 공개 reverse proxy는 `/admin*`, `/ops*`, `/actuator*`를 공개 도메인에서 차단합니다.
-- 운영 프로필에서는 Swagger UI를 비활성화합니다.
-- 보안 헤더와 rate limit은 `kraft.security` 아래에서 설정합니다.
+| 변수 | 기본값 | 설명 |
+|:---|:---:|:---|
+| `KRAFT_API_CLIENT` | `mock` | 당첨번호 수집 클라이언트 |
+| `KRAFT_ADMIN_ENABLED` | `false` | 관리자 UI 활성화 |
+| `KRAFT_ADMIN_PASSWORD` | — | 관리자 비밀번호 |
+| `PUBLIC_DATA_API_KEY` | — | 공공데이터포털 API 키 |
+| `KRAFT_COLLECT_AUTO_ENABLED` | `true` | 자동 수집 활성화 |
+| `KRAFT_SECURITY_OPS_ALLOWED_IPS` | `127.0.0.1,::1,10.0.0.0/8,...` | Ops API 허용 IP |
+| `KRAFT_SECURITY_RATE_LIMIT_MAX_REQUESTS` | `120` | 분당 요청 제한 |
+| `KRAFT_TRACING_SAMPLE_RATE` | `0.0` | OTEL 추적 샘플링 비율 |
+| `KRAFT_GRAFANA_ADMIN_PASSWORD` | — | Grafana 관리자 비밀번호 |
 
-## Git 정책
+</details>
 
-- `main`이 운영 브랜치입니다.
-- `docs/**` 문서는 Git 추적 대상이 아닙니다.
-- 기본적으로 GitHub에 게시하는 문서는 `README.md`만 허용합니다.
-- 커밋 전 `.env`, 운영 문서, 비밀값이 스테이징되지 않았는지 확인합니다.
+전체 설정은 `src/main/resources/application.yml`을 기준으로 관리합니다.
 
-## 라이선스
+---
 
-`LICENSE` 파일을 확인하세요.
+## 📊 모니터링
+
+| 컴포넌트 | URL | 범위 |
+|:---|:---|:---|
+| Prometheus | `http://localhost:9090` | 내부망 전용 |
+| Grafana | `http://localhost:3000` | 내부망 전용 |
+| Alertmanager | — | Discord 알림 발송 |
+
+### 알림 규칙
+
+| 규칙 | 조건 | 심각도 |
+|:---|:---|:---:|
+| AppDown | 2분 이상 응답 없음 | CRITICAL |
+| CircuitBreakerOpen | 5분 이상 OPEN | CRITICAL |
+| FallbackExhausted | Primary + Fallback 모두 실패 | CRITICAL |
+| AutoCollectError | 1시간 내 오류 발생 | WARNING |
+| HostDiskAlmostFull | 디스크 여유 < 10% | WARNING |
+| HighMemoryUsage | 메모리 사용률 > 85% | WARNING |
+
+---
+
+## 🛡️ 보안
+
+| 영역 | 제어 방식 |
+|:---|:---|
+| Public Web | 인증 없음, Rate Limiting 적용 |
+| Ops API | IP allowlist + Bearer token 이중 검증 |
+| Admin Page | Spring Security 폼 로그인 |
+| Security Headers | CSP, X-Frame-Options, HSTS |
+| Caddy | 공개 도메인에서 `/admin*`, `/ops*`, `/actuator*` 차단 |
+| Actuator | `health`, `info`, `prometheus`만 노출, IP 제한 |
+
+취약점 제보는 공개 Issue가 아닌 이메일로 전달합니다.
+
+```text
+portuna85@gmail.com
+```
+
+---
+
+## 🗃️ 데이터베이스 마이그레이션
+
+Flyway 마이그레이션은 `src/main/resources/db/migration/` 아래에서 관리합니다.
+
+<details open>
+<summary><strong>Flyway V1 ~ V12</strong></summary>
+
+<br>
+
+| Version | 설명 |
+|:---:|:---|
+| V1 | 기본 스키마: 당첨번호, 수집 로그, 판매점, 빈도 캐시, ShedLock |
+| V2 | 수집 로그 인덱스 최적화 |
+| V3 | 뉴스 소스 등급 컬럼 추가 |
+| V4 | 패턴 통계 요약 테이블 추가 |
+| V5 | 동반 번호 요약 테이블 추가 |
+| V6 | 뉴스 승인 컬럼 추가 |
+| V7 | 판매점 수집 시각 컬럼 추가 |
+| V8 | 뉴스 소스 도메인 컬럼 추가 |
+| V9 | 관리자 감사 로그, 차단 키워드/도메인 테이블 추가 |
+| V10 | 뉴스 거절 컬럼 추가 |
+| V11 | 판매점 지역: 시도, 시군구, 구매방법 컬럼 추가 |
+| V12 | 판매점 데이터 출처 컬럼 추가 |
+
+</details>
+
+---
+
+## 📄 라이선스
+
+라이선스 정보는 [LICENSE](LICENSE) 파일을 참조합니다.
+
+---
+
+<div align="center">
+
+<sub>
+Built for reliable Lotto 6/45 data collection, analysis, and operations.
+</sub>
+
+</div>

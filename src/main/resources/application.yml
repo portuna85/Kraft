@@ -131,10 +131,7 @@ kraft:
       cron:
         saturday-22-00: ${KRAFT_COLLECT_AUTO_CRON_SATURDAY_22_00:0 0 22 ? * SAT}
         sunday-06-00: ${KRAFT_COLLECT_AUTO_CRON_SUNDAY_06_00:0 0 6 ? * SUN}
-        store-saturday-21-15: ${KRAFT_COLLECT_AUTO_CRON_STORE_SATURDAY_21_15:0 15 21 ? * SAT}
-        store-saturday-22-00: ${KRAFT_COLLECT_AUTO_CRON_STORE_SATURDAY_22_00:0 0 22 ? * SAT}
-        store-sunday-06-00: ${KRAFT_COLLECT_AUTO_CRON_STORE_SUNDAY_06_00:0 0 6 ? * SUN}
-        store-daily-00-10: ${KRAFT_COLLECT_AUTO_CRON_STORE_DAILY_00_10:0 10 0 * * *}
+
     log-retention:
       enabled: ${KRAFT_COLLECT_LOG_RETENTION_ENABLED:true}
       days: ${KRAFT_COLLECT_LOG_RETENTION_DAYS:90}
@@ -157,9 +154,7 @@ kraft:
     user-agent: ${KRAFT_API_USER_AGENT:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36}
     referer: ${KRAFT_API_REFERER:https://www.dhlottery.co.kr/gameResult.do?method=byWin}
     accept-language: ${KRAFT_API_ACCEPT_LANGUAGE:ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7}
-    store-relay-url: ${KRAFT_API_STORE_RELAY_URL:}
-    public-data-api-key: ${PUBLIC_DATA_API_KEY:}
-    public-data-base-url: ${KRAFT_PUBLIC_DATA_BASE_URL:https://apis.data.go.kr}
+
   cache:
     winning-number-frequency:
       ttl-minutes: ${KRAFT_CACHE_FREQUENCY_TTL_MINUTES:10}

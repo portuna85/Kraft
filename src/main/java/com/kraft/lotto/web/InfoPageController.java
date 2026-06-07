@@ -2,7 +2,6 @@ package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
-import com.kraft.lotto.feature.winningnumber.application.WinningStoreQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -56,7 +55,6 @@ public class InfoPageController {
 
     private final LottoFetchLogQueryService fetchLogQueryService;
     private final WinningNumberQueryService winningNumberQueryService;
-    private final WinningStoreQueryService winningStoreQueryService;
 
     @GetMapping("/methodology")
     public String methodology() {
@@ -69,12 +67,6 @@ public class InfoPageController {
         winningNumberQueryService.findLatest().ifPresent(latest -> {
             model.addAttribute("latestStoredRound", latest.round());
             model.addAttribute("latestStoredDate", latest.drawDate());
-            model.addAttribute("store1Collected",
-                    winningStoreQueryService.hasGrade(latest.round(), 1));
-            model.addAttribute("store2Collected",
-                    winningStoreQueryService.hasGrade(latest.round(), 2));
-            winningStoreQueryService.findLastCollectedAt(latest.round())
-                    .ifPresent(at -> model.addAttribute("storeCollectedAt", at));
         });
         model.addAttribute("expectedRound", winningNumberQueryService.maxPossibleRound());
         return "info/data-source";

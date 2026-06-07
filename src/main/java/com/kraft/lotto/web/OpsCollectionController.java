@@ -1,7 +1,6 @@
 package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
-import com.kraft.lotto.feature.winningnumber.application.WinningStoreCollector;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse;
 import com.kraft.lotto.feature.winningnumber.web.dto.CollectStatusResponse;
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
@@ -11,7 +10,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +24,6 @@ public class OpsCollectionController {
 
     private final LottoCollectionCommandService collectionCommandService;
     private final OpsCollectionFacade opsCollectionFacade;
-    private final WinningStoreCollector winningStoreCollector;
     private final KraftSecurityProperties securityProperties;
 
     @Autowired
@@ -36,11 +33,9 @@ public class OpsCollectionController {
     )
     public OpsCollectionController(LottoCollectionCommandService collectionCommandService,
                                    OpsCollectionFacade opsCollectionFacade,
-                                   WinningStoreCollector winningStoreCollector,
                                    KraftSecurityProperties securityProperties) {
         this.collectionCommandService = collectionCommandService;
         this.opsCollectionFacade = opsCollectionFacade;
-        this.winningStoreCollector = winningStoreCollector;
         this.securityProperties = securityProperties;
     }
 
@@ -64,20 +59,6 @@ public class OpsCollectionController {
         return opsCollectionFacade.collectMissing(
                 MDC.get("requestId"),
                 ClientIpResolver.resolve(request, securityProperties.getTrustedProxies()));
-    }
-
-    @PostMapping("/stores")
-    @Operation(summary = "Collect winning stores (1st/2nd prize) for a specific round")
-    public Map<String, Object> collectStores(@RequestParam int round) {
-        boolean saved = winningStoreCollector.collectStores(round);
-        return Map.of("round", round, "saved", saved);
-    }
-
-    @PostMapping("/stores/backfill-regions")
-    @Operation(summary = "Backfill sido/sigungu from existing address for stores with null region")
-    public Map<String, Object> backfillRegions() {
-        int updated = winningStoreCollector.backfillRegions();
-        return Map.of("updated", updated);
     }
 
     @PostMapping("/refresh")
