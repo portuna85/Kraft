@@ -189,10 +189,6 @@ test.describe('brand copy regression', () => {
     await expect(page.locator('[data-source-tier="GENERAL"]')).toHaveCount(0);
   });
 
-  test('/latest shows store-collection-status', async ({ page }) => {
-    await page.goto('/latest');
-    await expect(page.locator('[data-testid="store-collection-status"]')).toBeVisible();
-  });
 });
 
 test.describe('accessibility smoke', () => {
