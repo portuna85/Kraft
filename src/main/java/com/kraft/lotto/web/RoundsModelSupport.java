@@ -2,7 +2,6 @@ package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import com.kraft.lotto.feature.winningnumber.application.WinningStoreQueryService;
-import com.kraft.lotto.feature.winningnumber.web.dto.WinningRegionSummaryDto;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

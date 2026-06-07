@@ -60,4 +60,12 @@ class AdminCollectionControllerParseTest {
         assertThat(stores).hasSize(1);
         assertThat(stores.get(0).winCount()).isEqualTo(1);
     }
+    @Test
+    @DisplayName("manual input marks stores with manual source")
+    void marksManualSource() {
+        List<WinningStore> stores = AdminCollectionController.parseStoresText(1227, 1, "store|address|1");
+
+        assertThat(stores).hasSize(1);
+        assertThat(stores.get(0).source()).isEqualTo("manual");
+    }
 }

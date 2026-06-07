@@ -44,11 +44,15 @@ public class WinningStoreEntity {
     @Column(name = "purchase_method", length = 20)
     private String purchaseMethod;
 
+    @Column(name = "source", length = 100)
+    private String source;
+
     protected WinningStoreEntity() {}
 
     public WinningStoreEntity(int round, int grade, String name, String address,
                                int winCount, LocalDateTime collectedAt,
-                               String sido, String sigungu, String purchaseMethod) {
+                               String sido, String sigungu, String purchaseMethod,
+                               String source) {
         this.round           = round;
         this.grade           = grade;
         this.name            = name;
@@ -58,15 +62,22 @@ public class WinningStoreEntity {
         this.sido            = sido;
         this.sigungu         = sigungu;
         this.purchaseMethod  = purchaseMethod;
+        this.source          = source;
+    }
+
+    public WinningStoreEntity(int round, int grade, String name, String address,
+                               int winCount, LocalDateTime collectedAt,
+                               String sido, String sigungu, String purchaseMethod) {
+        this(round, grade, name, address, winCount, collectedAt, sido, sigungu, purchaseMethod, null);
     }
 
     public WinningStoreEntity(int round, int grade, String name, String address,
                                int winCount, LocalDateTime collectedAt) {
-        this(round, grade, name, address, winCount, collectedAt, null, null, null);
+        this(round, grade, name, address, winCount, collectedAt, null, null, null, null);
     }
 
     public WinningStore toDomain() {
-        return new WinningStore(round, grade, name, address, winCount, sido, sigungu, purchaseMethod);
+        return new WinningStore(round, grade, name, address, winCount, sido, sigungu, purchaseMethod, source);
     }
 
     public Long          getId()             { return id; }
@@ -79,4 +90,5 @@ public class WinningStoreEntity {
     public String        getSido()           { return sido; }
     public String        getSigungu()        { return sigungu; }
     public String        getPurchaseMethod() { return purchaseMethod; }
+    public String        getSource()         { return source; }
 }

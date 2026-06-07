@@ -8,9 +8,15 @@ public record WinningStore(
         int winCount,
         String sido,
         String sigungu,
-        String purchaseMethod
+        String purchaseMethod,
+        String source
 ) {
     public static WinningStore of(int round, int grade, String name, String address, int winCount) {
-        return new WinningStore(round, grade, name, address, winCount, null, null, null);
+        return new WinningStore(round, grade, name, address, winCount, null, null, null, null);
+    }
+
+    public static WinningStore withSource(int round, int grade, String name, String address,
+                                          int winCount, String source) {
+        return new WinningStore(round, grade, name, address, winCount, null, null, null, source);
     }
 }

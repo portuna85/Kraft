@@ -97,7 +97,7 @@ class DhLotteryStoreApiClientTest {
 
     @Test
     @DisplayName("ensureWcCookie: cookieManager가 null이면 아무것도 하지 않는다")
-    void ensureWcCookie_skipsWhenCookieManagerIsNull() {
+    void ensureWcCookieSkipsWhenCookieManagerIsNull() {
         var c = new DhLotteryStoreApiClient(
                 mock(RestClient.class), new ObjectMapper(),
                 "https://www.dhlottery.co.kr/store.do", null, null, null, null);
@@ -109,7 +109,7 @@ class DhLotteryStoreApiClientTest {
 
     @Test
     @DisplayName("ensureWcCookie: wcCookie가 없으면 생성한다")
-    void ensureWcCookie_createsCookieWhenAbsent() {
+    void ensureWcCookieCreatesCookieWhenAbsent() {
         CookieManager manager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
         var c = new DhLotteryStoreApiClient(
                 mock(RestClient.class), new ObjectMapper(),
@@ -122,7 +122,7 @@ class DhLotteryStoreApiClientTest {
 
     @Test
     @DisplayName("ensureWcCookie: 이미 있으면 덮어쓰지 않는다")
-    void ensureWcCookie_doesNotOverwriteExisting() {
+    void ensureWcCookieDoesNotOverwriteExisting() {
         CookieManager manager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
         var c = new DhLotteryStoreApiClient(
                 mock(RestClient.class), new ObjectMapper(),

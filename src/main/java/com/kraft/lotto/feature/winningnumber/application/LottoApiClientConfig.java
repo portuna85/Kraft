@@ -33,12 +33,15 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class LottoApiClientConfig {
 
-    static final Set<String> DHLOTTERY_TOKENS = Set.of("dhlottery", "real");
-    static final Set<String> SMOK_TOKENS = Set.of("smok");
+    static final Set<String> DHLOTTERY_TOKENS   = Set.of("dhlottery", "real");
+    static final Set<String> SMOK_TOKENS        = Set.of("smok");
+    static final Set<String> PUBLIC_DATA_TOKENS = Set.of("public-data", "publicdata");
 
     public static Set<String> prodAllowedClientTokens() {
-        return Stream.concat(DHLOTTERY_TOKENS.stream(), SMOK_TOKENS.stream())
-                .collect(Collectors.toUnmodifiableSet());
+        return Stream.concat(
+                Stream.concat(DHLOTTERY_TOKENS.stream(), SMOK_TOKENS.stream()),
+                PUBLIC_DATA_TOKENS.stream()
+        ).collect(Collectors.toUnmodifiableSet());
     }
     private final Clock clock;
 
@@ -132,6 +135,12 @@ public class LottoApiClientConfig {
                     meterRegistry,
                     circuitBreaker
             );
+        }
+        if (PUBLIC_DATA_TOKENS.contains(token)) {
+            String baseUrl = properties.publicDataBaseUrl() != null && !properties.publicDataBaseUrl().isBlank()
+                    ? properties.publicDataBaseUrl() : "https://apis.data.go.kr";
+            String apiKey  = properties.publicDataApiKey() != null ? properties.publicDataApiKey() : "";
+            return new PublicDataLottoApiClient(lottoRestClient, objectMapper, baseUrl, apiKey, meterRegistry);
         }
         return new MockLottoApiClient(resolvedMockLatestRound);
     }

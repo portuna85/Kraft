@@ -147,8 +147,9 @@ public class DhLotteryStoreApiClient implements WinningStoreApiClient {
                 if (name == null || name.isBlank()) {
                     continue;
                 }
-                stores.add(WinningStore.of(round, grade, name.trim(),
-                        address == null ? "" : address.trim(), winCount));
+                stores.add(WinningStore.withSource(round, grade, name.trim(),
+                        address == null ? "" : address.trim(), winCount,
+                        WinningStoreSources.DHLOTTERY));
             }
             return List.copyOf(stores);
         } catch (Exception ex) {

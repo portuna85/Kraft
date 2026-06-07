@@ -37,7 +37,7 @@ class LottoDrawWinningStoreControllerTest {
     @DisplayName("grade 지정 시 해당 등급 판매점 목록을 반환한다")
     void returnsStoresByGrade() throws Exception {
         WinningStoreDto dto = new WinningStoreDto(1, "행운복권방", "서울특별시 강남구 테헤란로 1", 1,
-                "https://map.naver.com/v5/search/...", "서울", "강남구");
+                "https://map.naver.com/v5/search/...", "서울", "강남구", "dhlottery");
         when(queryService.findByRoundAndGrade(1227, 1)).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/lotto/draws/1227/winning-stores").param("grade", "1"))
@@ -50,8 +50,8 @@ class LottoDrawWinningStoreControllerTest {
     @Test
     @DisplayName("grade 미지정 시 1등·2등 모두 반환한다")
     void returnsAllGradesWhenNoGradeParam() throws Exception {
-        WinningStoreDto dto1 = new WinningStoreDto(1, "1등복권방", "서울특별시 마포구 1", 1, "url", "서울", "마포구");
-        WinningStoreDto dto2 = new WinningStoreDto(2, "2등복권방", "경기도 성남시 분당구 1", 1, "url", "경기", "성남시 분당구");
+        WinningStoreDto dto1 = new WinningStoreDto(1, "1등복권방", "서울특별시 마포구 1", 1, "url", "서울", "마포구", "dhlottery");
+        WinningStoreDto dto2 = new WinningStoreDto(2, "2등복권방", "경기도 성남시 분당구 1", 1, "url", "경기", "성남시 분당구", "dhlottery");
         when(queryService.findByRoundAndGrade(1227, 1)).thenReturn(List.of(dto1));
         when(queryService.findByRoundAndGrade(1227, 2)).thenReturn(List.of(dto2));
 

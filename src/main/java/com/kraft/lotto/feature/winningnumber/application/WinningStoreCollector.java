@@ -116,7 +116,7 @@ public class WinningStoreCollector {
                     KoreanAddressParser.ParsedAddress parsed = KoreanAddressParser.parse(s.address());
                     return new WinningStoreEntity(
                             s.round(), s.grade(), s.name(), s.address(), s.winCount(), now,
-                            parsed.sido(), parsed.sigungu(), s.purchaseMethod());
+                            parsed.sido(), parsed.sigungu(), s.purchaseMethod(), s.source());
                 })
                 .toList();
         storeRepository.deleteByRoundAndGrade(round, grade);
