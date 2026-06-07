@@ -1,5 +1,4 @@
 name: CI
-# push trigger test
 
 on:
   push:
