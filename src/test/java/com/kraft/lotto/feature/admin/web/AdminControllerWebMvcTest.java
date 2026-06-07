@@ -2,6 +2,7 @@ package com.kraft.lotto.feature.admin.web;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -197,6 +198,21 @@ class AdminControllerWebMvcTest {
         mockMvc.perform(get("/admin/ops/seo"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/seo"));
+    }
+
+    @Test
+    @DisplayName("수동 판매점 저장 — 저장 후 운영 도구 페이지로 리다이렉트한다")
+    void saveManualStoresRedirects() throws Exception {
+        doNothing().when(winningStoreCollector).saveManual(anyInt(), anyInt(), anyList());
+
+        mockMvc.perform(post("/admin/ops/collection/stores/manual")
+                        .with(csrf())
+                        .with(user("admin").roles("ADMIN_OPERATOR"))
+                        .param("round", "1227")
+                        .param("grade", "1")
+                        .param("storesText", "행운복권방|서울 강남구|1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/ops/collection"));
     }
 
     @Test

@@ -67,6 +67,20 @@ class WinningNumberEntityTest {
         assertThat(target.getSecondWinners()).isEqualTo(5);
     }
 
+    @Test
+    @DisplayName("13개 파라미터 생성자가 fetchedAt을 createdAt·updatedAt으로 설정한다")
+    void thirteenParamConstructorSetsTimestamps() {
+        WinningNumberEntity entity = new WinningNumberEntity(
+                1150, DATE,
+                1, 2, 3, 4, 5, 6, 7,
+                1_000_000_000L, 1,
+                100_000_000_000L, NOW
+        );
+
+        assertThat(entity.getCreatedAt()).isEqualTo(NOW);
+        assertThat(entity.getUpdatedAt()).isEqualTo(NOW);
+    }
+
     private static WinningNumberEntity entity(String rawJson) {
         return new WinningNumberEntity(
                 1150, DATE,

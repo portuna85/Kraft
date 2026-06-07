@@ -228,6 +228,53 @@ class RecommendServiceTest {
     }
 
     @Test
+    @DisplayName("MeterRegistry를 받는 생성자로 서비스를 생성한다")
+    void constructsWithMeterRegistry() {
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        var svc = new RecommendService(
+                List.of(new BirthdayBiasRule()),
+                new LottoRecommender(List.of(new BirthdayBiasRule()), new Random(FIXED_SEED), 100_000),
+                registry
+        );
+
+        assertThat(svc.recommend(1).combinations()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("passedLabels는 등록된 규칙 레이블 목록을 반환한다")
+    void passedLabelsReturnsLabels() {
+        var svc = service(List.of(new BirthdayBiasRule()));
+
+        assertThat(svc.passedLabels()).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("oddCount 필터를 지정하면 해당 홀수 개수의 조합만 반환한다")
+    void recommendWithOddCountFilterReturnsCombinationsWithCorrectOddCount() {
+        var svc = service(List.of());
+        var filter = RecommendFilter.of(3, null, null);
+
+        var response = svc.recommend(1, filter);
+
+        assertThat(response.combinations()).hasSize(1);
+        assertThat(new com.kraft.lotto.feature.winningnumber.domain.LottoCombination(
+                response.combinations().get(0).numbers()).oddCount()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("sumRange 필터를 지정하면 합계 범위 내 조합만 반환한다")
+    void recommendWithSumRangeFilterReturnsCombinationsInRange() {
+        var svc = service(List.of());
+        var filter = RecommendFilter.of(null, 100, 200);
+
+        var response = svc.recommend(1, filter);
+
+        assertThat(response.combinations()).hasSize(1);
+        int sum = response.combinations().get(0).numbers().stream().mapToInt(Integer::intValue).sum();
+        assertThat(sum).isBetween(100, 200);
+    }
+
+    @Test
     @DisplayName("oddCount가 6을 초과하면 예외가 발생한다")
     void throwsWhenOddCountExceedsSix() {
         var service = service(List.of());

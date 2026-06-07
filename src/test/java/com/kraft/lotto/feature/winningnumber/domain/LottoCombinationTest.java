@@ -125,4 +125,19 @@ class LottoCombinationTest {
         LottoCombination a = LottoCombination.of(1, 7, 13, 22, 34, 45);
         assertThat(a.sameNumbers(null)).isFalse();
     }
+
+    @Test
+    @DisplayName("홀수 개수를 올바르게 반환한다")
+    void oddCountReturnsCorrectCount() {
+        assertThat(LottoCombination.of(1, 2, 3, 4, 5, 6).oddCount()).isEqualTo(3);
+        assertThat(LottoCombination.of(2, 4, 6, 8, 10, 12).oddCount()).isEqualTo(0);
+        assertThat(LottoCombination.of(1, 3, 5, 7, 9, 11).oddCount()).isEqualTo(6);
+    }
+
+    @Test
+    @DisplayName("합계를 올바르게 반환한다")
+    void sumReturnsCorrectSum() {
+        assertThat(LottoCombination.of(1, 2, 3, 4, 5, 6).sum()).isEqualTo(21);
+        assertThat(LottoCombination.of(40, 41, 42, 43, 44, 45).sum()).isEqualTo(255);
+    }
 }

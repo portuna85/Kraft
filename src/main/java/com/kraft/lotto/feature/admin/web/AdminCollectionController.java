@@ -112,7 +112,7 @@ public class AdminCollectionController {
         return "redirect:/admin/ops/collection";
     }
 
-    private static List<WinningStore> parseStoresText(int round, int grade, String text) {
+    static List<WinningStore> parseStoresText(int round, int grade, String text) {
         return Arrays.stream(text.split("\\n"))
                 .map(String::trim)
                 .filter(line -> !line.isEmpty() && !line.startsWith("#"))

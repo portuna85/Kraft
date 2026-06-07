@@ -112,4 +112,48 @@ class WinningNumberQueryServiceTest {
         assertThat(max).isPositive();
         assertThat(max).isGreaterThan(1200);
     }
+
+    @Test
+    @DisplayName("findLatest는 당첨번호가 있으면 Optional을 반환한다")
+    void findLatestReturnsOptionalWhenPresent() {
+        when(repository.findTopByOrderByRoundDesc()).thenReturn(Optional.of(entity(1100)));
+
+        var result = service.findLatest();
+
+        assertThat(result).isPresent();
+        assertThat(result.get().round()).isEqualTo(1100);
+    }
+
+    @Test
+    @DisplayName("findLatest는 당첨번호가 없으면 빈 Optional을 반환한다")
+    void findLatestReturnsEmptyWhenAbsent() {
+        when(repository.findTopByOrderByRoundDesc()).thenReturn(Optional.empty());
+
+        assertThat(service.findLatest()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("findByRound는 유효한 회차에서 Optional을 반환한다")
+    void findByRoundReturnsOptionalForValidRound() {
+        when(repository.findById(100)).thenReturn(Optional.of(entity(100)));
+
+        var result = service.findByRound(100);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().round()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("findByRound는 해당 회차가 없으면 빈 Optional을 반환한다")
+    void findByRoundReturnsEmptyWhenAbsent() {
+        when(repository.findById(100)).thenReturn(Optional.empty());
+
+        assertThat(service.findByRound(100)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("expectedCurrentRound는 양수를 반환한다")
+    void expectedCurrentRoundReturnsPositive() {
+        assertThat(service.expectedCurrentRound()).isPositive();
+    }
 }
