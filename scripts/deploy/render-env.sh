@@ -54,4 +54,11 @@ while IFS= read -r name; do
   printf '%s=%s\n' "$name" "$value" >> .env
 done < .required-envs
 
+# optional secrets — 값이 있을 때만 .env에 추가
+for opt_name in PUBLIC_DATA_API_KEY KRAFT_API_STORE_RELAY_URL; do
+  value="$(printf '%s' "$ALL_SECRETS_JSON" | jq -r --arg key "$opt_name" '.[$key] // ""')"
+  [[ -z "$value" ]] && continue
+  printf '%s=%s\n' "$opt_name" "$value" >> .env
+done
+
 docker compose --env-file .env config -q
