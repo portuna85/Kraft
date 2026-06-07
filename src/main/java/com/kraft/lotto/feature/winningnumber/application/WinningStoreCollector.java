@@ -89,6 +89,17 @@ public class WinningStoreCollector {
         return allSuccess;
     }
 
+    @Transactional
+    public int backfillRegions() {
+        List<WinningStoreEntity> targets = storeRepository.findBySidoIsNull();
+        for (WinningStoreEntity entity : targets) {
+            KoreanAddressParser.ParsedAddress parsed = KoreanAddressParser.parse(entity.getAddress());
+            storeRepository.updateRegion(entity.getId(), parsed.sido(), parsed.sigungu());
+        }
+        log.info("backfillRegions completed: updated={}", targets.size());
+        return targets.size();
+    }
+
     public void saveManual(int round, int grade, List<WinningStore> stores) {
         if (stores.isEmpty()) {
             return;

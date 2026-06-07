@@ -69,6 +69,7 @@ public class WinningStoreEntity {
         return new WinningStore(round, grade, name, address, winCount, sido, sigungu, purchaseMethod);
     }
 
+    public Long          getId()             { return id; }
     public Integer       getRound()          { return round; }
     public Integer       getGrade()          { return grade; }
     public String        getName()           { return name; }

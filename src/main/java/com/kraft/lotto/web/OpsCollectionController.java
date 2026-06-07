@@ -73,6 +73,13 @@ public class OpsCollectionController {
         return Map.of("round", round, "saved", saved);
     }
 
+    @PostMapping("/stores/backfill-regions")
+    @Operation(summary = "Backfill sido/sigungu from existing address for stores with null region")
+    public Map<String, Object> backfillRegions() {
+        int updated = winningStoreCollector.backfillRegions();
+        return Map.of("updated", updated);
+    }
+
     @PostMapping("/refresh")
     @Operation(summary = "Re-fetch a specific round from API even if already collected (refresh=true)")
     public CollectResponse refreshRound(@RequestParam int round) {
