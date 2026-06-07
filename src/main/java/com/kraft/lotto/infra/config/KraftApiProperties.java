@@ -26,6 +26,7 @@ public record KraftApiProperties(
         String userAgent,
         String referer,
         String acceptLanguage,
-        String fallbackClient
+        String fallbackClient,
+        String storeRelayUrl
 ) {
 }

@@ -89,6 +89,14 @@ public class WinningStoreCollector {
         return allSuccess;
     }
 
+    public void saveManual(int round, int grade, List<WinningStore> stores) {
+        if (stores.isEmpty()) {
+            return;
+        }
+        persistGrade(round, grade, stores);
+        log.info("manual winning stores saved: round={}, grade={}, count={}", round, grade, stores.size());
+    }
+
     @Transactional
     void persistGrade(int round, int grade, List<WinningStore> stores) {
         LocalDateTime now = LocalDateTime.now(clock);

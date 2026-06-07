@@ -23,6 +23,11 @@ class WinningStoreConfiguration {
 
     @Bean
     WinningStoreApiClient winningStoreApiClient(KraftApiProperties properties, ObjectMapper objectMapper) {
+        if (properties.storeRelayUrl() != null && !properties.storeRelayUrl().isBlank()) {
+            log.info("store relay URL configured, using RelayStoreApiClient: {}", properties.storeRelayUrl());
+            return buildRelayClient(properties, objectMapper);
+        }
+
         CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
 
         int connectMs = Math.min(properties.connectTimeoutMs(), properties.requestTimeoutMs());
@@ -57,6 +62,22 @@ class WinningStoreConfiguration {
                 STORE_BASE_URL, SESSION_SEED_URL,
                 cookieManager, tracer,
                 properties.userAgent() != null ? properties.userAgent() : "");
+    }
+
+    private static WinningStoreApiClient buildRelayClient(KraftApiProperties properties, ObjectMapper objectMapper) {
+        int connectMs = Math.min(properties.connectTimeoutMs(), properties.requestTimeoutMs());
+        int readMs    = Math.min(properties.readTimeoutMs(),    properties.requestTimeoutMs());
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(connectMs))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(Duration.ofMillis(readMs));
+        RestClient relayRestClient = RestClient.builder()
+                .requestFactory(factory)
+                .defaultHeader(HttpHeaders.ACCEPT, "application/json")
+                .build();
+        return new RelayStoreApiClient(relayRestClient, objectMapper, properties.storeRelayUrl());
     }
 
     private static RestClient buildTracerClient() {

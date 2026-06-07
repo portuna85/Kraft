@@ -44,6 +44,32 @@
       </div>
     </div>
 
+    <div class="card mt-3">
+      <div class="card-header">판매점 수동 입력</div>
+      <div class="card-body">
+        <p class="card-text text-muted small">자동 수집이 실패한 경우 직접 판매점 데이터를 입력합니다.<br>
+          형식: <code>판매점명|주소|당첨건수</code> (주소, 당첨건수 생략 가능, 한 줄에 하나씩)</p>
+        <form th:action="@{/admin/ops/collection/stores/manual}" method="post"
+              onsubmit="return confirm('수동으로 판매점 데이터를 저장하시겠습니까?\n기존 데이터가 덮어쓰여집니다.')">
+          <div class="row g-2 mb-2">
+            <div class="col-4">
+              <input type="number" name="round" class="form-control form-control-sm" placeholder="회차" required min="1">
+            </div>
+            <div class="col-4">
+              <select name="grade" class="form-select form-select-sm" required>
+                <option value="">등급 선택</option>
+                <option value="1">1등</option>
+                <option value="2">2등</option>
+              </select>
+            </div>
+          </div>
+          <textarea name="storesText" class="form-control form-control-sm mb-2" rows="6"
+                    placeholder="판매점명|주소|당첨건수&#10;예) 행운복권방|서울 강남구 테헤란로 1|1&#10;예) 미래복권|부산 해운대구 센텀로 2" required></textarea>
+          <button type="submit" class="btn btn-warning btn-sm">수동 저장</button>
+        </form>
+      </div>
+    </div>
+
     <div class="card mt-4">
       <div class="card-header">최근 실행 이력</div>
       <div class="card-body p-0">
