@@ -103,9 +103,6 @@ jobs:
       - name: Prepare logs directory for bind mount
         run: ./scripts/deploy/prepare-logs.sh
 
-      - name: Repair Flyway V1 checksum (migration squash)
-        run: echo "Flyway V1 squash repair is handled by FlywayConfig.java on app startup."
-
       # C-1: GHCR에서 CI가 빌드한 이미지를 pull한다 (prod 호스트 재빌드 없음)
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -148,12 +145,15 @@ jobs:
             echo "- status: \`${{ job.status }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # C-7: self-hosted 디스크 정리 — 미사용 이미지/빌드 캐시 제거
+      # C-7: self-hosted 디스크 정리 — 사용 가능 공간이 5 GB 미만일 때만 실행
       - name: Prune unused Docker resources
         if: always()
         run: |
-          docker image prune -f || true
-          docker builder prune -f || true
+          avail=$(df --output=avail -BG / | tail -1 | tr -d 'G ')
+          if [ "${avail:-99}" -lt 5 ]; then
+            docker image prune -f || true
+            docker builder prune -f || true
+          fi
 
       - name: Cleanup secrets artifacts
         if: always()
