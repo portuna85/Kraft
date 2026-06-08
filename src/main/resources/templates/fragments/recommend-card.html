@@ -53,22 +53,20 @@
     <div id="recommend-loading" class="htmx-indicator kraft-state kraft-state-loading small">생성 중…</div>
     <div class="sets-grid" th:if="${combinations != null and !#lists.isEmpty(combinations)}">
       <div th:each="c, stat : ${combinations}" class="set-card">
-        <span class="set-index" th:text="'#' + ${stat.count}"></span>
-        <div class="ball-row">
-          <th:block th:each="n : ${c.numbers}">
-            <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
-          </th:block>
+        <div class="set-card-row">
+          <span class="set-index" th:text="'#' + ${stat.count}"></span>
+          <div class="ball-row">
+            <th:block th:each="n : ${c.numbers}">
+              <span th:replace="~{fragments/lotto-ball :: ball(${n}, '')}">1</span>
+            </th:block>
+          </div>
         </div>
-        <button class="set-card-copy-btn" type="button" aria-label="번호 복사">복사</button>
-        <details class="set-card-analysis" th:if="${not #lists.isEmpty(c.passedLabels)}">
-          <summary class="set-card-analysis-toggle small text-secondary">편향 회피 분석</summary>
-          <ul class="set-card-analysis-list">
-            <li th:each="label : ${c.passedLabels}" class="set-card-analysis-item">
-              <span class="set-card-analysis-check" aria-hidden="true">✓</span>
-              <span th:text="${label}">label</span>
-            </li>
-          </ul>
-        </details>
+        <ul class="set-card-analysis-list" th:if="${not #lists.isEmpty(c.passedLabels)}">
+          <li th:each="label : ${c.passedLabels}" class="set-card-analysis-item">
+            <span class="set-card-analysis-check" aria-hidden="true">✓</span>
+            <span th:text="${label}">label</span>
+          </li>
+        </ul>
       </div>
     </div>
     <!-- 고급 설정: 규칙 on/off -->
