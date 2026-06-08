@@ -55,16 +55,13 @@ jobs:
         run: python3 scripts/check_utf8.py
 
       - name: Validate Caddyfile
-        env:
-          KRAFT_DOMAIN: example.com
-          KRAFT_ADMIN_DOMAIN: admin.example.com
-          KRAFT_DB_NAME: kraft
-          KRAFT_DB_USER: kraft
-          KRAFT_DB_PASSWORD: kraft
-          KRAFT_DB_ROOT_PASSWORD: kraft
-          SPRING_PROFILES_ACTIVE: local
-          KRAFT_GRAFANA_ADMIN_PASSWORD: kraft
-        run: docker compose --profile tls run --rm caddy caddy validate --config /etc/caddy/Caddyfile
+        run: |
+          docker run --rm \
+            -e KRAFT_DOMAIN=example.com \
+            -e KRAFT_ADMIN_DOMAIN=admin.example.com \
+            -v "$PWD/docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine \
+            caddy validate --config /etc/caddy/Caddyfile
 
       - name: Check environment drift
         run: python3 scripts/check_env_drift.py
