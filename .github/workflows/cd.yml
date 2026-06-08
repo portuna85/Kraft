@@ -54,7 +54,7 @@ jobs:
         run: sudo chown -R "$USER":"$USER" "$GITHUB_WORKSPACE" || true
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ steps.ref.outputs.value }}
 
