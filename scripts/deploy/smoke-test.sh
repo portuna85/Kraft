@@ -39,7 +39,7 @@ printf '%s' "$BODY" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"' || {
 check_http "/" "200" "홈 페이지"
 check_http "/latest" "200" "최신 회차 페이지"
 check_http "/data-source" "200" "데이터 출처 페이지"
-check_body_contains "/data-source" "데이터 수집 상태" "data-source 콘텐츠 확인"
+check_body_contains "/data-source" "현재 데이터 상태" "data-source 콘텐츠 확인"
 
 # 보안 접근 제어 검증: 외부에서 보호 경로가 노출되지 않아야 함
 check_admin() {
