@@ -43,7 +43,10 @@ class SeoControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_XML);
-        assertThat(response.getBody()).contains("<loc>https://www.kraft.io.kr/</loc>");
+        assertThat(response.getBody())
+                .contains("<loc>https://www.kraft.io.kr/</loc>")
+                .contains("<loc>https://www.kraft.io.kr/latest</loc>")
+                .doesNotContain("/news?tier=");
     }
 
     @Test
