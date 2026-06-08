@@ -2,7 +2,7 @@
     # TLS는 Caddy가 Let's Encrypt / ZeroSSL에서 자동 발급·갱신
     # origin(app)은 내부 네트워크로만 접근 가능
 
-    encode gzip br
+    encode gzip
 
     # 헬스체크·actuator·관리자 ops·admin 직접 노출 차단 (내부망만 허용)
     @blocked path /actuator* /ops* /admin*
@@ -16,7 +16,7 @@
 }
 
 {$KRAFT_ADMIN_DOMAIN} {
-    encode gzip br
+    encode gzip
 
     # 관리자 도메인에서 raw ops·actuator 직접 접근 차단
     @rawBlocked path /ops* /actuator*
