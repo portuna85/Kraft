@@ -87,24 +87,10 @@ public class WinningStatisticsService {
         if (!event.dataChanged()) {
             return;
         }
-        // Summary table must be updated before frequency cache is evicted,
-        // so the next frequency() cache miss hits fresh summary data instead of triggering
-        // a full recompute from the raw winning_numbers table.
-        try {
-            cacheService.refreshFrequencySummary();
-        } catch (Exception e) {
-            log.error("frequency summary refresh failed, skipping cache eviction", e);
+        boolean ok = cacheService.refreshAll();
+        if (!ok) {
+            log.error("statistics summary refresh failed, skipping cache eviction");
             return;
-        }
-        try {
-            cacheService.refreshPatternStatsSummary();
-        } catch (Exception e) {
-            log.warn("pattern stats summary refresh failed, will recompute on next cache miss", e);
-        }
-        try {
-            cacheService.refreshCompanionPairSummary();
-        } catch (Exception e) {
-            log.warn("companion pair summary refresh failed, will recompute on next cache miss", e);
         }
         evictAll("winningNumberFrequency");
         evictAll("winningNumberFrequencyPeriod");

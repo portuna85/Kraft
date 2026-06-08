@@ -220,6 +220,24 @@ public class WinningStatisticsCacheService {
         return buildCompanionDtosFromRows(repository.findCompanionNumbers(target));
     }
 
+    public boolean refreshAll() {
+        for (String type : new String[]{"frequency", "pattern", "companion"}) {
+            try {
+                switch (type) {
+                    case "frequency" -> refreshFrequencySummary();
+                    case "pattern"   -> refreshPatternStatsSummary();
+                    case "companion" -> refreshCompanionPairSummary();
+                    default -> throw new IllegalStateException("unknown type: " + type);
+                }
+                meterRegistry.counter("kraft.statistics.summary.refresh", "type", type, "result", "ok").increment();
+            } catch (Exception e) {
+                meterRegistry.counter("kraft.statistics.summary.refresh", "type", type, "result", "failed").increment();
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Transactional
     public void refreshFrequencySummary() {
         if (summaryRepository == null) {

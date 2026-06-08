@@ -160,9 +160,7 @@ jobs:
           context: .
           file: Dockerfile.ci
           push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ env.IMAGE_NAME }}:latest
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -266,19 +264,20 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # Trivy + Syft를 build-test 크리티컬 패스에서 분리 — e2e-smoke와 병렬 실행
+  # Trivy + Syft를 build-test 크리티컬 패스에서 분리 — docker-publish 완료 후 이미지 스캔
   security-scan:
     name: Security Scan (Trivy + SBOM)
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: build-test
+    needs: [build-test, docker-publish]
 
     steps:
-      - name: Download app jar
-        uses: actions/download-artifact@v8
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
         with:
-          name: app-jar-${{ github.run_id }}
-          path: build/libs/
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache Trivy binary
         id: trivy-cache
@@ -300,10 +299,10 @@ jobs:
       - name: Add tool bin to PATH
         run: echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 
-      - name: Scan JAR for vulnerabilities (Trivy CLI)
+      - name: Scan image for vulnerabilities (Trivy CLI)
         run: |
           set -euo pipefail
-          trivy fs build/libs/app.jar \
+          trivy image "${{ env.IMAGE_NAME }}:${{ github.sha }}" \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
             --exit-code 1
@@ -328,7 +327,7 @@ jobs:
       - name: Generate SBOM (Syft CLI)
         run: |
           set -euo pipefail
-          syft scan build/libs/ -o cyclonedx-json=sbom.json
+          syft scan "${{ env.IMAGE_NAME }}:${{ github.sha }}" -o cyclonedx-json=sbom.json
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v7
@@ -336,6 +335,29 @@ jobs:
           name: sbom-${{ github.run_id }}
           path: sbom.json
           retention-days: 14
+
+  # SHA→latest 프로모션 — e2e-smoke, static-analysis, security-scan 전부 성공 후 실행
+  promote:
+    name: Promote SHA → latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [e2e-smoke, static-analysis, security-scan]
+    permissions:
+      packages: write
+
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag SHA as latest
+        run: |
+          docker pull "${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker tag  "${{ env.IMAGE_NAME }}:${{ github.sha }}" "${{ env.IMAGE_NAME }}:latest"
+          docker push "${{ env.IMAGE_NAME }}:latest"
 
   performance-smoke:
     name: Performance Smoke

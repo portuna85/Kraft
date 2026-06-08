@@ -47,6 +47,15 @@ public class LottoFetchLogEntity {
     @Column(name = "fetched_at", nullable = false)
     private LocalDateTime fetchedAt;
 
+    @Column(name = "api_client", length = 30)
+    private String apiClient;
+
+    @Column(name = "retry_count")
+    private Integer retryCount;
+
+    @Column(name = "latency_ms")
+    private Long latencyMs;
+
     protected LottoFetchLogEntity() {
     }
 
@@ -67,6 +76,13 @@ public class LottoFetchLogEntity {
         this.fetchedAt = fetchedAt;
     }
 
+    public LottoFetchLogEntity withDiagnostics(String apiClient, int retryCount, long latencyMs) {
+        this.apiClient = apiClient;
+        this.retryCount = retryCount;
+        this.latencyMs = latencyMs;
+        return this;
+    }
+
     private static String truncate(String value, int maxLength) {
         if (value == null || value.length() <= maxLength) {
             return value;
@@ -83,6 +99,9 @@ public class LottoFetchLogEntity {
     public Integer getResponseCode() { return responseCode; }
     public String getRawResponse() { return rawResponse; }
     public LocalDateTime getFetchedAt() { return fetchedAt; }
+    public String getApiClient() { return apiClient; }
+    public Integer getRetryCount() { return retryCount; }
+    public Long getLatencyMs() { return latencyMs; }
 
     private static String resolveFailureReason(LottoFetchStatus status, String message) {
         if (status != LottoFetchStatus.FAILED || message == null || message.isBlank()) {

@@ -33,7 +33,6 @@ groups:
           summary: "API 회로차단기 OPEN"
           description: "kraft API 회로차단기가 5분 이상 OPEN 상태입니다. 외부 수집 소스가 차단되었을 가능성이 있습니다."
 
-      # 양쪽 수집 소스 모두 실패 (B-1 CompositeLottoApiClient 구현 후 활성화)
       - alert: FallbackExhausted
         expr: increase(kraft_api_fallback_exhausted_total[1h]) > 0
         for: 0m
