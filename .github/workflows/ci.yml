@@ -58,6 +58,12 @@ jobs:
         env:
           KRAFT_DOMAIN: example.com
           KRAFT_ADMIN_DOMAIN: admin.example.com
+          KRAFT_DB_NAME: kraft
+          KRAFT_DB_USER: kraft
+          KRAFT_DB_PASSWORD: kraft
+          KRAFT_DB_ROOT_PASSWORD: kraft
+          SPRING_PROFILES_ACTIVE: local
+          KRAFT_GRAFANA_ADMIN_PASSWORD: kraft
         run: docker compose --profile tls run --rm caddy caddy validate --config /etc/caddy/Caddyfile
 
       - name: Check environment drift
