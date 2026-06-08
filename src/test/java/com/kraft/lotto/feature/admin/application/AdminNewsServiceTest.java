@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainRepository;
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordRepository;
+import com.kraft.lotto.feature.news.application.NewsRelevancePolicy;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
 import java.time.Clock;
@@ -43,7 +44,7 @@ class AdminNewsServiceTest {
     @BeforeEach
     void setUp() {
         service = new AdminNewsService(articleRepository, blockedDomainRepository,
-                blockedKeywordRepository, auditLogService, CLOCK);
+                blockedKeywordRepository, new NewsRelevancePolicy(), auditLogService, CLOCK);
     }
 
     @Test

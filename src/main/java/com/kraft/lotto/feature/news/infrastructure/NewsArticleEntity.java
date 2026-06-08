@@ -53,6 +53,9 @@ public class NewsArticleEntity {
     @Column(name = "rejected", nullable = false)
     private boolean rejected;
 
+    @Column(name = "reject_reason", length = 200)
+    private String rejectReason;
+
     protected NewsArticleEntity() {
     }
 
@@ -112,4 +115,6 @@ public class NewsArticleEntity {
     public void setApproved(boolean approved) { this.approved = approved; }
     public boolean isRejected() { return rejected; }
     public void setRejected(boolean rejected) { this.rejected = rejected; }
+    public String getRejectReason() { return rejectReason; }
+    public void setRejectReason(String rejectReason) { this.rejectReason = rejectReason; }
 }

@@ -34,6 +34,9 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticleEntity, 
     @Query("update NewsArticleEntity n set n.approved = false, n.rejected = true where n.sourceDomain = :domain")
     int rejectAllBySourceDomain(@Param("domain") String domain);
 
+    @Query("select n from NewsArticleEntity n where n.approved = true and n.collectedAt >= :since order by n.collectedAt desc")
+    List<NewsArticleEntity> findApprovedSince(@Param("since") LocalDateTime since);
+
     @Modifying
     @Query("delete from NewsArticleEntity n where n.collectedAt < :cutoff")
     int deleteByCollectedAtBefore(@Param("cutoff") LocalDateTime cutoff);

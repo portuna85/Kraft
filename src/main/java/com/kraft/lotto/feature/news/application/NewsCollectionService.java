@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.news.application;
 
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainRepository;
+import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordRepository;
 import com.kraft.lotto.feature.news.domain.NewsArticle;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
@@ -29,7 +30,9 @@ public class NewsCollectionService {
     private final Clock clock;
     private final int retentionDays;
     private final List<String> blockedDomains;
+    private final List<String> blockedKeywords;
     private final NewsBlockedDomainRepository blockedDomainRepository;
+    private final NewsBlockedKeywordRepository blockedKeywordRepository;
 
     NewsCollectionService(NewsArticleRepository repository,
                           NewsRssClient rssClient,
@@ -37,7 +40,7 @@ public class NewsCollectionService {
                           Clock clock,
                           int retentionDays) {
         this(repository, rssClient, persister, new NewsSourceClassifier(List.of(), List.of()),
-                clock, retentionDays, List.of(), null);
+                clock, retentionDays, List.of(), List.of(), null, null);
     }
 
     NewsCollectionService(NewsArticleRepository repository,
@@ -47,7 +50,7 @@ public class NewsCollectionService {
                           Clock clock,
                           int retentionDays,
                           List<String> blockedDomains) {
-        this(repository, rssClient, persister, classifier, clock, retentionDays, blockedDomains, null);
+        this(repository, rssClient, persister, classifier, clock, retentionDays, blockedDomains, List.of(), null, null);
     }
 
     NewsCollectionService(NewsArticleRepository repository,
@@ -58,6 +61,38 @@ public class NewsCollectionService {
                           int retentionDays,
                           List<String> blockedDomains,
                           NewsBlockedDomainRepository blockedDomainRepository) {
+        this(repository, rssClient, persister, classifier, clock, retentionDays, blockedDomains, List.of(),
+                blockedDomainRepository, null);
+    }
+
+    private final NewsRelevancePolicy relevancePolicy;
+
+    NewsCollectionService(NewsArticleRepository repository,
+                          NewsRssClient rssClient,
+                          NewsArticlePersister persister,
+                          NewsSourceClassifier classifier,
+                          Clock clock,
+                          int retentionDays,
+                          List<String> blockedDomains,
+                          List<String> blockedKeywords,
+                          NewsBlockedDomainRepository blockedDomainRepository,
+                          NewsBlockedKeywordRepository blockedKeywordRepository) {
+        this(repository, rssClient, persister, classifier, clock, retentionDays,
+                blockedDomains, blockedKeywords, blockedDomainRepository, blockedKeywordRepository,
+                new NewsRelevancePolicy());
+    }
+
+    NewsCollectionService(NewsArticleRepository repository,
+                          NewsRssClient rssClient,
+                          NewsArticlePersister persister,
+                          NewsSourceClassifier classifier,
+                          Clock clock,
+                          int retentionDays,
+                          List<String> blockedDomains,
+                          List<String> blockedKeywords,
+                          NewsBlockedDomainRepository blockedDomainRepository,
+                          NewsBlockedKeywordRepository blockedKeywordRepository,
+                          NewsRelevancePolicy relevancePolicy) {
         this.repository = repository;
         this.rssClient = rssClient;
         this.persister = persister;
@@ -65,7 +100,10 @@ public class NewsCollectionService {
         this.clock = clock;
         this.retentionDays = retentionDays;
         this.blockedDomains = List.copyOf(blockedDomains);
+        this.blockedKeywords = List.copyOf(blockedKeywords);
         this.blockedDomainRepository = blockedDomainRepository;
+        this.blockedKeywordRepository = blockedKeywordRepository;
+        this.relevancePolicy = relevancePolicy;
     }
 
     public NewsCollectResult collect() {
@@ -76,6 +114,9 @@ public class NewsCollectionService {
 
         List<String> dbBlockedDomains = blockedDomainRepository != null
                 ? blockedDomainRepository.findAllDomains()
+                : List.of();
+        List<String> dbBlockedKeywords = blockedKeywordRepository != null
+                ? blockedKeywordRepository.findAllKeywords()
                 : List.of();
 
         LocalDateTime now = LocalDateTime.now(clock);
@@ -89,23 +130,40 @@ public class NewsCollectionService {
                 log.debug("news blocked domain, skipped: link={}", article.link());
                 continue;
             }
+            if (isBlockedKeyword(article, dbBlockedKeywords)) {
+                skipped++;
+                log.debug("news blocked keyword, skipped: title={} link={}", article.title(), article.link());
+                continue;
+            }
+            NewsDecision decision = relevancePolicy.decide(
+                    article.title(), article.description(), article.source(), article.link());
+            if (decision.type() == NewsDecision.Type.REJECT) {
+                skipped++;
+                log.debug("news relevance reject score={} title={}", decision.score(), article.title());
+                continue;
+            }
             String hash = sha256(article.link());
             if (repository.existsByLinkHash(hash)) {
                 skipped++;
                 continue;
             }
             try {
-                persister.saveArticle(new NewsArticleEntity(
+                var sourceTier = classifier.classify(article.source());
+                var entity = new NewsArticleEntity(
                         truncate(article.title(), 500),
                         truncate(article.link(), 2000),
                         hash,
                         truncate(article.description(), 2000),
                         truncate(article.source(), 200),
                         domain,
-                        classifier.classify(article.source()),
+                        sourceTier,
                         article.pubDate(),
                         now
-                ));
+                );
+                if (decision.type() == NewsDecision.Type.REVIEW) {
+                    entity.setApproved(false);
+                }
+                persister.saveArticle(entity);
                 saved++;
             } catch (DataIntegrityViolationException e) {
                 skipped++;
@@ -149,6 +207,29 @@ public class NewsCollectionService {
         return dbDomains.stream()
                 .map(d -> d.toLowerCase(Locale.ROOT))
                 .anyMatch(domain::endsWith);
+    }
+
+    private boolean isBlockedKeyword(NewsArticle article, List<String> dbKeywords) {
+        String target = String.join(" ",
+                nullToEmpty(article.title()),
+                nullToEmpty(article.description()),
+                nullToEmpty(article.source()),
+                nullToEmpty(article.link())
+        ).toLowerCase(Locale.KOREAN);
+
+        return containsBlockedKeyword(target, blockedKeywords)
+                || containsBlockedKeyword(target, dbKeywords);
+    }
+
+    private static boolean containsBlockedKeyword(String target, List<String> keywords) {
+        return keywords.stream()
+                .map(keyword -> keyword == null ? "" : keyword.trim().toLowerCase(Locale.KOREAN))
+                .filter(keyword -> !keyword.isBlank())
+                .anyMatch(target::contains);
+    }
+
+    private static String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private static String sha256(String value) {

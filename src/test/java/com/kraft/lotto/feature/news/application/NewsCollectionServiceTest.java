@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainRepository;
+import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordRepository;
 import com.kraft.lotto.feature.news.domain.NewsArticle;
 import com.kraft.lotto.feature.news.domain.NewsSourceTier;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
@@ -44,6 +45,9 @@ class NewsCollectionServiceTest {
 
     @Mock
     NewsBlockedDomainRepository blockedDomainRepository;
+
+    @Mock
+    NewsBlockedKeywordRepository blockedKeywordRepository;
 
     @Test
     @DisplayName("새 기사는 저장된다")
@@ -188,6 +192,44 @@ class NewsCollectionServiceTest {
         NewsCollectionService.NewsCollectResult result = service.collect();
 
         assertThat(result.saved()).isEqualTo(0);
+        assertThat(result.skipped()).isEqualTo(1);
+        verify(persister, never()).saveArticle(any());
+    }
+
+    @Test
+    @DisplayName("DB에 등록된 차단 키워드가 설명에 포함된 기사는 건너뛴다")
+    void dbBlockedKeywordInDescriptionIsSkipped() {
+        NewsArticle article = new NewsArticle(null, "로또 소식", "https://example.com/news",
+                "분양 로또 관련 설명", "출처", LocalDateTime.now(), null);
+        when(rssClient.fetch()).thenReturn(List.of(article));
+        when(blockedKeywordRepository.findAllKeywords()).thenReturn(List.of("분양 로또"));
+
+        NewsCollectionService service = new NewsCollectionService(
+                repository, rssClient, persister,
+                new NewsSourceClassifier(List.of(), List.of()),
+                FIXED_CLOCK, 30, List.of(), List.of(), null, blockedKeywordRepository);
+        NewsCollectionService.NewsCollectResult result = service.collect();
+
+        assertThat(result.saved()).isEqualTo(0);
+        assertThat(result.skipped()).isEqualTo(1);
+        verify(repository, never()).existsByLinkHash(anyString());
+        verify(persister, never()).saveArticle(any());
+    }
+
+    @Test
+    @DisplayName("설정 차단 키워드는 제목 외 링크와 출처에도 적용된다")
+    void configuredBlockedKeywordAppliesToLinkAndSource() {
+        NewsArticle article = new NewsArticle(null, "로또 소식", "https://example.com/powerball/news",
+                "설명", "Powerball Daily", LocalDateTime.now(), null);
+        when(rssClient.fetch()).thenReturn(List.of(article));
+
+        NewsCollectionService service = new NewsCollectionService(
+                repository, rssClient, persister,
+                new NewsSourceClassifier(List.of(), List.of()),
+                FIXED_CLOCK, 30, List.of(), List.of("powerball"), null, null);
+        NewsCollectionService.NewsCollectResult result = service.collect();
+
+        assertThat(result.saved()).isZero();
         assertThat(result.skipped()).isEqualTo(1);
         verify(persister, never()).saveArticle(any());
     }
