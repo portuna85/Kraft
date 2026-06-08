@@ -148,6 +148,7 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    systemProperty("user.timezone", "Asia/Seoul")
 }
 
 tasks.named<Test>("test") {
