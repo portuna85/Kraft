@@ -119,45 +119,15 @@ test.describe('home smoke', () => {
   });
 });
 
-test.describe('news tier smoke', () => {
-  test('renders news page with tier tabs', async ({ page }) => {
+test.describe('news smoke', () => {
+  test('renders news page', async ({ page }) => {
     await page.goto('/news');
-    await expect(page.locator('.news-tier-tabs')).toBeVisible();
-    await expect(page.locator('.news-tier-tab')).toHaveCount(4); // 전체, official, press, general
+    await expect(page.locator('.news-list, .kraft-state-empty')).toBeVisible();
   });
 
-  test('/news 기본 접근 시 전체 탭이 active다', async ({ page }) => {
+  test('뉴스 페이지에 tier 필터 탭이 없다', async ({ page }) => {
     await page.goto('/news');
-    const allTab = page.locator('.news-tier-tab').first();
-    await expect(allTab).toHaveClass(/active/);
-  });
-
-  test('/news?tier=press 접근 시 press 탭이 active다', async ({ page }) => {
-    await page.goto('/news?tier=press');
-    const activeTab = page.locator('.news-tier-tab.active');
-    await expect(activeTab).toHaveCount(1);
-    await expect(activeTab).toContainText('언론');
-  });
-
-  test('/news?tier=official 접근 시 official 탭이 active다', async ({ page }) => {
-    await page.goto('/news?tier=official');
-    const activeTab = page.locator('.news-tier-tab.active');
-    await expect(activeTab).toHaveCount(1);
-    await expect(activeTab).toContainText('공식');
-  });
-
-  test('/news?tier=general 접근 시 general 탭이 active다', async ({ page }) => {
-    await page.goto('/news?tier=general');
-    const activeTab = page.locator('.news-tier-tab.active');
-    await expect(activeTab).toHaveCount(1);
-    await expect(activeTab).toContainText('일반');
-  });
-
-  test('tier 탭 클릭 시 tier query를 유지하며 이동한다', async ({ page }) => {
-    await page.goto('/news');
-    await page.locator('.news-tier-tab').filter({ hasText: '언론' }).click();
-    await expect(page).toHaveURL(/tier=press/);
-    await expect(page.locator('.news-tier-tab.active')).toContainText('언론');
+    await expect(page.locator('.news-tier-tabs')).toHaveCount(0);
   });
 });
 
