@@ -9,16 +9,6 @@
   </header>
 
   <div class="card mb-4 kraft-section" id="news-list">
-    <nav class="news-tier-tabs" aria-label="뉴스 출처 등급">
-      <a class="news-tier-tab"
-         th:classappend="${currentTier == ''} ? ' active'"
-         th:href="@{/news(page=0, size=${size})}">전체</a>
-      <a class="news-tier-tab"
-         th:each="tierOption : ${tiers}"
-         th:classappend="${currentTier == tierOption.paramValue()} ? ' active'"
-         th:href="@{/news(page=0, size=${size}, tier=${tierOption.paramValue()})}"
-         th:text="${tierOption.label()}">등급</a>
-    </nav>
     <div class="card-body p-0">
       <div th:if="${#lists.isEmpty(articles)}" class="kraft-state kraft-state-empty m-3">
         수집된 뉴스가 없습니다. 잠시 후 다시 확인해 주세요.
@@ -46,14 +36,14 @@
 
   <nav class="kraft-pagination" aria-label="페이지 이동" th:if="${totalPages > 1}">
     <a class="kraft-page-btn"
-       th:href="@{/news(page=${page - 1}, size=${size}, tier=${currentTier == '' ? null : currentTier})}"
+       th:href="@{/news(page=${page - 1}, size=${size})}"
        th:classappend="${page == 0} ? ' disabled'"
        th:attr="aria-disabled=${page == 0}"
        aria-label="이전 페이지">&#8249;</a>
     <span class="kraft-page-info"
           th:text="${page + 1} + ' / ' + ${totalPages}">1 / 1</span>
     <a class="kraft-page-btn"
-       th:href="@{/news(page=${page + 1}, size=${size}, tier=${currentTier == '' ? null : currentTier})}"
+       th:href="@{/news(page=${page + 1}, size=${size})}"
        th:classappend="${page + 1 >= totalPages} ? ' disabled'"
        th:attr="aria-disabled=${page + 1 >= totalPages}"
        aria-label="다음 페이지">&#8250;</a>

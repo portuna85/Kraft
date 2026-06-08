@@ -1,9 +1,6 @@
 package com.kraft.lotto.web;
 
 import com.kraft.lotto.feature.news.application.NewsQueryService;
-import com.kraft.lotto.feature.news.domain.NewsSourceTier;
-import com.kraft.lotto.support.BusinessException;
-import com.kraft.lotto.support.ErrorCode;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -26,30 +23,14 @@ public class NewsController {
     public String news(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "" + DEFAULT_SIZE) @Min(1) @Max(50) int size,
-            @RequestParam(required = false) String tier,
             Model model
     ) {
-        NewsSourceTier selectedTier = parseTier(tier);
-        NewsQueryService.NewsPage result = newsQueryService.list(page, size, selectedTier);
+        NewsQueryService.NewsPage result = newsQueryService.list(page, size, null);
         model.addAttribute("articles", result.articles());
         model.addAttribute("page", result.page());
         model.addAttribute("size", result.size());
         model.addAttribute("totalElements", result.totalElements());
         model.addAttribute("totalPages", result.totalPages());
-        model.addAttribute("tiers", NewsSourceTier.values());
-        model.addAttribute("currentTier", selectedTier == null ? "" : selectedTier.paramValue());
-        model.addAttribute("noindex", selectedTier == NewsSourceTier.GENERAL);
         return "news";
-    }
-
-    private static NewsSourceTier parseTier(String tier) {
-        if (tier == null || tier.isBlank()) {
-            return null;
-        }
-        return NewsSourceTier.fromParam(tier)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.INVALID_PARAMETER,
-                        "tier must be one of official, press, general"
-                ));
     }
 }
