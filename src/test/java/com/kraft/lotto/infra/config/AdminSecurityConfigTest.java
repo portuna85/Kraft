@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.mockito.Mockito.mock;
 
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
+import com.kraft.lotto.feature.admin.application.AdminLoginLockoutService;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -86,13 +87,15 @@ class AdminSecurityConfigTest {
     }
 
     private static AdminSecurityConfig config(KraftAdminProperties properties) {
-        return new AdminSecurityConfig(properties, mock(AdminAuditLogService.class));
+        return new AdminSecurityConfig(properties, mock(AdminAuditLogService.class),
+                mock(AdminLoginLockoutService.class));
     }
 
     private static PasswordEncoder encoder() {
         return new AdminSecurityConfig(
                 new KraftAdminProperties(false, "admin.example.test", null, null),
-                mock(AdminAuditLogService.class)
+                mock(AdminAuditLogService.class),
+                mock(AdminLoginLockoutService.class)
         ).adminPasswordEncoder();
     }
 }

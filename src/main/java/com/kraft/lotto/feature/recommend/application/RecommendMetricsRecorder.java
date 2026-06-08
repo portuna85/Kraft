@@ -38,5 +38,6 @@ public class RecommendMetricsRecorder {
             case OTHER -> "other";
         };
         meterRegistry.counter("kraft.recommend.generation.failure", "reason", reason).increment();
+        meterRegistry.counter("kraft.recommend.generator.timeout.total", "phase", reason).increment();
     }
 }

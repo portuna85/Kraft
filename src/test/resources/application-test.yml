@@ -10,7 +10,7 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:db/migration,classpath:db/vendor/{vendor}
     validate-on-migrate: false
     ignore-missing-migrations: true
 

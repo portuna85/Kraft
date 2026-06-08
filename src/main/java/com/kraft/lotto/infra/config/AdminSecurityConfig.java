@@ -1,7 +1,9 @@
 package com.kraft.lotto.infra.config;
 
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
+import com.kraft.lotto.feature.admin.application.AdminLoginLockoutService;
 import java.util.List;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -29,11 +31,14 @@ public class AdminSecurityConfig {
 
     private final KraftAdminProperties adminProperties;
     private final AdminAuditLogService auditLogService;
+    private final AdminLoginLockoutService lockoutService;
 
     public AdminSecurityConfig(KraftAdminProperties adminProperties,
-                               AdminAuditLogService auditLogService) {
+                               AdminAuditLogService auditLogService,
+                               AdminLoginLockoutService lockoutService) {
         this.adminProperties = adminProperties;
         this.auditLogService = auditLogService;
+        this.lockoutService = lockoutService;
     }
 
     @Bean
@@ -66,8 +71,11 @@ public class AdminSecurityConfig {
                 );
 
         if (adminProperties.enabled()) {
-            AdminAuthSuccessHandler successHandler = new AdminAuthSuccessHandler(auditLogService);
-            AdminAuthFailureHandler failureHandler = new AdminAuthFailureHandler(auditLogService);
+            AdminAuthSuccessHandler successHandler = new AdminAuthSuccessHandler(auditLogService, lockoutService);
+            AdminAuthFailureHandler failureHandler = new AdminAuthFailureHandler(auditLogService, lockoutService);
+
+            http.addFilterBefore(new AdminLoginLockoutFilter(lockoutService),
+                    UsernamePasswordAuthenticationFilter.class);
 
             http.formLogin(form -> form
                     .loginPage("/admin/login")

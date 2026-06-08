@@ -306,13 +306,14 @@ class WinningStatisticsServiceTest {
 
         service.evictCachesOnCollected(event);
 
-        verify(mockCacheService, never()).refreshFrequencySummary();
+        verify(mockCacheService, never()).refreshAll();
     }
 
     @Test
     @DisplayName("dataChanged=true인 이벤트 수신 시 통계 캐시를 비우고 요약을 갱신한다")
     void evictCachesOnCollectedDataChangedClearsCachesAndRefreshes() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        when(mockCacheService.refreshAll()).thenReturn(true);
         CacheManager cacheManager = mock(CacheManager.class);
         Cache frequency = mock(Cache.class);
         Cache frequencyPeriod = mock(Cache.class);
@@ -338,25 +339,27 @@ class WinningStatisticsServiceTest {
         verify(summary).clear();
         verify(patternStats).clear();
         verify(companionNumbers).clear();
-        verify(mockCacheService).refreshFrequencySummary();
+        verify(mockCacheService).refreshAll();
     }
 
     @Test
     @DisplayName("cacheManager가 없으면 캐시 삭제를 건너뛰고 요약만 갱신한다")
     void evictCachesOnCollectedWithoutCacheManager() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        when(mockCacheService.refreshAll()).thenReturn(true);
         WinningStatisticsService service = new WinningStatisticsService(mockCacheService);
         WinningNumbersCollectedEvent event = WinningNumbersCollectedEvent.of(1, 0, 0, 0);
 
         service.evictCachesOnCollected(event);
 
-        verify(mockCacheService).refreshFrequencySummary();
+        verify(mockCacheService).refreshAll();
     }
 
     @Test
     @DisplayName("특정 캐시가 null이면 나머지 캐시만 삭제한다")
     void evictCachesOnCollectedWithPartiallyMissingCaches() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        when(mockCacheService.refreshAll()).thenReturn(true);
         CacheManager cacheManager = mock(CacheManager.class);
         Cache frequency = mock(Cache.class);
         Cache summary = mock(Cache.class);
@@ -376,13 +379,14 @@ class WinningStatisticsServiceTest {
         verify(frequency).clear();
         verify(summary).clear();
         verify(patternStats).clear();
-        verify(mockCacheService).refreshFrequencySummary();
+        verify(mockCacheService).refreshAll();
     }
 
     @Test
     @DisplayName("데이터 변경 이벤트 시 요약 테이블 갱신은 캐시 삭제보다 먼저 실행된다")
     void evictCachesOnCollectedRefreshesSummaryBeforeCacheEviction() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        when(mockCacheService.refreshAll()).thenReturn(true);
         CacheManager cacheManager = mock(CacheManager.class);
         Cache frequency = mock(Cache.class);
         when(cacheManager.getCache("winningNumberFrequency")).thenReturn(frequency);
@@ -396,7 +400,7 @@ class WinningStatisticsServiceTest {
         service.evictCachesOnCollected(WinningNumbersCollectedEvent.of(1, 0, 0, 0));
 
         InOrder order = inOrder(mockCacheService, frequency);
-        order.verify(mockCacheService).refreshFrequencySummary();
+        order.verify(mockCacheService).refreshAll();
         order.verify(frequency).clear();
     }
 
@@ -404,13 +408,13 @@ class WinningStatisticsServiceTest {
     @DisplayName("요약 갱신이 실패하면 캐시 무효화를 수행하지 않는다")
     void evictCachesOnCollectedSkipsEvictionWhenRefreshFails() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
+        when(mockCacheService.refreshAll()).thenReturn(false);
         CacheManager cacheManager = mock(CacheManager.class);
-        doThrow(new RuntimeException("boom")).when(mockCacheService).refreshFrequencySummary();
 
         WinningStatisticsService service = new WinningStatisticsService(mockCacheService, cacheManager);
         service.evictCachesOnCollected(WinningNumbersCollectedEvent.of(1, 0, 0, 0));
 
-        verify(mockCacheService).refreshFrequencySummary();
+        verify(mockCacheService).refreshAll();
         verify(cacheManager, never()).getCache(org.mockito.ArgumentMatchers.anyString());
     }
 

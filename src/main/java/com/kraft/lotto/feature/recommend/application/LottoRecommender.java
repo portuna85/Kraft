@@ -131,14 +131,18 @@ public class LottoRecommender {
 
     private void recordDuplicateRejection() {
         meterRegistry.counter("kraft.recommend.rejection.by.type", "type", "duplicate").increment();
+        meterRegistry.counter("kraft.recommend.generator.reject.total", "reason", "duplicate").increment();
     }
 
     private void recordRuleRejection(String ruleName) {
         meterRegistry.counter("kraft.recommend.rejection.by.type", "type", "rule").increment();
         meterRegistry.counter("kraft.recommend.rejection.by.rule", "rule", ruleName).increment();
+        meterRegistry.counter("kraft.recommend.generator.reject.total", "reason", "rule_" + ruleName).increment();
     }
 
     private void recordTimeout() {
         meterRegistry.counter("kraft.recommend.timeout.count").increment();
+        meterRegistry.counter("kraft.recommend.generator.timeout.total",
+                "phase", "attempt_exhausted").increment();
     }
 }

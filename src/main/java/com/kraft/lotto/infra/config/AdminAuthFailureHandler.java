@@ -1,6 +1,7 @@
 package com.kraft.lotto.infra.config;
 
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
+import com.kraft.lotto.feature.admin.application.AdminLoginLockoutService;
 import com.kraft.lotto.support.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,9 +13,12 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 public class AdminAuthFailureHandler implements AuthenticationFailureHandler {
 
     private final AdminAuditLogService auditLogService;
+    private final AdminLoginLockoutService lockoutService;
 
-    public AdminAuthFailureHandler(AdminAuditLogService auditLogService) {
+    public AdminAuthFailureHandler(AdminAuditLogService auditLogService,
+                                   AdminLoginLockoutService lockoutService) {
         this.auditLogService = auditLogService;
+        this.lockoutService = lockoutService;
     }
 
     @Override
@@ -22,8 +26,12 @@ public class AdminAuthFailureHandler implements AuthenticationFailureHandler {
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
         String ip = ClientIpResolver.resolve(request, List.of());
-        auditLogService.recordFailure("unknown", "LOGIN_FAILED", null,
+        String username = request.getParameter("username");
+        lockoutService.recordFailure(username, ip);
+        auditLogService.recordFailure(username != null ? username : "unknown", "LOGIN_FAILED", null,
                 ip, request.getHeader("User-Agent"), exception.getMessage());
-        response.sendRedirect(request.getContextPath() + "/admin/login?error");
+        boolean locked = lockoutService.isLocked(username, ip);
+        String redirect = locked ? "/admin/login?locked" : "/admin/login?error";
+        response.sendRedirect(request.getContextPath() + redirect);
     }
 }

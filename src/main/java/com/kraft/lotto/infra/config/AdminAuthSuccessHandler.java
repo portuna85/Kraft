@@ -1,6 +1,7 @@
 package com.kraft.lotto.infra.config;
 
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
+import com.kraft.lotto.feature.admin.application.AdminLoginLockoutService;
 import com.kraft.lotto.support.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,9 +13,12 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 public class AdminAuthSuccessHandler implements AuthenticationSuccessHandler {
 
     private final AdminAuditLogService auditLogService;
+    private final AdminLoginLockoutService lockoutService;
 
-    public AdminAuthSuccessHandler(AdminAuditLogService auditLogService) {
+    public AdminAuthSuccessHandler(AdminAuditLogService auditLogService,
+                                   AdminLoginLockoutService lockoutService) {
         this.auditLogService = auditLogService;
+        this.lockoutService = lockoutService;
     }
 
     @Override
@@ -23,7 +27,7 @@ public class AdminAuthSuccessHandler implements AuthenticationSuccessHandler {
                                         Authentication authentication) throws IOException {
         String actor = authentication.getName();
         String ip = ClientIpResolver.resolve(request, List.of());
-
+        lockoutService.recordSuccess(actor, ip);
         auditLogService.recordSuccess(actor, "LOGIN_SUCCESS", null, ip,
                 request.getHeader("User-Agent"));
         response.sendRedirect(request.getContextPath() + "/admin/ops");

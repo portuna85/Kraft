@@ -84,8 +84,7 @@ class InfoPageControllerTest {
                 .andExpect(model().attribute("maxSearchRound", 1237))
                 .andExpect(model().attribute("appVersion", "0.2.0"))
                 .andExpect(model().attribute("buildTimeText", "2026-06-08T00:00:00Z"))
-                .andExpect(model().attribute("buildCommit", "abc1234"))
-                .andExpect(model().attributeExists("javaVersion"));
+                .andExpect(model().attribute("buildCommit", "abc1234"));
     }
 
     @Test

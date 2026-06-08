@@ -27,6 +27,10 @@ repositories {
     mavenCentral()
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 dependencies {
     val lombokVersion = "1.18.46"
 

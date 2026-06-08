@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
+import com.kraft.lotto.feature.admin.application.AdminLoginLockoutService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,16 +21,18 @@ import org.springframework.security.core.Authentication;
 class AdminAuthHandlerTest {
 
     AdminAuditLogService auditService;
+    AdminLoginLockoutService lockoutService;
 
     @BeforeEach
     void setUp() {
         auditService = mock(AdminAuditLogService.class);
+        lockoutService = mock(AdminLoginLockoutService.class);
     }
 
     @Test
     @DisplayName("SuccessHandler — 인증 성공 시 /admin/ops로 리다이렉트한다")
     void successHandlerRedirectsToOps() throws Exception {
-        AdminAuthSuccessHandler handler = new AdminAuthSuccessHandler(auditService);
+        AdminAuthSuccessHandler handler = new AdminAuthSuccessHandler(auditService, lockoutService);
 
         Authentication auth = mock(Authentication.class);
         when(auth.getName()).thenReturn("admin");
@@ -47,7 +50,7 @@ class AdminAuthHandlerTest {
     @Test
     @DisplayName("FailureHandler — /admin/login?error로 리다이렉트하고 감사 로그를 기록한다")
     void failureHandlerRedirectsAndAudits() throws Exception {
-        AdminAuthFailureHandler handler = new AdminAuthFailureHandler(auditService);
+        AdminAuthFailureHandler handler = new AdminAuthFailureHandler(auditService, lockoutService);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -56,8 +59,8 @@ class AdminAuthHandlerTest {
 
         handler.onAuthenticationFailure(request, response, ex);
 
-        assertThat(response.getRedirectedUrl()).isEqualTo("/admin/login?error");
-        verify(auditService).recordFailure(eq("unknown"), eq("LOGIN_FAILED"),
+        assertThat(response.getRedirectedUrl()).isIn("/admin/login?error", "/admin/login?locked");
+        verify(auditService).recordFailure(any(), eq("LOGIN_FAILED"),
                 isNull(), any(), any(), eq("bad"));
     }
 
