@@ -92,6 +92,8 @@ jobs:
           KRAFT_ADMIN_ENABLED: ${{ vars.KRAFT_ADMIN_ENABLED }}
           KRAFT_ADMIN_PASSWORD_HASH: ${{ secrets.KRAFT_ADMIN_PASSWORD_HASH }}
           KRAFT_SECURITY_TRUSTED_PROXIES: ${{ vars.KRAFT_SECURITY_TRUSTED_PROXIES }}
+          KRAFT_API_CLIENT:          ${{ vars.KRAFT_API_CLIENT }}
+          KRAFT_API_FALLBACK_CLIENT: ${{ vars.KRAFT_API_FALLBACK_CLIENT }}
         run: ./scripts/deploy/render-env.sh
 
       - name: Render Alertmanager config

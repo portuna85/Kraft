@@ -24,11 +24,19 @@ if [[ "${confirm}" != "yes" ]]; then
   exit 0
 fi
 
+TMP_CNF="$(mktemp)"
+chmod 600 "$TMP_CNF"
+cat > "$TMP_CNF" <<EOF
+[client]
+user=${DB_USER}
+password=${DB_PASSWORD}
+host=${DB_HOST}
+port=${DB_PORT}
+EOF
+trap 'rm -f "$TMP_CNF"' EXIT
+
 gunzip -c "${BACKUP_FILE}" | mysql \
-  --host="${DB_HOST}" \
-  --port="${DB_PORT}" \
-  --user="${DB_USER}" \
-  --password="${DB_PASSWORD}" \
+  --defaults-extra-file="$TMP_CNF" \
   "${DB_NAME}"
 
 echo "Restore complete."

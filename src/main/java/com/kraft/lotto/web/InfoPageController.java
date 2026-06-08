@@ -87,13 +87,11 @@ public class InfoPageController {
                 model.addAttribute("buildTimeText", buildProperties.getTime().toString());
             }
         }
-        model.addAttribute("javaVersion", System.getProperty("java.version"));
-
         String commit = firstNonBlank(
                 environment.getProperty("KRAFT_BUILD_COMMIT"),
                 environment.getProperty("KRAFT_APP_IMAGE_TAG"));
         if (commit != null) {
-            model.addAttribute("buildCommit", commit);
+            model.addAttribute("buildCommit", commit.length() <= 7 ? commit : commit.substring(0, 7));
         }
     }
 

@@ -21,7 +21,8 @@ umask 077
   printf 'KRAFT_DB_LOCAL_HOST=localhost\n'
   printf 'KRAFT_IN_CONTAINER=true\n'
   printf 'KRAFT_DB_CONNECTIVITY_CHECK_ENABLED=false\n'
-  printf 'KRAFT_API_CLIENT=smok\n'
+  printf 'KRAFT_API_CLIENT=%s\n'          "${KRAFT_API_CLIENT:-smok}"
+  printf 'KRAFT_API_FALLBACK_CLIENT=%s\n' "${KRAFT_API_FALLBACK_CLIENT:-public-data}"
   printf 'KRAFT_API_URL=https://www.dhlottery.co.kr/common.do\n'
   printf 'KRAFT_API_CONNECT_TIMEOUT_MS=2000\n'
   printf 'KRAFT_API_READ_TIMEOUT_MS=3000\n'

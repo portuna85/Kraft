@@ -52,6 +52,12 @@ jobs:
       - name: Validate UTF-8 text files
         run: python3 scripts/check_utf8.py
 
+      - name: Validate Caddyfile
+        env:
+          KRAFT_DOMAIN: example.com
+          KRAFT_ADMIN_DOMAIN: admin.example.com
+        run: docker compose --profile tls run --rm caddy caddy validate --config /etc/caddy/Caddyfile
+
       - name: Check environment drift
         run: python3 scripts/check_env_drift.py
 
@@ -320,13 +326,11 @@ jobs:
             | tar -xz -C "$RUNNER_TEMP/bin" syft
 
       - name: Generate SBOM (Syft CLI)
-        continue-on-error: true
         run: |
           set -euo pipefail
           syft scan build/libs/ -o cyclonedx-json=sbom.json
 
       - name: Upload SBOM
-        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: sbom-${{ github.run_id }}

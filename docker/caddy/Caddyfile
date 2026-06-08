@@ -1,4 +1,4 @@
-{KRAFT_DOMAIN} {
+{$KRAFT_DOMAIN} {
     # TLS는 Caddy가 Let's Encrypt / ZeroSSL에서 자동 발급·갱신
     # origin(app)은 내부 네트워크로만 접근 가능
 

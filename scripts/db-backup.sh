@@ -20,11 +20,18 @@ fi
 
 mkdir -p "${BACKUP_DIR}"
 
-mysqldump \
-  --host="${DB_HOST}" \
-  --port="${DB_PORT}" \
-  --user="${DB_USER}" \
-  --password="${DB_PASSWORD}" \
+TMP_CNF="$(mktemp)"
+chmod 600 "$TMP_CNF"
+cat > "$TMP_CNF" <<EOF
+[client]
+user=${DB_USER}
+password=${DB_PASSWORD}
+host=${DB_HOST}
+port=${DB_PORT}
+EOF
+trap 'rm -f "$TMP_CNF"' EXIT
+
+mysqldump --defaults-extra-file="$TMP_CNF" \
   --single-transaction \
   --routines \
   --triggers \

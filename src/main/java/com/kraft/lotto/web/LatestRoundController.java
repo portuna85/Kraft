@@ -15,7 +15,17 @@ public class LatestRoundController {
 
     @GetMapping("/latest")
     public String latestPage(Model model) {
-        queryService.findLatest().ifPresent(wn -> addModel(wn, model));
+        var latest = queryService.findLatest().orElse(null);
+        if (latest != null) {
+            addModel(latest, model);
+            model.addAttribute("pageTitle",
+                latest.round() + "회 로또 당첨번호 (" + latest.drawDate() + ")");
+            model.addAttribute("pageDescription",
+                latest.round() + "회(" + latest.drawDate() + ") 당첨번호와 세후 예상 수령액.");
+        } else {
+            model.addAttribute("pageTitle", "최신 로또 당첨번호");
+            model.addAttribute("pageDescription", "최신 로또 당첨번호를 확인하세요.");
+        }
         return "latest";
     }
 

@@ -123,7 +123,7 @@
     </div>
   </div>
   <div class="card mb-4 kraft-section"
-       th:if="${appVersion != null or buildCommit != null or buildTimeText != null or javaVersion != null}">
+       th:if="${appVersion != null or buildCommit != null or buildTimeText != null}">
     <div class="card-body">
       <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">Runtime</h2>
       <dl class="small mb-0">
@@ -139,10 +139,7 @@
           <dt class="fw-semibold d-inline">Build time:</dt>
           <dd class="d-inline ms-1" th:text="${buildTimeText}">-</dd>
         </div>
-        <div class="mb-0" th:if="${javaVersion != null}">
-          <dt class="fw-semibold d-inline">Java:</dt>
-          <dd class="d-inline ms-1" th:text="${javaVersion}">-</dd>
-        </div>
+
       </dl>
     </div>
   </div>

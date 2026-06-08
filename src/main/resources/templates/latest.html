@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('최신 회차', '최신 로또 당첨번호와 세후 1등·2등 예상 수령액을 확인하세요.', ~{::section})}">
+      th:replace="~{layout/base :: layout(${pageTitle}, ${pageDescription}, ~{::section})}">
 <section class="kraft-page">
   <header class="kraft-hero">
     <p class="eyebrow">최신 회차</p>
