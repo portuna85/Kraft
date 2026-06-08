@@ -12,7 +12,7 @@ import org.springframework.validation.annotation.Validated;
 public record KraftAdminProperties(
         boolean enabled,
         @NotBlank String adminDomain,
-        String adminPassword,
+        String adminPasswordHash,
         List<@Valid AdminUser> users
 ) {
     public KraftAdminProperties {
@@ -21,7 +21,7 @@ public record KraftAdminProperties(
 
     public record AdminUser(
             @NotBlank String username,
-            @NotBlank String password,
+            @NotBlank String passwordHash,
             @NotEmpty List<String> roles
     ) {
         public AdminUser {

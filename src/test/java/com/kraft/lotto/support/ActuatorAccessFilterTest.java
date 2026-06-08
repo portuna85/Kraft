@@ -105,4 +105,22 @@ class ActuatorAccessFilterTest {
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(chain.getRequest()).isNotNull();
     }
+
+    @Test
+    @DisplayName("Actuator root path is protected without trailing slash")
+    void blocksNonAllowlistedIpForActuatorRoot() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getActuator().setAllowedIps(java.util.List.of("127.0.0.1"));
+        ActuatorAccessFilter filter = new ActuatorAccessFilter(properties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/actuator");
+        request.setRemoteAddr("203.0.113.10");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(403);
+        assertThat(chain.getRequest()).isNull();
+    }
 }

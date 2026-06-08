@@ -26,7 +26,7 @@
   <img alt="Java" src="https://img.shields.io/badge/Java-25-007396?logo=openjdk&logoColor=white">
   <img alt="Spring Boot" src="https://img.shields.io/badge/Spring%20Boot-4.0.6-6DB33F?logo=springboot&logoColor=white">
   <img alt="MariaDB" src="https://img.shields.io/badge/MariaDB-11.7-003545?logo=mariadb&logoColor=white">
-  <img alt="Gradle" src="https://img.shields.io/badge/Gradle-8-02303A?logo=gradle&logoColor=white">
+  <img alt="Gradle" src="https://img.shields.io/badge/Gradle-9.5.1-02303A?logo=gradle&logoColor=white">
   <img alt="Docker" src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white">
   <img alt="Monitoring" src="https://img.shields.io/badge/Monitoring-Prometheus%20%2B%20Grafana-E6522C?logo=prometheus&logoColor=white">
   <img alt="License" src="https://img.shields.io/badge/License-See%20LICENSE-lightgrey">
@@ -86,7 +86,7 @@
 |:---|:---|
 | **Language / Runtime** | Java 25 |
 | **Framework** | Spring Boot 4.0.6 |
-| **Build** | Gradle 8, Kotlin DSL |
+| **Build** | Gradle 9.5.1, Kotlin DSL |
 | **Database** | MariaDB 11.7, H2 |
 | **ORM** | Spring Data JPA, Hibernate |
 | **Migration** | Flyway |
@@ -353,10 +353,11 @@ main push
 |:---|:---:|:---|
 | `KRAFT_API_CLIENT` | `mock` | 당첨번호 수집 클라이언트 |
 | `KRAFT_ADMIN_ENABLED` | `false` | 관리자 UI 활성화 |
-| `KRAFT_ADMIN_PASSWORD` | — | 관리자 비밀번호 |
+| `KRAFT_ADMIN_PASSWORD_HASH` | — | 관리자 비밀번호 해시 (`{bcrypt}` 등 Spring Security prefix 포함) |
 | `PUBLIC_DATA_API_KEY` | — | 공공데이터포털 API 키 |
 | `KRAFT_COLLECT_AUTO_ENABLED` | `true` | 자동 수집 활성화 |
 | `KRAFT_SECURITY_OPS_ALLOWED_IPS` | `127.0.0.1,::1,10.0.0.0/8,...` | Ops API 허용 IP |
+| `KRAFT_SECURITY_TRUSTED_PROXIES` | `127.0.0.1/32` | `X-Forwarded-For`를 신뢰할 프록시 CIDR |
 | `KRAFT_SECURITY_RATE_LIMIT_MAX_REQUESTS` | `120` | 분당 요청 제한 |
 | `KRAFT_TRACING_SAMPLE_RATE` | `0.0` | OTEL 추적 샘플링 비율 |
 | `KRAFT_GRAFANA_ADMIN_PASSWORD` | — | Grafana 관리자 비밀번호 |
@@ -398,6 +399,9 @@ main push
 | Security Headers | CSP, X-Frame-Options, HSTS |
 | Caddy | 공개 도메인에서 `/admin*`, `/ops*`, `/actuator*` 차단 |
 | Actuator | `health`, `info`, `prometheus`만 노출, IP 제한 |
+
+`KRAFT_SECURITY_TRUSTED_PROXIES`는 운영 Docker/Caddy 네트워크 CIDR에 맞춰 최소 범위로 설정해야 합니다.
+예시는 `172.18.0.0/16,127.0.0.1/32`이며, 실제 서버의 Docker network CIDR을 확인한 뒤 좁혀서 사용합니다.
 
 취약점 제보는 공개 Issue가 아닌 이메일로 전달합니다.
 

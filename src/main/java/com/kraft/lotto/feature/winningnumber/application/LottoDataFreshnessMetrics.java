@@ -1,6 +1,6 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
-import com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy;
+import com.kraft.lotto.feature.winningnumber.domain.LottoDrawSchedule;
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -32,6 +32,6 @@ public class LottoDataFreshnessMetrics {
     }
 
     private double expectedRound() {
-        return LottoRoundPolicy.maxPossibleRound(LocalDate.now(clock));
+        return LottoDrawSchedule.expectedRound(LocalDate.now(clock));
     }
 }

@@ -45,7 +45,11 @@ public class ActuatorAccessFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/actuator/");
+        return !isActuatorPath(request.getRequestURI());
+    }
+
+    private static boolean isActuatorPath(String path) {
+        return "/actuator".equals(path) || path.startsWith("/actuator/");
     }
 
     @Override

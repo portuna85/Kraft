@@ -3,6 +3,9 @@ package com.kraft.lotto.web;
 import com.kraft.lotto.feature.winningnumber.application.LottoFetchLogQueryService;
 import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,6 +58,8 @@ public class InfoPageController {
 
     private final LottoFetchLogQueryService fetchLogQueryService;
     private final WinningNumberQueryService winningNumberQueryService;
+    private final ObjectProvider<BuildProperties> buildPropertiesProvider;
+    private final Environment environment;
 
     @GetMapping("/methodology")
     public String methodology() {
@@ -68,8 +73,37 @@ public class InfoPageController {
             model.addAttribute("latestStoredRound", latest.round());
             model.addAttribute("latestStoredDate", latest.drawDate());
         });
-        model.addAttribute("expectedRound", winningNumberQueryService.maxPossibleRound());
+        model.addAttribute("expectedRound", winningNumberQueryService.expectedCurrentRound());
+        model.addAttribute("maxSearchRound", winningNumberQueryService.maxPossibleRound());
+        addBuildAttributes(model);
         return "info/data-source";
+    }
+
+    private void addBuildAttributes(Model model) {
+        BuildProperties buildProperties = buildPropertiesProvider.getIfAvailable();
+        if (buildProperties != null) {
+            model.addAttribute("appVersion", buildProperties.getVersion());
+            if (buildProperties.getTime() != null) {
+                model.addAttribute("buildTimeText", buildProperties.getTime().toString());
+            }
+        }
+        model.addAttribute("javaVersion", System.getProperty("java.version"));
+
+        String commit = firstNonBlank(
+                environment.getProperty("KRAFT_BUILD_COMMIT"),
+                environment.getProperty("KRAFT_APP_IMAGE_TAG"));
+        if (commit != null) {
+            model.addAttribute("buildCommit", commit);
+        }
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value.trim();
+            }
+        }
+        return null;
     }
 
     @GetMapping("/faq")

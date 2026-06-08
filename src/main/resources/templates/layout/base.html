@@ -15,9 +15,13 @@
   <meta property="og:title" th:content="${title}">
   <meta property="og:description" th:content="${description}">
   <meta property="og:url" th:content="${canonicalUrl}">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" th:content="${baseUrl + '/images/og-kraft-lotto-1200x630.png'}" th:unless="${isAdmin}">
+  <meta property="og:image:width" content="1200" th:unless="${isAdmin}">
+  <meta property="og:image:height" content="630" th:unless="${isAdmin}">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" th:content="${title}">
   <meta name="twitter:description" th:content="${description}">
+  <meta name="twitter:image" th:content="${baseUrl + '/images/og-kraft-lotto-1200x630.png'}" th:unless="${isAdmin}">
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0b3a66">
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#061d3a">
   <link rel="icon" th:href="@{/images/favicon.svg}" type="image/svg+xml">
@@ -42,15 +46,26 @@
     "description": "로또 당첨번호 조회, 빈도·패턴 통계, 편향 회피 번호 조합 도구"
   }
   </script>
+  <script type="application/ld+json" th:inline="text" th:attr="nonce=${cspNonce}" th:unless="${isAdmin}">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "KRAFT Lotto",
+    "url": "[[${baseUrl}]]",
+    "applicationCategory": "UtilityApplication",
+    "operatingSystem": "Web",
+    "description": "A reference tool for Korean Lotto 6/45 winning numbers, frequency statistics, and number-combination analysis."
+  }
+  </script>
   <script type="application/ld+json" th:attr="nonce=${cspNonce}"
           th:if="${pageJsonLd != null}" th:utext="${pageJsonLd}"></script>
 </head>
 <body>
 <a class="skip-to-content" href="#main-content">본문으로 건너뛰기</a>
-<nav class="navbar navbar-expand-md border-bottom sticky-top">
+<nav class="navbar navbar-expand-md border-bottom sticky-top" aria-label="데스크톱 메뉴">
   <div class="container kraft-container">
     <a class="navbar-brand fw-bold" href="/">KRAFT Lotto</a>
-    <div class="collapse navbar-collapse" id="navMain">
+    <div class="collapse navbar-collapse d-none d-md-flex" id="navMain">
       <ul class="navbar-nav me-auto ms-2 gap-1">
         <li class="nav-item">
           <a class="nav-link" th:classappend="${reqPath == '/' or reqPath == '/recommend'} ? 'active'" href="/"

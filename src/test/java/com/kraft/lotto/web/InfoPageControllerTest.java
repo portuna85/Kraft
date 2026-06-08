@@ -12,12 +12,16 @@ import com.kraft.lotto.feature.winningnumber.application.WinningNumberQueryServi
 import com.kraft.lotto.support.GlobalExceptionHandler;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.core.env.Environment;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
@@ -30,6 +34,10 @@ class InfoPageControllerTest {
     LottoFetchLogQueryService fetchLogQueryService;
     @Mock
     WinningNumberQueryService winningNumberQueryService;
+    @Mock
+    ObjectProvider<BuildProperties> buildPropertiesProvider;
+    @Mock
+    Environment environment;
 
     MockMvc mockMvc;
 
@@ -40,7 +48,7 @@ class InfoPageControllerTest {
         viewResolver.setSuffix(".html");
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new InfoPageController(
-                        fetchLogQueryService, winningNumberQueryService))
+                        fetchLogQueryService, winningNumberQueryService, buildPropertiesProvider, environment))
                 .setViewResolvers(viewResolver)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -59,12 +67,25 @@ class InfoPageControllerTest {
     void dataSourceReturnsViewWithChangeLog() throws Exception {
         when(fetchLogQueryService.recentCollectionLogs(anyInt())).thenReturn(List.of());
         when(winningNumberQueryService.findLatest()).thenReturn(Optional.empty());
-        when(winningNumberQueryService.maxPossibleRound()).thenReturn(1230);
+        when(winningNumberQueryService.expectedCurrentRound()).thenReturn(1227);
+        when(winningNumberQueryService.maxPossibleRound()).thenReturn(1237);
+        when(environment.getProperty("KRAFT_BUILD_COMMIT")).thenReturn(null);
+        when(environment.getProperty("KRAFT_APP_IMAGE_TAG")).thenReturn("abc1234");
+        Properties entries = new Properties();
+        entries.setProperty("version", "0.2.0");
+        entries.setProperty("time", "2026-06-08T00:00:00Z");
+        when(buildPropertiesProvider.getIfAvailable()).thenReturn(new BuildProperties(entries));
 
         mockMvc.perform(get("/data-source"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("info/data-source"))
-                .andExpect(model().attributeExists("changeLog"));
+                .andExpect(model().attributeExists("changeLog"))
+                .andExpect(model().attribute("expectedRound", 1227))
+                .andExpect(model().attribute("maxSearchRound", 1237))
+                .andExpect(model().attribute("appVersion", "0.2.0"))
+                .andExpect(model().attribute("buildTimeText", "2026-06-08T00:00:00Z"))
+                .andExpect(model().attribute("buildCommit", "abc1234"))
+                .andExpect(model().attributeExists("javaVersion"));
     }
 
     @Test

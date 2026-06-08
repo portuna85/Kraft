@@ -72,7 +72,7 @@ jobs:
         env:
           ALL_SECRETS_JSON: ${{ toJson(secrets) }}
           KRAFT_ADMIN_ENABLED: ${{ vars.KRAFT_ADMIN_ENABLED }}
-          KRAFT_ADMIN_PASSWORD: ${{ secrets.KRAFT_ADMIN_PASSWORD }}
+          KRAFT_ADMIN_PASSWORD_HASH: ${{ secrets.KRAFT_ADMIN_PASSWORD_HASH }}
         run: |
           set -euo pipefail
           ./scripts/deploy/validate-env.sh
@@ -82,6 +82,7 @@ jobs:
             [ -z "$value" ] && continue
             printf '::add-mask::%s\n' "$value"
           done < .required-envs
+          [ -z "${KRAFT_ADMIN_PASSWORD_HASH:-}" ] || printf '::add-mask::%s\n' "$KRAFT_ADMIN_PASSWORD_HASH"
 
       - name: Render .env
         env:
@@ -89,7 +90,8 @@ jobs:
           KRAFT_DB_NAME: ${{ secrets.KRAFT_DB_NAME }}
           KRAFT_APP_IMAGE_TAG: ${{ steps.ref.outputs.value }}
           KRAFT_ADMIN_ENABLED: ${{ vars.KRAFT_ADMIN_ENABLED }}
-          KRAFT_ADMIN_PASSWORD: ${{ secrets.KRAFT_ADMIN_PASSWORD }}
+          KRAFT_ADMIN_PASSWORD_HASH: ${{ secrets.KRAFT_ADMIN_PASSWORD_HASH }}
+          KRAFT_SECURITY_TRUSTED_PROXIES: ${{ vars.KRAFT_SECURITY_TRUSTED_PROXIES }}
         run: ./scripts/deploy/render-env.sh
 
       - name: Render Alertmanager config

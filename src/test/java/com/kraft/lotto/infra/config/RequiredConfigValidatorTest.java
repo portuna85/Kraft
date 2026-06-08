@@ -104,6 +104,38 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
+    @DisplayName("prod 프로필에서 관리자 UI가 활성화되면 비밀번호 해시가 필요하다")
+    void addsProblemWhenAdminEnabledWithoutPasswordHash() {
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("prod");
+        setValidProdOperationalConfig(env);
+        env.setProperty("kraft.api.client", "smok");
+        env.setProperty("kraft.admin.enabled", "true");
+        List<String> problems = new ArrayList<>();
+
+        ProdConfigValidator.validate(env, problems);
+
+        assertThat(problems).anyMatch(p -> p.contains("kraft.admin.admin-password-hash"));
+        assertThat(problems).anyMatch(p -> p.contains("KRAFT_ADMIN_PASSWORD_HASH"));
+    }
+
+    @Test
+    @DisplayName("prod 프로필에서 관리자 비밀번호 해시가 있으면 통과한다")
+    void noProblemWhenAdminPasswordHashIsPresent() {
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("prod");
+        setValidProdOperationalConfig(env);
+        env.setProperty("kraft.api.client", "smok");
+        env.setProperty("kraft.admin.enabled", "true");
+        env.setProperty("kraft.admin.admin-password-hash", "{bcrypt}$2a$12$abcdefghijklmnopqrstuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
+        List<String> problems = new ArrayList<>();
+
+        ProdConfigValidator.validate(env, problems);
+
+        assertThat(problems).noneMatch(p -> p.contains("kraft.admin.admin-password-hash"));
+    }
+
+    @Test
     @DisplayName("prod 프로필에서 약한 예시 값이 포함된 ops token은 실패한다")
     void addsProblemWhenOpsTokenIsWeak() {
         MockEnvironment env = new MockEnvironment();

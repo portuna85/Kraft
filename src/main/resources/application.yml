@@ -91,7 +91,7 @@ kraft:
   admin:
     enabled: ${KRAFT_ADMIN_ENABLED:false}
     admin-domain: ${KRAFT_ADMIN_DOMAIN:admin.kraft.io.kr}
-    admin-password: ${KRAFT_ADMIN_PASSWORD:}
+    admin-password-hash: ${KRAFT_ADMIN_PASSWORD_HASH:}
   public-base-url: ${KRAFT_PUBLIC_BASE_URL:https://www.kraft.io.kr}
   web:
     apex-host: ${KRAFT_WEB_APEX_HOST:kraft.io.kr}
@@ -129,8 +129,8 @@ kraft:
       enabled: ${KRAFT_COLLECT_AUTO_ENABLED:true}
       zone: ${KRAFT_COLLECT_AUTO_ZONE:Asia/Seoul}
       cron:
-        saturday-22-00: ${KRAFT_COLLECT_AUTO_CRON_SATURDAY_22_00:0 0 22 ? * SAT}
-        sunday-06-00: ${KRAFT_COLLECT_AUTO_CRON_SUNDAY_06_00:0 0 6 ? * SUN}
+        saturday-22-30: ${KRAFT_COLLECT_AUTO_CRON_SATURDAY_22_30:0 30 22 ? * SAT}
+        sunday-07-00: ${KRAFT_COLLECT_AUTO_CRON_SUNDAY_07_00:0 0 7 ? * SUN}
 
     log-retention:
       enabled: ${KRAFT_COLLECT_LOG_RETENTION_ENABLED:true}

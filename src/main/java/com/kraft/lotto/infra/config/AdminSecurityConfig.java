@@ -14,6 +14,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.savedrequest.NullRequestCache;
@@ -50,7 +52,7 @@ public class AdminSecurityConfig {
                             .hasAnyRole("ADMIN_VIEWER", "ADMIN_OPERATOR",
                                         "ADMIN_NEWS_MANAGER", "ADMIN_AUDITOR", "ADMIN_SUPER_ADMIN")
                         .requestMatchers("/admin/login", "/admin/login/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator", "/actuator/**").permitAll()
                         .anyRequest().permitAll()
                 )
                 .csrf(csrf -> csrf
@@ -82,12 +84,17 @@ public class AdminSecurityConfig {
     }
 
     @Bean
-    public UserDetailsService adminUserDetailsService() {
+    public PasswordEncoder adminPasswordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    @Bean
+    public UserDetailsService adminUserDetailsService(PasswordEncoder passwordEncoder) {
         if (adminProperties.hasConfiguredUsers()) {
             List<UserDetails> users = adminProperties.users().stream()
                     .map(u -> User.builder()
                             .username(u.username())
-                            .password("{noop}" + u.password())
+                            .password(requireDelegatingHash(u.passwordHash(), "admin user " + u.username()))
                             .roles(u.roles().toArray(new String[0]))
                             .build())
                     .collect(Collectors.toList());
@@ -95,24 +102,33 @@ public class AdminSecurityConfig {
             return new InMemoryUserDetailsManager(users);
         }
 
-        boolean hasExplicitPassword = adminProperties.enabled()
-                && adminProperties.adminPassword() != null
-                && !adminProperties.adminPassword().isBlank();
+        boolean hasExplicitPasswordHash = adminProperties.adminPasswordHash() != null
+                && !adminProperties.adminPasswordHash().isBlank();
 
-        if (adminProperties.enabled() && !hasExplicitPassword) {
-            log.warn("[ADMIN] KRAFT_ADMIN_PASSWORD 미설정 — 랜덤 패스워드로 기동합니다. "
-                    + "운영 환경에서는 반드시 명시적으로 설정하세요.");
+        if (adminProperties.enabled() && !hasExplicitPasswordHash) {
+            throw new IllegalStateException("Admin password hash is required when admin is enabled");
         }
 
-        String rawPassword = hasExplicitPassword
-                ? adminProperties.adminPassword()
-                : UUID.randomUUID().toString();
+        String passwordHash = hasExplicitPasswordHash
+                ? requireDelegatingHash(adminProperties.adminPasswordHash(), "default admin")
+                : passwordEncoder.encode(UUID.randomUUID().toString());
 
         UserDetails admin = User.builder()
                 .username("admin")
-                .password("{noop}" + rawPassword)
+                .password(passwordHash)
                 .roles("ADMIN_SUPER_ADMIN")
                 .build();
         return new InMemoryUserDetailsManager(admin);
+    }
+
+    private static String requireDelegatingHash(String passwordHash, String owner) {
+        if (passwordHash == null || passwordHash.isBlank()) {
+            throw new IllegalStateException("Admin password hash is required for " + owner);
+        }
+        String trimmed = passwordHash.trim();
+        if (!trimmed.startsWith("{") || trimmed.indexOf('}') <= 1) {
+            throw new IllegalStateException("Admin password hash must include a Spring Security id prefix for " + owner);
+        }
+        return trimmed;
     }
 }

@@ -22,8 +22,8 @@ class ProdConfigValidator {
         }
         boolean adminEnabled = Boolean.parseBoolean(RequiredConfigValidator.safeGet(env, "kraft.admin.enabled"));
         if (adminEnabled) {
-            requireNonBlank(env, problems, "kraft.admin.admin-password",
-                    "Admin password (env: KRAFT_ADMIN_PASSWORD)");
+            requireNonBlank(env, problems, "kraft.admin.admin-password-hash",
+                    "Admin password hash (env: KRAFT_ADMIN_PASSWORD_HASH)");
         }
         requireNonBlank(env, problems, "kraft.api.url", "External API URL (env: KRAFT_API_URL)");
         requireStrongOpsToken(env, problems);

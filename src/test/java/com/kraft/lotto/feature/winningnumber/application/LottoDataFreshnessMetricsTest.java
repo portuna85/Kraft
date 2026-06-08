@@ -44,6 +44,6 @@ class LottoDataFreshnessMetricsTest {
         new LottoDataFreshnessMetrics(winningNumberRepository, CLOCK, registry);
 
         double value = registry.get("kraft.latest_round.expected").gauge().value();
-        assertThat(value).isGreaterThan(1200);
+        assertThat(value).isEqualTo(1227.0);
     }
 }

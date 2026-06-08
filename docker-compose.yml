@@ -94,7 +94,7 @@ services:
       KRAFT_DB_URL: jdbc:mariadb://mariadb:3306/${KRAFT_DB_NAME}?rewriteBatchedStatements=true&useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Seoul&connectTimeout=3000
       KRAFT_API_URL: ${KRAFT_API_URL:-https://www.dhlottery.co.kr/common.do}
       KRAFT_ADMIN_ENABLED: ${KRAFT_ADMIN_ENABLED:-false}
-      KRAFT_ADMIN_PASSWORD: ${KRAFT_ADMIN_PASSWORD:-}
+      KRAFT_ADMIN_PASSWORD_HASH: ${KRAFT_ADMIN_PASSWORD_HASH:-}
       TZ: Asia/Seoul
     ports:
       - "127.0.0.1:${KRAFT_APP_PORT:-8080}:8080"

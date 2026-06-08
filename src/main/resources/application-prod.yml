@@ -6,6 +6,14 @@ spring:
       maximum-pool-size: ${KRAFT_DB_POOL_MAX_SIZE:20}
       minimum-idle: ${KRAFT_DB_POOL_MIN_IDLE:5}
 
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: lax
+
 springdoc:
   api-docs:
     enabled: false

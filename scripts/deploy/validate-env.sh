@@ -28,8 +28,8 @@ done < .required-envs
 admin_enabled="${KRAFT_ADMIN_ENABLED:-false}"
 admin_enabled="${admin_enabled,,}"
 if [[ "$admin_enabled" == "true" ]]; then
-  if [[ -z "${KRAFT_ADMIN_PASSWORD:-}" ]]; then
-    echo "::error::KRAFT_ADMIN_PASSWORD GitHub Secret is required when KRAFT_ADMIN_ENABLED=true"
+  if [[ -z "${KRAFT_ADMIN_PASSWORD_HASH:-}" ]]; then
+    echo "::error::KRAFT_ADMIN_PASSWORD_HASH GitHub Secret is required when KRAFT_ADMIN_ENABLED=true"
     exit 1
   fi
 fi
