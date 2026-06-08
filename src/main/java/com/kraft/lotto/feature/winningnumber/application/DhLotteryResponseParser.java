@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
@@ -30,7 +31,7 @@ class DhLotteryResponseParser {
         JsonNode node;
         try {
             node = objectMapper.readTree(body);
-        } catch (Exception ex) {
+        } catch (JsonProcessingException ex) {
             throw new LottoApiClientException("response parse failed (round=" + round + ")", ex, FailureReason.JSON_PARSE);
         }
         String returnValue = requiredText(node, "returnValue", round);

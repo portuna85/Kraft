@@ -1,19 +1,24 @@
 package com.kraft.lotto.support;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 record IpRange(byte[] baseAddress, int prefixLength) {
 
-    static IpRange parse(String expression) throws Exception {
-        String[] parts = expression.split("/", 2);
-        InetAddress base = InetAddress.getByName(parts[0]);
-        byte[] baseAddress = base.getAddress();
-        int maxBits = baseAddress.length * 8;
-        int prefix = parts.length == 2 ? Integer.parseInt(parts[1]) : maxBits;
-        if (prefix < 0 || prefix > maxBits) {
-            throw new IllegalArgumentException("Invalid prefix length: " + prefix);
+    static IpRange parse(String expression) {
+        try {
+            String[] parts = expression.split("/", 2);
+            InetAddress base = InetAddress.getByName(parts[0]);
+            byte[] baseAddress = base.getAddress();
+            int maxBits = baseAddress.length * 8;
+            int prefix = parts.length == 2 ? Integer.parseInt(parts[1]) : maxBits;
+            if (prefix < 0 || prefix > maxBits) {
+                throw new IllegalArgumentException("Invalid prefix length: " + prefix);
+            }
+            return new IpRange(baseAddress, prefix);
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException("Invalid IP expression: " + expression, e);
         }
-        return new IpRange(baseAddress, prefix);
     }
 
     boolean matches(byte[] candidate) {

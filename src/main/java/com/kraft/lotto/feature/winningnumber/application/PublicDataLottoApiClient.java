@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
@@ -9,12 +10,14 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
@@ -73,7 +76,7 @@ public class PublicDataLottoApiClient implements LottoApiClient {
         } catch (LottoApiClientException ex) {
             count("kraft.api.public_data.lotto.call.failure", "reason", ex.metricReason());
             throw ex;
-        } catch (Exception ex) {
+        } catch (RestClientException ex) {
             count("kraft.api.public_data.lotto.call.failure", "reason", "network");
             throw new LottoApiClientException(
                     "public-data lotto API call failed (round=" + round + "): " + ex.getMessage(),
@@ -123,7 +126,7 @@ public class PublicDataLottoApiClient implements LottoApiClient {
             return Optional.of(toWinningNumber(round, item, body, dateStr));
         } catch (LottoApiClientException ex) {
             throw ex;
-        } catch (Exception ex) {
+        } catch (JsonProcessingException | DateTimeParseException ex) {
             throw new LottoApiClientException(
                     "public-data lotto parse failed: round=" + round + ": " + ex.getMessage(),
                     ex, LottoApiClientException.FailureReason.JSON_PARSE);

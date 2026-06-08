@@ -43,7 +43,7 @@ public class FlywayConfig {
              ResultSet rs = stmt.executeQuery(
                  "SELECT checksum FROM flyway_schema_history WHERE version = '1'")) {
             return rs.next() ? String.valueOf(rs.getObject("checksum")) : null;
-        } catch (Exception e) {
+        } catch (java.sql.SQLException e) {
             // 테이블 미존재(최초 설치) 또는 연결 오류 — Flyway가 정상 처리
             return null;
         }
@@ -59,7 +59,7 @@ public class FlywayConfig {
              Statement stmt = conn.createStatement()) {
             stmt.execute("DELETE FROM flyway_schema_history");
             stmt.execute(insert);
-        } catch (Exception e) {
+        } catch (java.sql.SQLException e) {
             throw new IllegalStateException("Flyway V1 squash repair failed", e);
         }
     }

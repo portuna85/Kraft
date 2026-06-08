@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.ResourceAccessException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DhLotteryTracerClient")
@@ -52,7 +53,7 @@ class DhLotteryTracerClientTest {
     @Test
     @DisplayName("checkBotIp: HTTP 호출 실패 시 E를 반환한다")
     void checkBotIpReturnsEOnException() {
-        when(restClient.post()).thenThrow(new RuntimeException("timeout"));
+        when(restClient.post()).thenThrow(new ResourceAccessException("timeout"));
 
         assertThat(tracer.checkBotIp("/page")).isEqualTo("E");
     }
@@ -62,7 +63,7 @@ class DhLotteryTracerClientTest {
     @Test
     @DisplayName("inputQueue: HTTP 호출 실패 시 E를 반환한다")
     void inputQueueReturnsEOnException() {
-        when(restClient.post()).thenThrow(new RuntimeException("network error"));
+        when(restClient.post()).thenThrow(new ResourceAccessException("network error"));
 
         assertThat(tracer.inputQueue("/page", "login", "ua")).isEqualTo("E");
     }

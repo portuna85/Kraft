@@ -1,10 +1,12 @@
 (function () {
   'use strict';
 
+  // Request state
   var inFlightByTarget = Object.create(null);
   var retryAttemptByTarget = Object.create(null);
   var retryBlockedUntilByTarget = Object.create(null);
 
+  // Accessibility and UI feedback
   function announce(message) {
     var region = document.getElementById('fragment-live-region');
     if (!region) return;
@@ -24,6 +26,7 @@
     document.dispatchEvent(new CustomEvent('kraft:fragmentLoaded'));
   }
 
+  // Target and retry bookkeeping
   function targetKey(target) {
     if (!target) return null;
     return target.id || target.getAttribute('hx-get') || null;
@@ -56,6 +59,7 @@
     return Date.now() < (retryBlockedUntilByTarget[key] || 0);
   }
 
+  // User-facing state text
   function setUiState(target, state, message) {
     if (!target) return;
     target.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
@@ -78,6 +82,7 @@
     return '콘텐츠를 불러왔습니다.';
   }
 
+  // HTMX and DOM target resolution
   function resolveHtmxTarget(event) {
     var detail = event && event.detail;
     if (detail && detail.target && detail.target.nodeType === 1) {
@@ -126,6 +131,7 @@
     return !!triggeringEvent;
   }
 
+  // Non-HTMX fallback loader
   function loadFragmentFallback(target, focusAfterLoad, requestUrl, swapStyle) {
     if (!target) return Promise.resolve();
     var key = targetKey(target);
@@ -172,6 +178,7 @@
     return inFlightByTarget[key];
   }
 
+  // Event binding for fallback mode
   function bindFallbackInteractions() {
     document.body.addEventListener('click', function (event) {
       var source = event.target.closest('[hx-get]');
@@ -198,6 +205,7 @@
     });
   }
 
+  // HTMX path
   if (window.htmx) {
     document.body.addEventListener('htmx:beforeRequest', function (event) {
       var target = resolveHtmxTarget(event);
@@ -232,12 +240,14 @@
       clearInFlight(target);
     });
   } else {
+    // Fallback path when HTMX is unavailable
     Array.prototype.forEach.call(document.querySelectorAll('[hx-trigger="load"][hx-get]'), function (target) {
       loadFragmentFallback(target, false);
     });
     bindFallbackInteractions();
   }
 
+  // Shared retry button behavior
   document.body.addEventListener('click', function (event) {
     var retryBtn = event.target.closest('.kraft-retry-btn');
     if (!retryBtn) return;

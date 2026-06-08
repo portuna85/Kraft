@@ -18,6 +18,7 @@ public record KraftApiProperties(
         @PositiveOrZero @Max(10) int maxRetries,
         @PositiveOrZero @Max(60_000) int retryBackoffMs,
         @PositiveOrZero @Max(60_000) int backfillDelayMs,
+        @PositiveOrZero @Max(168) int enrichDelayHours,
         @PositiveOrZero int mockLatestRound,
         boolean circuitBreakerEnabled,
         @Positive @Max(100) int circuitBreakerFailureThreshold,

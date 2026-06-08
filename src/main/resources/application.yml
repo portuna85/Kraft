@@ -146,6 +146,7 @@ kraft:
     max-retries: ${KRAFT_API_MAX_RETRIES:2}
     retry-backoff-ms: ${KRAFT_API_RETRY_BACKOFF_MS:700}
     backfill-delay-ms: ${KRAFT_API_BACKFILL_DELAY_MS:700}
+    enrich-delay-hours: ${KRAFT_API_ENRICH_DELAY_HOURS:12}
     mock-latest-round: ${KRAFT_API_MOCK_LATEST_ROUND:0}
     circuit-breaker-enabled: ${KRAFT_API_CIRCUIT_BREAKER_ENABLED:true}
     circuit-breaker-failure-threshold: ${KRAFT_API_CIRCUIT_BREAKER_FAILURE_THRESHOLD:5}

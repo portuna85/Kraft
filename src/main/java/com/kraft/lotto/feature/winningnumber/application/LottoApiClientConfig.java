@@ -100,7 +100,9 @@ public class LottoApiClientConfig {
         if (fallbackToken != null && !fallbackToken.isBlank() && !fallbackToken.equals(primaryToken)) {
             LottoApiClient fallbackClient = buildClient(fallbackToken, properties, lottoRestClient, objectMapper,
                     meterRegistry, circuitBreakerRegistry, resolvedMockLatestRound);
-            return new CompositeLottoApiClient(primaryClient, primaryToken, fallbackClient, fallbackToken, meterRegistry, clock);
+            return new CompositeLottoApiClient(
+                    primaryClient, primaryToken, fallbackClient, fallbackToken,
+                    meterRegistry, clock, properties.enrichDelayHours());
         }
         return primaryClient;
     }

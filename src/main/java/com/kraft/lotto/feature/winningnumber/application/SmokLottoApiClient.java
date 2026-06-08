@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.winningnumber.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
@@ -157,7 +158,7 @@ public class SmokLottoApiClient implements LottoApiClient {
                     secondPrize, secondWinners, body, LocalDateTime.now(clock)));
         } catch (LottoApiClientException ex) {
             throw ex;
-        } catch (Exception ex) {
+        } catch (JsonProcessingException ex) {
             count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.JSON_PARSE.metricName());
             throw new LottoApiClientException(
                     "smok API parse failed (round=" + round + "): " + ex.getMessage(), ex,
@@ -214,7 +215,7 @@ public class SmokLottoApiClient implements LottoApiClient {
         }
         try {
             return OffsetDateTime.parse(value.asText()).toLocalDate();
-        } catch (Exception ex) {
+        } catch (java.time.format.DateTimeParseException ex) {
             count("kraft.api.smok.call.failure", "reason", LottoApiClientException.FailureReason.VALIDATION.metricName());
             throw new LottoApiClientException("invalid date field: " + fieldName, ex,
                     LottoApiClientException.FailureReason.VALIDATION);

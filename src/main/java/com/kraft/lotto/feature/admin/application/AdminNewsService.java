@@ -74,7 +74,7 @@ public class AdminNewsService {
             NewsArticleEntity article = findOrThrow(id);
             article.setApproved(true);
             auditLogService.recordSuccess(actor, "NEWS_APPROVE", "articleId:" + id, ip, ua);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             auditLogService.recordFailure(actor, "NEWS_APPROVE", "articleId:" + id, ip, ua, e.getMessage());
             throw e;
         }
@@ -87,7 +87,7 @@ public class AdminNewsService {
             article.setApproved(false);
             article.setRejected(true);
             auditLogService.recordSuccess(actor, "NEWS_REJECT", "articleId:" + id, ip, ua);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             auditLogService.recordFailure(actor, "NEWS_REJECT", "articleId:" + id, ip, ua, e.getMessage());
             throw e;
         }
@@ -108,7 +108,7 @@ public class AdminNewsService {
                 articleRepository.rejectAllBySourceDomain(domain);
             }
             auditLogService.recordSuccess(actor, "NEWS_BLOCK_DOMAIN", "domain:" + domain, ip, ua);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             auditLogService.recordFailure(actor, "NEWS_BLOCK_DOMAIN", "articleId:" + articleId, ip, ua, e.getMessage());
             throw e;
         }
@@ -126,7 +126,7 @@ public class AdminNewsService {
                         .build());
             }
             auditLogService.recordSuccess(actor, "NEWS_BLOCK_KEYWORD", "keyword:" + keyword, ip, ua);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             auditLogService.recordFailure(actor, "NEWS_BLOCK_KEYWORD", "keyword:" + keyword, ip, ua, e.getMessage());
             throw e;
         }

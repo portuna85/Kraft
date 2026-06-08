@@ -6,6 +6,7 @@ import com.kraft.lotto.infra.config.KraftSecurityProperties;
 import com.kraft.lotto.support.PublicRateLimitFilter.SlidingWindowCounter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -151,7 +152,7 @@ class PublicRateLimitFilterTest {
 
         long allowedCount = futures.stream()
                 .mapToLong(f -> {
-                    try { return f.get() ? 1L : 0L; } catch (Exception e) { return 0L; }
+                    try { return f.get() ? 1L : 0L; } catch (InterruptedException | ExecutionException e) { return 0L; }
                 })
                 .sum();
 

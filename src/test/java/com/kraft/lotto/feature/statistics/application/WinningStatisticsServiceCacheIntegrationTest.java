@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository;
-import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.BallFrequencyRow;
+import com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberStatisticsRepository.BallFrequencyRow;
 import com.kraft.lotto.support.BusinessException;
 import com.kraft.lotto.support.ErrorCode;
 import java.util.List;

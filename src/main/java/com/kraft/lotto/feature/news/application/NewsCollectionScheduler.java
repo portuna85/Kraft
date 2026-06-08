@@ -27,7 +27,7 @@ class NewsCollectionScheduler {
             NewsCollectionService.NewsCollectResult result = collectionService.collect();
             collectionService.purgeOldArticles();
             log.info("news collect done saved={} skipped={}", result.saved(), result.skipped());
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("news collect failed error={}", e.getMessage(), e);
         }
     }

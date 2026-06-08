@@ -81,7 +81,7 @@ public class WinningNumberAutoCollectScheduler {
             log.info("lotto collect-all done  trigger={} collected={} updated={} skipped={} failed={} latestRound={}",
                     trigger, r.collected(), r.updated(), r.skipped(), r.failed(), r.latestRound());
             recordRoundFailures(trigger, r.failed());
-        } catch (Exception ex) {
+        } catch (RuntimeException ex) {
             status = "failure";
             recordFailure(trigger, ex);
             log.error("[ALERT] lotto collect-all fail trigger={} exception={} message={}",
@@ -106,7 +106,7 @@ public class WinningNumberAutoCollectScheduler {
         meterRegistry.counter("kraft.collect.auto.round.failure", "trigger", trigger).increment(failedRounds);
     }
 
-    private void recordFailure(String trigger, Exception ex) {
+    private void recordFailure(String trigger, RuntimeException ex) {
         meterRegistry.counter(
                 "kraft.collect.auto.error",
                 "trigger", trigger,
@@ -118,7 +118,7 @@ public class WinningNumberAutoCollectScheduler {
         meterRegistry.counter("kraft.collect.auto.run", "trigger", trigger, "status", "skipped_overlap").increment();
     }
 
-    private static String classifyException(Exception ex) {
+    private static String classifyException(RuntimeException ex) {
         if (ex == null) {
             return "unknown";
         }

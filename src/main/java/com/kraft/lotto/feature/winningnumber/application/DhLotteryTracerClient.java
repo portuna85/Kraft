@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 class DhLotteryTracerClient {
 
@@ -56,7 +57,7 @@ class DhLotteryTracerClient {
                     .retrieve()
                     .body(String.class);
             return body != null ? body.trim() : "E";
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.debug("tracer checkBotIp error ({}), treating as E", e.getMessage());
             return "E";
         }
@@ -106,7 +107,7 @@ class DhLotteryTracerClient {
             }
             String[] parts = body.split("\t");
             return parts.length > 7 ? parts[7].trim() : "E";
-        } catch (Exception e) {
+        } catch (RestClientException e) {
             log.debug("tracer inputQueue error ({}), treating as E", e.getMessage());
             return "E";
         }

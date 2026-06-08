@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.news.application;
 
 import com.kraft.lotto.feature.news.domain.NewsArticle;
+import java.io.IOException;
 import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
@@ -19,6 +21,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 class NewsRssClient {
 
@@ -85,7 +88,7 @@ class NewsRssClient {
                 result.add(new NewsArticle(null, title.trim(), link.trim(), description, source, pubDate, null));
             }
             return result;
-        } catch (Exception e) {
+        } catch (ParserConfigurationException | SAXException | IOException e) {
             log.warn("news rss parse failed url={} error={}", rssUrl, e.getMessage());
             return List.of();
         }

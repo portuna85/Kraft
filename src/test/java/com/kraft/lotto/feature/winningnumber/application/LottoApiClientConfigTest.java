@@ -34,6 +34,7 @@ class LottoApiClientConfigTest {
                 0,
                 0,
                 0,
+                0,
                 true,
                 5,
                 30_000,

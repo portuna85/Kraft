@@ -47,7 +47,7 @@ public class AdminCollectionController {
                     "collected:" + result.collected(), ip, ua);
             redirectAttributes.addFlashAttribute("message",
                     "수집 완료: " + result.collected() + "건");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             auditLogService.recordFailure(actor, "COLLECT_LATEST", "latest", ip, ua, e.getMessage());
             redirectAttributes.addFlashAttribute("error", "수집 실패: " + e.getMessage());
         }

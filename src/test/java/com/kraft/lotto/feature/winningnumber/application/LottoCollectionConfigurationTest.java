@@ -63,7 +63,7 @@ class LottoCollectionConfigurationTest {
 
         @Bean
         KraftApiProperties kraftApiProperties() {
-            return new KraftApiProperties("mock", "http://localhost", 1000, 1000, 10000, 0, 0, 0, 0,
+            return new KraftApiProperties("mock", "http://localhost", 1000, 1000, 10000, 0, 0, 0, 0, 0,
                     true, 5, 30_000, 1, null, null, null, null, null, null, null);
         }
 

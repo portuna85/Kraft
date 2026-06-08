@@ -6,6 +6,8 @@ on:
     paths-ignore:
       - 'README.md'
       - 'docs/**'
+  schedule:
+    - cron: '0 2 * * 1'  # 매주 월요일 02:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -392,3 +394,76 @@ jobs:
             build/reports/tests/performanceSmokeTest/
             build/test-results/performanceSmokeTest/
           retention-days: 14
+
+  # Lighthouse CI — 주 1회 schedule 또는 workflow_dispatch 시 실행
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build-test
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Download app jar
+        uses: actions/download-artifact@v8
+        with:
+          name: app-jar-${{ github.run_id }}
+          path: build/libs/
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Install Lighthouse CLI
+        run: npm install -g @lhci/cli
+
+      - name: Start app in background
+        env:
+          KRAFT_E2E_JAR_PATH: build/libs/app.jar
+          SPRING_PROFILES_ACTIVE: local
+        run: |
+          java -jar build/libs/app.jar \
+            --server.port=8080 \
+            --spring.profiles.active=local &
+          echo $! > /tmp/app.pid
+          npx wait-on http://localhost:8080/actuator/health --timeout 60000
+
+      - name: Run Lighthouse CI
+        run: |
+          lhci autorun \
+            --collect.url=http://localhost:8080/ \
+            --collect.url=http://localhost:8080/latest \
+            --collect.url=http://localhost:8080/frequency \
+            --collect.numberOfRuns=1 \
+            --assert.preset=lighthouse:no-pwa \
+            --assert.assertions.categories:performance=warn \
+            --assert.assertions.categories:accessibility=error \
+            --assert.assertions.categories:best-practices=warn \
+            --assert.assertions.categories:seo=warn \
+            --upload.target=temporary-public-storage
+
+      - name: Stop app
+        if: always()
+        run: kill $(cat /tmp/app.pid) 2>/dev/null || true
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-report-${{ github.run_id }}
+          path: .lighthouseci/
+          retention-days: 30

@@ -201,6 +201,51 @@ class CompositeLottoApiClientTest {
                 "from", "dhlottery", "to", "smok", "reason", "draw_today").count()).isZero();
     }
 
+    @Test
+    @DisplayName("drawDate가 어제여도 enrich delay 시간 이내면 2등 보충을 스킵한다")
+    void drawDateYesterdayWithinDelaySkipsEnrich() {
+        LocalDate yesterday = LocalDate.of(2026, 6, 6);
+        Clock fixedClock = Clock.fixed(
+                Instant.parse("2026-06-06T23:00:00Z"), ZoneId.of("Asia/Seoul"));
+        CompositeLottoApiClient compositeWithDelay = new CompositeLottoApiClient(
+                primary, "dhlottery", fallback, "smok", meterRegistry, fixedClock, 12);
+
+        WinningNumber primaryResult = winningNumberWithDrawDate(0L, yesterday);
+        when(primary.fetch(1)).thenReturn(Optional.of(primaryResult));
+
+        Optional<WinningNumber> actual = compositeWithDelay.fetch(1);
+
+        assertThat(actual).contains(primaryResult);
+        verify(fallback, never()).fetch(1);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.skipped",
+                "from", "dhlottery", "to", "smok", "reason", "within_delay_window").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.attempt",
+                "from", "dhlottery", "to", "smok").count()).isZero();
+    }
+
+    @Test
+    @DisplayName("drawDate가 어제이고 enrich delay 시간이 지나면 2등 보충을 시도한다")
+    void drawDateYesterdayAfterDelayProceedsWithEnrich() {
+        LocalDate yesterday = LocalDate.of(2026, 6, 6);
+        Clock fixedClock = Clock.fixed(
+                Instant.parse("2026-06-07T12:30:00Z"), ZoneId.of("Asia/Seoul"));
+        CompositeLottoApiClient compositeWithDelay = new CompositeLottoApiClient(
+                primary, "dhlottery", fallback, "smok", meterRegistry, fixedClock, 12);
+
+        WinningNumber primaryResult = winningNumberWithDrawDate(0L, yesterday);
+        WinningNumber enrichResult = winningNumberWithDrawDate(70_054_508L, yesterday);
+        when(primary.fetch(1)).thenReturn(Optional.of(primaryResult));
+        when(fallback.fetch(1)).thenReturn(Optional.of(enrichResult));
+
+        Optional<WinningNumber> actual = compositeWithDelay.fetch(1);
+
+        assertThat(actual.get().secondPrize()).isEqualTo(70_054_508L);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.attempt",
+                "from", "dhlottery", "to", "smok").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.skipped",
+                "from", "dhlottery", "to", "smok", "reason", "within_delay_window").count()).isZero();
+    }
+
     private static WinningNumber winningNumberWithSecondPrize(long secondPrize) {
         return winningNumberWithDrawDate(secondPrize, LocalDate.of(2026, 6, 6));
     }

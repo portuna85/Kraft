@@ -36,10 +36,10 @@ public final class ClientIpResolver {
                     if (IpRange.parse(cidr).matches(candidate)) {
                         return true;
                     }
-                } catch (Exception ignored) {
+                } catch (IllegalArgumentException ignored) {
                 }
             }
-        } catch (Exception ignored) {
+        } catch (java.net.UnknownHostException ignored) {
         }
         return false;
     }

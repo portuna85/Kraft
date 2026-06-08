@@ -4,8 +4,12 @@ import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +25,7 @@ final class CompositeLottoApiClient implements LottoApiClient {
     private static final Logger log = LoggerFactory.getLogger(CompositeLottoApiClient.class);
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final LocalTime DRAW_TIME = LocalTime.of(20, 35);
 
     private final LottoApiClient primary;
     private final LottoApiClient fallback;
@@ -28,22 +33,30 @@ final class CompositeLottoApiClient implements LottoApiClient {
     private final String fallbackName;
     private final MeterRegistry meterRegistry;
     private final Clock clock;
+    private final int enrichDelayHours;
 
     CompositeLottoApiClient(LottoApiClient primary, String primaryName,
                             LottoApiClient fallback, String fallbackName,
                             MeterRegistry meterRegistry) {
-        this(primary, primaryName, fallback, fallbackName, meterRegistry, Clock.systemDefaultZone());
+        this(primary, primaryName, fallback, fallbackName, meterRegistry, Clock.systemDefaultZone(), 0);
     }
 
     CompositeLottoApiClient(LottoApiClient primary, String primaryName,
                             LottoApiClient fallback, String fallbackName,
                             MeterRegistry meterRegistry, Clock clock) {
+        this(primary, primaryName, fallback, fallbackName, meterRegistry, clock, 0);
+    }
+
+    CompositeLottoApiClient(LottoApiClient primary, String primaryName,
+                            LottoApiClient fallback, String fallbackName,
+                            MeterRegistry meterRegistry, Clock clock, int enrichDelayHours) {
         this.primary = primary;
         this.primaryName = primaryName;
         this.fallback = fallback;
         this.fallbackName = fallbackName;
         this.meterRegistry = meterRegistry;
         this.clock = clock;
+        this.enrichDelayHours = Math.max(0, enrichDelayHours);
         Counter.builder("kraft.api.fallback.exhausted").register(meterRegistry);
     }
 
@@ -79,6 +92,13 @@ final class CompositeLottoApiClient implements LottoApiClient {
             log.debug("[{}] 2등 보충 스킵 — 당일 추첨 (round={})", primaryName, round);
             return Optional.of(base);
         }
+        if (shouldSkipEnrichWithinDelay(base.drawDate())) {
+            meterRegistry.counter("kraft.api.fallback.enrich.skipped",
+                    "from", primaryName, "to", fallbackName, "reason", "within_delay_window").increment();
+            log.debug("[{}] 2등 보충 스킵 — 지연 시간 이내 (round={}, delayHours={})",
+                    primaryName, round, enrichDelayHours);
+            return Optional.of(base);
+        }
         try {
             meterRegistry.counter("kraft.api.fallback.enrich.attempt",
                     "from", primaryName, "to", fallbackName).increment();
@@ -101,5 +121,16 @@ final class CompositeLottoApiClient implements LottoApiClient {
                     primaryName, fallbackName, round, ex.getMessage());
         }
         return Optional.of(base);
+    }
+
+    private boolean shouldSkipEnrichWithinDelay(LocalDate drawDate) {
+        if (enrichDelayHours <= 0) {
+            return false;
+        }
+        ZonedDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(KST);
+        ZonedDateTime enrichAllowedAt = LocalDateTime.of(drawDate, DRAW_TIME)
+                .atZone(KST)
+                .plus(Duration.ofHours(enrichDelayHours));
+        return now.isBefore(enrichAllowedAt);
     }
 }

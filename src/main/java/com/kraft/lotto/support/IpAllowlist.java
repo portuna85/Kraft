@@ -2,6 +2,7 @@ package com.kraft.lotto.support;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ final class IpAllowlist {
             }
             try {
                 rules.add(IpRange.parse(trimmed));
-            } catch (Exception ex) {
+            } catch (IllegalArgumentException ex) {
                 log.warn("Ignoring invalid {} allowlist entry: {}", filterName, LogSanitizer.sanitizeLogValue(trimmed));
                 meterRegistry.counter("kraft.security.allowlist.invalid.entry", "filter", filterName).increment();
             }
@@ -44,7 +45,7 @@ final class IpAllowlist {
                 }
             }
             return false;
-        } catch (Exception ex) {
+        } catch (UnknownHostException ex) {
             log.warn("IP 주소 해석 실패: {}", LogSanitizer.sanitizeLogValue(clientIp));
             return false;
         }

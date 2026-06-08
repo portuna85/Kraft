@@ -88,7 +88,7 @@ class JdbcConnectivityValidator {
         try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(host, port), Math.max(timeoutMs, 100));
             return true;
-        } catch (Exception ex) {
+        } catch (java.io.IOException ex) {
             return false;
         }
     }
