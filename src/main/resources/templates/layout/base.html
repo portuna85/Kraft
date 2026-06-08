@@ -43,7 +43,15 @@
     "@type": "WebSite",
     "name": "KRAFT Lotto",
     "url": "[[${baseUrl}]]",
-    "description": "로또 당첨번호 조회, 빈도·패턴 통계, 편향 회피 번호 조합 도구"
+    "description": "로또 당첨번호 조회, 빈도·패턴 통계, 편향 회피 번호 조합 도구",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "[[${baseUrl}]]/rounds?round={round}"
+      },
+      "query-input": "required name=round"
+    }
   }
   </script>
   <script type="application/ld+json" th:inline="text" th:attr="nonce=${cspNonce}" th:unless="${isAdmin}">
@@ -59,6 +67,8 @@
   </script>
   <script type="application/ld+json" th:attr="nonce=${cspNonce}"
           th:if="${pageJsonLd != null}" th:utext="${pageJsonLd}"></script>
+  <script type="application/ld+json" th:attr="nonce=${cspNonce}"
+          th:if="${breadcrumbJsonLd != null}" th:utext="${breadcrumbJsonLd}"></script>
 </head>
 <body>
 <a class="skip-to-content" href="#main-content">본문으로 건너뛰기</a>

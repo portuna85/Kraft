@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# DEPRECATED: 환경 동기화 완료 후 이 스크립트는 더 이상 필요하지 않습니다.
+# 모든 환경이 V2~V12 기준으로 이미 패치됐습니다. 신규 DB는 패치 없이 정상 기동됩니다.
+#
 # flyway_schema_history 버전 번호를 V15~V25 → V2~V12 로 일괄 업데이트한다.
 # 이미 패치됐거나 신규 DB인 경우(V15 행 없음) UPDATE 0건으로 정상 종료된다.
 set -euo pipefail
