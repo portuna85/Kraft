@@ -3,6 +3,9 @@ package com.kraft.lotto.feature.winningnumber.application;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,20 +20,30 @@ final class CompositeLottoApiClient implements LottoApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(CompositeLottoApiClient.class);
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private final LottoApiClient primary;
     private final LottoApiClient fallback;
     private final String primaryName;
     private final String fallbackName;
     private final MeterRegistry meterRegistry;
+    private final Clock clock;
 
     CompositeLottoApiClient(LottoApiClient primary, String primaryName,
                             LottoApiClient fallback, String fallbackName,
                             MeterRegistry meterRegistry) {
+        this(primary, primaryName, fallback, fallbackName, meterRegistry, Clock.systemDefaultZone());
+    }
+
+    CompositeLottoApiClient(LottoApiClient primary, String primaryName,
+                            LottoApiClient fallback, String fallbackName,
+                            MeterRegistry meterRegistry, Clock clock) {
         this.primary = primary;
         this.primaryName = primaryName;
         this.fallback = fallback;
         this.fallbackName = fallbackName;
         this.meterRegistry = meterRegistry;
+        this.clock = clock;
         Counter.builder("kraft.api.fallback.exhausted").register(meterRegistry);
     }
 
@@ -60,6 +73,12 @@ final class CompositeLottoApiClient implements LottoApiClient {
     }
 
     private Optional<WinningNumber> tryEnrich(int round, WinningNumber base) {
+        if (base.drawDate().equals(LocalDate.now(clock.withZone(KST)))) {
+            meterRegistry.counter("kraft.api.fallback.enrich.skipped",
+                    "from", primaryName, "to", fallbackName, "reason", "draw_today").increment();
+            log.debug("[{}] 2등 보충 스킵 — 당일 추첨 (round={})", primaryName, round);
+            return Optional.of(base);
+        }
         try {
             meterRegistry.counter("kraft.api.fallback.enrich.attempt",
                     "from", primaryName, "to", fallbackName).increment();

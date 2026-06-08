@@ -10,7 +10,10 @@ import static org.mockito.Mockito.when;
 import com.kraft.lotto.feature.winningnumber.domain.LottoCombination;
 import com.kraft.lotto.feature.winningnumber.domain.WinningNumber;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -153,9 +156,58 @@ class CompositeLottoApiClientTest {
         assertThat(composite).isNotNull();
     }
 
+    @Test
+    @DisplayName("drawDate가 오늘(KST)이면 2등 보충을 스킵하고 enrich.skipped 카운터를 증가시킨다")
+    void drawDateTodayKstSkipsEnrich() {
+        LocalDate today = LocalDate.of(2026, 6, 7);
+        Clock fixedClock = Clock.fixed(
+                Instant.parse("2026-06-07T12:30:00Z"), ZoneId.of("Asia/Seoul"));
+        CompositeLottoApiClient compositeWithClock = new CompositeLottoApiClient(
+                primary, "dhlottery", fallback, "smok", meterRegistry, fixedClock);
+
+        WinningNumber primaryResult = winningNumberWithDrawDate(0L, today);
+        when(primary.fetch(1)).thenReturn(Optional.of(primaryResult));
+
+        Optional<WinningNumber> actual = compositeWithClock.fetch(1);
+
+        assertThat(actual).contains(primaryResult);
+        verify(fallback, never()).fetch(1);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.skipped",
+                "from", "dhlottery", "to", "smok", "reason", "draw_today").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.attempt",
+                "from", "dhlottery", "to", "smok").count()).isZero();
+    }
+
+    @Test
+    @DisplayName("drawDate가 어제이면 2등 보충을 시도한다")
+    void drawDateYesterdayProceedsWithEnrich() {
+        LocalDate yesterday = LocalDate.of(2026, 6, 6);
+        Clock fixedClock = Clock.fixed(
+                Instant.parse("2026-06-07T12:30:00Z"), ZoneId.of("Asia/Seoul"));
+        CompositeLottoApiClient compositeWithClock = new CompositeLottoApiClient(
+                primary, "dhlottery", fallback, "smok", meterRegistry, fixedClock);
+
+        WinningNumber primaryResult = winningNumberWithDrawDate(0L, yesterday);
+        WinningNumber enrichResult = winningNumberWithDrawDate(70_054_508L, yesterday);
+        when(primary.fetch(1)).thenReturn(Optional.of(primaryResult));
+        when(fallback.fetch(1)).thenReturn(Optional.of(enrichResult));
+
+        Optional<WinningNumber> actual = compositeWithClock.fetch(1);
+
+        assertThat(actual.get().secondPrize()).isEqualTo(70_054_508L);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.attempt",
+                "from", "dhlottery", "to", "smok").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("kraft.api.fallback.enrich.skipped",
+                "from", "dhlottery", "to", "smok", "reason", "draw_today").count()).isZero();
+    }
+
     private static WinningNumber winningNumberWithSecondPrize(long secondPrize) {
+        return winningNumberWithDrawDate(secondPrize, LocalDate.of(2026, 6, 6));
+    }
+
+    private static WinningNumber winningNumberWithDrawDate(long secondPrize, LocalDate drawDate) {
         return new WinningNumber(
-                1, LocalDate.of(2026, 6, 6),
+                1, drawDate,
                 new LottoCombination(List.of(1, 2, 3, 4, 5, 6)), 7,
                 1_000_000L, 5, 100_000_000L, 5_000_000L,
                 secondPrize, secondPrize > 0 ? 10 : 0,
