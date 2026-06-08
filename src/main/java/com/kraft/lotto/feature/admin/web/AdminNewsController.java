@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import java.security.Principal;
 import java.util.List;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Validated
@@ -101,7 +103,31 @@ public class AdminNewsController {
         return "redirect:/admin/ops/news";
     }
 
+    @GetMapping("/reclassify")
+    @ResponseBody
+    public ResponseEntity<ReclassifyCountResponse> reclassifyDryRun(
+            @RequestParam(defaultValue = "30") @Min(1) @Max(365) int days) {
+        int count = adminNewsService.countReclassifiable(days);
+        return ResponseEntity.ok(new ReclassifyCountResponse(count, days));
+    }
+
+    @PostMapping("/reclassify")
+    @ResponseBody
+    public ResponseEntity<ReclassifyApplyResponse> reclassifyApply(
+            @RequestParam(defaultValue = "30") @Min(1) @Max(365) int days,
+            Principal principal,
+            HttpServletRequest request) {
+        String actor = extractActor(principal);
+        String ip = ClientIpResolver.resolve(request, List.of());
+        int reclassified = adminNewsService.reclassifyApproved(days);
+        adminNewsService.recordReclassifyAudit(actor, ip, request.getHeader("User-Agent"), days, reclassified);
+        return ResponseEntity.ok(new ReclassifyApplyResponse(reclassified, days));
+    }
+
     private static String extractActor(Principal principal) {
         return principal != null ? principal.getName() : "unknown";
     }
+
+    public record ReclassifyCountResponse(int count, int days) {}
+    public record ReclassifyApplyResponse(int reclassified, int days) {}
 }

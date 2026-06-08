@@ -11,6 +11,35 @@
     <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
 
     <div class="card mb-3">
+      <div class="card-header">기존 승인 기사 재분류</div>
+      <div class="card-body">
+        <p class="text-muted small mb-2">차단 키워드/관련성 정책 기준으로 이미 승인된 기사를 재검사하여 노이즈 기사를 거부 처리합니다.</p>
+        <div class="row g-2 align-items-center">
+          <div class="col-auto">
+            <label for="reclassifyDays" class="col-form-label col-form-label-sm">최근</label>
+          </div>
+          <div class="col-auto">
+            <select id="reclassifyDays" class="form-select form-select-sm" style="width:auto">
+              <option value="30" selected>30일</option>
+              <option value="60">60일</option>
+              <option value="90">90일</option>
+              <option value="365">전체(365일)</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="reclassifyDryRun()">미리보기</button>
+          </div>
+          <div class="col-auto">
+            <button type="button" class="btn btn-warning btn-sm" onclick="reclassifyApply()">재분류 적용</button>
+          </div>
+          <div class="col-auto">
+            <span id="reclassifyResult" class="text-muted small"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
       <div class="card-header">키워드 차단 추가</div>
       <div class="card-body">
         <form th:action="@{/admin/ops/news/block-keyword}" method="post" class="row g-2"
@@ -162,4 +191,29 @@
     </div>
   </div>
 </section>
+<script th:inline="javascript" th:attr="nonce=${cspNonce}">
+  function getDays() {
+    return document.getElementById('reclassifyDays').value;
+  }
+  function setResult(msg) {
+    document.getElementById('reclassifyResult').textContent = msg;
+  }
+  function reclassifyDryRun() {
+    const days = getDays();
+    setResult('조회 중...');
+    fetch('/admin/ops/news/reclassify?days=' + days)
+      .then(r => r.json())
+      .then(data => setResult('재분류 대상: ' + data.count + '건 (최근 ' + data.days + '일)'))
+      .catch(() => setResult('조회 실패'));
+  }
+  function reclassifyApply() {
+    const days = getDays();
+    if (!confirm('최근 ' + days + '일 승인 기사를 재분류합니다. 노이즈 기사가 거부 처리됩니다. 계속하시겠습니까?')) return;
+    setResult('적용 중...');
+    fetch('/admin/ops/news/reclassify?days=' + days, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => { setResult('완료: ' + data.reclassified + '건 거부 처리됨'); location.reload(); })
+      .catch(() => setResult('적용 실패'));
+  }
+</script>
 </html>

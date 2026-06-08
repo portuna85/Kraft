@@ -4,12 +4,15 @@ import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainEntity;
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainRepository;
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordEntity;
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordRepository;
+import com.kraft.lotto.feature.news.application.NewsDecision;
+import com.kraft.lotto.feature.news.application.NewsRelevancePolicy;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,7 @@ public class AdminNewsService {
     private final NewsArticleRepository articleRepository;
     private final NewsBlockedDomainRepository blockedDomainRepository;
     private final NewsBlockedKeywordRepository blockedKeywordRepository;
+    private final NewsRelevancePolicy relevancePolicy;
     private final AdminAuditLogService auditLogService;
     private final Clock clock;
 
@@ -28,11 +32,13 @@ public class AdminNewsService {
     public AdminNewsService(NewsArticleRepository articleRepository,
                             NewsBlockedDomainRepository blockedDomainRepository,
                             NewsBlockedKeywordRepository blockedKeywordRepository,
+                            NewsRelevancePolicy relevancePolicy,
                             AdminAuditLogService auditLogService,
                             Clock clock) {
         this.articleRepository = articleRepository;
         this.blockedDomainRepository = blockedDomainRepository;
         this.blockedKeywordRepository = blockedKeywordRepository;
+        this.relevancePolicy = relevancePolicy;
         this.auditLogService = auditLogService;
         this.clock = clock;
     }
@@ -124,6 +130,76 @@ public class AdminNewsService {
             auditLogService.recordFailure(actor, "NEWS_BLOCK_KEYWORD", "keyword:" + keyword, ip, ua, e.getMessage());
             throw e;
         }
+    }
+
+    public void recordReclassifyAudit(String actor, String ip, String ua, int days, int count) {
+        auditLogService.recordSuccess(actor, "NEWS_RECLASSIFY",
+                "days:" + days + " reclassified:" + count, ip, ua);
+    }
+
+    @Transactional(readOnly = true)
+    public int countReclassifiable(int days) {
+        LocalDateTime since = LocalDateTime.now(clock).minusDays(days);
+        List<NewsArticleEntity> approved = articleRepository.findApprovedSince(since);
+        List<String> dbKeywords = blockedKeywordRepository.findAllKeywords();
+        return (int) approved.stream()
+                .filter(a -> shouldReject(a, dbKeywords))
+                .count();
+    }
+
+    @Transactional
+    public int reclassifyApproved(int days) {
+        LocalDateTime since = LocalDateTime.now(clock).minusDays(days);
+        List<NewsArticleEntity> approved = articleRepository.findApprovedSince(since);
+        List<String> dbKeywords = blockedKeywordRepository.findAllKeywords();
+
+        int count = 0;
+        for (NewsArticleEntity article : approved) {
+            String reason = rejectReason(article, dbKeywords);
+            if (reason != null) {
+                article.setApproved(false);
+                article.setRejected(true);
+                article.setRejectReason(reason);
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private boolean shouldReject(NewsArticleEntity article, List<String> dbKeywords) {
+        return rejectReason(article, dbKeywords) != null;
+    }
+
+    private String rejectReason(NewsArticleEntity article, List<String> dbKeywords) {
+        if (isBlockedByKeyword(article, dbKeywords)) {
+            return "reclassify:keyword";
+        }
+        NewsDecision decision = relevancePolicy.decide(
+                article.getTitle(), article.getDescription(), article.getSource(), article.getLink());
+        if (decision.type() == NewsDecision.Type.REJECT) {
+            return "reclassify:score:" + decision.score();
+        }
+        return null;
+    }
+
+    private static boolean isBlockedByKeyword(NewsArticleEntity article, List<String> keywords) {
+        if (keywords.isEmpty()) {
+            return false;
+        }
+        String target = String.join(" ",
+                nullToEmpty(article.getTitle()),
+                nullToEmpty(article.getDescription()),
+                nullToEmpty(article.getSource()),
+                nullToEmpty(article.getLink())
+        ).toLowerCase(Locale.KOREAN);
+        return keywords.stream()
+                .filter(k -> k != null && !k.isBlank())
+                .map(k -> k.toLowerCase(Locale.KOREAN).trim())
+                .anyMatch(target::contains);
+    }
+
+    private static String nullToEmpty(String s) {
+        return s == null ? "" : s;
     }
 
     private NewsArticleEntity findOrThrow(long id) {
