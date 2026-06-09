@@ -22,6 +22,7 @@ public class FlywayConfig {
     public FlywayMigrationStrategy flywayMigrationStrategy(DataSource dataSource) {
         return flyway -> {
             repairV1SquashIfNeeded(dataSource);
+            flyway.repair();   // 실패 행 제거 + 체크섬·description 재정렬
             flyway.migrate();
         };
     }
