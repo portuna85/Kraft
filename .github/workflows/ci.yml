@@ -508,7 +508,7 @@ jobs:
       - name: Run Flyway migration + validate against MariaDB
         run: |
           flyway migrate validate \
-            -url=jdbc:mariadb://mariadb:3306/kraft_lotto_ci \
+            -url=jdbc:mariadb://localhost:3306/kraft_lotto_ci \
             -user=kraft \
             -password=kraft \
             -locations=filesystem:src/main/resources/db/migration,filesystem:src/main/resources/db/vendor/mariadb
