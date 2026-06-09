@@ -9,7 +9,7 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "check:js": "node scripts/check-js-syntax.cjs",
-    "build:css": "postcss \"src/main/resources/static/css/*.css\" \"src/main/resources/static/vendor/bootstrap/bootstrap.min.css\" --dir src/main/resources/static/css --no-map"
+    "build:css": "postcss \"src/main/frontend/css/*.css\" --dir src/main/resources/static/css --no-map"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
