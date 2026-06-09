@@ -104,7 +104,6 @@ services:
     cap_drop: ["ALL"]
     read_only: true
     tmpfs: ["/tmp:size=64m,mode=1777"]
-    pids_limit: 256
     volumes:
       - ./logs:/app/logs
     healthcheck:
@@ -118,6 +117,7 @@ services:
         limits:
           memory: 1g
           cpus: "1.00"
+          pids: 256
     logging:
       driver: json-file
       options:
