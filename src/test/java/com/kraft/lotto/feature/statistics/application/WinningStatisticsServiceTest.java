@@ -234,7 +234,8 @@ class WinningStatisticsServiceTest {
                 new WinningStatisticsCacheService(winningNumberRepository, summaryRepository, meterRegistry);
         cacheService.refreshFrequencySummary();
 
-        assertThat(meterRegistry.get("kraft.statistics.frequency.summary.refresh.latency")
+        assertThat(meterRegistry.get("kraft.statistics.summary.refresh.duration")
+                .tag("type", "frequency")
                 .timer()
                 .count()).isEqualTo(1L);
     }
