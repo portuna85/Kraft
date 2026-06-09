@@ -500,11 +500,15 @@ jobs:
             | tar xz -C /tmp
           echo "/tmp/flyway-11.8.2" >> $GITHUB_PATH
 
+      - name: Download MariaDB JDBC driver for Flyway CLI
+        run: |
+          curl -sL https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/3.5.3/mariadb-java-client-3.5.3.jar \
+            -o /tmp/flyway-11.8.2/drivers/mariadb-java-client.jar
+
       - name: Run Flyway migration + validate against MariaDB
         run: |
           flyway migrate validate \
             -url=jdbc:mariadb://mariadb:3306/kraft_lotto_ci \
             -user=kraft \
             -password=kraft \
-            -locations=filesystem:src/main/resources/db/migration,filesystem:src/main/resources/db/vendor/mariadb \
-            -jarDirs=
+            -locations=filesystem:src/main/resources/db/migration,filesystem:src/main/resources/db/vendor/mariadb
