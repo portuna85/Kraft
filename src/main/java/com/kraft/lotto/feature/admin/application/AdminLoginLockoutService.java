@@ -1,5 +1,6 @@
 package com.kraft.lotto.feature.admin.application;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
@@ -29,6 +30,7 @@ public class AdminLoginLockoutService {
     @Value("${KRAFT_ADMIN_LOGIN_LOCKOUT_SECONDS:900}")
     private long lockoutSeconds;
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public AdminLoginLockoutService(MeterRegistry meterRegistry, Clock clock) {
         this.meterRegistry = meterRegistry;
         this.clock = clock;

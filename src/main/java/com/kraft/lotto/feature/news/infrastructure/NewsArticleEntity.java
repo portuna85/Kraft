@@ -1,6 +1,7 @@
 package com.kraft.lotto.feature.news.infrastructure;
 
 import com.kraft.lotto.feature.news.domain.NewsSourceTier;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -75,6 +76,7 @@ public class NewsArticleEntity {
         this(title, link, linkHash, description, source, NewsSourceTier.GENERAL, pubDate, collectedAt);
     }
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public NewsArticleEntity(String title,
                               String link,
                               String linkHash,
@@ -86,6 +88,7 @@ public class NewsArticleEntity {
         this(title, link, linkHash, description, source, null, sourceTier, pubDate, collectedAt);
     }
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public NewsArticleEntity(String title,
                               String link,
                               String linkHash,

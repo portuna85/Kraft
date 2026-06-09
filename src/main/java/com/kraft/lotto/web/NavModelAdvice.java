@@ -1,5 +1,6 @@
 package com.kraft.lotto.web;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,7 @@ public class NavModelAdvice {
         return (path != null) ? path : "/";
     }
 
+    @SuppressFBWarnings("VA_FORMAT_STRING_USES_NEWLINE")
     @ModelAttribute("breadcrumbJsonLd")
     public String breadcrumbJsonLd(HttpServletRequest request) {
         String path = request.getRequestURI();
