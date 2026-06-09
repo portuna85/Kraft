@@ -17,6 +17,8 @@ val strictCoverage = providers.gradleProperty("strictCoverage")
 group = "com.kraft"
 version = "0.2.0"
 
+extra["tomcat.version"] = "11.0.22"
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))

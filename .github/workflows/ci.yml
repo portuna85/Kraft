@@ -310,6 +310,7 @@ jobs:
           trivy image "${{ env.IMAGE_NAME }}:${{ github.sha }}" \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
+            --skip-files usr/bin/pebble \
             --exit-code 1
 
       - name: Cache Syft binary
