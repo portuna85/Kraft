@@ -69,7 +69,7 @@ class OpsPageControllerTest {
     @WithMockUser
     @DisplayName("유효한 요청은 모델을 정상 바인딩한다")
     void bindsModelForValidRequest() throws Exception {
-        int expectedTo = com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy.maxPossibleRound(java.time.LocalDate.now());
+        int expectedTo = com.kraft.lotto.feature.winningnumber.domain.LottoRoundPolicy.maxCollectableRound(java.time.LocalDate.now());
 
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1234));
         when(fetchLogQueryService.failureOverview(200, 100, "timeout", 1, expectedTo))

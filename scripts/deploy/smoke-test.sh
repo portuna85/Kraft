@@ -38,6 +38,9 @@ printf '%s' "$BODY" | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"' || {
 # 공개 페이지
 check_http "/" "200" "홈 페이지"
 check_http "/latest" "200" "최신 회차 페이지"
+check_http "/rounds" "200" "회차 목록 페이지"
+check_http "/frequency" "200" "빈도 분석 페이지"
+check_http "/news" "200" "뉴스 페이지"
 check_http "/data-source" "200" "데이터 출처 페이지"
 # th:if 조건과 무관하게 항상 렌더링되는 텍스트로 검증
 check_body_contains "/data-source" "당첨번호 데이터" "data-source 콘텐츠 확인"
@@ -101,6 +104,19 @@ if [[ -n "$OPS_TOKEN" ]]; then
       GAP=$(( EXPECTED - STORED ))
       if [[ $GAP -gt 1 ]]; then
         echo "::warning::회차 gap 경고: 예상 회차=${EXPECTED}, 저장 회차=${STORED}, gap=${GAP}"
+      fi
+    fi
+    # /rounds maxRound 괴리 검증: UI 상한이 DB 저장 회차보다 HEADROOM(10) 이상 높으면 경고
+    if [[ -n "$STORED" ]]; then
+      ROUNDS_BODY=$(curl -fsS "${BASE_URL}/rounds" 2>/dev/null || true)
+      MAX_ROUND_IN_UI=$(printf '%s' "$ROUNDS_BODY" | grep -oP '(?<=max=")[0-9]+' | head -1 || true)
+      if [[ -n "$MAX_ROUND_IN_UI" ]]; then
+        UI_GAP=$(( MAX_ROUND_IN_UI - STORED ))
+        if [[ $UI_GAP -gt 10 ]]; then
+          echo "::warning::/rounds maxRound=${MAX_ROUND_IN_UI} 이 DB 최신 회차=${STORED} 보다 ${UI_GAP}회 높습니다."
+        else
+          echo "OK: /rounds maxRound=${MAX_ROUND_IN_UI}, DB 최신 회차=${STORED}, gap=${UI_GAP}"
+        fi
       fi
     fi
   fi

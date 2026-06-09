@@ -8,6 +8,15 @@
     <p class="kraft-hero-description">과거 당첨 데이터를 기반으로 편향을 줄인 번호 조합을 제안합니다. 당첨 예측이 아닌 조합 점검 도구입니다.</p>
   </header>
 
-  <th:block th:replace="~{fragments/recommend-card :: recommend-card}"></th:block>
+  <div id="recommend"
+       hx-get="/fragments/recommend?count=5"
+       hx-trigger="load"
+       hx-swap="outerHTML">
+    <div class="card mb-4 kraft-section kraft-section-recommend">
+      <div class="card-body">
+        <div class="kraft-state kraft-state-loading small">번호를 불러오는 중…</div>
+      </div>
+    </div>
+  </div>
 </section>
 </html>

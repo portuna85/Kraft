@@ -59,7 +59,7 @@ class HomeControllerTest {
         FrequencyModelSupport frequencyModelSupport = new FrequencyModelSupport(statisticsService);
         RoundsModelSupport roundsModelSupport = new RoundsModelSupport(queryService);
         mockMvc = MockMvcBuilders.standaloneSetup(
-                        new HomeController(queryService, recommendModelSupport),
+                        new HomeController(queryService),
                         new RecommendController(recommendModelSupport),
                         new FrequencyController(frequencyModelSupport),
                         new RoundsController(roundsModelSupport)
@@ -222,7 +222,6 @@ class HomeControllerTest {
     private void stubHomeFrame() {
         when(queryService.expectedCurrentRound()).thenReturn(1200);
         when(queryService.findLatest()).thenReturn(Optional.empty());
-        stubRecommend(5, 5);
     }
 
     private static WinningNumberDto winningNumber(int round) {

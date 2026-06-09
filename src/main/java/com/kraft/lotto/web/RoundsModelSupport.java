@@ -24,7 +24,7 @@ class RoundsModelSupport {
     }
 
     void addRoundSearchModel(Integer round, Model model) {
-        model.addAttribute("maxRound", queryService.maxPossibleRound());
+        model.addAttribute("maxRound", queryService.userSearchMaxRound());
         model.addAttribute("round", round);
         var result = round == null ? null : queryService.findByRound(round).orElse(null);
         model.addAttribute("result", result);

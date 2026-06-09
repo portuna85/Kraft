@@ -20,7 +20,7 @@ class LottoDrawScheduleTest {
     void expectedRoundDoesNotIncludeSearchHeadroom() {
         LocalDate asOf = LocalDate.of(2026, 6, 7);
 
-        assertThat(LottoRoundPolicy.maxPossibleRound(asOf))
+        assertThat(LottoRoundPolicy.maxCollectableRound(asOf))
                 .isGreaterThan(LottoDrawSchedule.expectedRound(asOf));
     }
 }

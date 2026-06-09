@@ -57,7 +57,8 @@ public class AdminSecurityConfig {
                             .hasAnyRole("ADMIN_VIEWER", "ADMIN_OPERATOR",
                                         "ADMIN_NEWS_MANAGER", "ADMIN_AUDITOR", "ADMIN_SUPER_ADMIN")
                         .requestMatchers("/admin/login", "/admin/login/**").permitAll()
-                        .requestMatchers("/actuator", "/actuator/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers("/actuator", "/actuator/**").denyAll()
                         .anyRequest().permitAll()
                 )
                 .csrf(csrf -> csrf

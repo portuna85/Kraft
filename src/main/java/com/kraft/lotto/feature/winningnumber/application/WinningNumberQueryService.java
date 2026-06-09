@@ -41,7 +41,7 @@ public class WinningNumberQueryService {
     }
 
     public WinningNumberDto getByRound(int round) {
-        if (round < LottoRoundPolicy.MIN_ROUND || round > LottoRoundPolicy.maxPossibleRound(LocalDate.now(clock))) {
+        if (round < LottoRoundPolicy.MIN_ROUND || round > LottoRoundPolicy.maxCollectableRound(LocalDate.now(clock))) {
             throw new BusinessException(ErrorCode.LOTTO_INVALID_TARGET_ROUND);
         }
         return repository.findById(round)
@@ -51,7 +51,7 @@ public class WinningNumberQueryService {
     }
 
     public Optional<WinningNumberDto> findByRound(int round) {
-        if (round < LottoRoundPolicy.MIN_ROUND || round > LottoRoundPolicy.maxPossibleRound(LocalDate.now(clock))) {
+        if (round < LottoRoundPolicy.MIN_ROUND || round > LottoRoundPolicy.maxCollectableRound(LocalDate.now(clock))) {
             throw new BusinessException(ErrorCode.LOTTO_INVALID_TARGET_ROUND);
         }
         return repository.findById(round)
@@ -64,7 +64,16 @@ public class WinningNumberQueryService {
     }
 
     public int maxPossibleRound() {
-        return LottoRoundPolicy.maxPossibleRound(LocalDate.now(clock));
+        return LottoRoundPolicy.maxCollectableRound(LocalDate.now(clock));
+    }
+
+    public int latestPersistedRound() {
+        return repository.findMaxRound().orElse(0);
+    }
+
+    public int userSearchMaxRound() {
+        int latest = latestPersistedRound();
+        return latest > 0 ? latest : LottoDrawSchedule.expectedRound(LocalDate.now(clock));
     }
 
     public WinningNumberPageDto list(int page, int size) {

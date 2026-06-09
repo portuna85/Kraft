@@ -5,7 +5,6 @@ import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordRepository
 import com.kraft.lotto.feature.news.domain.NewsArticle;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -14,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,10 +27,11 @@ public class NewsCollectionService {
     private final NewsRssClient rssClient;
     private final NewsArticlePersister persister;
     private final NewsSourceClassifier classifier;
+    private final NewsRelevancePolicy relevancePolicy;
+    private final NewsBlockPolicy blockPolicy;
+    private final NewsDuplicatePolicy duplicatePolicy;
     private final Clock clock;
     private final int retentionDays;
-    private final List<String> blockedDomains;
-    private final List<String> blockedKeywords;
     private final NewsBlockedDomainRepository blockedDomainRepository;
     private final NewsBlockedKeywordRepository blockedKeywordRepository;
 
@@ -65,8 +66,6 @@ public class NewsCollectionService {
                 blockedDomainRepository, null);
     }
 
-    private final NewsRelevancePolicy relevancePolicy;
-
     NewsCollectionService(NewsArticleRepository repository,
                           NewsRssClient rssClient,
                           NewsArticlePersister persister,
@@ -97,13 +96,13 @@ public class NewsCollectionService {
         this.rssClient = rssClient;
         this.persister = persister;
         this.classifier = classifier;
+        this.relevancePolicy = relevancePolicy;
+        this.blockPolicy = new NewsBlockPolicy(blockedDomains, blockedKeywords);
+        this.duplicatePolicy = new NewsDuplicatePolicy(repository);
         this.clock = clock;
         this.retentionDays = retentionDays;
-        this.blockedDomains = List.copyOf(blockedDomains);
-        this.blockedKeywords = List.copyOf(blockedKeywords);
         this.blockedDomainRepository = blockedDomainRepository;
         this.blockedKeywordRepository = blockedKeywordRepository;
-        this.relevancePolicy = relevancePolicy;
     }
 
     public NewsCollectResult collect() {
@@ -124,39 +123,41 @@ public class NewsCollectionService {
         int skipped = 0;
 
         for (NewsArticle article : articles) {
-            String domain = extractDomain(article.link());
-            if (isBlockedDomain(domain, dbBlockedDomains)) {
+            String domain = NewsBlockPolicy.extractDomain(article.link());
+
+            Optional<NewsRejectReason> blockReject = blockPolicy.evaluate(domain, article, dbBlockedDomains, dbBlockedKeywords);
+            if (blockReject.isPresent()) {
+                log.debug("news blocked reason={} title={}", blockReject.get(), article.title());
                 skipped++;
-                log.debug("news blocked domain, skipped: link={}", article.link());
                 continue;
             }
-            if (isBlockedKeyword(article, dbBlockedKeywords)) {
-                skipped++;
-                log.debug("news blocked keyword, skipped: title={} link={}", article.title(), article.link());
-                continue;
-            }
+
             NewsDecision decision = relevancePolicy.decide(
                     article.title(), article.description(), article.source(), article.link());
             if (decision.type() == NewsDecision.Type.REJECT) {
-                skipped++;
                 log.debug("news relevance reject score={} title={}", decision.score(), article.title());
-                continue;
-            }
-            String hash = sha256(article.link());
-            if (repository.existsByLinkHash(hash)) {
                 skipped++;
                 continue;
             }
+
+            String linkHash = sha256(article.link());
+            String titleHash = sha256(normalizeTitle(article.title()));
+            Optional<NewsRejectReason> dupReject = duplicatePolicy.evaluate(linkHash, titleHash, now.minusDays(7));
+            if (dupReject.isPresent()) {
+                log.debug("news duplicate skipped reason={} title={}", dupReject.get(), article.title());
+                skipped++;
+                continue;
+            }
+
             try {
-                var sourceTier = classifier.classify(article.source());
                 var entity = new NewsArticleEntity(
                         truncate(article.title(), 500),
                         truncate(article.link(), 2000),
-                        hash,
+                        linkHash,
                         truncate(article.description(), 2000),
                         truncate(article.source(), 200),
                         domain,
-                        sourceTier,
+                        classifier.classify(article.source()),
                         article.pubDate(),
                         now
                 );
@@ -167,7 +168,7 @@ public class NewsCollectionService {
                 saved++;
             } catch (DataIntegrityViolationException e) {
                 skipped++;
-                log.warn("article duplicate, skipped: hash={}", hash);
+                log.warn("article duplicate, skipped: link={}", article.link());
             }
         }
 
@@ -185,51 +186,12 @@ public class NewsCollectionService {
         return deleted;
     }
 
-    private String extractDomain(String link) {
-        try {
-            String host = URI.create(link).getHost();
-            return host != null ? host.toLowerCase(Locale.ROOT) : null;
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    private boolean isBlockedDomain(String domain, List<String> dbDomains) {
-        if (domain == null) {
-            return true;
-        }
-        boolean blockedByConfig = blockedDomains.stream()
-                .map(d -> d.toLowerCase(Locale.ROOT))
-                .anyMatch(domain::endsWith);
-        if (blockedByConfig) {
-            return true;
-        }
-        return dbDomains.stream()
-                .map(d -> d.toLowerCase(Locale.ROOT))
-                .anyMatch(domain::endsWith);
-    }
-
-    private boolean isBlockedKeyword(NewsArticle article, List<String> dbKeywords) {
-        String target = String.join(" ",
-                nullToEmpty(article.title()),
-                nullToEmpty(article.description()),
-                nullToEmpty(article.source()),
-                nullToEmpty(article.link())
-        ).toLowerCase(Locale.KOREAN);
-
-        return containsBlockedKeyword(target, blockedKeywords)
-                || containsBlockedKeyword(target, dbKeywords);
-    }
-
-    private static boolean containsBlockedKeyword(String target, List<String> keywords) {
-        return keywords.stream()
-                .map(keyword -> keyword == null ? "" : keyword.trim().toLowerCase(Locale.KOREAN))
-                .filter(keyword -> !keyword.isBlank())
-                .anyMatch(target::contains);
-    }
-
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
+    private static String normalizeTitle(String title) {
+        if (title == null) return "";
+        return title.replaceAll("\\s+", " ")
+                    .replaceAll("[\\[\\]【】()（）<>]", "")
+                    .trim()
+                    .toLowerCase(Locale.KOREAN);
     }
 
     private static String sha256(String value) {

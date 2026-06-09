@@ -17,16 +17,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class HomeController {
 
     private final WinningNumberQueryService queryService;
-    private final RecommendModelSupport recommendModelSupport;
 
     @GetMapping("/")
     public String home(
             @RequestParam(required = false) @Min(LottoRoundPolicy.MIN_ROUND) @Max(LottoRoundPolicy.MAX_ROUND) Integer round,
-            @RequestParam(defaultValue = "5") @Min(PublicQueryParams.MIN_COUNT) @Max(PublicQueryParams.MAX_COUNT) int count,
             Model model
     ) {
         addHomeModel(PublicQueryParams.normalizeRound(round), model);
-        recommendModelSupport.addRecommendModel(PublicQueryParams.normalizeCount(count), model);
         return "home";
     }
 
