@@ -3,9 +3,8 @@ package com.kraft.lotto.infra.config;
 import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
 import com.kraft.lotto.feature.admin.application.AdminLoginLockoutService;
 import java.util.List;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -106,7 +105,7 @@ public class AdminSecurityConfig {
                             .password(requireDelegatingHash(u.passwordHash(), "admin user " + u.username()))
                             .roles(u.roles().toArray(new String[0]))
                             .build())
-                    .collect(Collectors.toList());
+                    .toList();
             log.info("[ADMIN] {}명의 관리자 계정을 설정에서 로드합니다.", users.size());
             return new InMemoryUserDetailsManager(users);
         }

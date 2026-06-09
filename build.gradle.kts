@@ -56,6 +56,9 @@ dependencies {
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.9.2")
     // bootstrap CSS는 src/main/resources/static/vendor/bootstrap/ 에서 직접 서빙
 
+    // Spring 7 ClassFileMetadataReader는 named module(tomcat-embed-core) 내 jakarta/servlet/Filter.class를
+    // getResourceAsStream으로 읽지 못한다(Java 25 모듈 캡슐화). 독립 JAR을 unnamed module에 올려 우회.
+    runtimeOnly("jakarta.servlet:jakarta.servlet-api")
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
     // H2는 prod에서 사용하지 않으나 E2E(playwright)가 JAR를 H2 모드로 기동하므로 runtimeOnly 유지
     runtimeOnly("com.h2database:h2")

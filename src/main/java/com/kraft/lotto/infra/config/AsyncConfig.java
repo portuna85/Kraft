@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
 @EnableAsync
@@ -26,10 +26,9 @@ public class AsyncConfig implements AsyncConfigurer {
 
     @Override
     public Executor getAsyncExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("kraft-async-");
+        SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor("kraft-async-");
+        executor.setVirtualThreads(true);
         executor.setTaskDecorator(copyMdcContext());
-        executor.initialize();
         return executor;
     }
 
