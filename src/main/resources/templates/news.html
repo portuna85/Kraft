@@ -19,6 +19,9 @@
           <a class="news-link" th:href="${article.link()}" target="_blank" rel="noopener noreferrer">
             <div class="news-meta">
               <span class="news-source" th:text="${article.source()}" th:if="${article.source() != null}">출처</span>
+              <span class="news-domain"
+                    th:if="${article.sourceDomain() != null and !article.sourceDomain().equals(article.source())}"
+                    th:text="${article.sourceDomain()}">domain</span>
               <span class="news-tier-badge"
                     th:if="${article.tier() != null}"
                     th:classappend="${article.tier().cssClass()}"

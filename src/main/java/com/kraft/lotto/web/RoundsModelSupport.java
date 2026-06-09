@@ -21,6 +21,12 @@ class RoundsModelSupport {
         model.addAttribute("size", rounds.size());
         model.addAttribute("pageSizes", List.of(20, 50, 100));
         model.addAttribute("currentSize", safeSize);
+        if (rounds.page() > 0) {
+            model.addAttribute("prevLink", "/rounds?page=" + (rounds.page() - 1) + "&size=" + rounds.size());
+        }
+        if (rounds.page() + 1 < rounds.totalPages()) {
+            model.addAttribute("nextLink", "/rounds?page=" + (rounds.page() + 1) + "&size=" + rounds.size());
+        }
     }
 
     void addRoundSearchModel(Integer round, Model model) {

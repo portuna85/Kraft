@@ -11,14 +11,16 @@ public record NewsArticleDto(
         String description,
         String source,
         String pubDateFormatted,
-        NewsSourceTier tier
+        NewsSourceTier tier,
+        String sourceDomain
 ) {
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
 
     public static NewsArticleDto of(Long id, String title, String link,
                                      String description, String source,
-                                     LocalDateTime pubDate, NewsSourceTier tier) {
+                                     LocalDateTime pubDate, NewsSourceTier tier,
+                                     String sourceDomain) {
         String formatted = pubDate != null ? pubDate.format(FMT) : "";
-        return new NewsArticleDto(id, title, link, description, source, formatted, tier);
+        return new NewsArticleDto(id, title, link, description, source, formatted, tier, sourceDomain);
     }
 }

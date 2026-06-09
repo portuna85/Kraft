@@ -9,6 +9,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" th:content="${description}">
   <link rel="canonical" th:href="${canonicalUrl}" th:if="${!isAdmin}">
+  <link rel="prev" th:if="${prevLink != null}" th:href="${baseUrl + prevLink}">
+  <link rel="next" th:if="${nextLink != null}" th:href="${baseUrl + nextLink}">
   <meta name="naver-site-verification" content="2cee6588f949ded613ff945305c892d82c130eb8">
   <meta name="robots" content="noindex,nofollow,noarchive" th:if="${isAdmin or (noindex != null and noindex)}">
   <meta property="og:type" content="website">

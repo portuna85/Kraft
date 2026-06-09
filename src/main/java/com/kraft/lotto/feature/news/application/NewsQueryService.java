@@ -50,7 +50,7 @@ public class NewsQueryService {
         List<NewsArticleDto> articles = p.getContent().stream()
                 .map(e -> NewsArticleDto.of(e.getId(), e.getTitle(), e.getLink(),
                         e.getDescription(), e.getSource(), e.getPubDate(),
-                        e.getSourceTier()))
+                        e.getSourceTier(), e.getSourceDomain()))
                 .toList();
         return new NewsPage(articles, p.getNumber(), p.getSize(),
                 (int) p.getTotalElements(), p.getTotalPages());
