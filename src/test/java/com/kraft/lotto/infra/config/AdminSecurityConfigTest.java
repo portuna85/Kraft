@@ -14,7 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-@DisplayName("AdminSecurityConfig")
+@DisplayName("관리자 보안 설정")
 class AdminSecurityConfigTest {
 
     @Test

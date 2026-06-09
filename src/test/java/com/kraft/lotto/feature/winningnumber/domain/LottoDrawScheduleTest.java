@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("LottoDrawSchedule")
+@DisplayName("로또 추첨 일정")
 class LottoDrawScheduleTest {
 
     @Test

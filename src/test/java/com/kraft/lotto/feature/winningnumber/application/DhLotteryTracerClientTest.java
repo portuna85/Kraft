@@ -16,7 +16,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.ResourceAccessException;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("DhLotteryTracerClient")
+@DisplayName("동행복권 트레이서 클라이언트")
 class DhLotteryTracerClientTest {
 
     @Mock RestClient restClient;
@@ -33,13 +33,13 @@ class DhLotteryTracerClientTest {
     // ── generateWcCookie ──────────────────────────────────────────
 
     @Test
-    @DisplayName("wcCookie는 _T_5자리숫자_WC 형식이다")
+    @DisplayName("WC 쿠키는 _T_5자리숫자_WC 형식이다")
     void generateWcCookieMatchesPattern() {
         assertThat(DhLotteryTracerClient.generateWcCookie()).matches("_T_\\d{5}_WC");
     }
 
     @Test
-    @DisplayName("generateWcCookie 숫자는 10000~99999 범위이다")
+    @DisplayName("생성된 WC 쿠키 숫자는 10000~99999 범위이다")
     void generateWcCookieNumberInRange() {
         for (int i = 0; i < 20; i++) {
             String cookie = DhLotteryTracerClient.generateWcCookie();
@@ -51,7 +51,7 @@ class DhLotteryTracerClientTest {
     // ── checkBotIp ───────────────────────────────────────────────
 
     @Test
-    @DisplayName("checkBotIp: HTTP 호출 실패 시 E를 반환한다")
+    @DisplayName("봇 IP 확인 호출이 실패하면 E를 반환한다")
     void checkBotIpReturnsEOnException() {
         when(restClient.post()).thenThrow(new ResourceAccessException("timeout"));
 
@@ -61,7 +61,7 @@ class DhLotteryTracerClientTest {
     // ── inputQueue ───────────────────────────────────────────────
 
     @Test
-    @DisplayName("inputQueue: HTTP 호출 실패 시 E를 반환한다")
+    @DisplayName("대기열 입력 호출이 실패하면 E를 반환한다")
     void inputQueueReturnsEOnException() {
         when(restClient.post()).thenThrow(new ResourceAccessException("network error"));
 
@@ -71,7 +71,7 @@ class DhLotteryTracerClientTest {
     // ── pollQueue (spy로 inputQueue 스텁) ─────────────────────────
 
     @Test
-    @DisplayName("pollQueue: inputQueue=F 이면 true를 반환한다")
+    @DisplayName("대기열 입력 결과가 F이면 true를 반환한다")
     void pollQueueReturnsTrueWhenF() {
         doReturn("F").when(tracerSpy).inputQueue(anyString(), anyString(), anyString());
 
@@ -79,7 +79,7 @@ class DhLotteryTracerClientTest {
     }
 
     @Test
-    @DisplayName("pollQueue: inputQueue=NE 이면 true를 반환한다")
+    @DisplayName("대기열 입력 결과가 NE이면 true를 반환한다")
     void pollQueueReturnsTrueWhenNE() {
         doReturn("NE").when(tracerSpy).inputQueue(anyString(), anyString(), anyString());
 
@@ -87,7 +87,7 @@ class DhLotteryTracerClientTest {
     }
 
     @Test
-    @DisplayName("pollQueue: inputQueue=E 이면 true를 반환한다")
+    @DisplayName("대기열 입력 결과가 E이면 true를 반환한다")
     void pollQueueReturnsTrueWhenE() {
         doReturn("E").when(tracerSpy).inputQueue(anyString(), anyString(), anyString());
 
@@ -95,7 +95,7 @@ class DhLotteryTracerClientTest {
     }
 
     @Test
-    @DisplayName("pollQueue: inputQueue가 예상 외 응답(R 등)이면 진행(true)을 반환한다")
+    @DisplayName("대기열 입력 결과가 예상 외 응답이면 진행(true)을 반환한다")
     void pollQueueReturnsTrueOnUnexpectedResponse() {
         doReturn("R").when(tracerSpy).inputQueue(anyString(), anyString(), anyString());
 
@@ -105,7 +105,7 @@ class DhLotteryTracerClientTest {
     // ── performHandshake (spy로 하위 메서드 스텁) ─────────────────
 
     @Test
-    @DisplayName("performHandshake: checkBotIp=E 이면 큐 없이 true를 반환한다")
+    @DisplayName("봇 IP 확인 결과가 E이면 대기열 처리 없이 true를 반환한다")
     void performHandshakeTrueWhenCheckBotIpReturnsE() {
         doReturn("E").when(tracerSpy).checkBotIp(anyString());
 
@@ -113,7 +113,7 @@ class DhLotteryTracerClientTest {
     }
 
     @Test
-    @DisplayName("performHandshake: checkBotIp=F, pollQueue=true 이면 true를 반환한다")
+    @DisplayName("봇 IP 확인 결과가 F이고 대기열 통과 시 true를 반환한다")
     void performHandshakeTrueWhenQueueClears() {
         doReturn("F").when(tracerSpy).checkBotIp(anyString());
         doReturn(true).when(tracerSpy).pollQueue(anyString(), anyString(), anyString());
@@ -122,7 +122,7 @@ class DhLotteryTracerClientTest {
     }
 
     @Test
-    @DisplayName("performHandshake: checkBotIp=F, pollQueue=false 이면 false를 반환한다")
+    @DisplayName("봇 IP 확인 결과가 F이고 대기열 차단 시 false를 반환한다")
     void performHandshakeFalseWhenQueueBlocked() {
         doReturn("F").when(tracerSpy).checkBotIp(anyString());
         doReturn(false).when(tracerSpy).pollQueue(anyString(), anyString(), anyString());
@@ -131,7 +131,7 @@ class DhLotteryTracerClientTest {
     }
 
     @Test
-    @DisplayName("serverIp가 null이어도 동작한다")
+    @DisplayName("serverIp가 null이어도 정상 동작한다")
     void constructorAcceptsNullServerIp() {
         DhLotteryTracerClient nullIpTracer = new DhLotteryTracerClient(restClient, null);
         DhLotteryTracerClient nullIpSpy    = spy(nullIpTracer);

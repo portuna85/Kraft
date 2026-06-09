@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("LottoDataFreshnessMetrics")
+@DisplayName("로또 데이터 최신성 메트릭")
 class LottoDataFreshnessMetricsTest {
 
     @Mock
@@ -26,7 +26,7 @@ class LottoDataFreshnessMetricsTest {
             Clock.fixed(Instant.parse("2026-06-07T12:00:00Z"), ZoneId.of("Asia/Seoul"));
 
     @Test
-    @DisplayName("게이지 kraft.latest_round.stored 는 DB 최신 회차를 반환한다")
+    @DisplayName("저장 회차 게이지는 DB 최신 회차를 반환한다")
     void storedRoundGaugeReturnsDbValue() {
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1230));
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
@@ -37,7 +37,7 @@ class LottoDataFreshnessMetricsTest {
     }
 
     @Test
-    @DisplayName("게이지 kraft.latest_round.expected 는 날짜 기반 예상 회차를 반환한다")
+    @DisplayName("예상 회차 게이지는 날짜 기반 예상 회차를 반환한다")
     void expectedRoundGaugeReturnsComputedValue() {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
 

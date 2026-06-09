@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("CollectionLockException")
+@DisplayName("수집 락 예외")
 class CollectionLockExceptionTest {
 
     @Test

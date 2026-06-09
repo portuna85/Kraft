@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 
-@DisplayName("ApiCircuitBreakerRegistry")
+@DisplayName("API 서킷 브레이커 레지스트리")
 class ApiCircuitBreakerRegistryTest {
 
     private static ApiCircuitBreakerRegistry registry() {
@@ -29,7 +29,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("등록된 breaker를 snapshots에서 조회할 수 있다")
+    @DisplayName("등록된 브레이커를 스냅샷에서 조회할 수 있다")
     void registeredBreakerAppearsInSnapshots() {
         ApiCircuitBreakerRegistry reg = registry();
         ApiCircuitBreaker breaker = ApiCircuitBreaker.disabled();
@@ -41,7 +41,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("null client로 등록하면 breaker를 그대로 반환하고 snapshots에 추가되지 않는다")
+    @DisplayName("client가 null이면 브레이커를 그대로 반환하고 스냅샷에 추가하지 않는다")
     void nullClientIsIgnored() {
         ApiCircuitBreakerRegistry reg = registry();
         ApiCircuitBreaker breaker = ApiCircuitBreaker.disabled();
@@ -53,7 +53,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("빈 client로 등록하면 snapshots에 추가되지 않는다")
+    @DisplayName("client가 비어 있으면 스냅샷에 추가하지 않는다")
     void blankClientIsIgnored() {
         ApiCircuitBreakerRegistry reg = registry();
         reg.register("  ", ApiCircuitBreaker.disabled());
@@ -62,7 +62,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("null breaker로 등록하면 null을 반환하고 snapshots에 추가되지 않는다")
+    @DisplayName("브레이커가 null이면 null을 반환하고 스냅샷에 추가하지 않는다")
     void nullBreakerIsIgnored() {
         ApiCircuitBreakerRegistry reg = registry();
         ApiCircuitBreaker returned = reg.register("client", null);
@@ -72,7 +72,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("같은 client를 두 번 등록해도 gauge가 중복 등록되지 않는다")
+    @DisplayName("같은 client를 두 번 등록해도 게이지는 중복 등록되지 않는다")
     void duplicateRegistrationDoesNotDuplicateGauge() {
         ApiCircuitBreakerRegistry reg = registry();
         ApiCircuitBreaker b1 = new ApiCircuitBreaker(true, 2, 1000, 1);
@@ -85,7 +85,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("상태 전이 리스너가 등록되어 breaker 상태가 바뀔 때 호출된다")
+    @DisplayName("상태 전이 리스너가 등록되어 브레이커 상태가 바뀔 때 호출된다")
     void stateTransitionListenerIsWired() {
         ApiCircuitBreakerRegistry reg = registry();
         AtomicLong now = new AtomicLong(0L);
@@ -98,7 +98,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("startup 시 meter registry가 늦게 준비되어도 gauge를 나중에 바인딩한다")
+    @DisplayName("시작 시점에 미터 레지스트리가 늦게 준비되어도 게이지를 나중에 바인딩한다")
     void bindsGaugeAfterSingletonInitializationWhenRegistryArrivesLate() {
         AtomicReference<MeterRegistry> registryRef = new AtomicReference<>();
         ObjectProvider<MeterRegistry> provider = new ObjectProvider<>() {

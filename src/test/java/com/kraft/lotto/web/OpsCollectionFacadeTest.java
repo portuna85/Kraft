@@ -22,7 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("OpsCollectionFacade")
+@DisplayName("운영 수집 퍼사드")
 class OpsCollectionFacadeTest {
 
     @Mock
@@ -48,7 +48,7 @@ class OpsCollectionFacadeTest {
     }
 
     @Test
-    @DisplayName("collectLatest: 락 획득 성공 시 실행 결과를 반환한다")
+    @DisplayName("최신 회차 수집은 락 획득에 성공하면 실행 결과를 반환한다")
     void collectLatestExecutesWhenLockAcquired() {
         when(commandService.collectAllUntilLatest()).thenReturn(SAMPLE);
         OpsCollectionFacade facade = new OpsCollectionFacade(commandService, acquiringExecutor(), FIXED_CLOCK);
@@ -59,7 +59,7 @@ class OpsCollectionFacadeTest {
     }
 
     @Test
-    @DisplayName("collectLatest: 락 획득 실패(overlap) 시 collected=0을 반환한다")
+    @DisplayName("최신 회차 수집은 락 획득에 실패하면 collected=0을 반환한다")
     void collectLatestSkipsWhenLockNotAcquired() {
         OpsCollectionFacade facade = new OpsCollectionFacade(commandService, nonAcquiringExecutor(), FIXED_CLOCK);
 
@@ -69,7 +69,7 @@ class OpsCollectionFacadeTest {
     }
 
     @Test
-    @DisplayName("collectMissing: 락 획득 성공 시 실행 결과를 반환한다")
+    @DisplayName("누락 회차 수집은 락 획득에 성공하면 실행 결과를 반환한다")
     void collectMissingExecutesWhenLockAcquired() {
         when(commandService.collectMissingOnce()).thenReturn(SAMPLE);
         OpsCollectionFacade facade = new OpsCollectionFacade(commandService, acquiringExecutor(), FIXED_CLOCK);
@@ -80,7 +80,7 @@ class OpsCollectionFacadeTest {
     }
 
     @Test
-    @DisplayName("락 실행 중 RuntimeException은 그대로 re-throw된다")
+    @DisplayName("락 실행 중 RuntimeException은 그대로 다시 던진다")
     void runtimeExceptionIsRethrown() {
         when(commandService.collectAllUntilLatest()).thenThrow(new RuntimeException("db connection lost"));
         OpsCollectionFacade facade = new OpsCollectionFacade(commandService, acquiringExecutor(), FIXED_CLOCK);
@@ -91,7 +91,7 @@ class OpsCollectionFacadeTest {
     }
 
     @Test
-    @DisplayName("null requestId/clientIp는 빈 문자열로 대체되어 예외 없이 처리된다")
+    @DisplayName("requestId와 clientIp가 null이면 빈 문자열로 대체해 예외 없이 처리한다")
     void nullAuditParamsAreSanitized() {
         OpsCollectionFacade facade = new OpsCollectionFacade(commandService, nonAcquiringExecutor(), FIXED_CLOCK);
 

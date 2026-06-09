@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("StartupValidationException")
+@DisplayName("시작 검증 예외")
 class StartupValidationExceptionTest {
 
     @Test

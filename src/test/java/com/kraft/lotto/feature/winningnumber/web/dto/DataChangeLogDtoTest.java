@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-@DisplayName("DataChangeLogDto")
+@DisplayName("데이터 변경 로그 DTO")
 class DataChangeLogDtoTest {
 
     @Test

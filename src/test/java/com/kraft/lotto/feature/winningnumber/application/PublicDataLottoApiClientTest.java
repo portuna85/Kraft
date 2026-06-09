@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("PublicDataLottoApiClient")
+@DisplayName("공공데이터 로또 API 클라이언트")
 class PublicDataLottoApiClientTest {
 
     private static final Clock FIXED_CLOCK = Clock.fixed(

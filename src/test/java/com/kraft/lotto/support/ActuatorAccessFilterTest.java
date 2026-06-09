@@ -107,7 +107,7 @@ class ActuatorAccessFilterTest {
     }
 
     @Test
-    @DisplayName("Actuator root path is protected without trailing slash")
+    @DisplayName("후행 슬래시가 없는 Actuator 루트 경로도 보호된다")
     void blocksNonAllowlistedIpForActuatorRoot() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getActuator().setAllowedIps(java.util.List.of("127.0.0.1"));
