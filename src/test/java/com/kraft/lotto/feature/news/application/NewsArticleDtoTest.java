@@ -16,7 +16,7 @@ class NewsArticleDtoTest {
         LocalDateTime pubDate = LocalDateTime.of(2026, 6, 1, 12, 30);
 
         NewsArticleDto dto = NewsArticleDto.of(1L, "제목", "https://example.com",
-                "설명", "출처", pubDate, null);
+                "설명", "출처", pubDate, null, null);
 
         assertThat(dto.pubDateFormatted()).isEqualTo("2026.06.01 12:30");
     }
@@ -25,7 +25,7 @@ class NewsArticleDtoTest {
     @DisplayName("pubDate가 null이면 빈 문자열을 반환한다")
     void nullPubDateReturnsEmptyString() {
         NewsArticleDto dto = NewsArticleDto.of(1L, "제목", "https://example.com",
-                "설명", "출처", null, null);
+                "설명", "출처", null, null, null);
 
         assertThat(dto.pubDateFormatted()).isEmpty();
     }
