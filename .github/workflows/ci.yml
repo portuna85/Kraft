@@ -494,18 +494,17 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Run Flyway migration + validate against MariaDB
-        env:
-          SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/kraft_lotto_ci
-          SPRING_DATASOURCE_USERNAME: kraft
-          SPRING_DATASOURCE_PASSWORD: kraft
-          SPRING_PROFILES_ACTIVE: prod
-          KRAFT_ADMIN_PASSWORD: '{noop}ci-test'
-          KRAFT_OPS_TOKEN: ci-token
+      - name: Download Flyway CLI
         run: |
-          ./gradlew flywayMigrate flywayValidate \
-            -Dflyway.url=jdbc:mariadb://mariadb:3306/kraft_lotto_ci \
-            -Dflyway.user=kraft \
-            -Dflyway.password=kraft \
-            -Dflyway.locations=classpath:db/migration,classpath:db/vendor/mariadb \
-            --no-daemon
+          curl -sL https://download.red-gate.com/maven/release/com/redgate/flyway/flyway-commandline/11.8.2/flyway-commandline-11.8.2-linux-x64.tar.gz \
+            | tar xz -C /tmp
+          echo "/tmp/flyway-11.8.2" >> $GITHUB_PATH
+
+      - name: Run Flyway migration + validate against MariaDB
+        run: |
+          flyway migrate validate \
+            -url=jdbc:mariadb://mariadb:3306/kraft_lotto_ci \
+            -user=kraft \
+            -password=kraft \
+            -locations=filesystem:src/main/resources/db/migration,filesystem:src/main/resources/db/vendor/mariadb \
+            -jarDirs=
