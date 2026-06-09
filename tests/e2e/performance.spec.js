@@ -2,7 +2,7 @@ const { test, expect, chromium } = require('@playwright/test');
 const fs = require('node:fs');
 
 const baseURL = process.env.KRAFT_E2E_BASE_URL || 'http://localhost:18080';
-const MIN_PERFORMANCE_SCORE = 0.8;
+const MIN_PERFORMANCE_SCORE = 0.85;
 const LIGHTHOUSE_MAX_ATTEMPTS = 3;
 const LIGHTHOUSE_ATTEMPT_TIMEOUT_MS = 75_000;
 const LIGHTHOUSE_RUN_TIMEOUT_MS = LIGHTHOUSE_MAX_ATTEMPTS * LIGHTHOUSE_ATTEMPT_TIMEOUT_MS + 30_000;

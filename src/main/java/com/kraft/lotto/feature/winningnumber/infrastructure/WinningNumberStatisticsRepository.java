@@ -15,24 +15,8 @@ public interface WinningNumberStatisticsRepository {
             """)
     List<CombinationRow> findAllCombinationsOrderByRoundAsc();
 
-    @Query(value = """
-            SELECT sub.ball AS ball, SUM(sub.hit) AS hitCount
-            FROM (
-                SELECT n1 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n1
-                UNION ALL
-                SELECT n2 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n2
-                UNION ALL
-                SELECT n3 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n3
-                UNION ALL
-                SELECT n4 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n4
-                UNION ALL
-                SELECT n5 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n5
-                UNION ALL
-                SELECT n6 AS ball, COUNT(*) AS hit FROM winning_numbers GROUP BY n6
-            ) sub
-            GROUP BY sub.ball
-            ORDER BY sub.ball ASC
-            """, nativeQuery = true)
+    @Query(value = "SELECT ball, hit_count AS hitCount FROM v_ball_frequencies ORDER BY ball ASC",
+            nativeQuery = true)
     List<BallFrequencyRow> findBallFrequencies();
 
     @Query(value = """

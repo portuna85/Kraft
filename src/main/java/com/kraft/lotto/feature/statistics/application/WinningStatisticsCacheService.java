@@ -245,6 +245,7 @@ public class WinningStatisticsCacheService {
         if (patternStatsSummaryRepository == null) {
             return;
         }
+        long startedAt = System.nanoTime();
         int latestRound = repository.findMaxRound().orElse(0);
         if (latestRound == 0) {
             return;
@@ -280,6 +281,8 @@ public class WinningStatisticsCacheService {
 
         patternStatsSummaryRepository.saveAll(rows);
         meterRegistry.counter("kraft.statistics.pattern.summary.refresh").increment();
+        meterRegistry.timer("kraft.statistics.summary.refresh.duration", "type", "pattern")
+                .record(Duration.ofNanos(System.nanoTime() - startedAt));
     }
 
     @Transactional
@@ -287,6 +290,7 @@ public class WinningStatisticsCacheService {
         if (companionPairSummaryRepository == null) {
             return;
         }
+        long startedAt = System.nanoTime();
         int latestRound = repository.findMaxRound().orElse(0);
         if (latestRound == 0) {
             return;
@@ -302,6 +306,8 @@ public class WinningStatisticsCacheService {
                 .toList();
         companionPairSummaryRepository.saveAll(rows);
         meterRegistry.counter("kraft.statistics.companion.summary.refresh").increment();
+        meterRegistry.timer("kraft.statistics.summary.refresh.duration", "type", "companion")
+                .record(Duration.ofNanos(System.nanoTime() - startedAt));
     }
 
     private void saveSummary(List<NumberFrequencyDto> frequencies, int latestRound) {
@@ -319,7 +325,7 @@ public class WinningStatisticsCacheService {
     }
 
     private void recordRefreshLatency(long startedAtNano) {
-        meterRegistry.timer("kraft.statistics.frequency.summary.refresh.latency")
+        meterRegistry.timer("kraft.statistics.summary.refresh.duration", "type", "frequency")
                 .record(Duration.ofNanos(System.nanoTime() - startedAtNano));
     }
 
