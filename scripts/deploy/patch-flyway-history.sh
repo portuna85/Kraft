@@ -18,10 +18,15 @@ UPDATE flyway_schema_history SET version = '9',  script = 'V9__add_admin_tables.
 UPDATE flyway_schema_history SET version = '10', script = 'V10__add_news_rejected_column.sql'         WHERE version = '23';
 UPDATE flyway_schema_history SET version = '11', script = 'V11__add_winning_store_region_columns.sql' WHERE version = '24';
 UPDATE flyway_schema_history SET version = '12', script = 'V12__add_winning_store_source.sql'         WHERE version = '25';
+-- V2~V4 체크섬 패치: 57ca1a5 커밋에서 파일 내용이 변경되어 DB 체크섬과 불일치 발생
+-- 이미 패치된 경우 UPDATE 0건으로 정상 종료됨
+UPDATE flyway_schema_history SET checksum =  1392555576 WHERE version = '2'  AND checksum = 543663862;
+UPDATE flyway_schema_history SET checksum = -1576893811 WHERE version = '3'  AND checksum = 845976414;
+UPDATE flyway_schema_history SET checksum =  593166103  WHERE version = '4'  AND checksum = -1739479475;
 SQL_EOF
 )"
 
-echo "Patching flyway_schema_history: V15~V25 → V2~V12"
+echo "Patching flyway_schema_history: V15~V25 → V2~V12, V2~V4 체크섬 정정"
 docker compose exec -T mariadb \
   bash -c 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -v' <<< "$SQL"
 echo "Patch complete"
