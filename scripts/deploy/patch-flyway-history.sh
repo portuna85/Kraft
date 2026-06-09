@@ -28,5 +28,5 @@ SQL_EOF
 
 echo "Patching flyway_schema_history: V15~V25 → V2~V12, V2~V4 체크섬 정정"
 docker compose exec -T mariadb \
-  bash -c 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -v' <<< "$SQL"
+  bash -c 'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -u"$MARIADB_USER" "$MARIADB_DATABASE" -v' <<< "$SQL"
 echo "Patch complete"
