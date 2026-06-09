@@ -4,7 +4,10 @@ import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainRepository;
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordRepository;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
 import com.kraft.lotto.infra.config.KraftNewsProperties;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -47,10 +50,12 @@ class NewsConfiguration {
                                                 NewsBlockedKeywordRepository blockedKeywordRepository,
                                                 NewsRelevancePolicy relevancePolicy,
                                                 Clock clock,
-                                                KraftNewsProperties properties) {
+                                                KraftNewsProperties properties,
+                                                ObjectProvider<MeterRegistry> meterRegistryProvider) {
         return new NewsCollectionService(
                 repository, rssClient, persister, classifier,
                 clock, properties.retentionDays(), properties.blockedDomains(), properties.excludeKeywords(),
-                blockedDomainRepository, blockedKeywordRepository, relevancePolicy);
+                blockedDomainRepository, blockedKeywordRepository, relevancePolicy,
+                meterRegistryProvider.getIfAvailable(SimpleMeterRegistry::new));
     }
 }

@@ -81,6 +81,9 @@ jobs:
       - name: Validate frontend JavaScript syntax
         run: npm run check:js
 
+      - name: Run frontend unit tests (Vitest)
+        run: npm run test:unit
+
       - name: Verify CSS build has no uncommitted diff
         run: git diff --exit-code -- src/main/resources/static/css
 
@@ -402,7 +405,7 @@ jobs:
           retention-days: 14
 
   # Lighthouse CI — 주 1회 schedule 또는 workflow_dispatch 시 실행
-  # performance.spec.js 의 Playwright Lighthouse 테스트를 재사용 (score >= 0.8 기준)
+  # performance.spec.js 의 Playwright Lighthouse 테스트를 재사용 (score >= 0.85 기준)
   lighthouse:
     name: Lighthouse CI
     runs-on: ubuntu-latest
@@ -453,3 +456,56 @@ jobs:
             playwright-report/
           if-no-files-found: ignore
           retention-days: 30
+
+  # Flyway 마이그레이션 검증 — MariaDB 실제 DB로 스키마 무결성 확인
+  migration-validate:
+    name: Flyway Migration Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build-test
+
+    services:
+      mariadb:
+        image: mariadb:11.7
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: kraft_lotto_ci
+          MARIADB_USER: kraft
+          MARIADB_PASSWORD: kraft
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Run Flyway migration + validate against MariaDB
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/kraft_lotto_ci
+          SPRING_DATASOURCE_USERNAME: kraft
+          SPRING_DATASOURCE_PASSWORD: kraft
+          SPRING_PROFILES_ACTIVE: prod
+          KRAFT_ADMIN_PASSWORD: '{noop}ci-test'
+          KRAFT_OPS_TOKEN: ci-token
+        run: |
+          ./gradlew flywayMigrate flywayValidate \
+            -Dflyway.url=jdbc:mariadb://mariadb:3306/kraft_lotto_ci \
+            -Dflyway.user=kraft \
+            -Dflyway.password=kraft \
+            -Dflyway.locations=classpath:db/migration,classpath:db/vendor/mariadb \
+            --no-daemon

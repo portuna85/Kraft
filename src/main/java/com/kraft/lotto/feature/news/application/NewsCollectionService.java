@@ -3,8 +3,11 @@ package com.kraft.lotto.feature.news.application;
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedDomainRepository;
 import com.kraft.lotto.feature.admin.infrastructure.NewsBlockedKeywordRepository;
 import com.kraft.lotto.feature.news.domain.NewsArticle;
+import com.kraft.lotto.feature.news.domain.NewsSourceTier;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleEntity;
 import com.kraft.lotto.feature.news.infrastructure.NewsArticleRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -34,6 +37,7 @@ public class NewsCollectionService {
     private final int retentionDays;
     private final NewsBlockedDomainRepository blockedDomainRepository;
     private final NewsBlockedKeywordRepository blockedKeywordRepository;
+    private final MeterRegistry meterRegistry;
 
     NewsCollectionService(NewsArticleRepository repository,
                           NewsRssClient rssClient,
@@ -92,6 +96,23 @@ public class NewsCollectionService {
                           NewsBlockedDomainRepository blockedDomainRepository,
                           NewsBlockedKeywordRepository blockedKeywordRepository,
                           NewsRelevancePolicy relevancePolicy) {
+        this(repository, rssClient, persister, classifier, clock, retentionDays,
+                blockedDomains, blockedKeywords, blockedDomainRepository, blockedKeywordRepository,
+                relevancePolicy, new SimpleMeterRegistry());
+    }
+
+    NewsCollectionService(NewsArticleRepository repository,
+                          NewsRssClient rssClient,
+                          NewsArticlePersister persister,
+                          NewsSourceClassifier classifier,
+                          Clock clock,
+                          int retentionDays,
+                          List<String> blockedDomains,
+                          List<String> blockedKeywords,
+                          NewsBlockedDomainRepository blockedDomainRepository,
+                          NewsBlockedKeywordRepository blockedKeywordRepository,
+                          NewsRelevancePolicy relevancePolicy,
+                          MeterRegistry meterRegistry) {
         this.repository = repository;
         this.rssClient = rssClient;
         this.persister = persister;
@@ -103,6 +124,7 @@ public class NewsCollectionService {
         this.retentionDays = retentionDays;
         this.blockedDomainRepository = blockedDomainRepository;
         this.blockedKeywordRepository = blockedKeywordRepository;
+        this.meterRegistry = meterRegistry;
     }
 
     public NewsCollectResult collect() {
@@ -128,6 +150,7 @@ public class NewsCollectionService {
             Optional<NewsRejectReason> blockReject = blockPolicy.evaluate(domain, article, dbBlockedDomains, dbBlockedKeywords);
             if (blockReject.isPresent()) {
                 log.debug("news blocked reason={} title={}", blockReject.get(), article.title());
+                countSkipped(blockReject.get().name());
                 skipped++;
                 continue;
             }
@@ -136,6 +159,7 @@ public class NewsCollectionService {
                     article.title(), article.description(), article.source(), article.link());
             if (decision.type() == NewsDecision.Type.REJECT) {
                 log.debug("news relevance reject score={} title={}", decision.score(), article.title());
+                countSkipped(NewsRejectReason.RELEVANCE_REJECT.name());
                 skipped++;
                 continue;
             }
@@ -145,10 +169,13 @@ public class NewsCollectionService {
             Optional<NewsRejectReason> dupReject = duplicatePolicy.evaluate(linkHash, titleHash, now.minusDays(7));
             if (dupReject.isPresent()) {
                 log.debug("news duplicate skipped reason={} title={}", dupReject.get(), article.title());
+                countSkipped(dupReject.get().name());
+                countDuplicate(dupReject.get() == NewsRejectReason.LINK_DUPLICATE ? "link_hash" : "title_hash");
                 skipped++;
                 continue;
             }
 
+            NewsSourceTier tier = classifier.classify(article.source());
             try {
                 var entity = new NewsArticleEntity(
                         truncate(article.title(), 500),
@@ -157,7 +184,7 @@ public class NewsCollectionService {
                         truncate(article.description(), 2000),
                         truncate(article.source(), 200),
                         domain,
-                        classifier.classify(article.source()),
+                        tier,
                         article.pubDate(),
                         now
                 );
@@ -165,8 +192,10 @@ public class NewsCollectionService {
                     entity.setApproved(false);
                 }
                 persister.saveArticle(entity);
+                meterRegistry.counter("kraft.news.collect.saved", "sourceTier", tier.name()).increment();
                 saved++;
             } catch (DataIntegrityViolationException e) {
+                countSkipped("DB_DUPLICATE");
                 skipped++;
                 log.warn("article duplicate, skipped: link={}", article.link());
             }
@@ -184,6 +213,14 @@ public class NewsCollectionService {
             log.info("news retention purged count={} cutoff={}", deleted, cutoff);
         }
         return deleted;
+    }
+
+    private void countSkipped(String reason) {
+        meterRegistry.counter("kraft.news.collect.skipped", "reason", reason).increment();
+    }
+
+    private void countDuplicate(String type) {
+        meterRegistry.counter("kraft.news.duplicate", "type", type).increment();
     }
 
     private static String normalizeTitle(String title) {
