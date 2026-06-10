@@ -38,7 +38,7 @@ ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError 
 
 VOLUME ["/app/logs"]
 
-HEALTHCHECK --interval=15s --timeout=5s --start-period=45s --retries=10 \
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=12 \
   CMD /app/healthcheck.sh
 
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]

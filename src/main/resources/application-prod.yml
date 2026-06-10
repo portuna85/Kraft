@@ -37,6 +37,10 @@ management:
       probability: ${KRAFT_TRACING_SAMPLE_RATE:0.1}
 
 kraft:
+  flyway:
+    # prod DB 에 checksum 불일치가 있을 수 있으므로 기본값 true (마이그레이션 파일 수정 이력 보호)
+    # DB 상태가 완전히 정합함이 확인되면 KRAFT_FLYWAY_REPAIR_ON_START=false 로 비활성화 가능
+    repair-on-start: ${KRAFT_FLYWAY_REPAIR_ON_START:true}
   history-init:
     enabled: ${KRAFT_HISTORY_INIT_ENABLED:false}
   api:
