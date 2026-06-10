@@ -252,7 +252,10 @@ class WinningStatisticsServiceTest {
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(0));
 
         WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
-                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).meterRegistry(new SimpleMeterRegistry()).build();
+                .forRepository(winningNumberRepository)
+                .summaryRepository(summaryRepository)
+                .meterRegistry(new SimpleMeterRegistry())
+                .build();
         cacheService.refreshFrequencySummary();
 
         verify(summaryRepository, never()).saveAll(ArgumentMatchers.anyList());

@@ -2,7 +2,6 @@ package com.kraft.lotto.web;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -19,8 +18,6 @@ import com.kraft.lotto.feature.winningnumber.web.dto.NumberFrequencyDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.OddEvenStatDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.PatternStatDto;
 import com.kraft.lotto.feature.winningnumber.web.dto.SumRangeStatDto;
-import com.kraft.lotto.support.BusinessException;
-import com.kraft.lotto.support.ErrorCode;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;

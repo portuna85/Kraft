@@ -86,5 +86,9 @@ public class StatisticsApiController {
     public record AnalysisRequest(
             @NotNull @Size(min = 6, max = 6, message = "번호는 정확히 6개여야 합니다.")
             List<@NotNull @Min(1) @Max(45) Integer> numbers
-    ) {}
+    ) {
+        public AnalysisRequest {
+            numbers = List.copyOf(numbers);
+        }
+    }
 }
