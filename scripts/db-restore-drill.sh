@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 # DB restore drill: 최신 백업을 임시 DB로 복원 후 테이블 존재 여부를 검증한다.
+# 성공 시 DRILL_STATE_FILE 을 갱신해 db-backup.sh 의 drill 만료 메트릭을 초기화한다.
+#
 # Usage:
 #   DB_USER=... DB_PASSWORD=... ./scripts/db-restore-drill.sh
 #   DB_USER=... DB_PASSWORD=... BACKUP_FILE=/path/to/backup.sql.gz ./scripts/db-restore-drill.sh
+#
+# GPG 암호화 백업(.sql.gz.gpg)은 복원 시 자동으로 복호화된다.
+# 복호화 키가 gpg 키링에 등록되어 있어야 한다.
 set -euo pipefail
 
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/kraft-lotto}"
 DB_HOST="${DB_HOST:-mariadb}"
 DB_PORT="${DB_PORT:-3306}"
 DRILL_DB="${DRILL_DB:-kraft_lotto_drill}"
+DRILL_STATE_FILE="${DRILL_STATE_FILE:-${BACKUP_DIR}/.last_restore_drill}"
 METRICS_DIR="${METRICS_DIR:-/var/lib/node_exporter/textfile}"
 
 if [[ -z "${DB_USER:-}" || -z "${DB_PASSWORD:-}" ]]; then
@@ -16,9 +22,9 @@ if [[ -z "${DB_USER:-}" || -z "${DB_PASSWORD:-}" ]]; then
   exit 1
 fi
 
-# 복원할 백업 파일 결정 (명시 지정 없으면 최신 파일)
+# 복원할 백업 파일 결정 (명시 지정 없으면 최신 파일; 암호화 여부 무관)
 if [[ -z "${BACKUP_FILE:-}" ]]; then
-  BACKUP_FILE=$(ls -t "${BACKUP_DIR}"/kraft_lotto_*.sql.gz 2>/dev/null | head -1)
+  BACKUP_FILE=$(ls -t "${BACKUP_DIR}"/kraft_lotto_*.sql.gz* 2>/dev/null | head -1 || true)
 fi
 
 if [[ -z "${BACKUP_FILE}" || ! -f "${BACKUP_FILE}" ]]; then
@@ -41,7 +47,18 @@ trap 'rm -f "$TMP_CNF"; mysql --defaults-extra-file="$TMP_CNF" -e "DROP DATABASE
 
 mysql --defaults-extra-file="$TMP_CNF" -e "DROP DATABASE IF EXISTS \`${DRILL_DB}\`; CREATE DATABASE \`${DRILL_DB}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-gunzip -c "${BACKUP_FILE}" | mysql --defaults-extra-file="$TMP_CNF" "${DRILL_DB}"
+# GPG 암호화 백업 자동 복호화 지원
+if [[ "${BACKUP_FILE}" == *.gpg ]]; then
+  if ! command -v gpg >/dev/null 2>&1; then
+    echo "ERROR: encrypted backup detected but gpg is not installed" >&2
+    exit 1
+  fi
+  gpg --batch --decrypt "${BACKUP_FILE}" \
+    | gunzip \
+    | mysql --defaults-extra-file="$TMP_CNF" "${DRILL_DB}"
+else
+  gunzip -c "${BACKUP_FILE}" | mysql --defaults-extra-file="$TMP_CNF" "${DRILL_DB}"
+fi
 
 # 핵심 테이블 존재 및 행 수 검증
 REQUIRED_TABLES=(winning_numbers news_articles admin_audit_log flyway_schema_history)
@@ -63,6 +80,10 @@ TIMESTAMP=$(date +%s)
 
 if [[ "${DRILL_OK}" -eq 1 ]]; then
   echo "Restore drill PASSED"
+  # db-backup.sh 의 restore drill 만료 메트릭을 초기화한다
+  mkdir -p "$(dirname "${DRILL_STATE_FILE}")"
+  date +%s > "${DRILL_STATE_FILE}"
+  echo "Drill timestamp recorded: ${DRILL_STATE_FILE}"
 else
   echo "Restore drill FAILED — check errors above" >&2
 fi

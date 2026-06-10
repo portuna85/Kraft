@@ -1,0 +1,12 @@
+[Unit]
+Description=kraft-lotto DB restore drill timer (quarterly)
+Requires=kraft-lotto-restore-drill.service
+
+[Timer]
+# 매 분기 첫째 주 일요일 04:00 KST (19:00 UTC)
+OnCalendar=*-01,04,07,10-01..07 Sun 19:00:00 UTC
+RandomizedDelaySec=600
+Persistent=true
+
+[Install]
+WantedBy=timers.target
