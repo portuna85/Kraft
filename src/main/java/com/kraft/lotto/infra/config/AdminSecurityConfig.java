@@ -4,6 +4,7 @@ import com.kraft.lotto.feature.admin.application.AdminAuditLogService;
 import com.kraft.lotto.feature.admin.application.AdminLoginLockoutService;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +42,10 @@ public class AdminSecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain adminFilterChain(HttpSecurity http,
+                                                CorsConfigurationSource apiCorsConfigurationSource) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(apiCorsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/ops/collection", "/admin/ops/collection/**")
                             .hasAnyRole("ADMIN_OPERATOR", "ADMIN_SUPER_ADMIN")

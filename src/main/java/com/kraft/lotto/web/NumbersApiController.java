@@ -11,7 +11,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +30,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Numbers", description = "번호 추천")
 public class NumbersApiController {
 
+    // 규칙 목록은 앱 배포 주기 내 불변 — 1시간 캐시
+    private static final CacheControl RULES_CACHE =
+            CacheControl.maxAge(1, TimeUnit.HOURS).cachePublic();
+
     private final RecommendService recommendService;
 
     @PostMapping("/recommend")
@@ -43,7 +49,9 @@ public class NumbersApiController {
     @GetMapping("/recommend/rules")
     @Operation(summary = "추천 시 적용되는 제외 규칙 목록 조회")
     public ResponseEntity<ApiResponse<List<RuleDto>>> rules() {
-        return ResponseEntity.ok(ApiResponse.success(recommendService.rules()));
+        return ResponseEntity.ok()
+                .cacheControl(RULES_CACHE)
+                .body(ApiResponse.success(recommendService.rules()));
     }
 
     public record RecommendRequest(

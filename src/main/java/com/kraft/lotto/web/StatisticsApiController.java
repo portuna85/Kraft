@@ -17,7 +17,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +37,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Statistics", description = "통계 분석")
 public class StatisticsApiController {
 
+    // 통계 캐시 TTL은 Caffeine 설정(10분)과 맞춤
+    private static final CacheControl STATS_CACHE =
+            CacheControl.maxAge(10, TimeUnit.MINUTES).cachePublic();
+
     private final WinningStatisticsService statisticsService;
 
     @GetMapping("/frequency")
@@ -44,20 +50,26 @@ public class StatisticsApiController {
         List<NumberFrequencyDto> result = period != null
                 ? statisticsService.frequencyForPeriod(period)
                 : statisticsService.frequency();
-        return ResponseEntity.ok(ApiResponse.success(result));
+        return ResponseEntity.ok()
+                .cacheControl(STATS_CACHE)
+                .body(ApiResponse.success(result));
     }
 
     @GetMapping("/patterns")
     @Operation(summary = "홀짝·합산 범위 패턴 통계 조회")
     public ResponseEntity<ApiResponse<PatternStatDto>> patterns() {
-        return ResponseEntity.ok(ApiResponse.success(statisticsService.patternStats()));
+        return ResponseEntity.ok()
+                .cacheControl(STATS_CACHE)
+                .body(ApiResponse.success(statisticsService.patternStats()));
     }
 
     @GetMapping("/companion")
     @Operation(summary = "특정 번호와 함께 출현한 번호 순위 조회")
     public ResponseEntity<ApiResponse<List<CompanionNumberDto>>> companion(
             @RequestParam @Min(1) @Max(45) int target) {
-        return ResponseEntity.ok(ApiResponse.success(statisticsService.companionNumbers(target)));
+        return ResponseEntity.ok()
+                .cacheControl(STATS_CACHE)
+                .body(ApiResponse.success(statisticsService.companionNumbers(target)));
     }
 
     @PostMapping("/analysis")
