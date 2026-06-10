@@ -33,6 +33,11 @@ dependencies:
   cached_network_image: ^3.3.1
   intl: ^0.19.0
 
+  # FCM 푸시 알림
+  firebase_core: ^3.13.1
+  firebase_messaging: ^15.2.5
+  flutter_local_notifications: ^18.0.1
+
   # 아이콘
   cupertino_icons: ^1.0.6
 

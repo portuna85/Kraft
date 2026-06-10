@@ -75,6 +75,21 @@ class KraftApiClient {
       _post('/api/v1/numbers/recommend', request.toJson(),
           (j) => RecommendedNumbers.fromJson(j));
 
+  // 푸시 알림 토큰
+  Future<void> registerPushToken(String token, String platform) async {
+    await _dio.post<void>(
+      '/api/v1/push/token',
+      data: {'token': token, 'platform': platform},
+    );
+  }
+
+  Future<void> unregisterPushToken(String token) async {
+    await _dio.delete<void>(
+      '/api/v1/push/token',
+      data: {'token': token},
+    );
+  }
+
   // ── 내부 헬퍼 ──────────────────────────────────────────────────────────
 
   Future<ApiResponse<T>> _get<T>(
