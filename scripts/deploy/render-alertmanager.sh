@@ -28,4 +28,5 @@ rendered = template.replace("${ALERTMANAGER_DISCORD_WEBHOOK_URL}", webhook)
 target_path.write_text(rendered, encoding="utf-8")
 PY
 
+chmod 0600 deploy-state/alertmanager.yml
 echo "Rendered Alertmanager config: deploy-state/alertmanager.yml"

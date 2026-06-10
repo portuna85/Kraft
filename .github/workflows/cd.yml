@@ -96,6 +96,8 @@ jobs:
           KRAFT_SECURITY_TRUSTED_PROXIES: ${{ vars.KRAFT_SECURITY_TRUSTED_PROXIES }}
           KRAFT_API_CLIENT:          ${{ vars.KRAFT_API_CLIENT }}
           KRAFT_API_FALLBACK_CLIENT: ${{ vars.KRAFT_API_FALLBACK_CLIENT }}
+          KRAFT_API_KEY_ENABLED:     ${{ vars.KRAFT_API_KEY_ENABLED }}
+          KRAFT_API_KEY_KEYS:        ${{ secrets.KRAFT_API_KEY_KEYS }}
         run: ./scripts/deploy/render-env.sh
 
       - name: Render Alertmanager config
