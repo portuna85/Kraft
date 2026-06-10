@@ -9,9 +9,11 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "check:js": "node scripts/check-js-syntax.cjs",
-    "build:css": "postcss \"src/main/frontend/css/*.css\" --dir src/main/resources/static/css --no-map"
+    "build:bootstrap": "postcss node_modules/bootstrap/dist/css/bootstrap.css -o src/main/resources/static/css/bootstrap.min.css --no-map",
+    "build:css": "npm run build:bootstrap && postcss \"src/main/frontend/css/*.css\" --dir src/main/resources/static/css --no-map"
   },
   "devDependencies": {
+    "bootstrap": "5.3.3",
     "@axe-core/playwright": "^4.11.3",
     "@fullhuman/postcss-purgecss": "^8.0.0",
     "@playwright/test": "^1.60.0",

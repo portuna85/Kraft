@@ -51,7 +51,8 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             response.setHeader("X-Content-Type-Options", "nosniff");
             if (securityProperties.getHeaders().isHstsEnabled()) {
                 String hstsValue = "max-age=" + securityProperties.getHeaders().getHstsMaxAgeSeconds()
-                        + (securityProperties.getHeaders().isHstsIncludeSubDomains() ? "; includeSubDomains" : "");
+                        + (securityProperties.getHeaders().isHstsIncludeSubDomains() ? "; includeSubDomains" : "")
+                        + (securityProperties.getHeaders().isHstsPreload() ? "; preload" : "");
                 response.setHeader("Strict-Transport-Security", hstsValue);
             }
         }

@@ -21,7 +21,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SEO 컨트롤러")
+@DisplayName("검색 최적화 컨트롤러")
 class SeoControllerTest {
 
     @Mock
@@ -34,7 +34,7 @@ class SeoControllerTest {
     SeoController controller;
 
     @Test
-    @DisplayName("sitemap.xml — 정상 URL로 loc 포함된 XML 반환")
+    @DisplayName("사이트맵 엑스엠엘 — 정상 주소로 위치 포함된 엑스엠엘 반환")
     void sitemapContainsLoc() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("https://www.kraft.io.kr");
@@ -50,7 +50,7 @@ class SeoControllerTest {
     }
 
     @Test
-    @DisplayName("robots.txt — 정상 URL로 Sitemap 포함된 텍스트 반환")
+    @DisplayName("로봇 파일 — 정상 주소로 사이트맵 포함된 텍스트 반환")
     void robotsTxtContainsSitemap() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("https://www.kraft.io.kr");
@@ -66,7 +66,7 @@ class SeoControllerTest {
     }
 
     @Test
-    @DisplayName("후행 슬래시는 제거되어 URL이 정규화된다")
+    @DisplayName("후행 슬래시는 제거되어 주소이 정규화된다")
     void trailingSlashIsStripped() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("https://www.kraft.io.kr///");
@@ -79,7 +79,7 @@ class SeoControllerTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {"   "})
-    @DisplayName("null·빈·공백 URL은 기본값으로 대체된다")
+    @DisplayName("널·빈·공백 주소은 기본값으로 대체된다")
     void nullOrBlankUrlFallsBackToDefault(String configuredUrl) {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn(configuredUrl);
@@ -91,7 +91,7 @@ class SeoControllerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"ftp://example.com", "file:///etc/hosts", "javascript:alert(1)"})
-    @DisplayName("http/https 외 스킴은 기본값으로 대체된다")
+    @DisplayName("에이치티티피와 에이치티티피에스 외 스킴은 기본값으로 대체된다")
     void nonHttpSchemesFallBackToDefault(String badUrl) {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn(badUrl);
@@ -102,7 +102,7 @@ class SeoControllerTest {
     }
 
     @Test
-    @DisplayName("쿼리 스트링이 있는 URL은 기본값으로 대체된다")
+    @DisplayName("쿼리 스트링이 있는 주소은 기본값으로 대체된다")
     void urlWithQueryStringFallsBackToDefault() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("https://example.com?foo=bar");
@@ -113,7 +113,7 @@ class SeoControllerTest {
     }
 
     @Test
-    @DisplayName("프래그먼트가 있는 URL은 기본값으로 대체된다")
+    @DisplayName("프래그먼트가 있는 주소은 기본값으로 대체된다")
     void urlWithFragmentFallsBackToDefault() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("https://example.com#section");
@@ -124,7 +124,7 @@ class SeoControllerTest {
     }
 
     @Test
-    @DisplayName("userInfo가 있는 URL은 기본값으로 대체된다")
+    @DisplayName("사용자 정보가 있는 주소은 기본값으로 대체된다")
     void urlWithUserInfoFallsBackToDefault() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("https://user:pass@example.com");
@@ -135,7 +135,7 @@ class SeoControllerTest {
     }
 
     @Test
-    @DisplayName("http 스킴은 허용된다")
+    @DisplayName("에이치티티피 스킴은 허용된다")
     void httpSchemeIsAllowed() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("http://localhost:8080");
@@ -146,7 +146,7 @@ class SeoControllerTest {
     }
 
     @Test
-    @DisplayName("XML 특수문자는 이스케이프된다")
+    @DisplayName("엑스엠엘 특수문자는 이스케이프된다")
     void xmlSpecialCharsAreEscaped() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("https://www.kraft.io.kr");
@@ -159,7 +159,7 @@ class SeoControllerTest {
     }
 
     @Test
-    @DisplayName("최신 당첨 회차가 있으면 sitemap에 lastmod가 포함된다")
+    @DisplayName("최신 당첨 회차가 있으면 사이트맵에 최종 수정일가 포함된다")
     void sitemapContainsLastmodWhenDrawExists() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("https://www.kraft.io.kr");
@@ -174,7 +174,7 @@ class SeoControllerTest {
     }
 
     @Test
-    @DisplayName("당첨 회차 데이터가 없으면 sitemap에 lastmod가 없다")
+    @DisplayName("당첨 회차 데이터가 없으면 사이트맵에 최종 수정일가 없다")
     void sitemapOmitsLastmodWhenNoDrawData() {
         when(environment.getProperty("kraft.public-base-url", "https://www.kraft.io.kr"))
                 .thenReturn("https://www.kraft.io.kr");

@@ -6,6 +6,7 @@ import java.sql.Statement;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.flyway.autoconfigure.FlywayMigrationStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,11 +19,16 @@ public class FlywayConfig {
     // V1–V18 squash 이전에 적용된 V1__init_winning_numbers.sql의 체크섬
     private static final int LEGACY_V1_CHECKSUM = -2024252480;
 
+    @Value("${kraft.flyway.repair-on-start:false}")
+    private boolean repairOnStart;
+
     @Bean
     public FlywayMigrationStrategy flywayMigrationStrategy(DataSource dataSource) {
         return flyway -> {
             repairV1SquashIfNeeded(dataSource);
-            flyway.repair();   // 실패 행 제거 + 체크섬·description 재정렬
+            if (repairOnStart) {
+                flyway.repair();
+            }
             flyway.migrate();
         };
     }

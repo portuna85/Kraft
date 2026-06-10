@@ -1,4 +1,5 @@
 module.exports = {
+  map: false,
   plugins: [
     require('@fullhuman/postcss-purgecss')({
       content: [

@@ -21,8 +21,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
@@ -33,7 +31,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(OpsPageController.class)
 @Import({TestCacheConfig.class, OpsPageControllerTest.CollectPropertiesConfig.class})
-@ImportAutoConfiguration(exclude = {OAuth2ClientWebSecurityAutoConfiguration.class})
 @DisplayName("운영 페이지 컨트롤러 테스트")
 class OpsPageControllerTest {
 

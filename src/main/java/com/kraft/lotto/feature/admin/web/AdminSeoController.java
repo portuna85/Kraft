@@ -34,24 +34,9 @@ public class AdminSeoController {
     }
 
     private static List<SitemapEntry> buildSitemapEntries(String baseUrl) {
-        return List.of(
-                new SitemapEntry(baseUrl + "/",                  "daily",   "1.0"),
-                new SitemapEntry(baseUrl + "/frequency",         "weekly",  "0.8"),
-                new SitemapEntry(baseUrl + "/rounds",            "daily",   "0.8"),
-                new SitemapEntry(baseUrl + "/stats",             "weekly",  "0.7"),
-                new SitemapEntry(baseUrl + "/analysis",          "weekly",  "0.7"),
-                new SitemapEntry(baseUrl + "/companion",         "weekly",  "0.6"),
-                new SitemapEntry(baseUrl + "/news",              "daily",   "0.7"),
-                new SitemapEntry(baseUrl + "/news?tier=official","daily",   "0.6"),
-                new SitemapEntry(baseUrl + "/news?tier=press",   "daily",   "0.6"),
-                new SitemapEntry(baseUrl + "/methodology",       "monthly", "0.5"),
-                new SitemapEntry(baseUrl + "/data-source",       "monthly", "0.5"),
-                new SitemapEntry(baseUrl + "/faq",               "monthly", "0.5"),
-                new SitemapEntry(baseUrl + "/responsible-play",  "monthly", "0.4"),
-                new SitemapEntry(baseUrl + "/privacy",           "yearly",  "0.3"),
-                new SitemapEntry(baseUrl + "/terms",             "yearly",  "0.3"),
-                new SitemapEntry(baseUrl + "/contact",           "monthly", "0.3")
-        );
+        return com.kraft.lotto.web.SeoPages.ALL.stream()
+                .map(p -> new SitemapEntry(baseUrl + p.path(), p.changefreq(), p.priority()))
+                .toList();
     }
 
     public record SitemapEntry(String url, String changefreq, String priority) {}

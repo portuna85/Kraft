@@ -24,11 +24,12 @@ import org.springframework.web.client.RestClient;
 /**
  * {@link LottoApiClient} 구현 선택을 담당한다.
  * <ul>
- *   <li>{@code kraft.api.client=dhlottery} 또는 {@code real} → {@link DhLotteryApiClient}</li>
+ *   <li>{@code smok} (운영 primary) → {@link SmokApiClient}</li>
+ *   <li>{@code public-data} / {@code publicdata} → {@link PublicDataLottoApiClient}</li>
+ *   <li>{@code dhlottery} / {@code real} → {@link DhLotteryApiClient} (폴백용)</li>
  *   <li>그 외(기본 포함) → {@link MockLottoApiClient}</li>
  * </ul>
- * 외부 표기({@code real})와 내부 구현체({@code dhlottery})를 동시에 허용하여
- * 환경변수나 배포 매니페스트에서 직관적인 토큰을 그대로 사용할 수 있게 한다.
+ * CompositeLottoApiClient가 primary 실패 시 fallback 클라이언트로 체이닝한다.
  */
 @Configuration
 public class LottoApiClientConfig {

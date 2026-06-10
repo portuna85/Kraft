@@ -61,6 +61,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+    security_opt: ["no-new-privileges:true"]
     deploy:
       resources:
         limits:
@@ -129,6 +130,7 @@ services:
     pull_policy: missing
     container_name: kraft-lotto-prometheus
     restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=15d
@@ -159,6 +161,7 @@ services:
     pull_policy: missing
     container_name: kraft-lotto-alertmanager
     restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
       - --storage.path=/alertmanager
@@ -188,6 +191,7 @@ services:
     pull_policy: missing
     container_name: kraft-lotto-grafana
     restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${KRAFT_GRAFANA_ADMIN_PASSWORD:?KRAFT_GRAFANA_ADMIN_PASSWORD is required}
       GF_USERS_ALLOW_SIGN_UP: "false"

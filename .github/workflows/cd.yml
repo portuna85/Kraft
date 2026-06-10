@@ -89,6 +89,8 @@ jobs:
           ALL_SECRETS_JSON: ${{ toJson(secrets) }}
           KRAFT_DB_NAME: ${{ secrets.KRAFT_DB_NAME }}
           KRAFT_APP_IMAGE_TAG: ${{ steps.ref.outputs.value }}
+          KRAFT_DOMAIN:              ${{ vars.KRAFT_DOMAIN }}
+          KRAFT_ADMIN_DOMAIN:        ${{ vars.KRAFT_ADMIN_DOMAIN }}
           KRAFT_ADMIN_ENABLED: ${{ vars.KRAFT_ADMIN_ENABLED }}
           KRAFT_ADMIN_PASSWORD_HASH: ${{ secrets.KRAFT_ADMIN_PASSWORD_HASH }}
           KRAFT_SECURITY_TRUSTED_PROXIES: ${{ vars.KRAFT_SECURITY_TRUSTED_PROXIES }}
@@ -115,7 +117,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Patch Flyway history (V15-V25 → V2-V12)
+      - name: Patch Flyway history if needed
         run: ./scripts/deploy/patch-flyway-history.sh
 
       - name: Pull & restart services
@@ -164,4 +166,4 @@ jobs:
 
       - name: Cleanup secrets artifacts
         if: always()
-        run: rm -f .env .required-envs deploy-state/alertmanager.yml
+        run: rm -f .env .required-envs

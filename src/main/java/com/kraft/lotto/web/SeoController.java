@@ -25,27 +25,16 @@ public class SeoController {
         String nl = System.lineSeparator();
         String baseUrl = publicBaseUrl();
         String lastmod = latestDrawDateIso();
-        String body = String.join(nl,
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-                "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">",
-                sitemapUrl(baseUrl, "/",                 "daily",   "1.0", lastmod),
-                sitemapUrl(baseUrl, "/latest",           "daily",   "0.9", lastmod),
-                sitemapUrl(baseUrl, "/frequency",        "weekly",  "0.8", lastmod),
-                sitemapUrl(baseUrl, "/rounds",           "daily",   "0.8", lastmod),
-                sitemapUrl(baseUrl, "/stats",            "weekly",  "0.7", lastmod),
-                sitemapUrl(baseUrl, "/analysis",         "weekly",  "0.7", lastmod),
-                sitemapUrl(baseUrl, "/companion",        "weekly",  "0.6", lastmod),
-                sitemapUrl(baseUrl, "/news",              "daily",   "0.7", lastmod),
-                sitemapUrl(baseUrl, "/methodology",      "monthly", "0.5", null),
-                sitemapUrl(baseUrl, "/data-source",      "monthly", "0.5", null),
-                sitemapUrl(baseUrl, "/faq",              "monthly", "0.5", null),
-                sitemapUrl(baseUrl, "/responsible-play", "monthly", "0.4", null),
-                sitemapUrl(baseUrl, "/privacy",          "yearly",  "0.3", null),
-                sitemapUrl(baseUrl, "/terms",            "yearly",  "0.3", null),
-                sitemapUrl(baseUrl, "/contact",          "monthly", "0.3", null),
-                "</urlset>"
-        ) + nl;
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(body);
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>").append(nl);
+        sb.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">").append(nl);
+        for (SeoPages.Page page : SeoPages.ALL) {
+            sb.append(sitemapUrl(baseUrl, page.path(), page.changefreq(), page.priority(),
+                    page.dynamicLastmod() ? lastmod : null));
+            sb.append(nl);
+        }
+        sb.append("</urlset>").append(nl);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(sb.toString());
     }
 
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)

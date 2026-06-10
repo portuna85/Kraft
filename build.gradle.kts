@@ -38,8 +38,6 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-    implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -54,7 +52,6 @@ dependencies {
     implementation("org.flywaydb:flyway-mysql")
     implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.2")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.9.2")
-    // bootstrap CSS는 src/main/resources/static/vendor/bootstrap/ 에서 직접 서빙
 
     // Spring 7 ClassFileMetadataReader는 named module(tomcat-embed-core) 내 jakarta/servlet/Filter.class를
     // getResourceAsStream으로 읽지 못한다(Java 25 모듈 캡슐화). 독립 JAR을 unnamed module에 올려 우회.

@@ -40,7 +40,7 @@ kraft:
   history-init:
     enabled: ${KRAFT_HISTORY_INIT_ENABLED:false}
   api:
-    client: ${KRAFT_API_CLIENT:real}
+    client: ${KRAFT_API_CLIENT:smok}
     fallback-client: ${KRAFT_API_FALLBACK_CLIENT:public-data}
   security:
     headers:

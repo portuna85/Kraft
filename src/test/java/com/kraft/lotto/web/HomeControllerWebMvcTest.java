@@ -14,8 +14,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -23,8 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest({HomeController.class, RecommendController.class})
 @Import({GlobalExceptionHandler.class, TestCacheConfig.class, LottoBallHelper.class, RecommendModelSupport.class})
-@ImportAutoConfiguration(exclude = {OAuth2ClientWebSecurityAutoConfiguration.class})
-@DisplayName("홈 컨트롤러 WebMvc 슬라이스 테스트")
+@DisplayName("홈 컨트롤러 웹 엠브이씨 슬라이스 테스트")
 class HomeControllerWebMvcTest {
 
     @Autowired
@@ -57,7 +54,7 @@ class HomeControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("oddCount가 허용 범위를 벗어나면 400을 반환한다")
+    @DisplayName("홀수 개수가 허용 범위를 벗어나면 400을 반환한다")
     void invalidOddCountReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/fragments/recommend").param("oddCount", "7"))
                 .andExpect(status().isBadRequest())

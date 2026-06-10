@@ -8,7 +8,7 @@
 
 ## 개요
 
-동행복권 공식 API 기반으로 로또 6/45 당첨번호를 자동 수집하고, 수집된 데이터를 분석해 웹에서 조회할 수 있도록 구성한 프로덕션 지향 서비스다.
+Smok API(primary) / 공공데이터포털(fallback)로 로또 6/45 당첨번호를 자동 수집하고, 수집된 데이터를 분석해 웹에서 조회할 수 있도록 구성한 프로덕션 지향 서비스다.
 
 | 번호 데이터 | 통계 분석 | 운영 관리 | 관측성 |
 |---|---|---|---|
@@ -32,7 +32,7 @@
 | Scheduler | Spring Scheduler, ShedLock |
 | Template | Thymeleaf |
 | Frontend | Bootstrap 5, HTMX |
-| CSS Pipeline | PostCSS, cssnano |
+| CSS Pipeline | PostCSS, PurgeCSS, cssnano |
 | API Docs | SpringDoc OpenAPI 3 |
 | Metrics | Micrometer, Prometheus |
 | Tracing | OpenTelemetry, OTLP |

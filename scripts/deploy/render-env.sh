@@ -41,6 +41,8 @@ umask 077
   printf 'KRAFT_HEALTHCHECK_URL=http://localhost:8080/actuator/health/readiness\n'
   printf 'KRAFT_HEALTHCHECK_TIMEOUT_SECONDS=3\n'
   printf 'KRAFT_ALERTMANAGER_CONFIG_FILE=./deploy-state/alertmanager.yml\n'
+  printf 'KRAFT_DOMAIN=%s\n'        "${KRAFT_DOMAIN:-}"
+  printf 'KRAFT_ADMIN_DOMAIN=%s\n'  "${KRAFT_ADMIN_DOMAIN:-}"
   printf 'KRAFT_ADMIN_ENABLED=%s\n' "${KRAFT_ADMIN_ENABLED:-false}"
   printf 'KRAFT_ADMIN_PASSWORD_HASH=%s\n' "${KRAFT_ADMIN_PASSWORD_HASH:-}"
 } > .env
@@ -57,7 +59,7 @@ while IFS= read -r name; do
 done < .required-envs
 
 # optional secrets — 값이 있을 때만 .env에 추가
-for opt_name in PUBLIC_DATA_API_KEY KRAFT_API_STORE_RELAY_URL; do
+for opt_name in PUBLIC_DATA_API_KEY; do
   value="$(printf '%s' "$ALL_SECRETS_JSON" | jq -r --arg key "$opt_name" '.[$key] // ""')"
   [[ -z "$value" ]] && continue
   printf '%s=%s\n' "$opt_name" "$value" >> .env

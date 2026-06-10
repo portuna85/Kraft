@@ -77,6 +77,8 @@ public class KraftSecurityProperties {
         private boolean hstsEnabled = false;
         private long hstsMaxAgeSeconds = 31536000L;
         private boolean hstsIncludeSubDomains = true;
+        // preload은 HSTS preload list 등록 의사가 있을 때만 true로 설정
+        private boolean hstsPreload = false;
 
         public boolean isEnabled() {
             return enabled;
@@ -140,6 +142,14 @@ public class KraftSecurityProperties {
 
         public void setHstsIncludeSubDomains(boolean hstsIncludeSubDomains) {
             this.hstsIncludeSubDomains = hstsIncludeSubDomains;
+        }
+
+        public boolean isHstsPreload() {
+            return hstsPreload;
+        }
+
+        public void setHstsPreload(boolean hstsPreload) {
+            this.hstsPreload = hstsPreload;
         }
     }
 
