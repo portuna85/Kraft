@@ -20,7 +20,7 @@ class DhLotteryResponseParserTest {
     private final DhLotteryResponseParser parser = new DhLotteryResponseParser(new ObjectMapper(), CLOCK);
 
     @Test
-    @DisplayName("성공적인 JSON 응답을 WinningNumber 객체로 파싱한다")
+    @DisplayName("성공적인 제이슨 응답을 당첨 번호 객체로 파싱한다")
     void parsesSuccessResponse() {
         var result = parser.parse(1200, successBody(1200));
 
@@ -39,7 +39,7 @@ class DhLotteryResponseParserTest {
     }
 
     @Test
-    @DisplayName("returnValue가 fail인 경우 빈 결과를 반환한다")
+    @DisplayName("반환값가 실패인 경우 빈 결과를 반환한다")
     void returnsEmptyForFailReturnValue() {
         var result = parser.parse(1201, "{\"returnValue\":\"fail\"}");
 
@@ -47,7 +47,7 @@ class DhLotteryResponseParserTest {
     }
 
     @Test
-    @DisplayName("JSON 파싱 전 HTML 응답을 거절한다")
+    @DisplayName("제이슨 파싱 전 에이치티엠엘 응답을 거절한다")
     void rejectsHtmlResponse() {
         LottoApiClientException ex = assertThatExceptionOfType(LottoApiClientException.class)
                 .isThrownBy(() -> parser.parse(1202, "<html></html>"))
@@ -84,7 +84,7 @@ class DhLotteryResponseParserTest {
     }
 
     @Test
-    @DisplayName("숫자 필드 타입이 잘못되면 validation 예외를 던진다")
+    @DisplayName("숫자 필드 타입이 잘못되면 검증 예외를 던진다")
     void rejectsNonIntegralField() {
         String body = """
                 {
@@ -113,7 +113,7 @@ class DhLotteryResponseParserTest {
     }
 
     @Test
-    @DisplayName("날짜 파싱에 실패하면 transform 예외를 던진다")
+    @DisplayName("날짜 파싱에 실패하면 변환 예외를 던진다")
     void rejectsInvalidDrawDate() {
         String body = """
                 {
@@ -141,7 +141,7 @@ class DhLotteryResponseParserTest {
     }
 
     @Test
-    @DisplayName("JSON이 아닌 본문은 json_parse 예외를 던진다")
+    @DisplayName("제이슨이 아닌 본문은 제이슨 파싱 예외를 던진다")
     void rejectsMalformedJsonBody() {
         LottoApiClientException ex = assertThatExceptionOfType(LottoApiClientException.class)
                 .isThrownBy(() -> parser.parse(1206, "{invalid-json"))

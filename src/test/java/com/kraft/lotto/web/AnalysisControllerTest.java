@@ -44,7 +44,7 @@ class AnalysisControllerTest {
     }
 
     @Test
-    @DisplayName("/analysis 페이지를 렌더링한다")
+    @DisplayName("분석 페이지를 렌더링한다")
     void analysisPageRendersView() throws Exception {
         mockMvc.perform(get("/analysis"))
                 .andExpect(status().isOk())

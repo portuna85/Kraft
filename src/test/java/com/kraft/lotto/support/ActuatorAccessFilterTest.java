@@ -9,11 +9,11 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-@DisplayName("Actuator 접근 제어 필터")
+@DisplayName("액추에이터 접근 제어 필터")
 class ActuatorAccessFilterTest {
 
     @Test
-    @DisplayName("허용된 IP로부터의 Actuator 접근을 허용한다")
+    @DisplayName("허용된 아이피로부터의 액추에이터 접근을 허용한다")
     void allowsAllowlistedIp() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getActuator().setAllowedIps(java.util.List.of("127.0.0.1"));
@@ -31,7 +31,7 @@ class ActuatorAccessFilterTest {
     }
 
     @Test
-    @DisplayName("허용되지 않은 IP로부터의 Actuator 접근을 차단한다")
+    @DisplayName("허용되지 않은 아이피로부터의 액추에이터 접근을 차단한다")
     void blocksNonAllowlistedIp() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getActuator().setAllowedIps(java.util.List.of("127.0.0.1"));
@@ -49,7 +49,7 @@ class ActuatorAccessFilterTest {
     }
 
     @Test
-    @DisplayName("Actuator 경로가 아닌 경우 IP 체크 없이 허용한다")
+    @DisplayName("액추에이터 경로가 아닌 경우 아이피 체크 없이 허용한다")
     void ignoresNonActuatorPaths() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getActuator().setAllowedIps(java.util.List.of("127.0.0.1"));
@@ -67,7 +67,7 @@ class ActuatorAccessFilterTest {
     }
 
     @Test
-    @DisplayName("trusted proxy가 아니면 X-Forwarded-For를 신뢰하지 않는다")
+    @DisplayName("신뢰 프록시가 아니면 전달 아이피 헤더를 신뢰하지 않는다")
     void ignoresForwardedForWhenRemoteProxyIsNotTrusted() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.setTrustedProxies(java.util.List.of("203.0.113.10"));
@@ -87,7 +87,7 @@ class ActuatorAccessFilterTest {
     }
 
     @Test
-    @DisplayName("trusted proxy이면 X-Forwarded-For 첫 값을 기준으로 허용한다")
+    @DisplayName("신뢰 프록시이면 전달 아이피 헤더 첫 값을 기준으로 허용한다")
     void usesForwardedForWhenRemoteProxyIsTrusted() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.setTrustedProxies(java.util.List.of("203.0.113.10"));
@@ -107,7 +107,7 @@ class ActuatorAccessFilterTest {
     }
 
     @Test
-    @DisplayName("후행 슬래시가 없는 Actuator 루트 경로도 보호된다")
+    @DisplayName("후행 슬래시가 없는 액추에이터 루트 경로도 보호된다")
     void blocksNonAllowlistedIpForActuatorRoot() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getActuator().setAllowedIps(java.util.List.of("127.0.0.1"));

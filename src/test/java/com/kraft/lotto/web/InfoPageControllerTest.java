@@ -55,7 +55,7 @@ class InfoPageControllerTest {
     }
 
     @Test
-    @DisplayName("/methodology 페이지를 반환한다")
+    @DisplayName("방법론 페이지를 반환한다")
     void methodologyReturnsView() throws Exception {
         mockMvc.perform(get("/methodology"))
                 .andExpect(status().isOk())
@@ -63,7 +63,7 @@ class InfoPageControllerTest {
     }
 
     @Test
-    @DisplayName("/data-source 페이지를 반환하고 changeLog 모델을 포함한다")
+    @DisplayName("데이터 출처 페이지를 반환하고 변경 로그 모델을 포함한다")
     void dataSourceReturnsViewWithChangeLog() throws Exception {
         when(fetchLogQueryService.recentCollectionLogs(anyInt())).thenReturn(List.of());
         when(winningNumberQueryService.findLatest()).thenReturn(Optional.empty());
@@ -88,7 +88,7 @@ class InfoPageControllerTest {
     }
 
     @Test
-    @DisplayName("/faq 페이지를 반환한다")
+    @DisplayName("자주 묻는 질문 페이지를 반환한다")
     void faqReturnsView() throws Exception {
         mockMvc.perform(get("/faq"))
                 .andExpect(status().isOk())
@@ -96,7 +96,7 @@ class InfoPageControllerTest {
     }
 
     @Test
-    @DisplayName("/responsible-play 페이지를 반환한다")
+    @DisplayName("책임 이용 안내 페이지를 반환한다")
     void responsiblePlayReturnsView() throws Exception {
         mockMvc.perform(get("/responsible-play"))
                 .andExpect(status().isOk())
@@ -104,7 +104,7 @@ class InfoPageControllerTest {
     }
 
     @Test
-    @DisplayName("/privacy 페이지를 반환한다")
+    @DisplayName("개인정보 처리방침 페이지를 반환한다")
     void privacyReturnsView() throws Exception {
         mockMvc.perform(get("/privacy"))
                 .andExpect(status().isOk())
@@ -112,7 +112,7 @@ class InfoPageControllerTest {
     }
 
     @Test
-    @DisplayName("/terms 페이지를 반환한다")
+    @DisplayName("이용약관 페이지를 반환한다")
     void termsReturnsView() throws Exception {
         mockMvc.perform(get("/terms"))
                 .andExpect(status().isOk())
@@ -120,7 +120,7 @@ class InfoPageControllerTest {
     }
 
     @Test
-    @DisplayName("/contact 페이지를 반환한다")
+    @DisplayName("문의 페이지를 반환한다")
     void contactReturnsView() throws Exception {
         mockMvc.perform(get("/contact"))
                 .andExpect(status().isOk())

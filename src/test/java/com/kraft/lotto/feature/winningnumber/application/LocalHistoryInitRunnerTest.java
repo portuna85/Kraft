@@ -35,7 +35,7 @@ class LocalHistoryInitRunnerTest {
     ApplicationArguments args;
 
     @Test
-    @DisplayName("빈 DB에서 전체 히스토리 수집을 시작한다")
+    @DisplayName("빈 데이터베이스에서 전체 히스토리 수집을 시작한다")
     void emptyDbStartsFullHistoryCollection() {
         when(queryService.findLatest()).thenReturn(Optional.empty());
         when(collectionService.collectAllHistory()).thenReturn(CollectResponse.ofInserted(1, 1));
@@ -47,7 +47,7 @@ class LocalHistoryInitRunnerTest {
     }
 
     @Test
-    @DisplayName("비어 있지 않은 DB에서 최신 회차 동기화를 시작한다")
+    @DisplayName("비어 있지 않은 데이터베이스에서 최신 회차 동기화를 시작한다")
     void nonEmptyDbStartsLatestSync() {
         when(queryService.findLatest()).thenReturn(Optional.of(latest()));
         when(collectionService.collectAllUntilLatest()).thenReturn(CollectResponse.ofSkipped(1, 1));

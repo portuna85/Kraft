@@ -42,7 +42,7 @@ class CompanionControllerTest {
     }
 
     @Test
-    @DisplayName("/companion 페이지를 렌더링한다")
+    @DisplayName("동반 번호 페이지를 렌더링한다")
     void companionPageRendersView() throws Exception {
         mockMvc.perform(get("/companion"))
                 .andExpect(status().isOk())
@@ -51,7 +51,7 @@ class CompanionControllerTest {
     }
 
     @Test
-    @DisplayName("/fragments/companion은 동반 번호 목록을 모델에 담아 반환한다")
+    @DisplayName("동반 번호 프래그먼트는 동반 번호 목록을 모델에 담아 반환한다")
     void companionFragmentReturnsCompanions() throws Exception {
         List<CompanionNumberDto> companions = List.of(
                 new CompanionNumberDto(34, 820L, 100.0, 1),

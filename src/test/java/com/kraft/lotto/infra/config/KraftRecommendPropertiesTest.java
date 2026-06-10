@@ -21,7 +21,7 @@ class KraftRecommendPropertiesTest {
     }
 
     @Test
-    @DisplayName("decade-threshold가 2 미만이면 생성에 실패한다")
+    @DisplayName("십단위 임계값가 2 미만이면 생성에 실패한다")
     void rejectsTooSmallDecadeThreshold() {
         assertThatThrownBy(() -> new KraftRecommendProperties(
                 5000,
@@ -32,7 +32,7 @@ class KraftRecommendPropertiesTest {
     }
 
     @Test
-    @DisplayName("decade-threshold가 2이면 실현 불가능한 설정으로 생성에 실패한다")
+    @DisplayName("십단위 임계값가 2이면 실현 불가능한 설정으로 생성에 실패한다")
     void rejectsFeasibilityViolatingDecadeThreshold() {
         assertThatThrownBy(() -> new KraftRecommendProperties(
                 5000,
@@ -44,7 +44,7 @@ class KraftRecommendPropertiesTest {
     }
 
     @Test
-    @DisplayName("max-attempts가 0 이하이면 생성에 실패한다")
+    @DisplayName("최대 시도 횟수가 0 이하이면 생성에 실패한다")
     void rejectsNonPositiveMaxAttempts() {
         assertThatThrownBy(() -> new KraftRecommendProperties(
                 0,

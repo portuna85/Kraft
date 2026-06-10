@@ -16,13 +16,13 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-@DisplayName("요청 ID 필터")
+@DisplayName("요청 아이디 필터")
 class RequestIdFilterTest {
 
     private final RequestIdFilter filter = new RequestIdFilter();
 
     @Test
-    @DisplayName("헤더가 없으면 요청 ID를 생성한다")
+    @DisplayName("헤더가 없으면 요청 아이디를 생성한다")
     void generatesRequestIdWhenHeaderAbsent() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -34,7 +34,7 @@ class RequestIdFilterTest {
     }
 
     @Test
-    @DisplayName("정화된 요청 ID 헤더를 재사용한다")
+    @DisplayName("정화된 요청 아이디 헤더를 재사용한다")
     void reusesSanitizedHeader() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/token/secret");
         request.addHeader(RequestIdFilter.HEADER_NAME, "rid-123\r\nbad");
@@ -46,7 +46,7 @@ class RequestIdFilterTest {
     }
 
     @Test
-    @DisplayName("Tracer가 주입되고 현재 span이 있으면 requestId를 tag로 전파한다")
+    @DisplayName("추적기가 주입되고 현재 스팬이 있으면 요청 아이디를 태그로 전파한다")
     void propagatesRequestIdToSpanTagWhenTracerPresent() throws Exception {
         Span span = mock(Span.class);
         when(span.tag("requestId", "req-abc")).thenReturn(span);
@@ -70,7 +70,7 @@ class RequestIdFilterTest {
     }
 
     @Test
-    @DisplayName("Tracer가 주입되어 있어도 currentSpan이 null이면 전파하지 않는다")
+    @DisplayName("추적기가 주입되어 있어도 현재 스팬이 널이면 전파하지 않는다")
     void doesNotPropagateWhenCurrentSpanIsNull() throws Exception {
         Tracer tracer = mock(Tracer.class);
         when(tracer.currentSpan()).thenReturn(null);

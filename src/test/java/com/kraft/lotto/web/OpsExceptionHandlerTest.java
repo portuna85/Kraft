@@ -16,13 +16,13 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-@DisplayName("Ops 예외 핸들러 테스트")
+@DisplayName("운영 예외 핸들러 테스트")
 class OpsExceptionHandlerTest {
 
     private final OpsExceptionHandler handler = new OpsExceptionHandler();
 
     @Test
-    @DisplayName("허용되지 않은 HTTP 메서드는 405 응답으로 처리한다")
+    @DisplayName("허용되지 않은 에이치티티피 메서드는 405 응답으로 처리한다")
     void handlesMethodNotAllowedAs405() {
         var ex = new HttpRequestMethodNotSupportedException("POST");
         var response = handler.handleMethodNotAllowed(ex);
@@ -35,7 +35,7 @@ class OpsExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("4xx BusinessException은 클라이언트 메시지를 그대로 반환한다")
+    @DisplayName("4백 번대 비즈니스 예외는 클라이언트 메시지를 그대로 반환한다")
     void handles4xxBusinessExceptionWithOriginalMessage() {
         BusinessException ex = new BusinessException(ErrorCode.REQUEST_VALIDATION_ERROR, "invalid round");
 
@@ -47,7 +47,7 @@ class OpsExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("5xx BusinessException은 기본 메시지로 마스킹된다")
+    @DisplayName("5백 번대 비즈니스 예외는 기본 메시지로 마스킹된다")
     void handles5xxBusinessExceptionWithDefaultMessage() {
         BusinessException ex = new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "internal details");
 
@@ -60,7 +60,7 @@ class OpsExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("MethodArgumentTypeMismatchException은 400으로 처리한다")
+    @DisplayName("메서드 인자 타입 불일치 예외은 400으로 처리한다")
     void handlesTypeMismatchAs400() {
         MethodArgumentTypeMismatchException ex = mock(MethodArgumentTypeMismatchException.class);
 
@@ -72,7 +72,7 @@ class OpsExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("ConstraintViolationException은 400으로 처리한다")
+    @DisplayName("제약 조건 위반 예외은 400으로 처리한다")
     void handlesConstraintViolationAs400() {
         ConstraintViolationException ex = new ConstraintViolationException(java.util.Set.of());
 
@@ -82,7 +82,7 @@ class OpsExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("NoResourceFoundException은 404로 처리한다")
+    @DisplayName("리소스 없음 예외은 404로 처리한다")
     void handlesNoResourceFoundAs404() {
         NoResourceFoundException ex = mock(NoResourceFoundException.class);
 

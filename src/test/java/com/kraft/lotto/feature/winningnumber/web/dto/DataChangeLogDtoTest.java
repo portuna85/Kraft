@@ -9,11 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-@DisplayName("데이터 변경 로그 DTO")
+@DisplayName("데이터 변경 로그 디티오")
 class DataChangeLogDtoTest {
 
     @Test
-    @DisplayName("fetchedAt 포맷이 yyyy-MM-dd HH:mm 형식이다")
+    @DisplayName("조회 시각 포맷이 연월일 시분 형식이다")
     void formatsDate() {
         DataChangeLogDto dto = DataChangeLogDto.of(1000, LottoFetchStatus.SUCCESS,
                 LocalDateTime.of(2026, 6, 1, 22, 30));
@@ -21,7 +21,7 @@ class DataChangeLogDtoTest {
     }
 
     @Test
-    @DisplayName("fetchedAt이 null이면 빈 문자열이다")
+    @DisplayName("조회 시각이 널이면 빈 문자열이다")
     void nullDateReturnsEmpty() {
         DataChangeLogDto dto = DataChangeLogDto.of(1000, LottoFetchStatus.SUCCESS, null);
         assertThat(dto.fetchedAtFormatted()).isEmpty();
@@ -34,7 +34,7 @@ class DataChangeLogDtoTest {
         "SKIPPED,   스킵,     changelog-skipped",
         "NOT_DRAWN, 미추첨,   changelog-not-drawn"
     })
-    @DisplayName("상태별 레이블과 CSS 클래스가 올바르다")
+    @DisplayName("상태별 레이블과 스타일 클래스가 올바르다")
     void statusLabelAndCss(LottoFetchStatus status, String label, String css) {
         DataChangeLogDto dto = DataChangeLogDto.of(1, status, null);
         assertThat(dto.statusLabel()).isEqualTo(label.trim());

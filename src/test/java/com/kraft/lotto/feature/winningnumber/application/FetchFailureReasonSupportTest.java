@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 class FetchFailureReasonSupportTest {
 
     @Test
-    @DisplayName("LottoApiClientException reason을 reason prefix로 정규화한다")
+    @DisplayName("로또 에이피아이 클라이언트 예외 사유을 사유 접두사로 정규화한다")
     void normalizesReasonFromException() {
         LottoApiClientException ex = new LottoApiClientException(
                 "response parse failed (round=1200)",
@@ -24,7 +24,7 @@ class FetchFailureReasonSupportTest {
     }
 
     @Test
-    @DisplayName("이미 reason prefix가 있는 문자열은 그대로 유지한다")
+    @DisplayName("이미 사유 접두사가 있는 문자열은 그대로 유지한다")
     void keepsExistingReasonPrefix() {
         String message = "reason=timeout; external API timeout exceeded";
 
@@ -37,7 +37,7 @@ class FetchFailureReasonSupportTest {
     }
 
     @Test
-    @DisplayName("알 수 없는 일반 예외 메시지는 other로 분류한다")
+    @DisplayName("알 수 없는 일반 예외 메시지는 기타로 분류한다")
     void classifiesUnknownMessageAsOther() {
         String normalized = FetchFailureReasonSupport.normalizeFailureMessage("some unknown failure");
 
@@ -45,7 +45,7 @@ class FetchFailureReasonSupportTest {
     }
 
     @Test
-    @DisplayName("SocketTimeoutException 원인은 timeout으로 우선 분류한다")
+    @DisplayName("소켓 타임아웃 예외 원인은 시간 초과로 우선 분류한다")
     void classifiesSocketTimeoutCauseAsTimeout() {
         LottoApiClientException ex = new LottoApiClientException(
                 "some other message",
@@ -59,7 +59,7 @@ class FetchFailureReasonSupportTest {
     }
 
     @Test
-    @DisplayName("VALIDATION FailureReason이 있는 예외는 validation으로 정규화한다")
+    @DisplayName("검증 실패 사유가 있는 예외는 검증으로 정규화한다")
     void normalizesValidationReasonFromException() {
         LottoApiClientException ex = new LottoApiClientException(
                 "round mismatch: request=100, response=101",
@@ -72,7 +72,7 @@ class FetchFailureReasonSupportTest {
     }
 
     @Test
-    @DisplayName("MISSING_FIELD FailureReason이 있는 예외는 missing_field로 정규화한다")
+    @DisplayName("필드 누락 실패 사유가 있는 예외는 필드 누락으로 정규화한다")
     void normalizesMissingFieldReasonFromException() {
         LottoApiClientException ex = new LottoApiClientException(
                 "missing required field: numbers",
@@ -85,7 +85,7 @@ class FetchFailureReasonSupportTest {
     }
 
     @Test
-    @DisplayName("FailureReason.OTHER일 때는 메시지 기반으로 분류한다")
+    @DisplayName("실패 사유.기타일 때는 메시지 기반으로 분류한다")
     void fallsBackToMessageClassificationWhenReasonIsOther() {
         LottoApiClientException ex = new LottoApiClientException(
                 "invalid date field: date",

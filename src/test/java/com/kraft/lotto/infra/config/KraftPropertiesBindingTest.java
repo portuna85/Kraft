@@ -23,7 +23,7 @@ class KraftPropertiesBindingTest {
     KraftCacheProperties cache;
 
     @Test
-    @DisplayName("API 설정 프로퍼티를 바인딩한다")
+    @DisplayName("에이피아이 설정 프로퍼티를 바인딩한다")
     void bindsApiProperties() {
         assertThat(api.client()).isEqualTo("mock");
         assertThat(api.url()).isEqualTo("http://localhost");

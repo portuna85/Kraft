@@ -12,14 +12,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClient;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("뉴스 RSS 클라이언트")
+@DisplayName("뉴스 알에스에스 클라이언트")
 class NewsRssClientTest {
 
     @Mock
     RestClient restClient;
 
     @Test
-    @DisplayName("유효한 RSS XML을 파싱하면 뉴스 목록을 반환한다")
+    @DisplayName("유효한 알에스에스 엑스엠엘을 파싱하면 뉴스 목록을 반환한다")
     void parsesValidRssXml() {
         NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse(sampleRss());
@@ -31,7 +31,7 @@ class NewsRssClientTest {
     }
 
     @Test
-    @DisplayName("maxArticles 제한이 적용된다")
+    @DisplayName("최대 기사 수 제한이 적용된다")
     void maxArticlesLimitIsApplied() {
         NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 1, List.of());
         List<NewsArticle> articles = client.parse(sampleRss());
@@ -40,7 +40,7 @@ class NewsRssClientTest {
     }
 
     @Test
-    @DisplayName("link가 없는 item은 건너뛴다")
+    @DisplayName("링크가 없는 항목은 건너뛴다")
     void itemWithoutLinkIsSkipped() {
         NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse(rssWithoutLink());
@@ -49,7 +49,7 @@ class NewsRssClientTest {
     }
 
     @Test
-    @DisplayName("잘못된 XML이면 빈 목록을 반환한다")
+    @DisplayName("잘못된 엑스엠엘이면 빈 목록을 반환한다")
     void malformedXmlReturnsEmptyList() {
         NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse("<invalid>xml<<</invalid>");
@@ -58,7 +58,7 @@ class NewsRssClientTest {
     }
 
     @Test
-    @DisplayName("description HTML 태그가 제거된다")
+    @DisplayName("설명 에이치티엠엘 태그가 제거된다")
     void descriptionHtmlTagsAreStripped() {
         NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse(rssWithHtmlDescription());
@@ -69,7 +69,7 @@ class NewsRssClientTest {
     }
 
     @Test
-    @DisplayName("pubDate가 없어도 파싱된다")
+    @DisplayName("발행일가 없어도 파싱된다")
     void itemWithoutPubDateIsParsed() {
         NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse(rssWithoutPubDate());
@@ -79,7 +79,7 @@ class NewsRssClientTest {
     }
 
     @Test
-    @DisplayName("fetch — 빈 응답이면 빈 목록을 반환한다")
+    @DisplayName("가져오기 — 빈 응답이면 빈 목록을 반환한다")
     void emptyResponseReturnsEmptyList() {
         NewsRssClient client = new NewsRssClient(restClient, "https://example.com/rss", 10, List.of());
         List<NewsArticle> articles = client.parse("");

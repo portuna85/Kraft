@@ -91,7 +91,7 @@ class WinningNumberQueryServiceTest {
     }
 
     @Test
-    @DisplayName("목록 조회 결과를 DTO로 반환한다")
+    @DisplayName("목록 조회 결과를 디티오로 반환한다")
     void listReturnsMappedDto() {
         Page<WinningNumberEntity> page = new PageImpl<>(List.of(entity(2), entity(1)), PageRequest.of(0, 20), 2);
         when(repository.findAllByOrderByRoundDesc(any())).thenReturn(page);
@@ -105,7 +105,7 @@ class WinningNumberQueryServiceTest {
     }
 
     @Test
-    @DisplayName("maxPossibleRound는 현재 날짜 기준으로 양수를 반환한다")
+    @DisplayName("최대 가능 회차는 현재 날짜 기준으로 양수를 반환한다")
     void maxPossibleRoundReturnsPositive() {
         int max = service.maxPossibleRound();
 
@@ -114,7 +114,7 @@ class WinningNumberQueryServiceTest {
     }
 
     @Test
-    @DisplayName("findLatest는 당첨번호가 있으면 Optional을 반환한다")
+    @DisplayName("최신 조회는 당첨번호가 있으면 옵셔널을 반환한다")
     void findLatestReturnsOptionalWhenPresent() {
         when(repository.findTopByOrderByRoundDesc()).thenReturn(Optional.of(entity(1100)));
 
@@ -125,7 +125,7 @@ class WinningNumberQueryServiceTest {
     }
 
     @Test
-    @DisplayName("findLatest는 당첨번호가 없으면 빈 Optional을 반환한다")
+    @DisplayName("최신 조회는 당첨번호가 없으면 빈 옵셔널을 반환한다")
     void findLatestReturnsEmptyWhenAbsent() {
         when(repository.findTopByOrderByRoundDesc()).thenReturn(Optional.empty());
 
@@ -133,7 +133,7 @@ class WinningNumberQueryServiceTest {
     }
 
     @Test
-    @DisplayName("findByRound는 유효한 회차에서 Optional을 반환한다")
+    @DisplayName("회차 조회는 유효한 회차에서 옵셔널을 반환한다")
     void findByRoundReturnsOptionalForValidRound() {
         when(repository.findById(100)).thenReturn(Optional.of(entity(100)));
 
@@ -144,7 +144,7 @@ class WinningNumberQueryServiceTest {
     }
 
     @Test
-    @DisplayName("findByRound는 해당 회차가 없으면 빈 Optional을 반환한다")
+    @DisplayName("회차 조회는 해당 회차가 없으면 빈 옵셔널을 반환한다")
     void findByRoundReturnsEmptyWhenAbsent() {
         when(repository.findById(100)).thenReturn(Optional.empty());
 
@@ -152,7 +152,7 @@ class WinningNumberQueryServiceTest {
     }
 
     @Test
-    @DisplayName("expectedCurrentRound는 양수를 반환한다")
+    @DisplayName("예상 현재 회차는 양수를 반환한다")
     void expectedCurrentRoundReturnsPositive() {
         assertThat(service.expectedCurrentRound()).isPositive();
     }

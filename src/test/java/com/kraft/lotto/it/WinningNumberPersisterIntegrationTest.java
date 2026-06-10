@@ -23,7 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(MariaDbContainerConfig.class)
 @EnabledIf(value = "com.kraft.lotto.it.TestcontainersAvailability#isDockerAvailable",
         disabledReason = "Docker is not available for Testcontainers")
-@DisplayName("WinningNumberPersister 통합 테스트 (Testcontainers)")
+@DisplayName("당첨 번호 저장기 통합 테스트 (테스트컨테이너)")
 class WinningNumberPersisterIntegrationTest {
 
     private static final List<Integer> TEST_ROUNDS = List.of(9901, 9902, 9903);
@@ -40,7 +40,7 @@ class WinningNumberPersisterIntegrationTest {
     }
 
     @Test
-    @DisplayName("최초 저장은 INSERTED를 반환한다")
+    @DisplayName("최초 저장은 삽입됨를 반환한다")
     void firstSaveReturnsInserted() {
         UpsertOutcome outcome = persister.upsert(sample(9901));
 
@@ -48,7 +48,7 @@ class WinningNumberPersisterIntegrationTest {
     }
 
     @Test
-    @DisplayName("동일 데이터 재저장은 UNCHANGED를 반환한다")
+    @DisplayName("동일 데이터 재저장은 변경 없음를 반환한다")
     void sameSaveReturnsUnchanged() {
         WinningNumber wn = sample(9902);
         persister.upsert(wn);
@@ -61,7 +61,7 @@ class WinningNumberPersisterIntegrationTest {
     }
 
     @Test
-    @DisplayName("데이터 변경 후 저장은 UPDATED를 반환한다")
+    @DisplayName("데이터 변경 후 저장은 수정됨를 반환한다")
     void changedSaveReturnsUpdated() {
         persister.upsert(sample(9903));
         WinningNumber changed = new WinningNumber(

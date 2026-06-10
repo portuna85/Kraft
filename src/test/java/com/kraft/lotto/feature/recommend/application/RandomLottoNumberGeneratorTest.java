@@ -34,7 +34,7 @@ class RandomLottoNumberGeneratorTest {
     }
 
     @Test
-    @DisplayName("null인 Random 객체는 거절한다")
+    @DisplayName("널인 랜덤 객체는 거절한다")
     void rejectsNullRandom() {
         assertThatThrownBy(() -> new RandomLottoNumberGenerator(null))
                 .isInstanceOf(IllegalArgumentException.class)

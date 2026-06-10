@@ -83,7 +83,7 @@ class PublicRateLimitFilterTest {
     // --- SlidingWindowCounter 단위 테스트 ---
 
     @Test
-    @DisplayName("SlidingWindowCounter: 윈도우 내 한도 초과 직후 remaining은 0이다")
+    @DisplayName("슬라이딩 윈도우 카운터: 윈도우 내 한도 초과 직후 남은 수은 0이다")
     void slidingWindowRemainingIsZeroAfterExhaustion() {
         long startNanos = 0L;
         SlidingWindowCounter counter = new SlidingWindowCounter();
@@ -105,7 +105,7 @@ class PublicRateLimitFilterTest {
     }
 
     @Test
-    @DisplayName("SlidingWindowCounter: 윈도우 만료 후 요청이 다시 허용된다")
+    @DisplayName("슬라이딩 윈도우 카운터: 윈도우 만료 후 요청이 다시 허용된다")
     void slidingWindowExpiryAllowsRequestsAgain() {
         long startNanos = 0L;
         long windowNanos = TimeUnit.SECONDS.toNanos(10);
@@ -125,7 +125,7 @@ class PublicRateLimitFilterTest {
     }
 
     @Test
-    @DisplayName("SlidingWindowCounter: 동시성 — N 스레드 동시 요청 시 허가 수가 maxRequests를 초과하지 않는다")
+    @DisplayName("슬라이딩 윈도우 카운터는 여러 스레드 동시 요청 시 허가 수가 최대 요청 수를 초과하지 않는다")
     void slidingWindowConcurrentRequestsNeverExceedMax() throws InterruptedException {
         long windowNanos = TimeUnit.SECONDS.toNanos(60);
         int maxRequests = 10;
@@ -160,7 +160,7 @@ class PublicRateLimitFilterTest {
     }
 
     @Test
-    @DisplayName("윈도우 경계에서는 2배 burst를 허용하지 않는다")
+    @DisplayName("윈도우 경계에서는 2배 순간 요청 폭증를 허용하지 않는다")
     void windowBoundaryShouldNotAllow2xBurst() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getRateLimit().setEnabled(true);

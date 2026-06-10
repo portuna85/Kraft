@@ -35,7 +35,7 @@ class AdminAuditLogServiceTest {
     }
 
     @Test
-    @DisplayName("성공 로그 기록 — SUCCESS 결과와 에러 메시지 없이 저장한다")
+    @DisplayName("성공 로그 기록 — 성공 결과와 에러 메시지 없이 저장한다")
     void recordSuccessSavesCorrectFields() {
         service.recordSuccess("admin@example.com", "COLLECT_LATEST", "round:1230",
                 "127.0.0.1", "Mozilla/5.0");
@@ -53,7 +53,7 @@ class AdminAuditLogServiceTest {
     }
 
     @Test
-    @DisplayName("실패 로그 기록 — FAILURE 결과와 에러 메시지를 저장한다")
+    @DisplayName("실패 로그 기록 — 실패 결과와 에러 메시지를 저장한다")
     void recordFailureSavesErrorMessage() {
         service.recordFailure("admin@example.com", "NEWS_APPROVE", "articleId:42",
                 "10.0.0.1", "curl/7.x", "article not found");
@@ -77,7 +77,7 @@ class AdminAuditLogServiceTest {
     }
 
     @Test
-    @DisplayName("로그 목록 조회(결과 필터) — Specification으로 조회한다")
+    @DisplayName("로그 목록 조회(결과 필터) — 명세으로 조회한다")
     void listWithResultFilterUsesSpecification() {
         org.springframework.data.domain.Pageable pageable =
                 org.springframework.data.domain.PageRequest.of(0, 10);

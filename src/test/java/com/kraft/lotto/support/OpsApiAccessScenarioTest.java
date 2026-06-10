@@ -41,7 +41,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("운영 API 접근 제어 시나리오 테스트")
+@DisplayName("운영 에이피아이 접근 제어 시나리오 테스트")
 class OpsApiAccessScenarioTest {
 
     @Mock
@@ -86,7 +86,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("GET /ops/collect/status: 토큰이 없으면 401")
+    @DisplayName("운영 상태 조회 요청은 토큰이 없으면 401을 반환한다")
     void statusWithoutTokenReturnsUnauthorized() throws Exception {
         mockMvc.perform(get("/ops/collect/status")
                         .with(request -> {
@@ -97,7 +97,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("GET /ops/collect/status: 잘못된 토큰이면 401")
+    @DisplayName("운영 상태 조회 요청은 잘못된 토큰이면 401을 반환한다")
     void statusWithInvalidTokenReturnsUnauthorized() throws Exception {
         mockMvc.perform(get("/ops/collect/status")
                         .header("X-Ops-Token", "wrong-token")
@@ -109,7 +109,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("GET /ops/collect/status: allowlist 외 IP는 403")
+    @DisplayName("운영 상태 조회 요청은 허용 목록 외 아이피이면 403을 반환한다")
     void statusFromDisallowedIpReturnsForbidden() throws Exception {
         mockMvc.perform(get("/ops/collect/status")
                         .header("X-Ops-Token", "expected-token")
@@ -121,7 +121,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("GET /ops/collect/status: 정상 토큰/허용 IP면 200")
+    @DisplayName("운영 상태 조회 요청은 정상 토큰과 허용 아이피면 200을 반환한다")
     void statusWithValidTokenAndAllowedIpReturnsOk() throws Exception {
         when(collectionCommandService.getStatus())
                 .thenReturn(new CollectStatusResponse(true, "collect-all", Instant.parse("2026-05-24T12:00:00Z"), 10));
@@ -142,7 +142,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("GET /ops/collect/status: Authorization Bearer 토큰도 허용")
+    @DisplayName("운영 상태 조회 요청은 인증 전달자 토큰도 허용한다")
     void statusWithValidBearerTokenReturnsOk() throws Exception {
         when(collectionCommandService.getStatus())
                 .thenReturn(new CollectStatusResponse(false, null, null, 0));
@@ -161,7 +161,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("GET /ops/fetch-logs/retention-status: 정상 토큰/허용 IP면 200")
+    @DisplayName("수집 로그 보존 상태 조회 요청은 정상 토큰과 허용 아이피면 200을 반환한다")
     void retentionStatusWithValidTokenAndAllowedIpReturnsOk() throws Exception {
         when(fetchLogQueryService.retentionStatus(true, 90, 1000, "0 30 3 * * *", "Asia/Seoul"))
                 .thenReturn(new FetchLogRetentionStatusDto(
@@ -193,7 +193,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("GET /ops/circuit-breakers: 정상 토큰/허용 IP면 200")
+    @DisplayName("운영 회로 차단기 조회 요청은 정상 토큰과 허용 아이피면 200을 반환한다")
     void circuitBreakersWithValidTokenAndAllowedIpReturnsOk() throws Exception {
         when(circuitBreakerRegistry.snapshots()).thenReturn(Map.of(
                 "smok", new ApiCircuitBreakerRegistry.Snapshot(true, "closed")
@@ -211,7 +211,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("POST /ops/collect: 정상 토큰/허용 IP면 facade 위임 후 200")
+    @DisplayName("수집 등록 요청은 정상 토큰과 허용 아이피면 퍼사드 위임 후 200을 반환한다")
     void collectWithValidTokenAndAllowedIpReturnsOk() throws Exception {
         when(opsCollectionFacade.collectLatest(any(), any())).thenReturn(
                 com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse.of(
@@ -232,7 +232,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("POST /ops/collect/missing: 정상 토큰/허용 IP면 facade 위임 후 200")
+    @DisplayName("누락 회차 수집 등록 요청은 정상 토큰과 허용 아이피면 퍼사드 위임 후 200을 반환한다")
     void collectMissingWithValidTokenAndAllowedIpReturnsOk() throws Exception {
         when(opsCollectionFacade.collectMissing(any(), any())).thenReturn(
                 com.kraft.lotto.feature.winningnumber.web.dto.CollectResponse.of(
@@ -253,7 +253,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("POST /ops/news/collect: 정상 토큰/허용 IP면 뉴스 수집 결과를 반환한다")
+    @DisplayName("뉴스 수집 등록 요청은 정상 토큰과 허용 아이피면 뉴스 수집 결과를 반환한다")
     void collectNewsWithValidTokenAndAllowedIpReturnsOk() throws Exception {
         when(newsCollectionService.collect()).thenReturn(new NewsCollectionService.NewsCollectResult(3, 4));
 
@@ -273,7 +273,7 @@ class OpsApiAccessScenarioTest {
     }
 
     @Test
-    @DisplayName("GET /ops/data-freshness: 정상 토큰/허용 IP면 freshness 상태를 반환한다")
+    @DisplayName("데이터 최신성 조회 요청은 정상 토큰과 허용 아이피면 최신성 상태를 반환한다")
     void dataFreshnessWithValidTokenReturnsOk() throws Exception {
         when(winningNumberQueryService.findLatest()).thenReturn(java.util.Optional.empty());
 

@@ -14,26 +14,26 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@DisplayName("LottoCollectionConfiguration 빈 생성 테스트")
+@DisplayName("로또 수집 설정 빈 생성 테스트")
 class LottoCollectionConfigurationTest {
 
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
             .withUserConfiguration(LottoCollectionConfiguration.class, MockDepsConfig.class);
 
     @Test
-    @DisplayName("LottoSingleDrawCollector 빈이 생성된다")
+    @DisplayName("단일 회차 로또 수집기 빈이 생성된다")
     void lottoSingleDrawCollectorBeanIsCreated() {
         runner.run(ctx -> assertThat(ctx).hasSingleBean(LottoSingleDrawCollector.class));
     }
 
     @Test
-    @DisplayName("LottoRangeCollector 빈이 생성된다")
+    @DisplayName("로또 범위 수집기 빈이 생성된다")
     void lottoRangeCollectorBeanIsCreated() {
         runner.run(ctx -> assertThat(ctx).hasSingleBean(LottoRangeCollector.class));
     }
 
     @Test
-    @DisplayName("LottoCollectionCommandService 빈이 생성된다")
+    @DisplayName("로또 수집 명령 서비스 빈이 생성된다")
     void lottoCollectionCommandServiceBeanIsCreated() {
         runner.run(ctx -> assertThat(ctx).hasSingleBean(LottoCollectionCommandService.class));
     }

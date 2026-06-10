@@ -45,7 +45,7 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("/news 페이지를 렌더링한다")
+    @DisplayName("뉴스 페이지를 렌더링한다")
     void newsPageRendersView() throws Exception {
         when(newsQueryService.list(anyInt(), anyInt(), eq(null))).thenReturn(emptyPage());
 
@@ -56,14 +56,14 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("page 파라미터가 숫자가 아니면 400을 반환한다")
+    @DisplayName("페이지 파라미터가 숫자가 아니면 400을 반환한다")
     void nonNumericPageReturns400() throws Exception {
         mockMvc.perform(get("/news").param("page", "abc"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("page 기본값은 0이다")
+    @DisplayName("페이지 기본값은 0이다")
     void defaultPageIsZero() throws Exception {
         when(newsQueryService.list(0, 20, null)).thenReturn(emptyPage());
 
@@ -73,7 +73,7 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("뉴스 목록이 있을 때 모델에 articles가 포함된다")
+    @DisplayName("뉴스 목록이 있을 때 모델에 기사 목록가 포함된다")
     void newsPageIncludesArticles() throws Exception {
         NewsArticleDto article = new NewsArticleDto(1L, "로또 뉴스", "https://example.com",
                 "설명", "뉴스원", "2026.06.01 12:00", null, null);
@@ -87,7 +87,7 @@ class NewsControllerTest {
     }
 
     @Test
-    @DisplayName("tier 파라미터가 있어도 전체 목록을 반환한다 (탭 제거)")
+    @DisplayName("등급 파라미터가 있어도 전체 목록을 반환한다 (탭 제거)")
     void tierParamIsIgnored() throws Exception {
         when(newsQueryService.list(anyInt(), anyInt(), eq(null))).thenReturn(emptyPage());
 

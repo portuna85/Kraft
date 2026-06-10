@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("smok API 클라이언트 테스트")
+@DisplayName("동행복권 에이피아이 클라이언트 테스트")
 class SmokLottoApiClientTest {
 
     private static final String BASE_URL = "https://smok95.github.io/lotto/results";
@@ -33,7 +33,7 @@ class SmokLottoApiClientTest {
     class Parse {
 
         @Test
-        @DisplayName("유효한 JSON을 도메인 모델로 변환한다")
+        @DisplayName("유효한 제이슨을 도메인 모델로 변환한다")
         void parseConvertsValidJsonToDomain() {
             Optional<WinningNumber> result = client.parse(100, successBody(100));
 
@@ -46,7 +46,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("divisions[0]에서 1등 정보를 파싱한다")
+        @DisplayName("등수 목록 첫 번째 항목에서 1등 정보를 파싱한다")
         void parseExtractsFirstPrizeFromDivisions() {
             Optional<WinningNumber> result = client.parse(100, successBody(100));
 
@@ -57,7 +57,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("draw_no가 요청 회차와 다르면 예외가 발생한다")
+        @DisplayName("응답 회차 번호가 요청 회차와 다르면 예외가 발생한다")
         void parseThrowsOnRoundMismatch() {
             assertThatThrownBy(() -> client.parse(100, successBody(101)))
                     .isInstanceOf(LottoApiClientException.class)
@@ -65,7 +65,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("잘못된 JSON 형식이면 예외가 발생한다")
+        @DisplayName("잘못된 제이슨 형식이면 예외가 발생한다")
         void parseThrowsOnInvalidJson() {
             assertThatThrownBy(() -> client.parse(100, "not-json"))
                     .isInstanceOf(LottoApiClientException.class);
@@ -92,7 +92,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("successBody 픽스처가 완전한 성공 응답으로 파싱된다")
+        @DisplayName("성공 본문 픽스처가 완전한 성공 응답으로 파싱된다")
         void fixtureIsValidAndComplete() {
             Optional<WinningNumber> result = client.parse(100, successBody(100));
 
@@ -112,7 +112,7 @@ class SmokLottoApiClientTest {
     class FailureReason {
 
         @Test
-        @DisplayName("HTTP 오류는 http_error 메트릭 태그와 HTTP_ERROR enum을 사용한다")
+        @DisplayName("에이치티티피 오류는 에이치티티피 오류 메트릭 태그와 에이치티티피 오류 열거값을 사용한다")
         void httpErrorUsesStandardReason() {
             SimpleMeterRegistry registry = new SimpleMeterRegistry();
             ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
@@ -130,7 +130,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("JSON 파싱 실패는 json_parse 메트릭 태그와 JSON_PARSE enum을 사용한다")
+        @DisplayName("제이슨 파싱 실패는 제이슨 파싱 메트릭 태그와 제이슨 파싱 열거값을 사용한다")
         void parseErrorUsesJsonParseReason() {
             SimpleMeterRegistry registry = new SimpleMeterRegistry();
             ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
@@ -148,7 +148,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("숫자 배열 크기 불일치는 validation 메트릭 태그와 VALIDATION enum을 사용한다")
+        @DisplayName("숫자 배열 크기 불일치는 검증 메트릭 태그와 검증 열거값을 사용한다")
         void invalidNumbersSizeUsesValidationReason() {
             SimpleMeterRegistry registry = new SimpleMeterRegistry();
             ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
@@ -166,7 +166,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("날짜 파싱 실패는 validation 메트릭 태그와 VALIDATION enum을 사용한다")
+        @DisplayName("날짜 파싱 실패는 검증 메트릭 태그와 검증 열거값을 사용한다")
         void dateParseFailureUsesValidationReason() {
             SimpleMeterRegistry registry = new SimpleMeterRegistry();
             ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
@@ -184,7 +184,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("회차 불일치는 validation 메트릭 태그와 VALIDATION enum을 사용한다")
+        @DisplayName("회차 불일치는 검증 메트릭 태그와 검증 열거값을 사용한다")
         void roundMismatchUsesValidationReason() {
             SimpleMeterRegistry registry = new SimpleMeterRegistry();
             ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
@@ -202,7 +202,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("metric tag cardinality — 허용 목록 외 reason은 other로 대체된다")
+        @DisplayName("메트릭 태그 카디널리티는 허용 목록 외 사유를 기타로 대체한다")
         void unknownReasonIsMappedToOther() {
             SimpleMeterRegistry registry = new SimpleMeterRegistry();
             ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
@@ -221,11 +221,11 @@ class SmokLottoApiClientTest {
     }
 
     @Nested
-    @DisplayName("HTTP 응답 처리")
+    @DisplayName("에이치티티피 응답 처리")
     class Fetch {
 
         @Test
-        @DisplayName("404 응답은 Optional.empty를 반환한다")
+        @DisplayName("404 응답은 옵셔널.빈 값를 반환한다")
         void fetchReturnsEmptyOn404() {
             ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(
                     0,
@@ -239,7 +239,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("미추첨 404 응답 수신 시 half-open 상태가 closed로 전환된다")
+        @DisplayName("미추첨 404 응답 수신 시 반열림 상태가 닫힘로 전환된다")
         void halfOpenClosesWhenNotDrawn404IsReturned() {
             AtomicLong now = new AtomicLong(0L);
             ApiCircuitBreaker breaker = new ApiCircuitBreaker(true, 1, 1000, 1, now::get);
@@ -289,7 +289,7 @@ class SmokLottoApiClientTest {
         }
 
         @Test
-        @DisplayName("성공 시 kraft.api.smok.call.total과 success 메트릭을 기록한다")
+        @DisplayName("성공 시 동행복권 호출 전체 메트릭과 성공 메트릭을 기록한다")
         void fetchRecordsMetricsOnSuccess() {
             SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
             ScriptedSmokLottoApiClient scriptedClient = new ScriptedSmokLottoApiClient(

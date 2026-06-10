@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("공공데이터 로또 API 클라이언트")
+@DisplayName("공공데이터 로또 에이피아이 클라이언트")
 class PublicDataLottoApiClientTest {
 
     private static final Clock FIXED_CLOCK = Clock.fixed(
@@ -33,7 +33,7 @@ class PublicDataLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("정상 응답을 파싱해 WinningNumber를 반환한다")
+    @DisplayName("정상 응답을 파싱해 당첨 번호를 반환한다")
     void parsesNormalResponse() {
         String body = """
                 {
@@ -75,7 +75,7 @@ class PublicDataLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("resultCode가 03이면 Optional.empty()를 반환한다 (미추첨)")
+    @DisplayName("결과 코드가 03이면 빈 옵셔널를 반환한다 (미추첨)")
     void returnsEmptyWhenResultCode03() {
         String body = """
                 {
@@ -92,7 +92,7 @@ class PublicDataLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("item이 없으면 Optional.empty()를 반환한다")
+    @DisplayName("항목이 없으면 빈 옵셔널를 반환한다")
     void returnsEmptyWhenNoItem() {
         String body = """
                 {
@@ -136,7 +136,7 @@ class PublicDataLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("resultCode가 00이 아닌 경우 예외를 던진다")
+    @DisplayName("결과 코드가 00이 아닌 경우 예외를 던진다")
     void throwsOnNonSuccessResultCode() {
         String body = """
                 {
@@ -153,7 +153,7 @@ class PublicDataLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("item이 배열로 감싸인 경우 첫 번째 항목을 사용한다")
+    @DisplayName("항목이 배열로 감싸인 경우 첫 번째 항목을 사용한다")
     void parsesFirstItemFromArray() {
         String body = """
                 {

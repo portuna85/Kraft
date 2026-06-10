@@ -33,14 +33,14 @@ class WinningNumberTest {
     }
 
     @Test
-    @DisplayName("추첨일이 null이면 예외가 발생한다")
+    @DisplayName("추첨일이 널이면 예외가 발생한다")
     void rejectsNullDrawDate() {
         assertThatThrownBy(() -> new WinningNumber(1, null, COMBO, 8, 0L, 0, 0L))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    @DisplayName("번호 조합이 null이면 예외가 발생한다")
+    @DisplayName("번호 조합이 널이면 예외가 발생한다")
     void rejectsNullCombination() {
         assertThatThrownBy(() -> new WinningNumber(1, DRAW, null, 8, 0L, 0, 0L))
                 .isInstanceOf(NullPointerException.class);

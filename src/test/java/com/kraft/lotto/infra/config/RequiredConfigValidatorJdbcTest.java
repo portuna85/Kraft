@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("JDBC 연결 검증기 테스트")
+@DisplayName("제이디비씨 연결 검증기 테스트")
 class RequiredConfigValidatorJdbcTest {
 
     @Test

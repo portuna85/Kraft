@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 
-@DisplayName("API 서킷 브레이커 레지스트리")
+@DisplayName("에이피아이 서킷 브레이커 레지스트리")
 class ApiCircuitBreakerRegistryTest {
 
     private static ApiCircuitBreakerRegistry registry() {
@@ -41,7 +41,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("client가 null이면 브레이커를 그대로 반환하고 스냅샷에 추가하지 않는다")
+    @DisplayName("클라이언트가 널이면 브레이커를 그대로 반환하고 스냅샷에 추가하지 않는다")
     void nullClientIsIgnored() {
         ApiCircuitBreakerRegistry reg = registry();
         ApiCircuitBreaker breaker = ApiCircuitBreaker.disabled();
@@ -53,7 +53,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("client가 비어 있으면 스냅샷에 추가하지 않는다")
+    @DisplayName("클라이언트가 비어 있으면 스냅샷에 추가하지 않는다")
     void blankClientIsIgnored() {
         ApiCircuitBreakerRegistry reg = registry();
         reg.register("  ", ApiCircuitBreaker.disabled());
@@ -62,7 +62,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("브레이커가 null이면 null을 반환하고 스냅샷에 추가하지 않는다")
+    @DisplayName("브레이커가 널이면 널을 반환하고 스냅샷에 추가하지 않는다")
     void nullBreakerIsIgnored() {
         ApiCircuitBreakerRegistry reg = registry();
         ApiCircuitBreaker returned = reg.register("client", null);
@@ -72,7 +72,7 @@ class ApiCircuitBreakerRegistryTest {
     }
 
     @Test
-    @DisplayName("같은 client를 두 번 등록해도 게이지는 중복 등록되지 않는다")
+    @DisplayName("같은 클라이언트를 두 번 등록해도 게이지는 중복 등록되지 않는다")
     void duplicateRegistrationDoesNotDuplicateGauge() {
         ApiCircuitBreakerRegistry reg = registry();
         ApiCircuitBreaker b1 = new ApiCircuitBreaker(true, 2, 1000, 1);

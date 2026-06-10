@@ -76,7 +76,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("POST 요청도 헤더 토큰이 유효하면 인증에 성공한다")
+    @DisplayName("등록 요청 요청도 헤더 토큰이 유효하면 인증에 성공한다")
     void postWithHeaderTokenIsAccepted() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
@@ -97,7 +97,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("Authorization Bearer 토큰이 유효하면 인증에 성공한다")
+    @DisplayName("인증 전달자 토큰이 유효하면 인증에 성공한다")
     void bearerTokenIsAccepted() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
@@ -139,7 +139,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("trusted proxy면 X-Forwarded-For 첫 IP를 기준으로 허용 여부를 판단한다")
+    @DisplayName("신뢰 프록시면 전달 아이피 헤더의 첫 아이피를 기준으로 허용 여부를 판단한다")
     void usesForwardedForWhenTrusted() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.setTrustedProxies(java.util.List.of("203.0.113.10"));
@@ -162,7 +162,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("trusted proxy가 아니면 X-Forwarded-For를 신뢰하지 않는다")
+    @DisplayName("신뢰 프록시가 아니면 전달 아이피 헤더를 신뢰하지 않는다")
     void ignoresForwardedForWhenRemoteIsNotTrustedProxy() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.setTrustedProxies(java.util.List.of("203.0.113.10"));
@@ -185,7 +185,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("admin/ops 접두사만 포함한 경로는 필터 대상이 아니다")
+    @DisplayName("관리자 운영 접두사만 포함한 경로는 필터 대상이 아니다")
     void nonOpsAdminPrefixPathIsNotFiltered() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));
@@ -205,7 +205,7 @@ class OpsAccessFilterTest {
     }
 
     @Test
-    @DisplayName("/admin/ops 경로는 Spring Security에 위임하므로 OpsAccessFilter 대상이 아니다")
+    @DisplayName("관리자 운영 경로는 스프링 시큐리티에 위임하므로 운영 접근 필터 대상이 아니다")
     void adminOpsPathIsNotFilteredByOpsFilter() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         properties.getOps().setAllowedIps(java.util.List.of("127.0.0.1"));

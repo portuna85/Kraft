@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
 
-@DisplayName("로또 API 설정 프로퍼티 검증 테스트")
+@DisplayName("로또 에이피아이 설정 프로퍼티 검증 테스트")
 class KraftApiPropertiesValidationTest {
 
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
@@ -26,28 +26,28 @@ class KraftApiPropertiesValidationTest {
             );
 
     @Test
-    @DisplayName("음수 connect-timeout-ms는 바인딩 실패를 유발한다")
+    @DisplayName("음수 연결 타임아웃 밀리초는 바인딩 실패를 유발한다")
     void rejectsNegativeConnectTimeout() {
         runner.withPropertyValues("kraft.api.connect-timeout-ms=-1")
                 .run(ctx -> assertThat(ctx).hasFailed());
     }
 
     @Test
-    @DisplayName("request-timeout-ms는 양수여야 한다")
+    @DisplayName("요청 타임아웃 밀리초는 양수여야 한다")
     void rejectsNonPositiveRequestTimeout() {
         runner.withPropertyValues("kraft.api.request-timeout-ms=0")
                 .run(ctx -> assertThat(ctx).hasFailed());
     }
 
     @Test
-    @DisplayName("blank client는 바인딩 실패를 유발한다")
+    @DisplayName("빈 클라이언트는 바인딩 실패를 유발한다")
     void rejectsBlankClient() {
         runner.withPropertyValues("kraft.api.client=")
                 .run(ctx -> assertThat(ctx).hasFailed());
     }
 
     @Test
-    @DisplayName("url이 비어있으면 바인딩에 실패한다")
+    @DisplayName("주소가 비어 있으면 바인딩에 실패한다")
     void rejectsBlankUrl() {
         runner.withPropertyValues("kraft.api.url=")
                 .run(ctx -> assertThat(ctx).hasFailed());

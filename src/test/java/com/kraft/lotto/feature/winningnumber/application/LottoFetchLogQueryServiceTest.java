@@ -36,7 +36,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("retention 상태 응답에 설정/집계/컷오프를 포함한다")
+    @DisplayName("보존 상태 응답에 설정/집계/컷오프를 포함한다")
     void returnsRetentionStatusSnapshot() {
         Clock fixedClock = Clock.fixed(Instant.parse("2026-05-24T12:00:00Z"), ZoneId.of("UTC"));
         LottoFetchLogQueryService svc = new LottoFetchLogQueryService(fetchLogRepository, fixedClock);
@@ -57,7 +57,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("reason 파라미터가 null이면 필터 없이 DB 집계를 조회한다")
+    @DisplayName("사유 파라미터가 널이면 필터 없이 데이터베이스 집계를 조회한다")
     void nullReasonPassesNullFilter() {
         lenient().when(fetchLogRepository.countFailureReasonsByFilter(isNull(), isNull(), isNull()))
                 .thenReturn(List.of());
@@ -69,7 +69,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("reason 파라미터가 공백이면 null로 정규화된다")
+    @DisplayName("사유 파라미터가 공백이면 널로 정규화된다")
     void blankReasonNormalizesToNull() {
         lenient().when(fetchLogRepository.countFailureReasonsByFilter(isNull(), isNull(), isNull()))
                 .thenReturn(List.of());
@@ -80,7 +80,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("reason 파라미터가 있으면 소문자 변환 후 DB 필터로 전달된다")
+    @DisplayName("사유 파라미터가 있으면 소문자 변환 후 데이터베이스 필터로 전달된다")
     void nonBlankReasonPassedAsLowercase() {
         lenient().when(fetchLogRepository.countFailureReasonsByFilter(any(), isNull(), isNull()))
                 .thenReturn(List.of(new FetchFailureReasonDto("timeout", 2L)));
@@ -92,7 +92,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("limit은 반환되는 reason 그룹 수를 제한한다")
+    @DisplayName("제한값은 반환되는 사유 그룹 수를 제한한다")
     void limitCapsReturnedReasonGroups() {
         lenient().when(fetchLogRepository.countFailureReasonsByFilter(isNull(), isNull(), isNull()))
                 .thenReturn(List.of(
@@ -109,7 +109,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("failuresResponse는 빈 저장소에서 빈 items DTO를 반환한다")
+    @DisplayName("실패 응답는 빈 저장소에서 빈 항목 디티오를 반환한다")
     void failuresResponseReturnsDtoWithEmptyItems() {
         lenient().when(fetchLogRepository.findRecentFailedFilteredByReason(isNull(), isNull(), isNull(), any()))
                 .thenReturn(List.of());
@@ -121,7 +121,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("failureOverview는 reason·log 집계를 함께 반환한다")
+    @DisplayName("실패 개요는 사유와 로그 집계를 함께 반환한다")
     void failureOverviewCombinesBothSummaries() {
         lenient().when(fetchLogRepository.countFailureReasonsByFilter(isNull(), isNull(), isNull()))
                 .thenReturn(List.of());
@@ -135,7 +135,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("PagedFailures: null rows는 빈 리스트로 대체된다")
+    @DisplayName("페이징 실패 목록: 널 행는 빈 리스트로 대체된다")
     void pagedFailuresNullRowsFallsBack() {
         var paged = new LottoFetchLogQueryService.PagedFailures(null, 1, 20, false);
 
@@ -143,7 +143,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("recentCollectionLogs는 수집 이력을 DataChangeLogDto 목록으로 반환한다")
+    @DisplayName("최근 수집 로그는 수집 이력을 데이터 변경 로그 디티오 목록으로 반환한다")
     void recentCollectionLogsReturnsDtos() {
         LottoFetchLogEntity entity = new LottoFetchLogEntity(
                 1100, null, LottoFetchStatus.SUCCESS, null, 200, null,
@@ -159,7 +159,7 @@ class LottoFetchLogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("recentCollectionLogs limit은 1~50으로 제한된다")
+    @DisplayName("최근 수집 로그 제한값은 1~50으로 제한된다")
     void recentCollectionLogsClampLimit() {
         when(fetchLogRepository.findRecentAll(any())).thenReturn(List.of());
 

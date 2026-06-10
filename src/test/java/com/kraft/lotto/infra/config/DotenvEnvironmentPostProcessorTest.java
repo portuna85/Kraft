@@ -11,14 +11,14 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.SpringApplication;
 import org.springframework.mock.env.MockEnvironment;
 
-@DisplayName("Dotenv 환경 포스트 프로세서")
+@DisplayName("닷엔브 환경 포스트 프로세서")
 class DotenvEnvironmentPostProcessorTest {
 
     @TempDir
     Path tempDir;
 
     @Test
-    @DisplayName("설정된 안전 제한보다 큰 .env 파일은 무시한다")
+    @DisplayName("설정된 안전 제한보다 큰 닷엔브 파일은 무시한다")
     void skipsOversizedDotenvFile() throws Exception {
         Path file = tempDir.resolve(".env");
         byte[] content = new byte[(int) DotenvEnvironmentPostProcessor.MAX_DOTENV_BYTES + 1];
@@ -30,7 +30,7 @@ class DotenvEnvironmentPostProcessorTest {
     }
 
     @Test
-    @DisplayName("지정된 .env 경로를 환경변수로 전달할 수 있다")
+    @DisplayName("지정된 닷엔브 경로를 환경변수로 전달할 수 있다")
     void loadsExplicitDotenvPathFromEnvironmentVariable() throws Exception {
         Path file = tempDir.resolve("custom.env");
         Files.writeString(file, "KRAFT_DB_USER=alice\n", StandardCharsets.UTF_8);
@@ -44,7 +44,7 @@ class DotenvEnvironmentPostProcessorTest {
     }
 
     @Test
-    @DisplayName("dotenv 로딩을 비활성화하면 파일을 읽지 않는다")
+    @DisplayName("닷엔브 로딩을 비활성화하면 파일을 읽지 않는다")
     void disablesDotenvLoadingWhenRequested() throws Exception {
         Path file = tempDir.resolve(".env");
         Files.writeString(file, "KRAFT_DB_USER=alice\n", StandardCharsets.UTF_8);

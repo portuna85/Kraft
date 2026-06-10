@@ -6,13 +6,13 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("LottoFetchLogEntity 절단 테스트")
+@DisplayName("로또 수집 로그 엔티티 절단 테스트")
 class LottoFetchLogEntityTest {
 
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 1, 1, 0, 0, 0);
 
     @Test
-    @DisplayName("message는 500자를 초과하면 절단된다")
+    @DisplayName("메시지는 500자를 초과하면 절단된다")
     void messageIsTruncatedAt500Chars() {
         String longMessage = "a".repeat(600);
 
@@ -22,7 +22,7 @@ class LottoFetchLogEntityTest {
     }
 
     @Test
-    @DisplayName("rawResponse는 4000자를 초과하면 절단된다")
+    @DisplayName("원본 응답는 4000자를 초과하면 절단된다")
     void rawResponseIsTruncatedAt4000Chars() {
         String longRaw = "x".repeat(5000);
 
@@ -32,7 +32,7 @@ class LottoFetchLogEntityTest {
     }
 
     @Test
-    @DisplayName("500자 이하 message는 그대로 유지된다")
+    @DisplayName("500자 이하 메시지는 그대로 유지된다")
     void messageUnder500IsKeptAsIs() {
         String msg = "short message";
 
@@ -42,7 +42,7 @@ class LottoFetchLogEntityTest {
     }
 
     @Test
-    @DisplayName("null 값은 null로 유지된다")
+    @DisplayName("널 값은 널로 유지된다")
     void nullValuesArePassedThrough() {
         LottoFetchLogEntity entity = entity(null, null);
 

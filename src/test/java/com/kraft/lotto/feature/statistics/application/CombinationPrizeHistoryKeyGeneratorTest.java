@@ -27,7 +27,7 @@ class CombinationPrizeHistoryKeyGeneratorTest {
     }
 
     @Test
-    @DisplayName("첫 파라미터가 List가 아니면 조합 검증 예외가 발생한다")
+    @DisplayName("첫 파라미터가 리스트가 아니면 조합 검증 예외가 발생한다")
     void generateWithNonListParam() throws Exception {
         Method method = SampleTarget.class.getDeclaredMethod("target", List.class);
 

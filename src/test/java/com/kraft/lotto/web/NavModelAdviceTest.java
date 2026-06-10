@@ -20,14 +20,14 @@ class NavModelAdviceTest {
     NavModelAdvice advice = new NavModelAdvice();
 
     @Test
-    @DisplayName("요청 URI를 currentPath로 반환한다")
+    @DisplayName("요청 주소를 현재 경로로 반환한다")
     void returnsRequestUri() {
         when(request.getRequestURI()).thenReturn("/frequency");
         assertThat(advice.currentPath(request)).isEqualTo("/frequency");
     }
 
     @Test
-    @DisplayName("URI가 null이면 루트 경로를 반환한다")
+    @DisplayName("요청 주소가 널이면 루트 경로를 반환한다")
     void returnsRootWhenUriIsNull() {
         when(request.getRequestURI()).thenReturn(null);
         assertThat(advice.currentPath(request)).isEqualTo("/");

@@ -41,7 +41,7 @@ class RecommendMetricsQueryServiceTest {
     }
 
     @Test
-    @DisplayName("latency timer가 기록된 경우 count/mean/max를 반환한다")
+    @DisplayName("지연 시간 타이머가 기록된 경우 개수와 평균과 최대값을 반환한다")
     void withLatencyTimerReturnsStats() {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         registry.timer("kraft.recommend.generation.latency")
@@ -58,7 +58,7 @@ class RecommendMetricsQueryServiceTest {
     }
 
     @Test
-    @DisplayName("request.count summary가 기록된 경우 requestedSetCount를 반환한다")
+    @DisplayName("요청 개수 요약이 기록된 경우 요청 세트 수를 반환한다")
     void withRequestSummaryReturnsCount() {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         registry.summary("kraft.recommend.request.count").record(3);
@@ -71,7 +71,7 @@ class RecommendMetricsQueryServiceTest {
     }
 
     @Test
-    @DisplayName("generation.failure 카운터가 기록된 경우 failuresByReason에 집계된다")
+    @DisplayName("생성 실패 카운터가 기록된 경우 사유별 실패 수에 집계된다")
     void withFailureCountersReturnsByReason() {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         registry.counter("kraft.recommend.generation.failure", "reason", "initial_pick_timeout").increment();

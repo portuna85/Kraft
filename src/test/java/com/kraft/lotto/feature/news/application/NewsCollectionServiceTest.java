@@ -78,7 +78,7 @@ class NewsCollectionServiceTest {
     }
 
     @Test
-    @DisplayName("RSS가 비어 있으면 저장하지 않는다")
+    @DisplayName("알에스에스가 비어 있으면 저장하지 않는다")
     void emptyRssSkipsAll() {
         when(rssClient.fetch()).thenReturn(List.of());
 
@@ -109,7 +109,7 @@ class NewsCollectionServiceTest {
     }
 
     @Test
-    @DisplayName("purgeOldArticles는 보존 기간 이전 데이터를 삭제한다")
+    @DisplayName("오래된 기사 삭제는 보존 기간 이전 데이터를 삭제한다")
     void purgeDeletesOldArticles() {
         when(repository.deleteByCollectedAtBefore(any(LocalDateTime.class))).thenReturn(5);
 
@@ -142,7 +142,7 @@ class NewsCollectionServiceTest {
     }
 
     @Test
-    @DisplayName("수집 시 주입된 Clock의 시각을 collectedAt에 사용한다")
+    @DisplayName("수집 시 주입된 시계의 시각을 수집 시각에 사용한다")
     void collectUsesInjectedClock() {
         when(rssClient.fetch()).thenReturn(List.of(article("https://example.com/1")));
         when(repository.existsByLinkHash(anyString())).thenReturn(false);
@@ -180,7 +180,7 @@ class NewsCollectionServiceTest {
     }
 
     @Test
-    @DisplayName("DB에 등록된 차단 도메인의 기사는 건너뛴다")
+    @DisplayName("데이터베이스에 등록된 차단 도메인의 기사는 건너뛴다")
     void dbBlockedDomainIsSkipped() {
         when(rssClient.fetch()).thenReturn(List.of(article("https://blocked.example.com/news")));
         when(blockedDomainRepository.findAllDomains()).thenReturn(List.of("blocked.example.com"));
@@ -197,7 +197,7 @@ class NewsCollectionServiceTest {
     }
 
     @Test
-    @DisplayName("DB에 등록된 차단 키워드가 설명에 포함된 기사는 건너뛴다")
+    @DisplayName("데이터베이스에 등록된 차단 키워드가 설명에 포함된 기사는 건너뛴다")
     void dbBlockedKeywordInDescriptionIsSkipped() {
         NewsArticle article = new NewsArticle(null, "로또 소식", "https://example.com/news",
                 "분양 로또 관련 설명", "출처", LocalDateTime.now(), null);

@@ -59,7 +59,7 @@ class OpsCollectionFacadeTest {
     }
 
     @Test
-    @DisplayName("최신 회차 수집은 락 획득에 실패하면 collected=0을 반환한다")
+    @DisplayName("최신 회차 수집은 락 획득에 실패하면 수집 수=0을 반환한다")
     void collectLatestSkipsWhenLockNotAcquired() {
         OpsCollectionFacade facade = new OpsCollectionFacade(commandService, nonAcquiringExecutor(), FIXED_CLOCK);
 
@@ -80,7 +80,7 @@ class OpsCollectionFacadeTest {
     }
 
     @Test
-    @DisplayName("락 실행 중 RuntimeException은 그대로 다시 던진다")
+    @DisplayName("락 실행 중 런타임 예외은 그대로 다시 던진다")
     void runtimeExceptionIsRethrown() {
         when(commandService.collectAllUntilLatest()).thenThrow(new RuntimeException("db connection lost"));
         OpsCollectionFacade facade = new OpsCollectionFacade(commandService, acquiringExecutor(), FIXED_CLOCK);
@@ -91,7 +91,7 @@ class OpsCollectionFacadeTest {
     }
 
     @Test
-    @DisplayName("requestId와 clientIp가 null이면 빈 문자열로 대체해 예외 없이 처리한다")
+    @DisplayName("요청 아이디와 클라이언트 아이피가 널이면 빈 문자열로 대체해 예외 없이 처리한다")
     void nullAuditParamsAreSanitized() {
         OpsCollectionFacade facade = new OpsCollectionFacade(commandService, nonAcquiringExecutor(), FIXED_CLOCK);
 
@@ -101,7 +101,7 @@ class OpsCollectionFacadeTest {
     }
 
     @Test
-    @DisplayName("체크드 예외는 CollectionLockException으로 래핑된다")
+    @DisplayName("체크 예외는 수집 락 예외로 래핑된다")
     void checkedExceptionIsWrapped() {
         LockProvider provider = config -> { throw new RuntimeException("shedlock failure"); };
         LockingTaskExecutor executor = new DefaultLockingTaskExecutor(provider);

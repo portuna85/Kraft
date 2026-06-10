@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("API 재시도 지원")
+@DisplayName("에이피아이 재시도 지원")
 class ApiRetrySupportTest {
 
     @Test

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class LogSanitizerTest {
 
     @Test
-    @DisplayName("null 값은 빈 문자열로 변환된다")
+    @DisplayName("널 값은 빈 문자열로 변환된다")
     void sanitizeNullReturnsEmpty() {
         assertThat(LogSanitizer.sanitizeLogValue(null)).isEmpty();
     }
@@ -35,13 +35,13 @@ class LogSanitizerTest {
     }
 
     @Test
-    @DisplayName("null 쿼리 파라미터는 빈 문자열을 반환한다")
+    @DisplayName("널 쿼리 파라미터는 빈 문자열을 반환한다")
     void maskSensitiveQueryWithNull() {
         assertThat(LogSanitizer.maskSensitiveQuery(null)).isEmpty();
     }
 
     @Test
-    @DisplayName("URL 인코딩된 민감 쿼리 파라미터도 마스킹한다")
+    @DisplayName("주소 인코딩된 민감 쿼리 파라미터도 마스킹한다")
     void maskSensitiveQueryUrlEncodedTokenShouldBeMasked() {
         assertThat(LogSanitizer.maskSensitiveQuery("token=%74%65%73%74&count=5"))
                 .isEqualTo("token=***&count=5");

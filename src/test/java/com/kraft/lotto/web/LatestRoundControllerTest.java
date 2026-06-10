@@ -45,7 +45,7 @@ class LatestRoundControllerTest {
     }
 
     @Test
-    @DisplayName("최신 회차가 있으면 latest 뷰와 모델을 반환한다")
+    @DisplayName("최신 회차가 있으면 최신 뷰와 모델을 반환한다")
     void latestPageWithData() throws Exception {
         when(queryService.findLatest()).thenReturn(Optional.of(LottoTestFixtures.winningNumberDto(1200)));
 
@@ -56,7 +56,7 @@ class LatestRoundControllerTest {
     }
 
     @Test
-    @DisplayName("최신 회차가 없으면 latest 뷰를 빈 모델로 반환한다")
+    @DisplayName("최신 회차가 없으면 최신 뷰를 빈 모델로 반환한다")
     void latestPageWithNoData() throws Exception {
         when(queryService.findLatest()).thenReturn(Optional.empty());
 

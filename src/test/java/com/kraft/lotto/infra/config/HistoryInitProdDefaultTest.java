@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-@DisplayName("prod 프로파일 기본값 테스트")
+@DisplayName("운영 프로파일 기본값 테스트")
 class HistoryInitProdDefaultTest {
 
     @Test
-    @DisplayName("prod 프로파일에서 history-init은 기본적으로 비활성화된다")
+    @DisplayName("운영 프로파일에서 이력 초기화은 기본적으로 비활성화된다")
     void prodDefaultDisablesHistoryInit() {
         try (ConfigurableApplicationContext context = new SpringApplicationBuilder(KraftLottoApplication.class)
                 .profiles("prod")

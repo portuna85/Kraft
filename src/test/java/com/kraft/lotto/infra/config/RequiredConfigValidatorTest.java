@@ -24,7 +24,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod 프로필에서 운영 설정이 누락되면 문제를 감지한다")
+    @DisplayName("운영 프로필에서 운영 설정이 누락되면 문제를 감지한다")
     void addsProblemsWhenProdOperationalConfigsMissing() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("prod");
@@ -48,7 +48,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod가 아닌 프로필에서는 운영 설정을 검증하지 않는다")
+    @DisplayName("운영가 아닌 프로필에서는 운영 설정을 검증하지 않는다")
     void doesNotAddOperationalConfigProblemsOutsideProd() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("local");
@@ -60,7 +60,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod 프로필에서 mock API 클라이언트는 허용되지 않는다")
+    @DisplayName("운영 프로필에서 모의 에이피아이 클라이언트는 허용되지 않는다")
     void addsProblemWhenProdClientIsMock() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("prod");
@@ -74,7 +74,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod 프로필에서 dh(smok) API 클라이언트는 허용된다")
+    @DisplayName("운영 프로필에서 동행복권 에이피아이 클라이언트는 허용된다")
     void noProblemWhenProdClientIsSmok() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("prod");
@@ -88,7 +88,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod 프로필에서 32자 미만 ops token은 실패한다")
+    @DisplayName("운영 프로필에서 32자 미만 운영 토큰은 실패한다")
     void addsProblemWhenOpsTokenTooShort() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("prod");
@@ -104,7 +104,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod 프로필에서 관리자 UI가 활성화되면 비밀번호 해시가 필요하다")
+    @DisplayName("운영 프로필에서 관리자 화면이 활성화되면 비밀번호 해시가 필요하다")
     void addsProblemWhenAdminEnabledWithoutPasswordHash() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("prod");
@@ -120,7 +120,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod 프로필에서 관리자 비밀번호 해시가 있으면 통과한다")
+    @DisplayName("운영 프로필에서 관리자 비밀번호 해시가 있으면 통과한다")
     void noProblemWhenAdminPasswordHashIsPresent() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("prod");
@@ -136,7 +136,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod 프로필에서 약한 예시 값이 포함된 ops token은 실패한다")
+    @DisplayName("운영 프로필에서 약한 예시 값이 포함된 운영 토큰은 실패한다")
     void addsProblemWhenOpsTokenIsWeak() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("prod");
@@ -156,7 +156,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod 프로필에서 32자 이상 강한 ops token은 통과한다")
+    @DisplayName("운영 프로필에서 32자 이상 강한 운영 토큰은 통과한다")
     void noProblemWhenOpsTokenIsStrong() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("prod");
@@ -170,7 +170,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("prod가 아닌 프로필에서는 ops token 강도를 검증하지 않는다")
+    @DisplayName("운영가 아닌 프로필에서는 운영 토큰 강도를 검증하지 않는다")
     void doesNotValidateOpsTokenStrengthOutsideProd() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("local");
@@ -204,7 +204,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("컨테이너 환경에서 prod 프로필이 아니면 실패한다")
+    @DisplayName("컨테이너 환경에서 운영 프로필이 아니면 실패한다")
     void failsWhenInContainerButNotProdProfile() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("local");
@@ -217,7 +217,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("컨테이너 외부 환경에서 local 프로필이 아니면 실패한다")
+    @DisplayName("컨테이너 외부 환경에서 로컬 프로필이 아니면 실패한다")
     void failsWhenOutsideContainerButNotLocalProfile() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("prod");
@@ -230,7 +230,7 @@ class RequiredConfigValidatorTest {
     }
 
     @Test
-    @DisplayName("프로필 정책이 유효하면 KRAFT_ENV 요구사항 문제를 보고하지 않는다")
+    @DisplayName("프로필 정책이 유효하면 크래프트 환경 요구사항 문제를 보고하지 않는다")
     void doesNotRequireKraftEnvWhenProfilePolicyValid() {
         MockEnvironment env = new MockEnvironment();
         env.setActiveProfiles("local");

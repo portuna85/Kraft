@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("API 서킷 브레이커")
+@DisplayName("에이피아이 서킷 브레이커")
 class ApiCircuitBreakerTest {
 
     @Test
@@ -43,7 +43,7 @@ class ApiCircuitBreakerTest {
     }
 
     @Test
-    @DisplayName("disabled 상태에서는 항상 허가하고 상태가 변하지 않는다")
+    @DisplayName("비활성화 상태에서는 항상 허가하고 상태가 변하지 않는다")
     void disabledAlwaysPermits() {
         ApiCircuitBreaker breaker = ApiCircuitBreaker.disabled();
 
@@ -55,7 +55,7 @@ class ApiCircuitBreakerTest {
     }
 
     @Test
-    @DisplayName("open 지속시간 경계: 1ns 부족하면 여전히 차단된다")
+    @DisplayName("열림 지속시간 경계에서 1나노초 부족하면 여전히 차단된다")
     void openDurationBoundaryOneLessNano() {
         AtomicLong now = new AtomicLong(0L);
         int openDurationMs = 500;
@@ -70,7 +70,7 @@ class ApiCircuitBreakerTest {
     }
 
     @Test
-    @DisplayName("open 지속시간 경계: 정확히 만료 시점에 half-open으로 전이한다")
+    @DisplayName("열림 지속시간 경계: 정확히 만료 시점에 반열림으로 전이한다")
     void openDurationBoundaryExactExpiry() {
         AtomicLong now = new AtomicLong(0L);
         int openDurationMs = 500;
@@ -83,7 +83,7 @@ class ApiCircuitBreakerTest {
     }
 
     @Test
-    @DisplayName("half-open 최대 호출 상한에 도달하면 추가 허가를 거부한다")
+    @DisplayName("반열림 최대 호출 상한에 도달하면 추가 허가를 거부한다")
     void halfOpenMaxCallsExceeded() {
         AtomicLong now = new AtomicLong(0L);
         int halfOpenMax = 2;
@@ -98,7 +98,7 @@ class ApiCircuitBreakerTest {
     }
 
     @Test
-    @DisplayName("half-open에서 실패하면 다시 open으로 돌아간다")
+    @DisplayName("반열림에서 실패하면 다시 열림으로 돌아간다")
     void halfOpenFailureReopens() {
         AtomicLong now = new AtomicLong(0L);
         ApiCircuitBreaker breaker = new ApiCircuitBreaker(true, 1, 100, 2, now::get);
@@ -114,7 +114,7 @@ class ApiCircuitBreakerTest {
     }
 
     @Test
-    @DisplayName("성공 기록 시 실패 카운터가 리셋되어 closed에서 재시작한다")
+    @DisplayName("성공 기록 시 실패 카운터가 리셋되어 닫힘에서 재시작한다")
     void successResetFailureCount() {
         AtomicLong now = new AtomicLong(0L);
         ApiCircuitBreaker breaker = new ApiCircuitBreaker(true, 3, 100, 1, now::get);
@@ -134,7 +134,7 @@ class ApiCircuitBreakerTest {
     }
 
     @Test
-    @DisplayName("동시성: 다중 스레드에서 실패를 기록해도 open 전이는 정확히 한 번만 발생한다")
+    @DisplayName("동시성: 다중 스레드에서 실패를 기록해도 열림 전이는 정확히 한 번만 발생한다")
     void concurrentFailuresOpenTransitionIsConsistent() throws InterruptedException {
         AtomicLong now = new AtomicLong(0L);
         int threshold = 5;
@@ -169,7 +169,7 @@ class ApiCircuitBreakerTest {
     }
 
     @Test
-    @DisplayName("동시성: tryAcquirePermission과 recordFailure 동시 호출 시 상태 일관성 유지")
+    @DisplayName("동시성 상황에서 권한 획득 시도와 실패 기록을 동시에 호출해도 상태 일관성을 유지한다")
     void concurrentAcquireAndFailureStateConsistency() throws InterruptedException {
         AtomicLong now = new AtomicLong(0L);
         ApiCircuitBreaker breaker = new ApiCircuitBreaker(true, 3, 1_000, 2, now::get);

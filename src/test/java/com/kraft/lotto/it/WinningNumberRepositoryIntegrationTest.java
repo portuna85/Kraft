@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @EnabledIf(value = "com.kraft.lotto.it.TestcontainersAvailability#isDockerAvailable",
         disabledReason = "Docker is not available for Testcontainers")
-@DisplayName("WinningNumberRepository 통합 테스트")
+@DisplayName("당첨 번호 저장소 통합 테스트")
 class WinningNumberRepositoryIntegrationTest {
 
     @Autowired
@@ -40,7 +40,7 @@ class WinningNumberRepositoryIntegrationTest {
     }
 
     @Test
-    @DisplayName("저장한 엔티티를 round로 조회할 수 있다")
+    @DisplayName("저장한 엔티티를 회차로 조회할 수 있다")
     void saveAndFindById() {
         winningNumberRepository.save(entity(100));
 
@@ -54,7 +54,7 @@ class WinningNumberRepositoryIntegrationTest {
     }
 
     @Test
-    @DisplayName("findAllByOrderByRoundDesc는 round 내림차순으로 반환한다")
+    @DisplayName("회차 내림차순 전체 조회는 회차 내림차순으로 반환한다")
     void findAllByOrderByRoundDescReturnsDescendingOrder() {
         winningNumberRepository.saveAll(List.of(entity(10), entity(30), entity(20)));
 
@@ -67,7 +67,7 @@ class WinningNumberRepositoryIntegrationTest {
     }
 
     @Test
-    @DisplayName("findPrizeHitsByNumbers는 6개가 모두 일치하는 회차를 1등으로 반환한다")
+    @DisplayName("번호 당첨 이력 조회는 6개가 모두 일치하는 회차를 1등으로 반환한다")
     void findPrizeHitsByNumbersReturnsFirstPrizeHit() {
         winningNumberRepository.save(entity(500));
 
@@ -79,7 +79,7 @@ class WinningNumberRepositoryIntegrationTest {
     }
 
     @Test
-    @DisplayName("findPrizeHitsByNumbers는 5개 + 보너스 일치 회차를 2등으로 반환한다")
+    @DisplayName("번호 당첨 이력 조회는 5개 + 보너스 일치 회차를 2등으로 반환한다")
     void findPrizeHitsByNumbersReturnsSecondPrizeHit() {
         WinningNumberEntity secondPrize = new WinningNumberEntity(
                 600, LocalDate.of(2021, 6, 1),
@@ -96,7 +96,7 @@ class WinningNumberRepositoryIntegrationTest {
     }
 
     @Test
-    @DisplayName("WinningNumberFrequencySummaryRepository saveAll은 upsert처럼 동작한다")
+    @DisplayName("당첨 번호 빈도 요약 저장소 전체 저장은 업서트처럼 동작한다")
     void frequencySummaryUpsert() {
         var initial = List.of(
                 new WinningNumberFrequencySummaryEntity(1, 5L, 100),

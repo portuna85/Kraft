@@ -21,7 +21,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("당첨번호 upsert 실행기 테스트")
+@DisplayName("당첨번호 업서트 실행기 테스트")
 class WinningNumberUpsertExecutorTest {
 
     private final WinningNumberRepository repository = mock(WinningNumberRepository.class);
@@ -29,7 +29,7 @@ class WinningNumberUpsertExecutorTest {
     private final WinningNumberUpsertExecutor executor = new WinningNumberUpsertExecutor(repository, clock);
 
     @Test
-    @DisplayName("저장된 행이 없으면 INSERTED를 반환한다")
+    @DisplayName("저장된 행이 없으면 삽입됨를 반환한다")
     void returnsInsertedWhenRowAbsent() {
         stubFindById(1201, Optional.empty());
         stubNativeUpsert();
@@ -40,7 +40,7 @@ class WinningNumberUpsertExecutorTest {
     }
 
     @Test
-    @DisplayName("저장된 행이 있고 데이터가 동일하면 UNCHANGED를 반환한다")
+    @DisplayName("저장된 행이 있고 데이터가 동일하면 변경 없음를 반환한다")
     void returnsUnchangedWhenDataIsSame() {
         WinningNumber wn = sample(1200);
         stubFindById(1200, Optional.of(toEntity(wn)));
@@ -52,7 +52,7 @@ class WinningNumberUpsertExecutorTest {
     }
 
     @Test
-    @DisplayName("저장된 행이 있고 데이터가 다르면 UPDATED를 반환한다")
+    @DisplayName("저장된 행이 있고 데이터가 다르면 수정됨를 반환한다")
     void returnsUpdatedWhenDataDiffers() {
         stubFindById(1200, Optional.of(toEntity(sample(1200))));
         stubNativeUpsert();

@@ -20,14 +20,14 @@ import org.springframework.test.context.ActiveProfiles;
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 @Import(TestCacheConfig.class)
-@DisplayName("WinningNumberRepository DataJpa 슬라이스 테스트")
+@DisplayName("당첨 번호 저장소 데이터 제이피에이 슬라이스 테스트")
 class WinningNumberRepositoryDataJpaTest {
 
     @Autowired
     WinningNumberRepository repository;
 
     @Test
-    @DisplayName("findBallFrequencies는 각 볼 번호별 출현 횟수를 집계하여 반환한다")
+    @DisplayName("볼 빈도 조회는 각 볼 번호별 출현 횟수를 집계하여 반환한다")
     void findBallFrequenciesReturnsAggregatedCounts() {
         repository.save(entity(
                 1001, LocalDate.of(2026, 5, 10),
@@ -56,7 +56,7 @@ class WinningNumberRepositoryDataJpaTest {
     }
 
     @Test
-    @DisplayName("findPrizeHitsByNumbers는 1등과 2등 당첨 회차를 반환한다")
+    @DisplayName("번호 당첨 이력 조회는 1등과 2등 당첨 회차를 반환한다")
     void findPrizeHitsByNumbersReturnsExpectedRanks() {
         repository.save(entity(
                 1100, LocalDate.of(2026, 5, 10),

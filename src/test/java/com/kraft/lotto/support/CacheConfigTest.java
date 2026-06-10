@@ -29,7 +29,7 @@ class CacheConfigTest {
             );
 
     @Test
-    @DisplayName("모든 캐시가 CacheManager에 등록된다")
+    @DisplayName("모든 캐시가 캐시 관리자에 등록된다")
     void registersAllCaches() {
         runner.run(context -> {
             CacheManager cacheManager = context.getBean(CacheManager.class);
@@ -43,7 +43,7 @@ class CacheConfigTest {
     }
 
     @Test
-    @DisplayName("캐시는 통계 수집(recordStats)이 활성화된 Caffeine 캐시로 생성된다")
+    @DisplayName("캐시는 통계 수집(통계 기록)이 활성화된 카페인 캐시로 생성된다")
     void cacheHasStatsRecordingEnabled() {
         runner.run(context -> {
             CacheManager cacheManager = context.getBean(CacheManager.class);
@@ -57,7 +57,7 @@ class CacheConfigTest {
     }
 
     @Test
-    @DisplayName("캐시 메트릭이 MeterRegistry에 바인딩된다")
+    @DisplayName("캐시 메트릭이 미터 레지스트리에 바인딩된다")
     void cacheMetricsAreBoundToMeterRegistry() {
         runner.run(context -> {
             CacheManager cacheManager = context.getBean(CacheManager.class);

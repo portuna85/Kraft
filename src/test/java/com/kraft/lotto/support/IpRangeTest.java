@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("IP 대역 파서/매처 테스트")
+@DisplayName("아이피 대역 파서/매처 테스트")
 class IpRangeTest {
 
     @Test
@@ -32,7 +32,7 @@ class IpRangeTest {
     }
 
     @Test
-    @DisplayName("CIDR 매칭은 바이트 길이, 바이트 비교, 잔여 비트 비교를 적용한다")
+    @DisplayName("사이더 매칭은 바이트 길이, 바이트 비교, 잔여 비트 비교를 적용한다")
     void matchesWithByteAndBitChecks() throws Exception {
         IpRange range = IpRange.parse("192.168.10.0/24");
 

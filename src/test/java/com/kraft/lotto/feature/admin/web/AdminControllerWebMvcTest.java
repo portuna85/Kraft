@@ -38,7 +38,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
              AdminAuditController.class, AdminNewsController.class,
              AdminSystemController.class, AdminCacheController.class, AdminSeoController.class})
 @Import({TestCacheConfig.class, AdminControllerWebMvcTest.SecurityMvcConfig.class})
-@DisplayName("Admin 컨트롤러 WebMvc 테스트")
+@DisplayName("관리자 컨트롤러 웹 엠브이씨 테스트")
 class AdminControllerWebMvcTest {
 
     @TestConfiguration
@@ -74,7 +74,7 @@ class AdminControllerWebMvcTest {
 
     @Test
     @WithMockUser(roles = "ADMIN_OPERATOR")
-    @DisplayName("운영 도구 페이지 조회 — ADMIN_OPERATOR 역할 사용자에게 200을 반환한다")
+    @DisplayName("운영 도구 페이지 조회는 관리자 운영자 역할 사용자에게 200을 반환한다")
     void collectionPageIsOk() throws Exception {
         when(auditLogService.list(any(), any())).thenReturn(Page.empty());
         mockMvc.perform(get("/admin/ops/collection"))
@@ -84,7 +84,7 @@ class AdminControllerWebMvcTest {
 
     @Test
     @WithMockUser(roles = "ADMIN_AUDITOR")
-    @DisplayName("감사 로그 페이지 조회 — ADMIN_AUDITOR 역할 사용자에게 200을 반환한다")
+    @DisplayName("감사 로그 페이지 조회는 관리자 감사자 역할 사용자에게 200을 반환한다")
     void auditPageIsOk() throws Exception {
         when(auditLogService.list(any(), any())).thenReturn(Page.empty());
         mockMvc.perform(get("/admin/ops/audit"))
@@ -94,7 +94,7 @@ class AdminControllerWebMvcTest {
 
     @Test
     @WithMockUser(roles = "ADMIN_NEWS_MANAGER")
-    @DisplayName("뉴스 관리 페이지 조회 — ADMIN_NEWS_MANAGER 역할 사용자에게 200을 반환한다")
+    @DisplayName("뉴스 관리 페이지 조회는 관리자 뉴스 관리자 역할 사용자에게 200을 반환한다")
     void newsPageIsOk() throws Exception {
         when(adminNewsService.listPending(any(Pageable.class))).thenReturn(Page.empty());
         mockMvc.perform(get("/admin/ops/news").param("tab", "pending"))
@@ -155,7 +155,7 @@ class AdminControllerWebMvcTest {
 
     @Test
     @WithMockUser(roles = "ADMIN_VIEWER")
-    @DisplayName("시스템 상태 페이지 조회 — ADMIN_VIEWER 역할 사용자에게 200을 반환한다")
+    @DisplayName("시스템 상태 페이지 조회는 관리자 조회자 역할 사용자에게 200을 반환한다")
     void systemPageIsOk() throws Exception {
         mockMvc.perform(get("/admin/ops/system"))
                 .andExpect(status().isOk())
@@ -164,7 +164,7 @@ class AdminControllerWebMvcTest {
 
     @Test
     @WithMockUser(roles = "ADMIN_OPERATOR")
-    @DisplayName("캐시 관리 페이지 조회 — ADMIN_OPERATOR 역할 사용자에게 200을 반환한다")
+    @DisplayName("캐시 관리 페이지 조회는 관리자 운영자 역할 사용자에게 200을 반환한다")
     void cachePageIsOk() throws Exception {
         when(cacheManager.getCache(any())).thenReturn(null);
         mockMvc.perform(get("/admin/ops/cache"))
@@ -174,7 +174,7 @@ class AdminControllerWebMvcTest {
 
     @Test
     @WithMockUser(roles = "ADMIN_VIEWER")
-    @DisplayName("SEO 점검 페이지 조회 — ADMIN_VIEWER 역할 사용자에게 200을 반환한다")
+    @DisplayName("검색 최적화 점검 페이지 조회는 관리자 조회자 역할 사용자에게 200을 반환한다")
     void seoPageIsOk() throws Exception {
         mockMvc.perform(get("/admin/ops/seo"))
                 .andExpect(status().isOk())

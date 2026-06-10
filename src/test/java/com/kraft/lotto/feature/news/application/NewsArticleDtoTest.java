@@ -7,11 +7,11 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("뉴스 기사 DTO")
+@DisplayName("뉴스 기사 디티오")
 class NewsArticleDtoTest {
 
     @Test
-    @DisplayName("pubDate가 있으면 포맷된 문자열로 변환한다")
+    @DisplayName("발행일가 있으면 포맷된 문자열로 변환한다")
     void formatsPubDate() {
         LocalDateTime pubDate = LocalDateTime.of(2026, 6, 1, 12, 30);
 
@@ -22,7 +22,7 @@ class NewsArticleDtoTest {
     }
 
     @Test
-    @DisplayName("pubDate가 null이면 빈 문자열을 반환한다")
+    @DisplayName("발행일가 널이면 빈 문자열을 반환한다")
     void nullPubDateReturnsEmptyString() {
         NewsArticleDto dto = NewsArticleDto.of(1L, "제목", "https://example.com",
                 "설명", "출처", null, null, null);

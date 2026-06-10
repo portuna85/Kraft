@@ -60,7 +60,7 @@ class LottoTheoreticalDistributionTest {
     }
 
     @Test
-    @DisplayName("C(45,6) = 8,145,060개의 조합이 존재한다")
+    @DisplayName("45개 중 6개를 고르는 조합은 8,145,060개이다")
     void totalCombinationsIsCorrect() {
         assertThat(LottoTheoreticalDistribution.TOTAL_COMBINATIONS).isEqualTo(8_145_060L);
     }

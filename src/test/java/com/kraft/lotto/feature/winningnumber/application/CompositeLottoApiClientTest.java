@@ -20,7 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("CompositeLottoApiClient 폴백 체이닝 테스트")
+@DisplayName("복합 로또 에이피아이 클라이언트 폴백 체이닝 테스트")
 class CompositeLottoApiClientTest {
 
     private LottoApiClient primary;
@@ -37,7 +37,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("primary가 secondPrize > 0으로 성공하면 fallback을 호출하지 않는다")
+    @DisplayName("주 클라이언트가 2등 상금 > 0으로 성공하면 대체 클라이언트을 호출하지 않는다")
     void primarySuccessWithSecondPrizeNoFallbackCall() {
         WinningNumber result = winningNumberWithSecondPrize(1_000_000L);
         when(primary.fetch(1)).thenReturn(Optional.of(result));
@@ -50,7 +50,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("primary가 secondPrize=0으로 성공하면 fallback으로 2등 보충(enrich)을 시도한다")
+    @DisplayName("주 클라이언트가 2등 상금=0으로 성공하면 대체 클라이언트으로 2등 보충(보강)을 시도한다")
     void primarySuccessSecondPrizeZeroEnrichFromFallback() {
         WinningNumber primaryResult = winningNumberWithSecondPrize(0L);
         WinningNumber enrichResult = winningNumberWithSecondPrize(70_054_508L);
@@ -67,7 +67,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("primary secondPrize=0이고 fallback도 secondPrize=0이면 primary 결과를 그대로 반환한다")
+    @DisplayName("주 클라이언트 2등 상금=0이고 대체 클라이언트도 2등 상금=0이면 주 클라이언트 결과를 그대로 반환한다")
     void primaryAndFallbackBothSecondPrizeZeroReturnsPrimary() {
         WinningNumber primaryResult = winningNumberWithSecondPrize(0L);
         WinningNumber fallbackResult = winningNumberWithSecondPrize(0L);
@@ -82,7 +82,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("primary secondPrize=0이고 fallback 보충 실패해도 primary 결과를 반환한다")
+    @DisplayName("주 클라이언트 2등 상금=0이고 대체 클라이언트 보충 실패해도 주 클라이언트 결과를 반환한다")
     void primarySecondPrizeZeroEnrichFailReturnsOriginal() {
         WinningNumber primaryResult = winningNumberWithSecondPrize(0L);
         when(primary.fetch(1)).thenReturn(Optional.of(primaryResult));
@@ -95,7 +95,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("primary가 empty를 반환(미추첨 권위)하면 fallback을 호출하지 않는다")
+    @DisplayName("주 클라이언트가 빈 값를 반환(미추첨 권위)하면 대체 클라이언트을 호출하지 않는다")
     void primaryEmptyNoFallbackCall() {
         when(primary.fetch(99)).thenReturn(Optional.empty());
 
@@ -106,7 +106,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("primary 예외 발생 시 fallback을 호출하고 fallback.used counter를 증가시킨다")
+    @DisplayName("주 클라이언트 예외 발생 시 대체 클라이언트를 호출하고 대체 클라이언트 사용 카운터를 증가시킨다")
     void primaryExceptionFallbackSuccess() {
         WinningNumber result = mock(WinningNumber.class);
         when(primary.fetch(10)).thenThrow(new LottoApiClientException("dhlottery error"));
@@ -120,7 +120,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("CircuitBreakerOpenException 발생 시 fallback으로 전환한다")
+    @DisplayName("서킷 브레이커 열림 예외 발생 시 대체 클라이언트으로 전환한다")
     void circuitBreakerOpenFallbackSuccess() {
         WinningNumber result = mock(WinningNumber.class);
         when(primary.fetch(20)).thenThrow(new CircuitBreakerOpenException("circuit open"));
@@ -133,7 +133,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("primary와 fallback 모두 실패하면 예외를 전파하고 fallback.exhausted counter를 증가시킨다")
+    @DisplayName("주 클라이언트와 대체 클라이언트 모두 실패하면 예외를 전파하고 대체 클라이언트 소진 카운터를 증가시킨다")
     void bothFailExhaustedCounterAndException() {
         LottoApiClientException primaryEx = new LottoApiClientException("dhlottery error");
         LottoApiClientException fallbackEx = new LottoApiClientException("smok error");
@@ -149,7 +149,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("fallbackClient가 null이면 LottoApiClientConfig에서 Composite를 생성하지 않는다")
+    @DisplayName("대체 클라이언트가 널이면 로또 에이피아이 클라이언트 설정에서 복합 클라이언트를 생성하지 않는다")
     void nullFallbackTokenNoCompositeCreated() {
         // fallbackClient=null → Composite 미생성 검증은 LottoApiClientConfigTest에서 담당.
         // 여기서는 Composite 자체의 동작만 검증하므로 이 케이스는 설정 레이어 테스트로 위임.
@@ -157,7 +157,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("drawDate가 오늘(KST)이면 2등 보충을 스킵하고 enrich.skipped 카운터를 증가시킨다")
+    @DisplayName("추첨일이 오늘이면 2등 보충을 건너뛰고 보강 건너뜀 카운터를 증가시킨다")
     void drawDateTodayKstSkipsEnrich() {
         LocalDate today = LocalDate.of(2026, 6, 7);
         Clock fixedClock = Clock.fixed(
@@ -179,7 +179,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("drawDate가 어제이면 2등 보충을 시도한다")
+    @DisplayName("추첨일가 어제이면 2등 보충을 시도한다")
     void drawDateYesterdayProceedsWithEnrich() {
         LocalDate yesterday = LocalDate.of(2026, 6, 6);
         Clock fixedClock = Clock.fixed(
@@ -202,7 +202,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("drawDate가 어제여도 enrich delay 시간 이내면 2등 보충을 스킵한다")
+    @DisplayName("추첨일이 어제여도 보강 지연 시간 이내면 2등 보충을 건너뛴다")
     void drawDateYesterdayWithinDelaySkipsEnrich() {
         LocalDate yesterday = LocalDate.of(2026, 6, 6);
         Clock fixedClock = Clock.fixed(
@@ -224,7 +224,7 @@ class CompositeLottoApiClientTest {
     }
 
     @Test
-    @DisplayName("drawDate가 어제이고 enrich delay 시간이 지나면 2등 보충을 시도한다")
+    @DisplayName("추첨일이 어제이고 보강 지연 시간이 지나면 2등 보충을 시도한다")
     void drawDateYesterdayAfterDelayProceedsWithEnrich() {
         LocalDate yesterday = LocalDate.of(2026, 6, 6);
         Clock fixedClock = Clock.fixed(

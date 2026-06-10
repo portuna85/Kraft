@@ -11,13 +11,13 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.util.ReflectionTestUtils;
 
-@DisplayName("WWW 리다이렉트 필터")
+@DisplayName("더블유더블유더블유 리다이렉트 필터")
 class WwwRedirectFilterTest {
 
     private final WwwRedirectFilter filter = configuredFilter("kraft.io.kr", "https://www.kraft.io.kr");
 
     @Test
-    @DisplayName("non-www 도메인 요청을 www로 301 리다이렉트한다")
+    @DisplayName("더블유더블유더블유 없는 도메인 요청을 더블유더블유더블유로 301 리다이렉트한다")
     void redirectsNonWwwToWww() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
         request.setServerName("kraft.io.kr");
@@ -43,7 +43,7 @@ class WwwRedirectFilterTest {
     }
 
     @Test
-    @DisplayName("포트가 포함된 apex 호스트도 고정 목적지로 301 리다이렉트한다")
+    @DisplayName("포트가 포함된 최상위 호스트도 고정 목적지로 301 리다이렉트한다")
     void redirectsApexWithPort() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
         request.setServerName("kraft.io.kr:443");
@@ -56,7 +56,7 @@ class WwwRedirectFilterTest {
     }
 
     @Test
-    @DisplayName("www 도메인 요청은 통과시킨다")
+    @DisplayName("더블유더블유더블유 도메인 요청은 통과시킨다")
     void passesThroughWwwRequests() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
         request.setServerName("www.kraft.io.kr");
@@ -100,7 +100,7 @@ class WwwRedirectFilterTest {
     }
 
     @Test
-    @DisplayName("설정된 apex/canonical 도메인을 사용해 리다이렉트한다")
+    @DisplayName("설정된 최상위/정식 도메인을 사용해 리다이렉트한다")
     void redirectsUsingConfiguredHosts() throws Exception {
         WwwRedirectFilter customFilter = configuredFilter("example.com", "https://www.example.com");
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/promo");

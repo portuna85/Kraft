@@ -7,14 +7,14 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("WinningNumberEntity rawJson 절단 테스트")
+@DisplayName("당첨 번호 엔티티 원본 제이슨 절단 테스트")
 class WinningNumberEntityTest {
 
     private static final LocalDate DATE = LocalDate.of(2026, 1, 1);
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 1, 1, 0, 0, 0);
 
     @Test
-    @DisplayName("rawJson은 4000자를 초과하면 절단된다")
+    @DisplayName("원본 제이슨은 4000자를 초과하면 절단된다")
     void rawJsonIsTruncatedAt4000Chars() {
         String longJson = "x".repeat(5000);
 
@@ -24,7 +24,7 @@ class WinningNumberEntityTest {
     }
 
     @Test
-    @DisplayName("4000자 이하 rawJson은 그대로 유지된다")
+    @DisplayName("4000자 이하 원본 제이슨은 그대로 유지된다")
     void rawJsonUnder4000IsKeptAsIs() {
         String json = "{\"returnValue\":\"success\"}";
 
@@ -34,7 +34,7 @@ class WinningNumberEntityTest {
     }
 
     @Test
-    @DisplayName("null rawJson은 null로 유지된다")
+    @DisplayName("널 원본 제이슨은 널로 유지된다")
     void nullRawJsonIsPassedThrough() {
         WinningNumberEntity entity = entity(null);
 
@@ -42,7 +42,7 @@ class WinningNumberEntityTest {
     }
 
     @Test
-    @DisplayName("updateFrom은 secondPrize와 secondWinners도 갱신한다")
+    @DisplayName("갱신 메서드는 2등 상금과 2등 당첨자 수도 갱신한다")
     void updateFromShouldUpdateSecondPrizeAndWinners() {
         WinningNumberEntity target = new WinningNumberEntity(
                 1150, DATE,
@@ -68,7 +68,7 @@ class WinningNumberEntityTest {
     }
 
     @Test
-    @DisplayName("13개 파라미터 생성자가 fetchedAt을 createdAt·updatedAt으로 설정한다")
+    @DisplayName("13개 파라미터 생성자가 조회 시각을 생성 시각·수정 시각으로 설정한다")
     void thirteenParamConstructorSetsTimestamps() {
         WinningNumberEntity entity = new WinningNumberEntity(
                 1150, DATE,

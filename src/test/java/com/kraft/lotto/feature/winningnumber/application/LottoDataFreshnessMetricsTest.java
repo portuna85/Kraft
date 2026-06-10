@@ -26,7 +26,7 @@ class LottoDataFreshnessMetricsTest {
             Clock.fixed(Instant.parse("2026-06-07T12:00:00Z"), ZoneId.of("Asia/Seoul"));
 
     @Test
-    @DisplayName("저장 회차 게이지는 DB 최신 회차를 반환한다")
+    @DisplayName("저장 회차 게이지는 데이터베이스 최신 회차를 반환한다")
     void storedRoundGaugeReturnsDbValue() {
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1230));
         SimpleMeterRegistry registry = new SimpleMeterRegistry();

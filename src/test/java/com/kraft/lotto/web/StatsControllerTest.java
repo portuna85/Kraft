@@ -44,7 +44,7 @@ class StatsControllerTest {
     }
 
     @Test
-    @DisplayName("/stats 페이지를 렌더링한다")
+    @DisplayName("통계 페이지를 렌더링한다")
     void statsPageRendersView() throws Exception {
         when(statisticsService.patternStats()).thenReturn(patternStatDto());
 
@@ -55,7 +55,7 @@ class StatsControllerTest {
     }
 
     @Test
-    @DisplayName("/fragments/stats 프래그먼트를 반환한다")
+    @DisplayName("통계 프래그먼트를 반환한다")
     void statsFragmentReturnsFragment() throws Exception {
         when(statisticsService.patternStats()).thenReturn(patternStatDto());
 

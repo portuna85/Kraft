@@ -64,7 +64,7 @@ class LottoCollectionCommandServiceTest {
     }
 
     @Test
-    @DisplayName("최신 회차까지 수집 시 API가 아직 추첨되지 않은 회차를 보고하면 중단한다")
+    @DisplayName("최신 회차까지 수집 시 에이피아이가 아직 추첨되지 않은 회차를 보고하면 중단한다")
     void collectAllUntilLatestStopsOnNotDrawn() {
         LottoCollectionCommandService service = service();
         when(winningNumberRepository.findMaxRound())
@@ -115,7 +115,7 @@ class LottoCollectionCommandServiceTest {
     }
 
     @Test
-    @DisplayName("설정된 maxPerRun에 도달하면 추가 수집을 중단한다")
+    @DisplayName("설정된 실행당 최대 개수에 도달하면 추가 수집을 중단한다")
     void collectAllUntilLatestStopsAtConfiguredMaxPerRun() {
         LottoCollectionCommandService service = new LottoCollectionCommandService(
                 winningNumberRepository,
@@ -137,7 +137,7 @@ class LottoCollectionCommandServiceTest {
     }
 
     @Test
-    @DisplayName("stopOnFailure=false면 실패 회차를 기록하고 다음 회차 수집을 계속한다")
+    @DisplayName("실패 시 중단=거짓면 실패 회차를 기록하고 다음 회차 수집을 계속한다")
     void collectAllUntilLatestContinuesWhenStopOnFailureDisabled() {
         LottoCollectionCommandService service = new LottoCollectionCommandService(
                 winningNumberRepository,
@@ -207,7 +207,7 @@ class LottoCollectionCommandServiceTest {
     }
 
     @Test
-    @DisplayName("실행 중에는 active 상태를 반환하고 완료 후 idle로 복귀한다")
+    @DisplayName("실행 중에는 활성 상태를 반환하고 완료 후 대기로 복귀한다")
     void statusTransitionsFromActiveToIdle() throws Exception {
         LottoCollectionCommandService service = new LottoCollectionCommandService(
                 winningNumberRepository,
@@ -251,7 +251,7 @@ class LottoCollectionCommandServiceTest {
     }
 
     @Test
-    @DisplayName("특정 회차를 refresh=true로 재수집하고 이벤트를 발행한다")
+    @DisplayName("특정 회차를 새로고침=참로 재수집하고 이벤트를 발행한다")
     void collectOneRefreshFetchesWithRefreshAndPublishesEvent() {
         LottoCollectionCommandService service = service();
         when(singleDrawCollector.collectOne(1227, true)).thenReturn(CollectResponse.ofUpdated(1, 1227));

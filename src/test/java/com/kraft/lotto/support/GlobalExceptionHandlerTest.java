@@ -18,7 +18,7 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    @DisplayName("BusinessException은 에러 뷰로 렌더링한다")
+    @DisplayName("비즈니스 예외은 에러 뷰로 렌더링한다")
     void handlesBusinessExceptionAsErrorView() {
         var ex = new BusinessException(ErrorCode.REQUEST_VALIDATION_ERROR, "count 오류");
         ModelAndView mav = handler.handleBusiness(ex);
@@ -46,7 +46,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("허용되지 않은 HTTP 메서드는 405 에러 뷰로 처리한다")
+    @DisplayName("허용되지 않은 에이치티티피 메서드는 405 에러 뷰로 처리한다")
     void handlesMethodNotAllowedAs405() {
         var ex = new HttpRequestMethodNotSupportedException("POST");
         ModelAndView mav = handler.handleMethodNotAllowed(ex);
@@ -83,7 +83,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("5xx BusinessException은 내부 메시지 대신 defaultMessage를 반환한다")
+    @DisplayName("5백 번대 비즈니스 예외는 내부 메시지 대신 기본 메시지를 반환한다")
     void hidesInternalMessageFor5xxBusinessException() {
         var ex = new BusinessException(ErrorCode.EXTERNAL_API_FAILURE, "내부 상세 메시지");
         ModelAndView mav = handler.handleBusiness(ex);

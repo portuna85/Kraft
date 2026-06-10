@@ -10,7 +10,7 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("모의 로또 API 클라이언트 테스트")
+@DisplayName("모의 로또 에이피아이 클라이언트 테스트")
 class MockLottoApiClientTest {
 
     @Test

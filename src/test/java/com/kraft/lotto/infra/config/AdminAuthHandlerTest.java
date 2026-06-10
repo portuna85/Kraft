@@ -17,7 +17,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 
-@DisplayName("Admin 인증 핸들러 테스트")
+@DisplayName("관리자 인증 핸들러 테스트")
 class AdminAuthHandlerTest {
 
     AdminAuditLogService auditService;
@@ -30,7 +30,7 @@ class AdminAuthHandlerTest {
     }
 
     @Test
-    @DisplayName("SuccessHandler — 인증 성공 시 /admin/ops로 리다이렉트한다")
+    @DisplayName("성공 핸들러는 인증 성공 시 관리자 운영 페이지로 리다이렉트한다")
     void successHandlerRedirectsToOps() throws Exception {
         AdminAuthSuccessHandler handler = new AdminAuthSuccessHandler(auditService, lockoutService);
 
@@ -48,7 +48,7 @@ class AdminAuthHandlerTest {
     }
 
     @Test
-    @DisplayName("FailureHandler — /admin/login?error로 리다이렉트하고 감사 로그를 기록한다")
+    @DisplayName("실패 핸들러는 로그인 오류 페이지로 리다이렉트하고 감사 로그를 기록한다")
     void failureHandlerRedirectsAndAudits() throws Exception {
         AdminAuthFailureHandler handler = new AdminAuthFailureHandler(auditService, lockoutService);
 

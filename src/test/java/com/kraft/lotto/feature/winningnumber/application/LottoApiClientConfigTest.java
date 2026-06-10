@@ -16,11 +16,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.client.RestClient;
 
-@DisplayName("로또 API 클라이언트 설정 테스트")
+@DisplayName("로또 에이피아이 클라이언트 설정 테스트")
 class LottoApiClientConfigTest {
 
     @Test
-    @DisplayName("mock-latest-round이 0이면 DB max round + 1을 mock latest round로 사용한다")
+    @DisplayName("모의 최신 회차가 0이면 데이터베이스 최대 회차에 1을 더해 모의 최신 회차로 사용한다")
     void usesDbMaxRoundPlusOneWhenMockLatestRoundIsZero() {
         LottoApiClientConfig config = new LottoApiClientConfig(
                 Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul")));

@@ -57,7 +57,7 @@ class RecommendRuleConfigTest {
     }
 
     @Test
-    @DisplayName("스프링 주입 시 LottoRecommender의 규칙 순서는 PastWinningRule이 마지막이다")
+    @DisplayName("스프링 주입 시 로또 추천기의 규칙 순서는 과거 당첨 규칙이 마지막이다")
     void keepsPastWinningRuleAsLastInSpringInjection() {
         try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
             context.registerBean(KraftRecommendProperties.class, () -> PROPERTIES);

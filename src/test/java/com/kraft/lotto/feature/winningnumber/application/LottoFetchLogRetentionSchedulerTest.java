@@ -46,7 +46,7 @@ class LottoFetchLogRetentionSchedulerTest {
     }
 
     @Test
-    @DisplayName("cutoff는 현재 시각에서 보존 기간을 뺀 값이다")
+    @DisplayName("기준 시각는 현재 시각에서 보존 기간을 뺀 값이다")
     void cutoffIsNowMinusRetentionDays() {
         Clock fixedClock = Clock.fixed(Instant.parse("2026-06-01T03:30:00Z"), ZoneOffset.UTC);
         ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);

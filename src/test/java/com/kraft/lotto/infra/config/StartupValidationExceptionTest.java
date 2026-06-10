@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class StartupValidationExceptionTest {
 
     @Test
-    @DisplayName("메시지를 보존하며, fillInStackTrace가 자기 자신을 반환한다")
+    @DisplayName("메시지를 보존하며 스택 추적 채우기는 자기 자신을 반환한다")
     void messageAndNoStackTrace() {
         StartupValidationException ex = new StartupValidationException("missing env");
 

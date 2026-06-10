@@ -72,7 +72,7 @@ class AdminSecurityConfigTest {
     }
 
     @Test
-    @DisplayName("Spring Security id prefix가 없는 해시는 거부한다")
+    @DisplayName("스프링 시큐리티 아이디 접두사가 없는 해시는 거부한다")
     void rejectsPasswordHashWithoutDelegatingPrefix() {
         AdminSecurityConfig config = config(new KraftAdminProperties(
                 true,

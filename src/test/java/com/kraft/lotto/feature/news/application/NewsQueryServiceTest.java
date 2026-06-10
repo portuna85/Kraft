@@ -33,7 +33,7 @@ class NewsQueryServiceTest {
     NewsQueryService service;
 
     @Test
-    @DisplayName("tier 미지정 시 official·press 기사만 반환한다")
+    @DisplayName("등급 미지정 시 공식 및 언론 기사만 반환한다")
     void returnsPagedArticles() {
         NewsArticleEntity entity = new NewsArticleEntity(
                 "로또 뉴스", "https://example.com/1", "abc123",
@@ -85,7 +85,7 @@ class NewsQueryServiceTest {
     }
 
     @Test
-    @DisplayName("page가 음수면 예외가 발생한다")
+    @DisplayName("페이지가 음수면 예외가 발생한다")
     void listPageNegativeShouldThrow() {
         assertThatExceptionOfType(BusinessException.class)
                 .isThrownBy(() -> service.list(-1, 20))
@@ -94,7 +94,7 @@ class NewsQueryServiceTest {
     }
 
     @Test
-    @DisplayName("size가 0이면 예외가 발생한다")
+    @DisplayName("크기가 0이면 예외가 발생한다")
     void listSizeZeroShouldThrow() {
         assertThatExceptionOfType(BusinessException.class)
                 .isThrownBy(() -> service.list(0, 0))

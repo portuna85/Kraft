@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("동행복권 API 클라이언트 테스트")
+@DisplayName("동행복권 에이피아이 클라이언트 테스트")
 class DhLotteryApiClientTest {
 
     private final DhLotteryApiClient client =
@@ -52,7 +52,7 @@ class DhLotteryApiClientTest {
         }
 
         @Test
-        @DisplayName("HTML 응답은 예외가 발생한다")
+        @DisplayName("에이치티엠엘 응답은 예외가 발생한다")
         void parseThrowsOnHtmlResponse() {
             assertThatThrownBy(() -> client.parse(1102, "<html>error</html>"))
                     .isInstanceOf(LottoApiClientException.class);
@@ -66,7 +66,7 @@ class DhLotteryApiClientTest {
         }
 
         @Test
-        @DisplayName("결과가 fail이면 빈 Optional을 반환한다")
+        @DisplayName("결과가 실패이면 빈 옵셔널을 반환한다")
         void parseReturnsEmptyOnReturnValueFail() {
             String body = """
                     {"returnValue":"fail","drwNo":1102}
@@ -109,7 +109,7 @@ class DhLotteryApiClientTest {
         }
 
         @Test
-        @DisplayName("successBody 픽스처가 완전한 성공 응답으로 파싱된다")
+        @DisplayName("성공 본문 픽스처가 완전한 성공 응답으로 파싱된다")
         void fixtureIsValidAndComplete() {
             Optional<WinningNumber> result = client.parse(1102, successBody(1102));
 
@@ -160,7 +160,7 @@ class DhLotteryApiClientTest {
         }
 
         @Test
-        @DisplayName("4xx 오류 발생 시 재시도하지 않고 예외가 발생한다")
+        @DisplayName("4백 번대 오류 발생 시 재시도하지 않고 예외가 발생한다")
         void fetchThrowsOnHttpErrorWithoutRetryFor4xx() {
             ScriptedDhLotteryApiClient scriptedClient = new ScriptedDhLotteryApiClient(
                     2,
@@ -173,7 +173,7 @@ class DhLotteryApiClientTest {
         }
 
         @Test
-        @DisplayName("JSON이 아닌 본문은 예외가 발생한다")
+        @DisplayName("제이슨이 아닌 본문은 예외가 발생한다")
         void fetchThrowsOnNonJsonBody() {
             ScriptedDhLotteryApiClient scriptedClient = new ScriptedDhLotteryApiClient(
                     2,
@@ -186,7 +186,7 @@ class DhLotteryApiClientTest {
         }
 
         @Test
-        @DisplayName("미추첨 미래 회차 HTML 응답은 빈 Optional을 반환한다")
+        @DisplayName("미추첨 미래 회차 에이치티엠엘 응답은 빈 옵셔널을 반환한다")
         void fetchReturnsEmptyOnHtmlBodyForFutureRound() {
             ScriptedDhLotteryApiClient scriptedClient = new ScriptedDhLotteryApiClient(
                     2,
@@ -198,7 +198,7 @@ class DhLotteryApiClientTest {
         }
 
         @Test
-        @DisplayName("이미 추첨됐어야 할 회차에 HTML 응답이 오면 예외가 발생한다")
+        @DisplayName("이미 추첨됐어야 할 회차에 에이치티엠엘 응답이 오면 예외가 발생한다")
         void fetchThrowsOnHtmlBodyForExpectedRound() {
             ScriptedDhLotteryApiClient scriptedClient = new ScriptedDhLotteryApiClient(
                     0,
@@ -212,7 +212,7 @@ class DhLotteryApiClientTest {
         }
 
         @Test
-        @DisplayName("미추첨 HTML 응답 수신 시 half-open 상태가 closed로 전환된다")
+        @DisplayName("미추첨 에이치티엠엘 응답 수신 시 반열림 상태가 닫힘로 전환된다")
         void halfOpenClosesWhenNotDrawnHtmlIsReturned() {
             AtomicLong now = new AtomicLong(0L);
             ApiCircuitBreaker breaker = new ApiCircuitBreaker(true, 1, 1000, 1, now::get);

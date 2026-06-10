@@ -59,7 +59,7 @@ class LottoSingleDrawCollectorTest {
     }
 
     @Test
-    @DisplayName("batch skip 시 logSkip=false이면 skip 로그를 저장하지 않는다")
+    @DisplayName("배치 건너뛰기 시 건너뛰기 로그가 거짓이면 건너뛰기 로그를 저장하지 않는다")
     void batchSkipDoesNotSaveLog() {
         LottoSingleDrawCollector collector = collector();
         when(winningNumberRepository.existsByRound(1200)).thenReturn(true);
@@ -72,7 +72,7 @@ class LottoSingleDrawCollectorTest {
     }
 
     @Test
-    @DisplayName("수집된 당첨 번호를 저장하고 성공 로그에는 원본 JSON을 생략한다")
+    @DisplayName("수집된 당첨 번호를 저장하고 성공 로그에는 원본 제이슨을 생략한다")
     void storesFetchedWinningNumber() {
         LottoSingleDrawCollector collector = collector();
         WinningNumber winningNumber = winningNumber(1201);
@@ -104,7 +104,7 @@ class LottoSingleDrawCollectorTest {
     }
 
     @Test
-    @DisplayName("외부 API 실패를 실패 회차로 변환하고 응답 상세 정보를 보존한다")
+    @DisplayName("외부 에이피아이 실패를 실패 회차로 변환하고 응답 상세 정보를 보존한다")
     void recordsApiFailure() {
         LottoSingleDrawCollector collector = collector();
         when(lottoApiClient.fetch(1203))

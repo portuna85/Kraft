@@ -80,7 +80,7 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("빈도 프래그먼트는 FrequencyViewModel 리스트를 모델에 담아 렌더링한다")
+    @DisplayName("빈도 프래그먼트는 빈도 뷰 모델 리스트를 모델에 담아 렌더링한다")
     void frequencyFragmentRendersView() throws Exception {
         List<NumberFrequencyDto> freqs = List.of(
                 new NumberFrequencyDto(1, 3, 0.1),
@@ -145,7 +145,7 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("추천 프래그먼트에서 낮은 count 값은 그대로 1로 전달한다")
+    @DisplayName("추천 프래그먼트에서 낮은 개수 값은 그대로 1로 전달한다")
     void recommendFragmentWithLowCountCallsService() throws Exception {
         stubRecommend(1, 1);
 
@@ -157,7 +157,7 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("추천 프래그먼트에서 count=10은 그대로 서비스에 전달한다")
+    @DisplayName("추천 프래그먼트에서 개수=10은 그대로 서비스에 전달한다")
     void recommendFragmentWithMaxCountCallsService() throws Exception {
         stubRecommend(10, 10);
 
@@ -193,7 +193,7 @@ class HomeControllerTest {
     }
 
     @Test
-    @DisplayName("숫자가 아닌 회차 값에 대해 400 Bad Request를 반환한다")
+    @DisplayName("숫자가 아닌 회차 값에 대해 400 잘못된 요청를 반환한다")
     void nonNumericRoundReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/").param("round", "abc"))
                 .andExpect(status().isBadRequest())

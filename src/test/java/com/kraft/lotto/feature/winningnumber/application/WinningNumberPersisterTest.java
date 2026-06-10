@@ -27,7 +27,7 @@ class WinningNumberPersisterTest {
     private final WinningNumberPersister persister = new WinningNumberPersister(executor, meterRegistry);
 
     @Test
-    @DisplayName("upsert는 동일 데이터면 UNCHANGED를 반환한다")
+    @DisplayName("업서트는 동일 데이터면 변경 없음를 반환한다")
     void upsertReturnsUnchangedForSameData() {
         when(executor.upsertOnce(any())).thenReturn(UpsertOutcome.UNCHANGED);
 
@@ -37,7 +37,7 @@ class WinningNumberPersisterTest {
     }
 
     @Test
-    @DisplayName("upsert는 기존 데이터가 다르면 UPDATED를 반환한다")
+    @DisplayName("업서트는 기존 데이터가 다르면 수정됨를 반환한다")
     void upsertReturnsUpdatedWhenDataChanged() {
         when(executor.upsertOnce(any())).thenReturn(UpsertOutcome.UPDATED);
 
@@ -47,7 +47,7 @@ class WinningNumberPersisterTest {
     }
 
     @Test
-    @DisplayName("upsert는 신규 데이터면 INSERTED를 반환한다")
+    @DisplayName("업서트는 신규 데이터면 삽입됨를 반환한다")
     void upsertReturnsInsertedWhenMissing() {
         when(executor.upsertOnce(any())).thenReturn(UpsertOutcome.INSERTED);
 

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("OpsCollectionController 단위 테스트")
+@DisplayName("운영 수집 컨트롤러 단위 테스트")
 class OpsCollectionControllerTest {
 
     LottoCollectionCommandService commandService;
@@ -28,7 +28,7 @@ class OpsCollectionControllerTest {
     }
 
     @Test
-    @DisplayName("refreshRound는 재수집 결과를 반환한다")
+    @DisplayName("회차 새로고침은 재수집 결과를 반환한다")
     void refreshRoundReturnsCollectResponse() {
         CollectResponse expected = CollectResponse.ofInserted(1, 1227);
         when(commandService.collectOneRefresh(1227)).thenReturn(expected);

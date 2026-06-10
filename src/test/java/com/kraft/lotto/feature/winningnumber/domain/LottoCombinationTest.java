@@ -26,7 +26,7 @@ class LottoCombinationTest {
     }
 
     @Test
-    @DisplayName("null 리스트는 허용되지 않는다")
+    @DisplayName("널 리스트는 허용되지 않는다")
     void rejectsNullList() {
         assertThatThrownBy(() -> new LottoCombination(null))
                 .isInstanceOf(NullPointerException.class);
@@ -58,7 +58,7 @@ class LottoCombinationTest {
     }
 
     @Test
-    @DisplayName("null 요소를 포함할 수 없다")
+    @DisplayName("널 요소를 포함할 수 없다")
     void rejectsNullElement() {
         List<Integer> withNull = new ArrayList<>();
         withNull.add(1);
@@ -120,7 +120,7 @@ class LottoCombinationTest {
     }
 
     @Test
-    @DisplayName("null과 비교 시 false를 반환한다")
+    @DisplayName("널과 비교 시 거짓을 반환한다")
     void sameNumbersReturnsFalseForNull() {
         LottoCombination a = LottoCombination.of(1, 7, 13, 22, 34, 45);
         assertThat(a.sameNumbers(null)).isFalse();

@@ -16,7 +16,7 @@ class LottoDrawScheduleTest {
     }
 
     @Test
-    @DisplayName("검색 허용 상한 headroom과 추첨 완료 회차는 분리된다")
+    @DisplayName("검색 허용 상한 여유분과 추첨 완료 회차는 분리된다")
     void expectedRoundDoesNotIncludeSearchHeadroom() {
         LocalDate asOf = LocalDate.of(2026, 6, 7);
 
