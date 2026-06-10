@@ -41,10 +41,13 @@ umask 077
   printf 'KRAFT_HEALTHCHECK_URL=http://localhost:8080/actuator/health/readiness\n'
   printf 'KRAFT_HEALTHCHECK_TIMEOUT_SECONDS=3\n'
   printf 'KRAFT_ALERTMANAGER_CONFIG_FILE=./deploy-state/alertmanager.yml\n'
-  printf 'KRAFT_DOMAIN=%s\n'        "${KRAFT_DOMAIN:-}"
-  printf 'KRAFT_ADMIN_DOMAIN=%s\n'  "${KRAFT_ADMIN_DOMAIN:-}"
+  # 빈 값은 기록하지 않아 application.yml 기본값이 적용되도록 한다
+  [[ -n "${KRAFT_DOMAIN:-}" ]]       && printf 'KRAFT_DOMAIN=%s\n'       "${KRAFT_DOMAIN}"
+  [[ -n "${KRAFT_ADMIN_DOMAIN:-}" ]] && printf 'KRAFT_ADMIN_DOMAIN=%s\n' "${KRAFT_ADMIN_DOMAIN}"
   printf 'KRAFT_ADMIN_ENABLED=%s\n' "${KRAFT_ADMIN_ENABLED:-false}"
-  printf 'KRAFT_ADMIN_PASSWORD_HASH=%s\n' "${KRAFT_ADMIN_PASSWORD_HASH:-}"
+  # bcrypt 해시에 포함된 $ 가 Docker Compose 변수 치환 엔진에 의해 해석되지 않도록
+  # 단일 따옴표로 감싼다 (env_file 파서는 따옴표를 벗겨 원본 값을 컨테이너에 전달)
+  printf "KRAFT_ADMIN_PASSWORD_HASH='%s'\n" "${KRAFT_ADMIN_PASSWORD_HASH:-}"
 } > .env
 
 while IFS= read -r name; do
@@ -55,14 +58,15 @@ while IFS= read -r name; do
     echo "::error::Secret '$name' contains a newline — refusing to write to .env"
     exit 1
   fi
-  printf '%s=%s\n' "$name" "$value" >> .env
+  # 단일 따옴표로 감싸 $ 를 포함한 비밀값이 Docker Compose 변수 치환으로 훼손되지 않도록 한다
+  printf "%s='%s'\n" "$name" "$value" >> .env
 done < .required-envs
 
 # optional secrets — 값이 있을 때만 .env에 추가
 for opt_name in PUBLIC_DATA_API_KEY; do
   value="$(printf '%s' "$ALL_SECRETS_JSON" | jq -r --arg key "$opt_name" '.[$key] // ""')"
   [[ -z "$value" ]] && continue
-  printf '%s=%s\n' "$opt_name" "$value" >> .env
+  printf "%s='%s'\n" "$opt_name" "$value" >> .env
 done
 
 docker compose --env-file .env config -q
