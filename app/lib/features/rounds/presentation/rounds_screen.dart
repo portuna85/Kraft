@@ -23,32 +23,95 @@ class RoundsScreen extends ConsumerStatefulWidget {
 
 class _RoundsScreenState extends ConsumerState<RoundsScreen> {
   int _page = 0;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearch() {
+    final input = _searchController.text.trim();
+    final round = int.tryParse(input);
+    if (round != null && round > 0) {
+      _searchController.clear();
+      context.go('/rounds/$round');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(roundsPageProvider(_page));
     return Scaffold(
       appBar: AppBar(title: const Text('회차 검색')),
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorView(
-          message: errorMessage(e),
-          onRetry: () => ref.invalidate(roundsPageProvider(_page)),
-        ),
-        data: (page) => Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: page.content.length,
-                itemBuilder: (_, i) => _RoundTile(round: page.content[i]),
+      body: Column(
+        children: [
+          _SearchBar(
+            controller: _searchController,
+            onSearch: _onSearch,
+          ),
+          Expanded(
+            child: async.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => _ErrorView(
+                message: errorMessage(e),
+                onRetry: () => ref.invalidate(roundsPageProvider(_page)),
+              ),
+              data: (page) => RefreshIndicator(
+                onRefresh: () async =>
+                    ref.invalidate(roundsPageProvider(_page)),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: page.content.length,
+                        itemBuilder: (_, i) =>
+                            _RoundTile(round: page.content[i]),
+                      ),
+                    ),
+                    _Pagination(
+                      current: _page,
+                      totalPages: page.totalPages,
+                      onChanged: (p) => setState(() => _page = p),
+                    ),
+                  ],
+                ),
               ),
             ),
-            _Pagination(
-              current: _page,
-              totalPages: page.totalPages,
-              onChanged: (p) => setState(() => _page = p),
-            ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchBar extends StatelessWidget {
+  const _SearchBar({required this.controller, required this.onSearch});
+  final TextEditingController controller;
+  final VoidCallback onSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.search,
+        onSubmitted: (_) => onSearch(),
+        decoration: InputDecoration(
+          hintText: '회차 번호로 바로 이동 (예: 1200)',
+          prefixIcon: const Icon(Icons.tag),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: onSearch,
+          ),
+          border: const OutlineInputBorder(),
+          isDense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         ),
       ),
     );
@@ -128,7 +191,8 @@ class _Pagination extends StatelessWidget {
           Text('${current + 1} / $totalPages'),
           IconButton(
             icon: const Icon(Icons.chevron_right),
-            onPressed: current < totalPages - 1 ? () => onChanged(current + 1) : null,
+            onPressed:
+                current < totalPages - 1 ? () => onChanged(current + 1) : null,
           ),
         ],
       ),

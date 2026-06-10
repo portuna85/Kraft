@@ -19,13 +19,17 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text('KRAFT Lotto')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _LatestRoundCard(),
-          const SizedBox(height: 16),
-          const _RecommendCard(),
-        ],
+      body: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(latestRoundProvider),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            _LatestRoundCard(),
+            const SizedBox(height: 16),
+            const _RecommendCard(),
+          ],
+        ),
       ),
     );
   }
