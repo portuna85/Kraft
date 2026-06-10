@@ -2,7 +2,7 @@ name: kraft-lotto
 
 services:
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2-alpine@sha256:77c07d5ebfa5be9fd6c820d2094ae662c9e7eeb9bf98346b7f639900263ee2a2
     pull_policy: missing
     container_name: kraft-lotto-caddy
     restart: unless-stopped
