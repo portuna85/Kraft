@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/api/api_client.dart';
 import '../domain/recommend_request.dart';
 import '../domain/recommended_numbers.dart';
+import '../../saved/presentation/saved_screen.dart';
 
 part 'numbers_screen.g.dart';
 
@@ -96,12 +97,12 @@ class _NumbersScreenState extends ConsumerState<NumbersScreen> {
   }
 }
 
-class _ResultList extends StatelessWidget {
+class _ResultList extends ConsumerWidget {
   const _ResultList({required this.result});
   final RecommendedNumbers result;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -132,11 +133,15 @@ class _ResultList extends StatelessWidget {
                       ),
                       IconButton(
                         icon: const Icon(Icons.bookmark_add_outlined),
-                        onPressed: () {
-                          // TODO: 저장 기능
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('번호함에 저장됐습니다')),
-                          );
+                        onPressed: () async {
+                          await ref
+                              .read(savedNumbersProvider.notifier)
+                              .add(e.value.numbers);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('번호함에 저장됐습니다')),
+                            );
+                          }
                         },
                       ),
                     ],

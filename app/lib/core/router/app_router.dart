@@ -29,25 +29,19 @@ GoRouter appRouter(AppRouterRef ref) {
               builder: (_, __) => const RoundsScreen(),
               routes: [
                 GoRoute(
-                  path: ':drwNo',
+                  path: ':roundNo',
                   builder: (_, state) => RoundDetailScreen(
-                    drwNo: int.parse(state.pathParameters['drwNo']!),
+                    drwNo: int.parse(state.pathParameters['roundNo']!),
                   ),
                 ),
               ],
             ),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/stats',
-              builder: (_, __) => const StatsScreen(),
-              routes: [
-                GoRoute(
-                  path: 'numbers',
-                  builder: (_, __) => const NumbersScreen(),
-                ),
-              ],
-            ),
+            GoRoute(path: '/stats', builder: (_, __) => const StatsScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/numbers', builder: (_, __) => const NumbersScreen()),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/saved', builder: (_, __) => const SavedScreen()),

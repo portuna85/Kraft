@@ -25,12 +25,17 @@ class ScaffoldWithNav extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.search_outlined),
             selectedIcon: Icon(Icons.search),
-            label: '검색',
+            label: '회차',
           ),
           NavigationDestination(
             icon: Icon(Icons.bar_chart_outlined),
             selectedIcon: Icon(Icons.bar_chart),
             label: '통계',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.auto_awesome_outlined),
+            selectedIcon: Icon(Icons.auto_awesome),
+            label: '번호 추천',
           ),
           NavigationDestination(
             icon: Icon(Icons.bookmark_outline),
