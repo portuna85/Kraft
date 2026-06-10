@@ -75,6 +75,44 @@ class KraftApiClient {
       _post('/api/v1/numbers/recommend', request.toJson(),
           (j) => RecommendedNumbers.fromJson(j));
 
+  // 번호 저장함
+  Future<ApiResponse<List<Map<String, dynamic>>>> getSavedNumbers(
+      String deviceToken) async {
+    final res = await _dio.get<Map<String, dynamic>>(
+      '/api/v1/saved',
+      queryParameters: {'deviceToken': deviceToken},
+    );
+    final envelope = res.data!;
+    final List<Map<String, dynamic>> items = (envelope['data'] as List)
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
+    return ApiResponse<List<Map<String, dynamic>>>(
+      success: envelope['success'] as bool? ?? true,
+      data: items,
+      error: _parseError(envelope),
+    );
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> saveSavedNumbers(
+      String deviceToken, List<int> numbers, String? label) async {
+    final res = await _dio.post<Map<String, dynamic>>(
+      '/api/v1/saved',
+      data: {
+        'deviceToken': deviceToken,
+        'numbers': numbers,
+        if (label != null) 'label': label,
+      },
+    );
+    return _decode(res.data!, (j) => j);
+  }
+
+  Future<void> deleteSavedNumbers(int id, String deviceToken) async {
+    await _dio.delete<void>(
+      '/api/v1/saved/$id',
+      queryParameters: {'deviceToken': deviceToken},
+    );
+  }
+
   // 푸시 알림 토큰
   Future<void> registerPushToken(String token, String platform) async {
     await _dio.post<void>(

@@ -1,40 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
+import '../../../core/api/api_client.dart';
 import '../../../core/error/app_exception.dart';
 
 part 'saved_screen.g.dart';
 
+// FCM 토큰 키 (push_notification_service.dart 와 동일)
+const _tokenKey = 'fcm_token_v1';
+const _storage = FlutterSecureStorage();
+
+class SavedItem {
+  const SavedItem({
+    required this.id,
+    required this.numbers,
+    this.label,
+    required this.savedAt,
+  });
+
+  final int id;
+  final List<int> numbers;
+  final String? label;
+  final DateTime savedAt;
+
+  factory SavedItem.fromJson(Map<String, dynamic> j) => SavedItem(
+        id: j['id'] as int,
+        numbers: (j['numbers'] as List).cast<int>(),
+        label: j['label'] as String?,
+        savedAt: DateTime.parse(j['savedAt'] as String),
+      );
+}
+
 @riverpod
 class SavedNumbers extends _$SavedNumbers {
-  static const _key = 'saved_numbers';
-
   @override
-  Future<List<List<int>>> build() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList(_key) ?? [];
-    return raw
-        .map((s) => (jsonDecode(s) as List).cast<int>())
-        .toList();
+  Future<List<SavedItem>> build() async {
+    final token = await _storage.read(key: _tokenKey);
+    if (token == null) return [];
+    final api = ref.watch(kraftApiClientProvider);
+    final res = await api.getSavedNumbers(token);
+    return res.data?.map(SavedItem.fromJson).toList() ?? [];
   }
 
-  Future<void> add(List<int> numbers) async {
-    final current = await future;
-    final prefs = await SharedPreferences.getInstance();
-    final updated = [...current, numbers];
-    await prefs.setStringList(_key, updated.map(jsonEncode).toList());
-    state = AsyncValue.data(updated);
+  Future<void> add(List<int> numbers, {String? label}) async {
+    final token = await _storage.read(key: _tokenKey);
+    if (token == null) throw Exception('FCM 토큰이 없습니다. 푸시 알림 설정을 확인하세요.');
+    final api = ref.read(kraftApiClientProvider);
+    final res = await api.saveSavedNumbers(token, numbers, label);
+    if (res.data != null) {
+      final newItem = SavedItem.fromJson(res.data!);
+      final current = await future;
+      state = AsyncValue.data([newItem, ...current]);
+    }
   }
 
-  Future<void> remove(int index) async {
+  Future<void> remove(int id) async {
+    final token = await _storage.read(key: _tokenKey);
+    if (token == null) return;
+    final api = ref.read(kraftApiClientProvider);
+    await api.deleteSavedNumbers(id, token);
     final current = await future;
-    final prefs = await SharedPreferences.getInstance();
-    final updated = [...current]..removeAt(index);
-    await prefs.setStringList(_key, updated.map(jsonEncode).toList());
-    state = AsyncValue.data(updated);
+    state = AsyncValue.data(current.where((e) => e.id != id).toList());
   }
 }
 
@@ -69,10 +97,9 @@ class SavedScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(8),
                 itemCount: list.length,
                 itemBuilder: (_, i) => _SavedTile(
-                  numbers: list[i],
-                  index: i,
+                  item: list[i],
                   onDelete: () =>
-                      ref.read(savedNumbersProvider.notifier).remove(i),
+                      ref.read(savedNumbersProvider.notifier).remove(list[i].id),
                 ),
               ),
       ),
@@ -81,26 +108,27 @@ class SavedScreen extends ConsumerWidget {
 }
 
 class _SavedTile extends StatelessWidget {
-  const _SavedTile({
-    required this.numbers,
-    required this.index,
-    required this.onDelete,
-  });
-  final List<int> numbers;
-  final int index;
+  const _SavedTile({required this.item, required this.onDelete});
+  final SavedItem item;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading: Text(
-          '${index + 1}',
-          style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-        ),
+        leading: item.label != null
+            ? Tooltip(
+                message: item.label!,
+                child: const Icon(Icons.label_outline, color: Colors.blueGrey),
+              )
+            : const Icon(Icons.bookmark_outline, color: Colors.grey),
         title: Wrap(
           spacing: 6,
-          children: numbers.map((n) => _Ball(n)).toList(),
+          children: item.numbers.map((n) => _Ball(n)).toList(),
+        ),
+        subtitle: Text(
+          _formatDate(item.savedAt),
+          style: const TextStyle(fontSize: 11, color: Colors.grey),
         ),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -108,6 +136,10 @@ class _SavedTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime dt) {
+    return '${dt.year}.${dt.month.toString().padLeft(2, '0')}.${dt.day.toString().padLeft(2, '0')}';
   }
 }
 
