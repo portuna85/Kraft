@@ -61,7 +61,7 @@ public class AdminSecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/ops/**")
+                        .ignoringRequestMatchers("/ops/**", "/api/v1/**")
                 )
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.deny())
