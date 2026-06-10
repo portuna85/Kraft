@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/api/api_client.dart';
 import '../../../core/error/app_exception.dart';
+import '../domain/analysis_result.dart';
 import '../domain/companion_stats.dart';
 import '../domain/frequency_stats.dart';
 import '../domain/pattern_stats.dart';
@@ -11,9 +12,20 @@ import '../domain/pattern_stats.dart';
 part 'stats_screen.g.dart';
 
 @riverpod
-Future<List<BallFrequency>> frequencyStats(FrequencyStatsRef ref) async {
-  final res = await ref.watch(kraftApiClientProvider).getFrequency();
+Future<List<BallFrequency>> frequencyStats(
+    FrequencyStatsRef ref, int? period) async {
+  final res =
+      await ref.watch(kraftApiClientProvider).getFrequency(period: period);
   return res.data ?? [];
+}
+
+@riverpod
+Future<AnalysisResult> analysisResult(
+    AnalysisResultRef ref, List<int> numbers) async {
+  final res = await ref
+      .watch(kraftApiClientProvider)
+      .analyze({'numbers': numbers});
+  return res.data!;
 }
 
 @riverpod
@@ -36,7 +48,7 @@ class StatsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('통계'),
@@ -45,6 +57,7 @@ class StatsScreen extends StatelessWidget {
               Tab(text: '번호 빈도'),
               Tab(text: '패턴'),
               Tab(text: '동반 번호'),
+              Tab(text: '분석'),
             ],
           ),
         ),
@@ -53,6 +66,7 @@ class StatsScreen extends StatelessWidget {
             _FrequencyTab(),
             _PatternTab(),
             _CompanionTab(),
+            _AnalysisTab(),
           ],
         ),
       ),
@@ -62,34 +76,68 @@ class StatsScreen extends StatelessWidget {
 
 // ── 번호 빈도 탭 ────────────────────────────────────────────────────────────
 
-class _FrequencyTab extends ConsumerWidget {
+class _FrequencyTab extends ConsumerStatefulWidget {
   const _FrequencyTab();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(frequencyStatsProvider);
-    return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(errorMessage(e))),
-      data: (frequencies) {
-        if (frequencies.isEmpty) {
-          return const Center(child: Text('데이터가 없습니다'));
-        }
-        final maxCount =
-            frequencies.map((e) => e.count).reduce((a, b) => a > b ? a : b);
-        return ListView.separated(
-          padding: const EdgeInsets.all(8),
-          itemCount: frequencies.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (_, i) {
-            final f = frequencies[i];
-            return _FrequencyRow(
-              frequency: f,
-              barRatio: f.count / maxCount,
-            );
-          },
-        );
-      },
+  ConsumerState<_FrequencyTab> createState() => _FrequencyTabState();
+}
+
+class _FrequencyTabState extends ConsumerState<_FrequencyTab> {
+  int? _period; // null = 전체
+
+  static const _periods = [
+    (label: '전체', value: null),
+    (label: '최근 50회', value: 50),
+    (label: '최근 100회', value: 100),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final async = ref.watch(frequencyStatsProvider(_period));
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: SegmentedButton<int?>(
+            segments: _periods
+                .map((p) =>
+                    ButtonSegment(value: p.value, label: Text(p.label)))
+                .toList(),
+            selected: {_period},
+            onSelectionChanged: (s) => setState(() => _period = s.first),
+            style: const ButtonStyle(
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ),
+        Expanded(
+          child: async.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text(errorMessage(e))),
+            data: (frequencies) {
+              if (frequencies.isEmpty) {
+                return const Center(child: Text('데이터가 없습니다'));
+              }
+              final maxCount = frequencies
+                  .map((e) => e.count)
+                  .reduce((a, b) => a > b ? a : b);
+              return ListView.separated(
+                padding: const EdgeInsets.all(8),
+                itemCount: frequencies.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (_, i) {
+                  final f = frequencies[i];
+                  return _FrequencyRow(
+                    frequency: f,
+                    barRatio: f.count / maxCount,
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -225,8 +273,13 @@ class _CompanionTabState extends ConsumerState<_CompanionTab> {
 }
 
 class _BallGrid extends StatelessWidget {
-  const _BallGrid({required this.selected, required this.onTap});
+  const _BallGrid({
+    required this.onTap,
+    this.selected,
+    this.selectedSet,
+  });
   final int? selected;
+  final Set<int>? selectedSet;
   final ValueChanged<int> onTap;
 
   @override
@@ -238,7 +291,9 @@ class _BallGrid extends StatelessWidget {
         runSpacing: 6,
         children: List.generate(45, (i) {
           final n = i + 1;
-          final isSelected = selected == n;
+          final isSelected = selectedSet != null
+              ? selectedSet!.contains(n)
+              : selected == n;
           return GestureDetector(
             onTap: () => onTap(n),
             child: AnimatedContainer(
@@ -246,7 +301,9 @@ class _BallGrid extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: isSelected ? _ballColor(n) : _ballColor(n).withValues(alpha: 0.35),
+                color: isSelected
+                    ? _ballColor(n)
+                    : _ballColor(n).withValues(alpha: 0.35),
                 shape: BoxShape.circle,
                 border: isSelected
                     ? Border.all(color: Colors.black54, width: 2)
@@ -338,6 +395,188 @@ class _SmallBall extends StatelessWidget {
           fontSize: 13,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    );
+  }
+}
+
+// ── 분석 탭 ─────────────────────────────────────────────────────────────────
+
+class _AnalysisTab extends ConsumerStatefulWidget {
+  const _AnalysisTab();
+
+  @override
+  ConsumerState<_AnalysisTab> createState() => _AnalysisTabState();
+}
+
+class _AnalysisTabState extends ConsumerState<_AnalysisTab> {
+  final Set<int> _selected = {};
+
+  void _toggle(int n) {
+    setState(() {
+      if (_selected.contains(n)) {
+        _selected.remove(n);
+      } else if (_selected.length < 6) {
+        _selected.add(n);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ready = _selected.length == 6;
+    final numbers = [..._selected]..sort();
+    final async =
+        ready ? ref.watch(analysisResultProvider(numbers)) : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+          child: Text(
+            '번호 6개를 선택하면 과거 당첨 이력을 조회합니다',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: Colors.grey),
+          ),
+        ),
+        _BallGrid(
+          selectedSet: _selected,
+          onTap: _toggle,
+        ),
+        if (_selected.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              children: [
+                Text(
+                  '선택: ${numbers.join(', ')}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => setState(() => _selected.clear()),
+                  child: const Text('초기화'),
+                ),
+              ],
+            ),
+          ),
+        const Divider(height: 1),
+        Expanded(
+          child: !ready
+              ? Center(
+                  child: Text(
+                    '${6 - _selected.length}개 더 선택하세요',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                )
+              : async!.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text(errorMessage(e))),
+                  data: (result) => _AnalysisResult(result: result),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AnalysisResult extends StatelessWidget {
+  const _AnalysisResult({required this.result});
+  final AnalysisResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _StatChip(
+                  label: '1등',
+                  count: result.firstPrizeCount,
+                  color: Colors.amber.shade700,
+                ),
+                _StatChip(
+                  label: '2등',
+                  count: result.secondPrizeCount,
+                  color: Colors.blueGrey,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (result.firstPrizeHits.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          const _SectionHeader('1등 당첨 회차'),
+          const SizedBox(height: 6),
+          ...result.firstPrizeHits.map((h) => _HitTile(hit: h)),
+        ],
+        if (result.secondPrizeHits.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          const _SectionHeader('2등 당첨 회차'),
+          const SizedBox(height: 6),
+          ...result.secondPrizeHits.map((h) => _HitTile(hit: h)),
+        ],
+        if (result.firstPrizeCount == 0 && result.secondPrizeCount == 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: Center(
+              child: Text(
+                '과거 당첨 이력이 없습니다',
+                style:
+                    TextStyle(color: Colors.grey.shade600),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip(
+      {required this.label, required this.count, required this.color});
+  final String label;
+  final int count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(label,
+            style: TextStyle(
+                color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+        const SizedBox(height: 4),
+        Text('$count회',
+            style: TextStyle(
+                fontSize: 22, fontWeight: FontWeight.bold, color: color)),
+      ],
+    );
+  }
+}
+
+class _HitTile extends StatelessWidget {
+  const _HitTile({required this.hit});
+  final PrizeHit hit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 4),
+      child: ListTile(
+        dense: true,
+        title: Text('제 ${hit.round}회'),
+        trailing: Text(hit.drawDate,
+            style: const TextStyle(color: Colors.grey, fontSize: 12)),
       ),
     );
   }

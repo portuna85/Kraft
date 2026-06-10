@@ -33,6 +33,20 @@ class NumbersScreen extends ConsumerStatefulWidget {
 
 class _NumbersScreenState extends ConsumerState<NumbersScreen> {
   int _count = 5;
+  bool _showAdvanced = false;
+  int? _oddCount;
+  int? _sumMin;
+  int? _sumMax;
+
+  final _sumMinController = TextEditingController();
+  final _sumMaxController = TextEditingController();
+
+  @override
+  void dispose() {
+    _sumMinController.dispose();
+    _sumMaxController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +71,72 @@ class _NumbersScreenState extends ConsumerState<NumbersScreen> {
                     label: '$_count',
                     onChanged: (v) => setState(() => _count = v.round()),
                   ),
+                  InkWell(
+                    onTap: () =>
+                        setState(() => _showAdvanced = !_showAdvanced),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Text(
+                            '고급 옵션',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 13,
+                            ),
+                          ),
+                          Icon(
+                            _showAdvanced
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_showAdvanced) ...[
+                    const SizedBox(height: 8),
+                    _OddCountSelector(
+                      value: _oddCount,
+                      onChanged: (v) => setState(() => _oddCount = v),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _sumMinController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: '합계 최소',
+                              isDense: true,
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (v) => setState(
+                                () => _sumMin = int.tryParse(v)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _sumMaxController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: '합계 최대',
+                              isDense: true,
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (v) => setState(
+                                () => _sumMax = int.tryParse(v)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  const SizedBox(height: 4),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
@@ -64,7 +144,12 @@ class _NumbersScreenState extends ConsumerState<NumbersScreen> {
                           ? null
                           : () => ref
                               .read(recommendNotifierProvider.notifier)
-                              .recommend(RecommendRequest(count: _count)),
+                              .recommend(RecommendRequest(
+                                count: _count,
+                                oddCount: _oddCount,
+                                sumMin: _sumMin,
+                                sumMax: _sumMax,
+                              )),
                       icon: state.isLoading
                           ? const SizedBox(
                               width: 18,
@@ -150,6 +235,41 @@ class _ResultList extends ConsumerWidget {
                 ),
               ),
             ),
+      ],
+    );
+  }
+}
+
+class _OddCountSelector extends StatelessWidget {
+  const _OddCountSelector({required this.value, required this.onChanged});
+  final int? value;
+  final ValueChanged<int?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('홀수 개수', style: TextStyle(fontSize: 13)),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 6,
+          children: [
+            ChoiceChip(
+              label: const Text('제한없음'),
+              selected: value == null,
+              onSelected: (_) => onChanged(null),
+            ),
+            ...List.generate(
+              7,
+              (i) => ChoiceChip(
+                label: Text('$i개'),
+                selected: value == i,
+                onSelected: (_) => onChanged(i),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
