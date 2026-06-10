@@ -1,5 +1,6 @@
 package com.kraft.lotto.support;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
@@ -8,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -25,21 +28,34 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Order(Ordered.HIGHEST_PRECEDENCE + 30)
 public class PublicRateLimitFilter extends OncePerRequestFilter {
 
+    private static final String API_V1_PREFIX = "/api/v1/";
+
+    private static final java.util.List<String> RATE_LIMITED_PREFIXES = java.util.List.of(
+            API_V1_PREFIX,
+            "/latest", "/rounds", "/stats", "/analysis",
+            "/companion", "/news", "/recommend", "/fragments/"
+    );
+
     private final KraftSecurityProperties securityProperties;
     private final Cache<String, SlidingWindowCounter> counters;
     private final LongSupplier nanoTimeSupplier;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public PublicRateLimitFilter(ObjectProvider<KraftSecurityProperties> securityPropertiesProvider) {
-        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new));
+    public PublicRateLimitFilter(ObjectProvider<KraftSecurityProperties> securityPropertiesProvider,
+                                 ObjectProvider<ObjectMapper> objectMapperProvider) {
+        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new),
+             objectMapperProvider.getIfAvailable(ObjectMapper::new));
     }
 
-    PublicRateLimitFilter(KraftSecurityProperties securityProperties) {
-        this(securityProperties, System::nanoTime);
+    PublicRateLimitFilter(KraftSecurityProperties securityProperties, ObjectMapper objectMapper) {
+        this(securityProperties, objectMapper, System::nanoTime);
     }
 
-    PublicRateLimitFilter(KraftSecurityProperties securityProperties, LongSupplier nanoTimeSupplier) {
+    PublicRateLimitFilter(KraftSecurityProperties securityProperties, ObjectMapper objectMapper,
+                          LongSupplier nanoTimeSupplier) {
         this.securityProperties = securityProperties;
+        this.objectMapper = objectMapper;
         this.nanoTimeSupplier = nanoTimeSupplier;
         long windowSeconds = Math.max(1L, securityProperties.getRateLimit().getWindowSeconds());
         long maxKeys = Math.max(1L, securityProperties.getRateLimit().getMaxKeys());
@@ -49,20 +65,20 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
                 .build();
     }
 
-    private static final java.util.List<String> RATE_LIMITED_PREFIXES = java.util.List.of(
-            "/latest", "/rounds", "/stats", "/analysis",
-            "/companion", "/news", "/recommend", "/fragments/"
-    );
-
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         if (!securityProperties.getRateLimit().isEnabled()) {
             return true;
         }
+        String path = request.getRequestURI();
+        // API 경로는 GET/POST 모두 제한 (POST /recommend, POST /analysis 가 고비용)
+        if (path.startsWith(API_V1_PREFIX)) {
+            return false;
+        }
+        // 웹 경로는 GET만 제한
         if (!"GET".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
-        String path = request.getRequestURI();
         if ("/".equals(path)) {
             return false;
         }
@@ -93,8 +109,16 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
         if (!result.allowed()) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", Long.toString(result.retryAfterSeconds()));
-            response.setContentType("text/plain;charset=UTF-8");
-            response.getWriter().write("Too many requests. Please retry later.");
+            if (request.getRequestURI().startsWith(API_V1_PREFIX)) {
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                response.getWriter().write(
+                        objectMapper.writeValueAsString(
+                                ApiResponse.failure(ErrorCode.RATE_LIMITED)));
+            } else {
+                response.setContentType("text/plain;charset=UTF-8");
+                response.getWriter().write("Too many requests. Please retry later.");
+            }
             return;
         }
 

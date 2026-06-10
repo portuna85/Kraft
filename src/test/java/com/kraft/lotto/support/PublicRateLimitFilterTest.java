@@ -2,6 +2,7 @@ package com.kraft.lotto.support;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
 import com.kraft.lotto.support.PublicRateLimitFilter.SlidingWindowCounter;
 import java.util.ArrayList;
@@ -22,14 +23,20 @@ import org.springframework.mock.web.MockHttpServletResponse;
 @DisplayName("공개 경로 속도 제한 필터")
 class PublicRateLimitFilterTest {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    private static PublicRateLimitFilter filterWithMax(int maxRequests) {
+        KraftSecurityProperties props = new KraftSecurityProperties();
+        props.getRateLimit().setEnabled(true);
+        props.getRateLimit().setMaxRequests(maxRequests);
+        props.getRateLimit().setWindowSeconds(60);
+        return new PublicRateLimitFilter(props, OBJECT_MAPPER);
+    }
+
     @Test
     @DisplayName("공개 프래그먼트 경로에서 요청 한도를 초과하면 429를 반환한다")
     void returnsTooManyRequestsAfterThreshold() throws Exception {
-        KraftSecurityProperties properties = new KraftSecurityProperties();
-        properties.getRateLimit().setEnabled(true);
-        properties.getRateLimit().setMaxRequests(2);
-        properties.getRateLimit().setWindowSeconds(60);
-        PublicRateLimitFilter filter = new PublicRateLimitFilter(properties);
+        PublicRateLimitFilter filter = filterWithMax(2);
 
         MockHttpServletResponse first = execute(filter, "/fragments/recommend", "198.51.100.11");
         MockHttpServletResponse second = execute(filter, "/fragments/recommend", "198.51.100.11");
@@ -47,11 +54,7 @@ class PublicRateLimitFilterTest {
     @Test
     @DisplayName("공개 경로가 아닌 경우 속도 제한을 적용하지 않는다")
     void doesNotRateLimitNonPublicPaths() throws Exception {
-        KraftSecurityProperties properties = new KraftSecurityProperties();
-        properties.getRateLimit().setEnabled(true);
-        properties.getRateLimit().setMaxRequests(1);
-        properties.getRateLimit().setWindowSeconds(60);
-        PublicRateLimitFilter filter = new PublicRateLimitFilter(properties);
+        PublicRateLimitFilter filter = filterWithMax(1);
 
         MockHttpServletResponse first = execute(filter, "/css/app.css", "198.51.100.11");
         MockHttpServletResponse second = execute(filter, "/css/app.css", "198.51.100.11");
@@ -70,7 +73,7 @@ class PublicRateLimitFilterTest {
         properties.getRateLimit().setMaxRequests(1);
         properties.getRateLimit().setWindowSeconds(60);
         properties.getRateLimit().setMaxKeys(32);
-        PublicRateLimitFilter filter = new PublicRateLimitFilter(properties);
+        PublicRateLimitFilter filter = new PublicRateLimitFilter(properties, OBJECT_MAPPER);
 
         for (int i = 0; i < 2_000; i++) {
             execute(filter, "/fragments/recommend", "198.51.100." + i);
@@ -167,7 +170,7 @@ class PublicRateLimitFilterTest {
         properties.getRateLimit().setMaxRequests(2);
         properties.getRateLimit().setWindowSeconds(60);
         AtomicLong now = new AtomicLong(0L);
-        PublicRateLimitFilter filter = new PublicRateLimitFilter(properties, now::get);
+        PublicRateLimitFilter filter = new PublicRateLimitFilter(properties, OBJECT_MAPPER, now::get);
 
         MockHttpServletResponse first = execute(filter, "/fragments/recommend", "198.51.100.11");
         now.set(TimeUnit.SECONDS.toNanos(59));
@@ -182,10 +185,56 @@ class PublicRateLimitFilterTest {
         assertThat(fourth.getStatus()).isEqualTo(429);
     }
 
+    @Test
+    @DisplayName("/api/v1/ POST 요청도 속도 제한 대상이다")
+    void apiV1PostRequestIsRateLimited() throws Exception {
+        PublicRateLimitFilter filter = filterWithMax(1);
+
+        MockHttpServletResponse first = execute(filter, "/api/v1/numbers/recommend", "198.51.100.1", "POST");
+        MockHttpServletResponse second = execute(filter, "/api/v1/numbers/recommend", "198.51.100.1", "POST");
+
+        assertThat(first.getStatus()).isEqualTo(200);
+        assertThat(second.getStatus()).isEqualTo(429);
+    }
+
+    @Test
+    @DisplayName("/api/v1/ 429 응답은 JSON ApiResponse 형식이다")
+    void apiV1Returns429AsJson() throws Exception {
+        PublicRateLimitFilter filter = filterWithMax(1);
+
+        execute(filter, "/api/v1/rounds/latest", "198.51.100.2");
+        MockHttpServletResponse blocked = execute(filter, "/api/v1/rounds/latest", "198.51.100.2");
+
+        assertThat(blocked.getStatus()).isEqualTo(429);
+        assertThat(blocked.getContentType()).contains("application/json");
+        var body = OBJECT_MAPPER.readTree(blocked.getContentAsString());
+        assertThat(body.get("success").asBoolean()).isFalse();
+        assertThat(body.get("error").get("code").asText()).isEqualTo("RATE_LIMITED");
+    }
+
+    @Test
+    @DisplayName("웹 경로 POST는 속도 제한 대상이 아니다")
+    void webPathPostIsNotRateLimited() throws Exception {
+        PublicRateLimitFilter filter = filterWithMax(1);
+
+        MockHttpServletResponse first = execute(filter, "/recommend", "198.51.100.3", "POST");
+        MockHttpServletResponse second = execute(filter, "/recommend", "198.51.100.3", "POST");
+
+        assertThat(first.getStatus()).isEqualTo(200);
+        assertThat(second.getStatus()).isEqualTo(200);
+    }
+
     private static MockHttpServletResponse execute(PublicRateLimitFilter filter,
                                                    String path,
                                                    String remoteAddr) throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", path);
+        return execute(filter, path, remoteAddr, "GET");
+    }
+
+    private static MockHttpServletResponse execute(PublicRateLimitFilter filter,
+                                                   String path,
+                                                   String remoteAddr,
+                                                   String method) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest(method, path);
         request.setRemoteAddr(remoteAddr);
         MockHttpServletResponse response = new MockHttpServletResponse();
         filter.doFilter(request, response, new MockFilterChain());
