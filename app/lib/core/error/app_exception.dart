@@ -8,7 +8,11 @@ final class NetworkException extends AppException {
 }
 
 final class ApiException extends AppException {
-  const ApiException({required this.code, required super.message, required this.retryable});
+  const ApiException({
+    required this.code,
+    required String message,
+    required this.retryable,
+  }) : super(message);
   final String code;
   final bool retryable;
 }

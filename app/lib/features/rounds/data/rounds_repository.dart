@@ -19,8 +19,8 @@ class RoundsRepository {
     return res.data!;
   }
 
-  Future<Round> getByDrwNo(int drwNo) async {
-    final res = await _client.getRound(drwNo);
+  Future<Round> getByDrwNo(int round) async {
+    final res = await _client.getRound(round);
     return res.data!;
   }
 

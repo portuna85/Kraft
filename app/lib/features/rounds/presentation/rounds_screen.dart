@@ -62,13 +62,13 @@ class _RoundTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text('제 ${round.drwNo}회 (${round.drwNoDate})'),
+      title: Text('제 ${round.round}회 (${round.drawDate})'),
       subtitle: Wrap(
         spacing: 4,
         children: round.mainNumbers.map((n) => _Ball(n)).toList(),
       ),
       trailing: const Icon(Icons.chevron_right),
-      onTap: () => context.go('/rounds/${round.drwNo}'),
+      onTap: () => context.go('/rounds/${round.round}'),
     );
   }
 }

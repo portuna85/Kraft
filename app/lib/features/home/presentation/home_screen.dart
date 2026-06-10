@@ -5,8 +5,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../rounds/data/rounds_repository.dart';
 import '../../rounds/domain/round.dart';
-import '../../rounds/presentation/rounds_screen.dart';
-import '../../numbers/presentation/numbers_screen.dart';
 
 part 'home_screen.g.dart';
 
@@ -52,17 +50,17 @@ class _LatestRoundCard extends ConsumerWidget {
               Row(
                 children: [
                   Text(
-                    '제 ${round.drwNo}회',
+                    '제 ${round.round}회',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const Spacer(),
                   TextButton(
-                    onPressed: () => context.go('/rounds/${round.drwNo}'),
+                    onPressed: () => context.go('/rounds/${round.round}'),
                     child: const Text('상세보기'),
                   ),
                 ],
               ),
-              Text(round.drwNoDate,
+              Text(round.drawDate,
                   style: Theme.of(context).textTheme.bodySmall),
               const SizedBox(height: 12),
               Wrap(
@@ -70,7 +68,7 @@ class _LatestRoundCard extends ConsumerWidget {
                 children: [
                   ...round.mainNumbers.map((n) => _Ball(n)),
                   const _PlusSeparator(),
-                  _Ball(round.bnusNo, isBonus: true),
+                  _Ball(round.bonusNumber, isBonus: true),
                 ],
               ),
             ],

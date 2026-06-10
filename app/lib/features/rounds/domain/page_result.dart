@@ -1,22 +1,27 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'page_result.freezed.dart';
-part 'page_result.g.dart';
-
-@freezed
-class PageResult<T> with _$PageResult<T> {
-  const factory PageResult({
-    required List<T> content,
-    required int page,
-    required int size,
-    required int totalElements,
-    required int totalPages,
-    required bool last,
-  }) = _PageResult<T>;
+class PageResult<T> {
+  const PageResult({
+    required this.content,
+    required this.page,
+    required this.size,
+    required this.totalElements,
+    required this.totalPages,
+  });
+  final List<T> content;
+  final int page;
+  final int size;
+  final int totalElements;
+  final int totalPages;
 
   factory PageResult.fromJson(
     Map<String, dynamic> json,
     T Function(Object?) fromJsonT,
-  ) =>
-      _$PageResultFromJson(json, fromJsonT);
+  ) {
+    return PageResult(
+      content: (json['content'] as List).map(fromJsonT).toList(),
+      page: json['page'] as int,
+      size: json['size'] as int,
+      totalElements: json['totalElements'] as int,
+      totalPages: json['totalPages'] as int,
+    );
+  }
 }

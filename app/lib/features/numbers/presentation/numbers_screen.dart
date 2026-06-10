@@ -127,7 +127,7 @@ class _ResultList extends StatelessWidget {
                       Expanded(
                         child: Wrap(
                           spacing: 6,
-                          children: e.value.map((n) => _Ball(n)).toList(),
+                          children: e.value.numbers.map((n) => _Ball(n)).toList(),
                         ),
                       ),
                       IconButton(

@@ -9,9 +9,9 @@ import '../domain/pattern_stats.dart';
 part 'stats_screen.g.dart';
 
 @riverpod
-Future<FrequencyStats> frequencyStats(FrequencyStatsRef ref) async {
+Future<List<BallFrequency>> frequencyStats(FrequencyStatsRef ref) async {
   final res = await ref.watch(kraftApiClientProvider).getFrequency();
-  return res.data!;
+  return res.data ?? [];
 }
 
 @riverpod
@@ -57,21 +57,24 @@ class _FrequencyTab extends ConsumerWidget {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text(e.toString())),
-      data: (stats) => ListView.separated(
-        padding: const EdgeInsets.all(8),
-        itemCount: stats.frequencies.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (_, i) {
-          final f = stats.frequencies[i];
-          final maxCount = stats.frequencies
-              .map((e) => e.count)
-              .reduce((a, b) => a > b ? a : b);
-          return _FrequencyRow(
-            frequency: f,
-            barRatio: f.count / maxCount,
-          );
-        },
-      ),
+      data: (frequencies) {
+        if (frequencies.isEmpty) {
+          return const Center(child: Text('데이터가 없습니다'));
+        }
+        final maxCount = frequencies.map((e) => e.count).reduce((a, b) => a > b ? a : b);
+        return ListView.separated(
+          padding: const EdgeInsets.all(8),
+          itemCount: frequencies.length,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (_, i) {
+            final f = frequencies[i];
+            return _FrequencyRow(
+              frequency: f,
+              barRatio: f.count / maxCount,
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -128,22 +131,43 @@ class _PatternTab extends ConsumerWidget {
       data: (stats) => ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  title: const Text('평균 합계'),
-                  trailing: Text(stats.avgSum.toStringAsFixed(1)),
+          _SectionHeader('홀짝 패턴 (총 ${stats.totalDraws}회)'),
+          const SizedBox(height: 8),
+          ...stats.oddEvenStats.map((s) => Card(
+                child: ListTile(
+                  title: Text('홀수 ${s.oddCount}개 / 짝수 ${s.evenCount}개'),
+                  subtitle: LinearProgressIndicator(
+                    value: s.percent / 100,
+                    minHeight: 6,
+                  ),
+                  trailing: Text('${s.percent.toStringAsFixed(1)}%'),
                 ),
-                ListTile(
-                  title: const Text('평균 홀수 개수'),
-                  trailing: Text(stats.avgOddCount.toStringAsFixed(1)),
+              )),
+          const SizedBox(height: 16),
+          _SectionHeader('합산 범위 패턴'),
+          const SizedBox(height: 8),
+          ...stats.sumRangeStats.map((s) => Card(
+                child: ListTile(
+                  title: Text('${s.rangeStart}~${s.rangeEnd}'),
+                  subtitle: LinearProgressIndicator(
+                    value: s.percent / 100,
+                    minHeight: 6,
+                  ),
+                  trailing: Text('${s.percent.toStringAsFixed(1)}%'),
                 ),
-              ],
-            ),
-          ),
+              )),
         ],
       ),
     );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.title);
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(title, style: Theme.of(context).textTheme.titleSmall);
   }
 }

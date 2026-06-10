@@ -43,7 +43,7 @@ class _RoundDetail extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          '제 ${round.drwNo}회 (${round.drwNoDate})',
+          '제 ${round.round}회 (${round.drawDate})',
           style: theme.textTheme.titleLarge,
         ),
         const SizedBox(height: 20),
@@ -65,7 +65,7 @@ class _RoundDetail extends StatelessWidget {
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text('+', style: TextStyle(fontSize: 20)),
                     ),
-                    _Ball(round.bnusNo, isMain: false),
+                    _Ball(round.bonusNumber, isMain: false),
                   ],
                 ),
               ],
@@ -76,9 +76,10 @@ class _RoundDetail extends StatelessWidget {
         Card(
           child: Column(
             children: [
-              _InfoRow('1등 당첨자 수', '${round.firstPrzwnerCo}명'),
-              _InfoRow('1등 당첨금', '${_fmt.format(round.firstWinamnt)}원'),
-              _InfoRow('총 판매금액', '${_fmt.format(round.totSellamnt)}원'),
+              _InfoRow('1등 당첨자 수', '${round.firstWinners}명'),
+              _InfoRow('1등 당첨금', '${_fmt.format(round.firstPrize)}원'),
+              _InfoRow('2등 당첨자 수', '${round.secondWinners}명'),
+              _InfoRow('총 판매금액', '${_fmt.format(round.totalSales)}원'),
             ],
           ),
         ),
