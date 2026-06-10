@@ -1,6 +1,5 @@
 package com.kraft.lotto.web;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +22,17 @@ public class NavModelAdvice {
             "/faq",       "자주 묻는 질문"
     );
 
+    private static final String BREADCRUMB_HOME =
+            "{\"@context\":\"https://schema.org\",\"@type\":\"BreadcrumbList\","
+            + "\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,"
+            + "\"name\":\"홈\",\"item\":\"%s/\"}]}";
+
+    private static final String BREADCRUMB_SUB =
+            "{\"@context\":\"https://schema.org\",\"@type\":\"BreadcrumbList\","
+            + "\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,"
+            + "\"name\":\"홈\",\"item\":\"%s/\"},{\"@type\":\"ListItem\","
+            + "\"position\":2,\"name\":\"%s\",\"item\":\"%s%s\"}]}";
+
     @Value("${kraft.public-base-url:https://www.kraft.io.kr}")
     private String baseUrl;
 
@@ -32,7 +42,6 @@ public class NavModelAdvice {
         return (path != null) ? path : "/";
     }
 
-    @SuppressFBWarnings("VA_FORMAT_STRING_USES_NEWLINE")
     @ModelAttribute("breadcrumbJsonLd")
     public String breadcrumbJsonLd(HttpServletRequest request) {
         String path = request.getRequestURI();
@@ -44,12 +53,8 @@ public class NavModelAdvice {
             return null;
         }
         if ("/".equals(path) || "/recommend".equals(path)) {
-            return """
-                    {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"%s/"}]}
-                    """.formatted(baseUrl).strip();
+            return BREADCRUMB_HOME.formatted(baseUrl);
         }
-        return """
-                {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"%s/"},{"@type":"ListItem","position":2,"name":"%s","item":"%s%s"}]}
-                """.formatted(baseUrl, label, baseUrl, path).strip();
+        return BREADCRUMB_SUB.formatted(baseUrl, label, baseUrl, path);
     }
 }

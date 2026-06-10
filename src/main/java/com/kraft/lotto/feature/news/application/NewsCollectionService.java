@@ -224,7 +224,9 @@ public class NewsCollectionService {
     }
 
     private static String normalizeTitle(String title) {
-        if (title == null) return "";
+        if (title == null) {
+            return "";
+        }
         return title.replaceAll("\\s+", " ")
                     .replaceAll("[\\[\\]【】()（）<>]", "")
                     .trim()
