@@ -45,6 +45,16 @@ echo "=== 방화벽 주의 ==="
 # 먼저 삽입하므로, UFW 규칙만으로는 컨테이너 포트를 차단할 수 없다.
 # 호스트 방화벽 정책은 /etc/docker/daemon.json의 iptables 설정 또는
 # DOCKER-USER 체인에 직접 규칙을 추가해 적용해야 한다.
+#
+# DOCKER-USER 체인 적용 예시 (루프백/Docker 내부망 외 8080 접근 차단):
+#   sudo iptables -I DOCKER-USER -p tcp --dport 8080 -j DROP
+#   sudo iptables -I DOCKER-USER -p tcp --dport 8080 -s 127.0.0.1 -j ACCEPT
+#   sudo iptables -I DOCKER-USER -p tcp --dport 8080 -s 172.18.0.0/16 -j ACCEPT
+#
+# 재부팅 후에도 유지하려면 iptables-persistent 를 설치하거나
+# /etc/network/if-pre-up.d/ 훅에 위 명령을 등록한다:
+#   sudo apt-get install -y iptables-persistent
+#   sudo netfilter-persistent save
 
 echo ""
 echo "=== 최종 상태 확인 ==="

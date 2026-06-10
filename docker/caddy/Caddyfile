@@ -2,6 +2,9 @@
     # TLS는 Caddy가 Let's Encrypt / ZeroSSL에서 자동 발급·갱신
     # origin(app)은 내부 네트워크로만 접근 가능
 
+    # HSTS — preload 는 한번 등록되면 취소가 매우 어려우므로 명시적으로 제외
+    header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
     encode gzip
 
     # 헬스체크·actuator·관리자 ops·admin 직접 노출 차단 (내부망만 허용)
@@ -16,6 +19,8 @@
 }
 
 {$KRAFT_ADMIN_DOMAIN} {
+    header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
     encode gzip
 
     # 관리자 도메인에서 raw ops·actuator 직접 접근 차단

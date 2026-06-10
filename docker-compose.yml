@@ -23,6 +23,7 @@ services:
     depends_on:
       app:
         condition: service_healthy
+    security_opt: ["no-new-privileges:true"]
     deploy:
       resources:
         limits:
@@ -231,6 +232,7 @@ services:
       - /var/lib/node_exporter/textfile:/textfile:ro
     networks:
       - kraft-net
+    security_opt: ["no-new-privileges:true"]
     deploy:
       resources:
         limits:

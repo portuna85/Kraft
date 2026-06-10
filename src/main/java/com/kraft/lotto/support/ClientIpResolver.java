@@ -10,8 +10,9 @@ public final class ClientIpResolver {
     }
 
     /**
-     * X-Forwarded-For を右から左へたどり、信頼プロキシを除去した最初の非信頼ホップを返す。
-     * これにより Caddy 設定が append 方式に変わっても偽造 IP が先頭に来ない。
+     * X-Forwarded-For 헤더를 오른쪽에서 왼쪽으로 순회해 신뢰 프록시를 제거한 뒤
+     * 첫 번째 비신뢰 홉 IP를 반환한다. Caddy 가 append 방식으로 XFF 를 추가하더라도
+     * 클라이언트가 헤더를 위조해 선두에 임의 IP 를 삽입하는 공격을 차단한다.
      */
     public static String resolve(HttpServletRequest request, List<String> trustedProxyCidrs) {
         if (!trustedProxyCidrs.isEmpty()) {
