@@ -34,7 +34,7 @@ class WinningStatisticsServiceCacheIntegrationTest {
 
         @Bean
         WinningStatisticsCacheService winningStatisticsCacheService(WinningNumberRepository repository) {
-            return new WinningStatisticsCacheService(repository, null);
+            return WinningStatisticsCacheServiceBuilder.forRepository(repository).build();
         }
 
         @Bean

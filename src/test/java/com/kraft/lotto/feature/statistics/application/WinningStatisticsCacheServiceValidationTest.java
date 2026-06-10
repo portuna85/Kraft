@@ -31,7 +31,7 @@ class WinningStatisticsCacheServiceValidationTest {
     }
 
     @Test
-    @DisplayName("null 또는 범위 밖 숫자가 있으면 예외가 발생한다")
+    @DisplayName("널 또는 범위 밖 숫자가 있으면 예외가 발생한다")
     void rejectsNullOrOutOfRangeNumbers() {
         assertInvalid(Arrays.asList(1, 2, 3, 4, 5, null));
         assertInvalid(List.of(0, 2, 3, 4, 5, 6));
@@ -45,10 +45,10 @@ class WinningStatisticsCacheServiceValidationTest {
     }
 
     @Test
-    @DisplayName("frequencyForPeriod의 rounds가 0 이하이면 예외가 발생한다")
+    @DisplayName("기간별 빈도의 회차 수가 0 이하이면 예외가 발생한다")
     void frequencyForPeriodRoundsZeroShouldThrow() {
         var repository = org.mockito.Mockito.mock(com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.class);
-        var service = new WinningStatisticsCacheService(repository, null);
+        var service = WinningStatisticsCacheServiceBuilder.forRepository(repository).build();
 
         assertThatExceptionOfType(BusinessException.class)
                 .isThrownBy(() -> service.frequencyForPeriod(0))
@@ -57,10 +57,10 @@ class WinningStatisticsCacheServiceValidationTest {
     }
 
     @Test
-    @DisplayName("companionNumbers의 target이 0이면 예외가 발생한다")
+    @DisplayName("동반 번호의 대상 번호가 0이면 예외가 발생한다")
     void companionNumbersTargetZeroShouldThrow() {
         var repository = org.mockito.Mockito.mock(com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.class);
-        var service = new WinningStatisticsCacheService(repository, null);
+        var service = WinningStatisticsCacheServiceBuilder.forRepository(repository).build();
 
         assertThatExceptionOfType(BusinessException.class)
                 .isThrownBy(() -> service.companionNumbers(0))
@@ -69,10 +69,10 @@ class WinningStatisticsCacheServiceValidationTest {
     }
 
     @Test
-    @DisplayName("companionNumbers의 target이 46이면 예외가 발생한다")
+    @DisplayName("동반 번호의 대상 번호가 46이면 예외가 발생한다")
     void companionNumbersTarget46ShouldThrow() {
         var repository = org.mockito.Mockito.mock(com.kraft.lotto.feature.winningnumber.infrastructure.WinningNumberRepository.class);
-        var service = new WinningStatisticsCacheService(repository, null);
+        var service = WinningStatisticsCacheServiceBuilder.forRepository(repository).build();
 
         assertThatExceptionOfType(BusinessException.class)
                 .isThrownBy(() -> service.companionNumbers(46))

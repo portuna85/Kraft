@@ -37,7 +37,8 @@ class WinningStatisticsPerformanceSmokeTest {
         }
         when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(summaryRows);
 
-        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).build();
         int iterations = 400;
         long startedAt = System.nanoTime();
         for (int i = 0; i < iterations; i++) {

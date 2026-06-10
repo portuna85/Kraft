@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("통계 summary 테이블 경로 테스트")
+@DisplayName("통계 요약 테이블 경로 테스트")
 class WinningStatisticsSummaryTest {
 
     private static final int LATEST_ROUND = 1100;
@@ -42,15 +42,16 @@ class WinningStatisticsSummaryTest {
 
     @BeforeEach
     void setUp() {
-        service = new WinningStatisticsCacheService(
-                repository, null,
-                patternStatsSummaryRepository, companionPairSummaryRepository);
+        service = WinningStatisticsCacheServiceBuilder.forRepository(repository)
+                .patternStats(patternStatsSummaryRepository)
+                .companionPair(companionPairSummaryRepository)
+                .build();
     }
 
     // ──── patternStats ────
 
     @Test
-    @DisplayName("유효한 pattern summary가 있으면 DB 집계 쿼리를 호출하지 않는다")
+    @DisplayName("유효한 패턴 요약이 있으면 데이터베이스 집계 쿼리를 호출하지 않는다")
     void patternStatsUsesSummaryWhenValid() {
         when(repository.findMaxRound()).thenReturn(Optional.of(LATEST_ROUND));
         when(patternStatsSummaryRepository.findAllByOrderByStatTypeAscBucketKeyAsc())
@@ -65,7 +66,7 @@ class WinningStatisticsSummaryTest {
     }
 
     @Test
-    @DisplayName("summary round가 최신이 아니면 DB 집계로 fallback 한다")
+    @DisplayName("요약 회차가 최신이 아니면 데이터베이스 집계로 대체 클라이언트 한다")
     void patternStatsFallbackWhenSummaryStale() {
         when(repository.findMaxRound()).thenReturn(Optional.of(LATEST_ROUND));
         when(patternStatsSummaryRepository.findAllByOrderByStatTypeAscBucketKeyAsc())
@@ -81,7 +82,7 @@ class WinningStatisticsSummaryTest {
     }
 
     @Test
-    @DisplayName("ODD_EVEN 행이 7개 미만이면 DB 집계로 fallback 한다")
+    @DisplayName("홀짝 행이 7개 미만이면 데이터베이스 집계로 대체 클라이언트 한다")
     void patternStatsFallbackWhenOddEvenRowsInsufficient() {
         when(repository.findMaxRound()).thenReturn(Optional.of(LATEST_ROUND));
         List<PatternStatsSummaryEntity> incomplete = validPatternSummaryRows(LATEST_ROUND);
@@ -101,7 +102,7 @@ class WinningStatisticsSummaryTest {
     // ──── companionNumbers ────
 
     @Test
-    @DisplayName("유효한 companion summary가 있으면 DB UNION ALL 쿼리를 호출하지 않는다")
+    @DisplayName("유효한 동반 번호 요약이 있으면 데이터베이스 합집합 쿼리를 호출하지 않는다")
     void companionNumbersUsesSummaryWhenValid() {
         int target = 7;
         when(repository.findMaxRound()).thenReturn(Optional.of(LATEST_ROUND));
@@ -115,7 +116,7 @@ class WinningStatisticsSummaryTest {
     }
 
     @Test
-    @DisplayName("companion summary row 수가 44개 미만이면 DB 쿼리로 fallback 한다")
+    @DisplayName("동반 번호 요약 행 수가 44개 미만이면 데이터베이스 쿼리로 대체한다")
     void companionNumbersFallbackWhenSummaryIncomplete() {
         int target = 7;
         when(repository.findMaxRound()).thenReturn(Optional.of(LATEST_ROUND));
@@ -129,7 +130,7 @@ class WinningStatisticsSummaryTest {
     }
 
     @Test
-    @DisplayName("companion summary round가 최신이 아니면 DB 쿼리로 fallback 한다")
+    @DisplayName("동반 번호 요약 회차가 최신이 아니면 데이터베이스 쿼리로 대체한다")
     void companionNumbersFallbackWhenSummaryStale() {
         int target = 3;
         when(repository.findMaxRound()).thenReturn(Optional.of(LATEST_ROUND));
@@ -143,7 +144,7 @@ class WinningStatisticsSummaryTest {
     }
 
     @Test
-    @DisplayName("companion summary dense rank이 올바르게 계산된다")
+    @DisplayName("동반 번호 요약 조밀 순위가 올바르게 계산된다")
     void companionNumbersSummaryDenseRankCorrect() {
         int target = 7;
         when(repository.findMaxRound()).thenReturn(Optional.of(LATEST_ROUND));
@@ -170,7 +171,7 @@ class WinningStatisticsSummaryTest {
     // ──── refresh ────
 
     @Test
-    @DisplayName("refreshPatternStatsSummary는 ODD_EVEN 7행과 SUM_RANGE 행을 저장한다")
+    @DisplayName("패턴 통계 요약 새로고침은 홀짝 7행과 합계 범위 행을 저장한다")
     void refreshPatternStatsSummarySavesAllTypes() {
         when(repository.findMaxRound()).thenReturn(Optional.of(LATEST_ROUND));
         when(repository.count()).thenReturn(1000L);
@@ -183,7 +184,7 @@ class WinningStatisticsSummaryTest {
     }
 
     @Test
-    @DisplayName("refreshPatternStatsSummary는 maxRound 0이면 아무것도 저장하지 않는다")
+    @DisplayName("패턴 통계 요약 새로고침은 최대 회차가 0이면 아무것도 저장하지 않는다")
     void refreshPatternStatsSummarySkipsWhenNoData() {
         when(repository.findMaxRound()).thenReturn(Optional.empty());
 
@@ -193,7 +194,7 @@ class WinningStatisticsSummaryTest {
     }
 
     @Test
-    @DisplayName("refreshCompanionPairSummary는 findAllCompanionPairs 결과를 저장한다")
+    @DisplayName("동반 번호 쌍 요약 새로고침은 전체 동반 번호 쌍 조회 결과를 저장한다")
     void refreshCompanionPairSummarySavesAllPairs() {
         when(repository.findMaxRound()).thenReturn(Optional.of(LATEST_ROUND));
         when(repository.findAllCompanionPairs()).thenReturn(List.of(

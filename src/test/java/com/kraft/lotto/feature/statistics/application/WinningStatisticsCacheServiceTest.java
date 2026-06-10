@@ -19,7 +19,7 @@ class WinningStatisticsCacheServiceTest {
     WinningNumberRepository repository;
 
     @Test
-    @DisplayName("동반 번호 동률은 같은 rank를 갖는다")
+    @DisplayName("동반 번호 동률은 같은 순위를 갖는다")
     void companionNumbersTiedHitCountShouldHaveSameRank() {
         when(repository.findCompanionNumbers(7)).thenReturn(List.of(
                 companionRow(1, 10L),
@@ -29,7 +29,7 @@ class WinningStatisticsCacheServiceTest {
                 companionRow(5, 3L)
         ));
 
-        WinningStatisticsCacheService service = new WinningStatisticsCacheService(repository, null);
+        WinningStatisticsCacheService service = WinningStatisticsCacheServiceBuilder.forRepository(repository).build();
         var result = service.companionNumbers(7);
 
         assertThat(result).extracting(dto -> dto.rank())

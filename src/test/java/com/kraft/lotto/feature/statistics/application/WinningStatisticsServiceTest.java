@@ -49,7 +49,8 @@ class WinningStatisticsServiceTest {
         }
         when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(rows);
 
-        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).build();
         var result = cacheService.frequency();
 
         assertThat(result).hasSize(45);
@@ -59,7 +60,7 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("요약 데이터가 오래된 경우 DB에 쓰지 않고 재계산한다")
+    @DisplayName("요약 데이터가 오래된 경우 데이터베이스에 쓰지 않고 재계산한다")
     void recomputesWhenSummaryIsStale() {
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
         when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(List.of(
@@ -70,7 +71,8 @@ class WinningStatisticsServiceTest {
                 ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
         ));
 
-        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).build();
         var result = cacheService.frequency();
 
         assertThat(result).hasSize(45);
@@ -88,7 +90,8 @@ class WinningStatisticsServiceTest {
                 ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
         ));
 
-        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).build();
         List<NumberFrequencyDto> result = cacheService.frequency();
 
         assertThat(result).hasSize(45);
@@ -105,7 +108,8 @@ class WinningStatisticsServiceTest {
                 ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
         ));
 
-        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).build();
         cacheService.frequency();
 
         verify(winningNumberRepository).findBallFrequencies();
@@ -127,7 +131,8 @@ class WinningStatisticsServiceTest {
                 ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
         ));
 
-        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).build();
         cacheService.frequency();
 
         verify(winningNumberRepository).findBallFrequencies();
@@ -147,7 +152,8 @@ class WinningStatisticsServiceTest {
                 ballFrequencyRow(4, 2L), ballFrequencyRow(5, 2L), ballFrequencyRow(6, 2L)
         ));
 
-        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).build();
         cacheService.frequency();
 
         verify(winningNumberRepository).findBallFrequencies();
@@ -163,8 +169,8 @@ class WinningStatisticsServiceTest {
                 ballFrequencyRow(4, 1L), ballFrequencyRow(5, 1L), ballFrequencyRow(6, 1L)
         ));
 
-        WinningStatisticsCacheService cacheService =
-                new WinningStatisticsCacheService(winningNumberRepository, summaryRepository, meterRegistry);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).meterRegistry(meterRegistry).build();
         cacheService.refreshFrequencySummary();
 
         verify(summaryRepository).saveAll(ArgumentMatchers.anyList());
@@ -186,8 +192,8 @@ class WinningStatisticsServiceTest {
                 ballFrequencyRow(4, 1L), ballFrequencyRow(5, 1L), ballFrequencyRow(6, 1L)
         ));
 
-        WinningStatisticsCacheService cacheService =
-                new WinningStatisticsCacheService(winningNumberRepository, summaryRepository, meterRegistry);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).meterRegistry(meterRegistry).build();
         cacheService.frequency();
 
         long latencyCount = meterRegistry.get("kraft.statistics.frequency.latency")
@@ -198,7 +204,7 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("요약을 재사용하지 못하면 frequency cache miss 메트릭을 기록한다")
+    @DisplayName("요약을 재사용하지 못하면 빈도 캐시 미스 메트릭을 기록한다")
     void recordsCacheMissMetricWhenSummaryCannotBeUsed() {
         SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(1201));
@@ -210,8 +216,8 @@ class WinningStatisticsServiceTest {
                 ballFrequencyRow(4, 1L), ballFrequencyRow(5, 1L), ballFrequencyRow(6, 1L)
         ));
 
-        WinningStatisticsCacheService cacheService =
-                new WinningStatisticsCacheService(winningNumberRepository, summaryRepository, meterRegistry);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).meterRegistry(meterRegistry).build();
         cacheService.frequency();
 
         assertThat(meterRegistry.get("kraft.statistics.frequency.cache.miss")
@@ -230,8 +236,8 @@ class WinningStatisticsServiceTest {
                 ballFrequencyRow(4, 1L), ballFrequencyRow(5, 1L), ballFrequencyRow(6, 1L)
         ));
 
-        WinningStatisticsCacheService cacheService =
-                new WinningStatisticsCacheService(winningNumberRepository, summaryRepository, meterRegistry);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).meterRegistry(meterRegistry).build();
         cacheService.refreshFrequencySummary();
 
         assertThat(meterRegistry.get("kraft.statistics.summary.refresh.duration")
@@ -245,15 +251,15 @@ class WinningStatisticsServiceTest {
     void refreshFrequencySummaryReturnsWhenLatestRoundIsZero() {
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(0));
 
-        WinningStatisticsCacheService cacheService =
-                new WinningStatisticsCacheService(winningNumberRepository, summaryRepository, new SimpleMeterRegistry());
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).meterRegistry(new SimpleMeterRegistry()).build();
         cacheService.refreshFrequencySummary();
 
         verify(summaryRepository, never()).saveAll(ArgumentMatchers.anyList());
     }
 
     @Test
-    @DisplayName("combinationPrizeHistory는 1등과 2등을 올바르게 분류하고 번호를 정렬한다")
+    @DisplayName("조합 당첨 이력는 1등과 2등을 올바르게 분류하고 번호를 정렬한다")
     void combinationPrizeHistoryClassifiesFirstAndSecond() {
         WinningNumberRepository.PrizeHitWithRankRow first = prizeHitRow(100, LocalDate.of(2020, 1, 1), 1);
         WinningNumberRepository.PrizeHitWithRankRow second = prizeHitRow(200, LocalDate.of(2021, 1, 1), 2);
@@ -261,7 +267,8 @@ class WinningStatisticsServiceTest {
         when(winningNumberRepository.findPrizeHitsByNumbers(1, 2, 3, 4, 5, 6))
                 .thenReturn(List.of(first, second));
 
-        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).build();
         var result = cacheService.combinationPrizeHistory(List.of(6, 5, 4, 3, 2, 1));
 
         assertThat(result.numbers()).isEqualTo(List.of(1, 2, 3, 4, 5, 6));
@@ -274,7 +281,7 @@ class WinningStatisticsServiceTest {
     // ---- WinningStatisticsService 조합 로직 테스트 ----
 
     @Test
-    @DisplayName("frequencySummary는 출현 빈도가 낮은 번호 6개를 정렬된 상태로 반환한다")
+    @DisplayName("빈도 요약는 출현 빈도가 낮은 번호 6개를 정렬된 상태로 반환한다")
     void frequencySummarySelectsLowest6() {
         when(winningNumberRepository.findMaxRound()).thenReturn(Optional.of(100));
         when(winningNumberRepository.count()).thenReturn(100L);
@@ -289,7 +296,8 @@ class WinningStatisticsServiceTest {
         when(summaryRepository.findAllByOrderByBallAsc()).thenReturn(rows);
         when(winningNumberRepository.findPrizeHitsByNumbers(1, 2, 3, 4, 5, 6)).thenReturn(List.of());
 
-        WinningStatisticsCacheService cacheService = new WinningStatisticsCacheService(winningNumberRepository, summaryRepository);
+        WinningStatisticsCacheService cacheService = WinningStatisticsCacheServiceBuilder
+                .forRepository(winningNumberRepository).summaryRepository(summaryRepository).build();
         WinningStatisticsService service = new WinningStatisticsService(cacheService);
         var summary = service.frequencySummary();
 
@@ -298,7 +306,7 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("dataChanged=false인 이벤트 수신 시 요약 갱신을 수행하지 않는다")
+    @DisplayName("데이터 변경 여부=거짓인 이벤트 수신 시 요약 갱신을 수행하지 않는다")
     void evictCachesOnCollectedDataNotChangedNoSummaryRefresh() {
         WinningStatisticsCacheService mockCacheService = org.mockito.Mockito.mock(WinningStatisticsCacheService.class);
         WinningStatisticsService service = new WinningStatisticsService(mockCacheService);
@@ -310,7 +318,7 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("dataChanged=true인 이벤트 수신 시 통계 캐시를 비우고 요약을 갱신한다")
+    @DisplayName("데이터 변경 여부=참인 이벤트 수신 시 통계 캐시를 비우고 요약을 갱신한다")
     void evictCachesOnCollectedDataChangedClearsCachesAndRefreshes() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
         when(mockCacheService.refreshAll()).thenReturn(true);
@@ -343,7 +351,7 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("cacheManager가 없으면 캐시 삭제를 건너뛰고 요약만 갱신한다")
+    @DisplayName("캐시 관리자가 없으면 캐시 삭제를 건너뛰고 요약만 갱신한다")
     void evictCachesOnCollectedWithoutCacheManager() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
         when(mockCacheService.refreshAll()).thenReturn(true);
@@ -356,7 +364,7 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("특정 캐시가 null이면 나머지 캐시만 삭제한다")
+    @DisplayName("특정 캐시가 널이면 나머지 캐시만 삭제한다")
     void evictCachesOnCollectedWithPartiallyMissingCaches() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
         when(mockCacheService.refreshAll()).thenReturn(true);
@@ -419,7 +427,7 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("frequencySummary는 빈도 목록을 포함한다")
+    @DisplayName("빈도 요약는 빈도 목록을 포함한다")
     void frequencySummaryContainsFrequencyList() {
         WinningStatisticsCacheService mockCacheService = org.mockito.Mockito.mock(WinningStatisticsCacheService.class);
         List<NumberFrequencyDto> freqList = List.of(new NumberFrequencyDto(1, 5L, 50.0));
@@ -435,7 +443,7 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("서비스 frequency는 캐시 서비스 결과를 그대로 반환한다")
+    @DisplayName("서비스 빈도는 캐시 서비스 결과를 그대로 반환한다")
     void frequencyDelegatesToCacheService() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
         List<NumberFrequencyDto> frequencies = List.of(new NumberFrequencyDto(1, 1L, 1.0));
@@ -446,7 +454,7 @@ class WinningStatisticsServiceTest {
     }
 
     @Test
-    @DisplayName("서비스 combinationPrizeHistory는 캐시 서비스 결과를 그대로 반환한다")
+    @DisplayName("서비스 조합 당첨 이력는 캐시 서비스 결과를 그대로 반환한다")
     void combinationPrizeHistoryDelegatesToCacheService() {
         WinningStatisticsCacheService mockCacheService = mock(WinningStatisticsCacheService.class);
         var history = new com.kraft.lotto.feature.winningnumber.web.dto.CombinationPrizeHistoryDto(

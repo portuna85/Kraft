@@ -58,32 +58,6 @@ public class WinningStatisticsCacheService {
     }
 
     WinningStatisticsCacheService(WinningNumberRepository repository,
-                                  WinningNumberFrequencySummaryRepository summaryRepository) {
-        this(repository, summaryRepository, new SimpleMeterRegistry(), Clock.systemDefaultZone(), null, null);
-    }
-
-    WinningStatisticsCacheService(WinningNumberRepository repository,
-                                  WinningNumberFrequencySummaryRepository summaryRepository,
-                                  PatternStatsSummaryRepository patternStatsSummaryRepository,
-                                  CompanionPairSummaryRepository companionPairSummaryRepository) {
-        this(repository, summaryRepository, new SimpleMeterRegistry(), Clock.systemDefaultZone(),
-                patternStatsSummaryRepository, companionPairSummaryRepository);
-    }
-
-    WinningStatisticsCacheService(WinningNumberRepository repository,
-                                   WinningNumberFrequencySummaryRepository summaryRepository,
-                                   MeterRegistry meterRegistry) {
-        this(repository, summaryRepository, meterRegistry, Clock.systemDefaultZone(), null, null);
-    }
-
-    WinningStatisticsCacheService(WinningNumberRepository repository,
-                                   WinningNumberFrequencySummaryRepository summaryRepository,
-                                   MeterRegistry meterRegistry,
-                                   Clock clock) {
-        this(repository, summaryRepository, meterRegistry, clock, null, null);
-    }
-
-    WinningStatisticsCacheService(WinningNumberRepository repository,
                                    WinningNumberFrequencySummaryRepository summaryRepository,
                                    MeterRegistry meterRegistry,
                                    Clock clock,
