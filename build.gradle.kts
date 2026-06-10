@@ -52,6 +52,7 @@ dependencies {
     implementation("org.flywaydb:flyway-mysql")
     implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.2")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.9.2")
+    implementation("com.google.firebase:firebase-admin:9.4.3")
 
     // Spring 7 ClassFileMetadataReader는 named module(tomcat-embed-core) 내 jakarta/servlet/Filter.class를
     // getResourceAsStream으로 읽지 못한다(Java 25 모듈 캡슐화). 독립 JAR을 unnamed module에 올려 우회.
