@@ -58,3 +58,11 @@ docs/*.md
 AGENTS.md
 CLAUDE.md
 .env
+
+# Flutter app build artifacts
+app/build/
+app/.dart_tool/
+app/*.g.dart
+app/**/*.g.dart
+app/*.freezed.dart
+app/**/*.freezed.dart
