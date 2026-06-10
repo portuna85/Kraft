@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
 
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "유효하지 않은 API 키입니다.", false),
     LOTTO_INVALID_COUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 추천 개수입니다.", false),
     LOTTO_INVALID_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 로또 번호입니다.", false),
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "유효하지 않은 요청 파라미터입니다.", false),
