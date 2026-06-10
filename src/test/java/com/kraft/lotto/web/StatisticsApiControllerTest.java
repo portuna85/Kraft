@@ -1,11 +1,13 @@
 package com.kraft.lotto.web;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -204,10 +206,67 @@ class StatisticsApiControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // ── Cache-Control ────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("빈도 조회 응답에 Cache-Control max-age=600, public 이 포함된다")
+    void frequencyResponseHasCacheControl() throws Exception {
+        when(statisticsService.frequency()).thenReturn(sampleFrequencies());
+
+        mockMvc.perform(get("/api/v1/stats/frequency"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("max-age=600")))
+                .andExpect(header().string("Cache-Control", containsString("public")));
+    }
+
+    @Test
+    @DisplayName("패턴 조회 응답에 Cache-Control max-age=600, public 이 포함된다")
+    void patternsResponseHasCacheControl() throws Exception {
+        when(statisticsService.patternStats()).thenReturn(samplePatternStats());
+
+        mockMvc.perform(get("/api/v1/stats/patterns"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("max-age=600")))
+                .andExpect(header().string("Cache-Control", containsString("public")));
+    }
+
+    @Test
+    @DisplayName("동반 출현 조회 응답에 Cache-Control max-age=600, public 이 포함된다")
+    void companionResponseHasCacheControl() throws Exception {
+        when(statisticsService.companionNumbers(7)).thenReturn(List.of(
+                new CompanionNumberDto(34, 80L, 43.2, 1)));
+
+        mockMvc.perform(get("/api/v1/stats/companion").param("target", "7"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("max-age=600")))
+                .andExpect(header().string("Cache-Control", containsString("public")));
+    }
+
+    @Test
+    @DisplayName("분석 POST 응답에는 Cache-Control 헤더가 없다")
+    void analysisPostHasNoCacheControl() throws Exception {
+        when(statisticsService.combinationPrizeHistory(anyList())).thenReturn(
+                new CombinationPrizeHistoryDto(List.of(1,2,3,4,5,6), 0, 0, List.of(), List.of()));
+
+        mockMvc.perform(post("/api/v1/stats/analysis")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("numbers", List.of(1,2,3,4,5,6)))))
+                .andExpect(status().isOk())
+                .andExpect(header().doesNotExist("Cache-Control"));
+    }
+
     private static List<NumberFrequencyDto> sampleFrequencies() {
         return List.of(
                 new NumberFrequencyDto(7, 210L, 17.1),
                 new NumberFrequencyDto(34, 185L, 15.1)
+        );
+    }
+
+    private static PatternStatDto samplePatternStats() {
+        return new PatternStatDto(
+                List.of(new OddEvenStatDto(3, 3, 200L, 32.5, 250L, 31.3)),
+                List.of(new SumRangeStatDto(100, 149, 180L, 29.2, 220L, 28.6)),
+                615L
         );
     }
 }

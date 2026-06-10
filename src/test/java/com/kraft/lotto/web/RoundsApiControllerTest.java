@@ -1,9 +1,11 @@
 package com.kraft.lotto.web;
 
 import static com.kraft.lotto.support.fixtures.LottoTestFixtures.winningNumberDto;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -136,5 +138,41 @@ class RoundsApiControllerTest {
     void listWithNonNumericSizeReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/api/v1/rounds").param("size", "abc"))
                 .andExpect(status().isBadRequest());
+    }
+
+    // ── Cache-Control ────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("최신 회차 조회 응답에 Cache-Control max-age=300, public 이 포함된다")
+    void latestRoundResponseHasShortCacheControl() throws Exception {
+        when(queryService.getLatest()).thenReturn(winningNumberDto(1200));
+
+        mockMvc.perform(get("/api/v1/rounds/latest"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("max-age=300")))
+                .andExpect(header().string("Cache-Control", containsString("public")));
+    }
+
+    @Test
+    @DisplayName("회차 목록 조회 응답에 Cache-Control max-age=300, public 이 포함된다")
+    void listRoundsResponseHasShortCacheControl() throws Exception {
+        var pageDto = new WinningNumberPageDto(List.of(winningNumberDto(1200)), 0, 20, 1L, 1);
+        when(queryService.list(0, 20)).thenReturn(pageDto);
+
+        mockMvc.perform(get("/api/v1/rounds"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("max-age=300")))
+                .andExpect(header().string("Cache-Control", containsString("public")));
+    }
+
+    @Test
+    @DisplayName("특정 회차 조회 응답에 Cache-Control max-age=86400, public 이 포함된다")
+    void byRoundResponseHasLongCacheControl() throws Exception {
+        when(queryService.getByRound(1200)).thenReturn(winningNumberDto(1200));
+
+        mockMvc.perform(get("/api/v1/rounds/1200"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("max-age=86400")))
+                .andExpect(header().string("Cache-Control", containsString("public")));
     }
 }

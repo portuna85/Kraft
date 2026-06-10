@@ -23,7 +23,7 @@ public class ApiCorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/v1/**")
-                .allowedOrigins(publicBaseUrl, "http://localhost:*", "http://10.0.2.2:*")
+                .allowedOriginPatterns(publicBaseUrl, "http://localhost:*", "http://10.0.2.2:*")
                 .allowedMethods(
                         HttpMethod.GET.name(),
                         HttpMethod.POST.name(),

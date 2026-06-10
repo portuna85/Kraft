@@ -2,12 +2,14 @@ package com.kraft.lotto.web;
 
 import static com.kraft.lotto.support.fixtures.LottoTestFixtures.combinationDtos;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -184,5 +186,32 @@ class NumbersApiControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isMethodNotAllowed());
+    }
+
+    // ── Cache-Control ────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("규칙 목록 조회 응답에 Cache-Control max-age=3600, public 이 포함된다")
+    void rulesResponseHasOneHourCacheControl() throws Exception {
+        when(recommendService.rules()).thenReturn(List.of(
+                new RuleDto("BirthdayBiasRule", "생일 편향 제외")));
+
+        mockMvc.perform(get("/api/v1/numbers/recommend/rules"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("max-age=3600")))
+                .andExpect(header().string("Cache-Control", containsString("public")));
+    }
+
+    @Test
+    @DisplayName("번호 추천 POST 응답에는 Cache-Control 헤더가 없다")
+    void recommendPostHasNoCacheControl() throws Exception {
+        when(recommendService.recommend(eq(1), any(RecommendFilter.class)))
+                .thenReturn(new RecommendResponse(combinationDtos(1)));
+
+        mockMvc.perform(post("/api/v1/numbers/recommend")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("count", 1))))
+                .andExpect(status().isOk())
+                .andExpect(header().doesNotExist("Cache-Control"));
     }
 }

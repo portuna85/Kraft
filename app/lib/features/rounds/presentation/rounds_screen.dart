@@ -32,7 +32,7 @@ class _RoundsScreenState extends ConsumerState<RoundsScreen> {
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorView(
-          message: e is AppException ? e.message : '오류가 발생했습니다',
+          message: errorMessage(e),
           onRetry: () => ref.invalidate(roundsPageProvider(_page)),
         ),
         data: (page) => Column(
