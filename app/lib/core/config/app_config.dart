@@ -3,6 +3,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_config.g.dart';
 
+/// --dart-define=BASE_URL=http://192.168.x.x:8080 으로 덮어쓸 수 있다.
+/// --dart-define=API_KEY=xxx 로 API 키를 주입할 수 있다.
+const _kBaseUrlOverride = String.fromEnvironment('BASE_URL');
+const _kApiKeyOverride = String.fromEnvironment('API_KEY');
+
 @riverpod
 AppConfig appConfig(AppConfigRef ref) => kDebugMode
     ? AppConfig.local()
@@ -11,14 +16,18 @@ AppConfig appConfig(AppConfigRef ref) => kDebugMode
 class AppConfig {
   const AppConfig({required this.baseUrl, this.apiKey});
 
-  factory AppConfig.local() => const AppConfig(
-        baseUrl: 'http://10.0.2.2:8080', // Android 에뮬레이터 → 로컬호스트
-        apiKey: null,
+  factory AppConfig.local() => AppConfig(
+        baseUrl: _kBaseUrlOverride.isNotEmpty
+            ? _kBaseUrlOverride
+            : 'http://10.0.2.2:8080',
+        apiKey: _kApiKeyOverride.isNotEmpty ? _kApiKeyOverride : null,
       );
 
-  factory AppConfig.prod() => const AppConfig(
-        baseUrl: 'https://www.kraft.io.kr',
-        apiKey: null, // 필요 시 flutter_secure_storage로 주입
+  factory AppConfig.prod() => AppConfig(
+        baseUrl: _kBaseUrlOverride.isNotEmpty
+            ? _kBaseUrlOverride
+            : 'https://www.kraft.io.kr',
+        apiKey: _kApiKeyOverride.isNotEmpty ? _kApiKeyOverride : null,
       );
 
   final String baseUrl;
