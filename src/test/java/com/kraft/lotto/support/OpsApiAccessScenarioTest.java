@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
-import com.kraft.lotto.feature.news.application.NewsCollectionService;
 import com.kraft.lotto.feature.recommend.application.RecommendMetricsQueryService;
 import com.kraft.lotto.feature.winningnumber.application.ApiCircuitBreakerRegistry;
 import com.kraft.lotto.feature.winningnumber.application.LottoCollectionCommandService;
@@ -24,7 +23,6 @@ import com.kraft.lotto.web.OpsCollectionController;
 import com.kraft.lotto.web.OpsExceptionHandler;
 import com.kraft.lotto.web.OpsFetchLogController;
 import com.kraft.lotto.web.OpsMonitoringController;
-import com.kraft.lotto.web.OpsNewsController;
 import com.kraft.lotto.web.OpsNoStoreAdvice;
 import java.time.Clock;
 import java.time.Instant;
@@ -61,9 +59,6 @@ class OpsApiAccessScenarioTest {
     @Mock
     WinningNumberQueryService winningNumberQueryService;
 
-    @Mock
-    NewsCollectionService newsCollectionService;
-
     MockMvc mockMvc;
 
     @BeforeEach
@@ -77,8 +72,7 @@ class OpsApiAccessScenarioTest {
                                 circuitBreakerRegistry,
                                 winningNumberQueryService,
                                 Clock.fixed(Instant.parse("2026-05-26T00:00:00Z"), ZoneId.of("Asia/Seoul"))
-                        ),
-                        new OpsNewsController(newsCollectionService)
+                        )
                 )
                 .setControllerAdvice(new OpsNoStoreAdvice(), new OpsExceptionHandler())
                 .addFilters(new OpsAccessFilter(securityProperties()))
@@ -250,26 +244,6 @@ class OpsApiAccessScenarioTest {
                 .andExpect(jsonPath("$.latestRound").value(1200));
 
         verify(opsCollectionFacade).collectMissing(any(), any());
-    }
-
-    @Test
-    @DisplayName("뉴스 수집 등록 요청은 정상 토큰과 허용 아이피면 뉴스 수집 결과를 반환한다")
-    void collectNewsWithValidTokenAndAllowedIpReturnsOk() throws Exception {
-        when(newsCollectionService.collect()).thenReturn(new NewsCollectionService.NewsCollectResult(3, 4));
-
-        mockMvc.perform(post("/ops/news/collect")
-                        .header("X-Ops-Token", "expected-token")
-                        .with(request -> {
-                            request.setRemoteAddr("127.0.0.1");
-                            return request;
-                        }))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.saved").value(3))
-                .andExpect(jsonPath("$.skipped").value(4))
-                .andExpect(header().string("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0"));
-
-        verify(newsCollectionService).collect();
-        verify(newsCollectionService).purgeOldArticles();
     }
 
     @Test

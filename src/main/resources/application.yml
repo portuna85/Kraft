@@ -178,69 +178,11 @@ kraft:
     companion-numbers:
       ttl-minutes: ${KRAFT_CACHE_COMPANION_TTL_MINUTES:30}
       max-size: ${KRAFT_CACHE_COMPANION_MAX_SIZE:45}
-  news:
-    enabled: ${KRAFT_NEWS_ENABLED:true}
-    cron: ${KRAFT_NEWS_CRON:0 0 */6 * * *}
-    rss-url: "${KRAFT_NEWS_RSS_URL:https://news.google.com/rss/search?q=로또&hl=ko&gl=KR&ceid=KR:ko}"
-    max-articles-per-run: ${KRAFT_NEWS_MAX_ARTICLES_PER_RUN:30}
-    retention-days: ${KRAFT_NEWS_RETENTION_DAYS:30}
-    connect-timeout-ms: ${KRAFT_NEWS_CONNECT_TIMEOUT_MS:5000}
-    read-timeout-ms: ${KRAFT_NEWS_READ_TIMEOUT_MS:10000}
-    exclude-keywords:
-      - "아파트 로또"
-      - "분양 로또"
-      - "청약 로또"
-      - "선거 로또"
-      - "취업 로또"
-      - "입시 로또"
-      - "전세 로또"
-      - "공익신고"
-      - "해외 로또"
-      - "캐나다 로또"
-      - "파워볼"
-      - "복권 당첨 비법"
-      - "로또식 투자"
-      - "로또급 선물"
-      - "로또 아파트"
-      - "로또 분양"
-      - "로또 청약"
-    blocked-domains:
-      - "kmrk.ru"
-    official-sources:
-      - "동행복권"
-      - "dhlottery"
-      - "기획재정부"
-      - "복권위원회"
-      - "나라복권"
-    press-sources:
-      - "연합뉴스"
-      - "뉴시스"
-      - "뉴스1"
-      - "조선"
-      - "중앙"
-      - "동아"
-      - "한겨레"
-      - "경향"
-      - "한국경제"
-      - "매일경제"
-      - "이데일리"
-      - "머니투데이"
-      - "헤럴드"
-      - "서울경제"
-      - "국민일보"
-      - "문화일보"
-      - "세계일보"
-      - "SBS"
-      - "MBC"
-      - "KBS"
-      - "JTBC"
-      - "YTN"
-      - "MBN"
-      - "채널A"
-      - "TV조선"
-      - "아시아경제"
-      - "파이낸셜"
-      - "뉴스투데이"
+  fcm:
+    enabled: ${KRAFT_FCM_ENABLED:false}
+    credentials-path: ${KRAFT_FCM_CREDENTIALS_PATH:}
+    draw-result-topic: ${KRAFT_FCM_DRAW_RESULT_TOPIC:draw-result}
+    stale-cleanup-cron: ${KRAFT_FCM_STALE_CLEANUP_CRON:0 0 4 * * *}
   recommend:
     max-attempts: ${KRAFT_RECOMMEND_MAX_ATTEMPTS:5000}
     initial-pick-max-attempts: ${KRAFT_RECOMMEND_INITIAL_PICK_MAX_ATTEMPTS:10000}

@@ -18,7 +18,6 @@ public class NavModelAdvice {
             "/stats",     "패턴 통계",
             "/companion", "동반 번호",
             "/analysis",  "분석 도구",
-            "/news",      "로또 뉴스",
             "/faq",       "자주 묻는 질문"
     );
 

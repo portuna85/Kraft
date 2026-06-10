@@ -46,7 +46,7 @@ class SeoControllerTest {
         assertThat(response.getBody())
                 .contains("<loc>https://www.kraft.io.kr/</loc>")
                 .contains("<loc>https://www.kraft.io.kr/latest</loc>")
-                .doesNotContain("/news?tier=");
+                .doesNotContain("/news");
     }
 
     @Test

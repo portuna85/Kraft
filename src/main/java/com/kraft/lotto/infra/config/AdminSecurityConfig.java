@@ -49,15 +49,13 @@ public class AdminSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/ops/collection", "/admin/ops/collection/**")
                             .hasAnyRole("ADMIN_OPERATOR", "ADMIN_SUPER_ADMIN")
-                        .requestMatchers("/admin/ops/news", "/admin/ops/news/**")
-                            .hasAnyRole("ADMIN_NEWS_MANAGER", "ADMIN_SUPER_ADMIN")
                         .requestMatchers("/admin/ops/audit", "/admin/ops/audit/**")
                             .hasAnyRole("ADMIN_AUDITOR", "ADMIN_SUPER_ADMIN")
                         .requestMatchers("/admin/ops/cache", "/admin/ops/cache/**")
                             .hasAnyRole("ADMIN_OPERATOR", "ADMIN_SUPER_ADMIN")
                         .requestMatchers("/admin/ops", "/admin/ops/**")
                             .hasAnyRole("ADMIN_VIEWER", "ADMIN_OPERATOR",
-                                        "ADMIN_NEWS_MANAGER", "ADMIN_AUDITOR", "ADMIN_SUPER_ADMIN")
+                                        "ADMIN_AUDITOR", "ADMIN_SUPER_ADMIN")
                         .requestMatchers("/admin/login", "/admin/login/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/actuator", "/actuator/**").denyAll()

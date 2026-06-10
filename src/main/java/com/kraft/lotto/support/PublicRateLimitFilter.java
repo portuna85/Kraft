@@ -33,7 +33,7 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
     private static final java.util.List<String> RATE_LIMITED_PREFIXES = java.util.List.of(
             API_V1_PREFIX,
             "/latest", "/rounds", "/stats", "/analysis",
-            "/companion", "/news", "/recommend", "/fragments/"
+            "/companion", "/recommend", "/fragments/"
     );
 
     private final KraftSecurityProperties securityProperties;

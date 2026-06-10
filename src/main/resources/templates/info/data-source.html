@@ -38,26 +38,6 @@
     </div>
   </div>
 
-  <div class="card mb-4 kraft-section">
-    <div class="card-body">
-      <h2 class="h6 text-uppercase fw-semibold text-secondary mb-3">뉴스 데이터</h2>
-      <dl class="small mb-0">
-        <div class="mb-2">
-          <dt class="fw-semibold d-inline">출처:</dt>
-          <dd class="d-inline ms-1">Google News RSS (로또 관련 키워드 기반)</dd>
-        </div>
-        <div class="mb-2">
-          <dt class="fw-semibold d-inline">갱신 주기:</dt>
-          <dd class="d-inline ms-1">6시간마다 자동 수집</dd>
-        </div>
-        <div class="mb-0">
-          <dt class="fw-semibold d-inline">보관 기간:</dt>
-          <dd class="d-inline ms-1">최근 30일분</dd>
-        </div>
-      </dl>
-    </div>
-  </div>
-
   <!-- 현재 데이터 상태 -->
   <div class="card mb-4 kraft-section" th:if="${latestStoredRound != null}">
     <div class="card-body">
