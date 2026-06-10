@@ -5,13 +5,13 @@ part 'app_config.g.dart';
 
 @riverpod
 AppConfig appConfig(AppConfigRef ref) => kDebugMode
-    ? AppConfig.dev()
+    ? AppConfig.local()
     : AppConfig.prod();
 
 class AppConfig {
   const AppConfig({required this.baseUrl, this.apiKey});
 
-  factory AppConfig.dev() => const AppConfig(
+  factory AppConfig.local() => const AppConfig(
         baseUrl: 'http://10.0.2.2:8080', // Android 에뮬레이터 → 로컬호스트
         apiKey: null,
       );
