@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../config/app_config.dart';
+import 'kraft_interceptor.dart';
 import '../../features/rounds/domain/round.dart';
 import '../../features/rounds/domain/page_result.dart';
 import '../../features/stats/domain/frequency_stats.dart';
@@ -21,11 +22,12 @@ KraftApiClient kraftApiClient(KraftApiClientRef ref) {
     baseUrl: config.baseUrl,
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 15),
+    responseType: ResponseType.json,
     headers: {
       if (config.apiKey != null) 'X-Api-Key': config.apiKey!,
       'Accept': 'application/json',
     },
-  ));
+  ))..interceptors.add(KraftInterceptor());
   return KraftApiClient(dio);
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../core/error/app_exception.dart';
 import '../data/rounds_repository.dart';
 import '../domain/round.dart';
 
@@ -25,7 +26,7 @@ class RoundDetailScreen extends ConsumerWidget {
       appBar: AppBar(title: Text('제 $drwNo회')),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => Center(child: Text(errorMessage(e))),
         data: (round) => _RoundDetail(round: round),
       ),
     );

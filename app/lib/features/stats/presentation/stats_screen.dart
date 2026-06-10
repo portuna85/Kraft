@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/api/api_client.dart';
+import '../../../core/error/app_exception.dart';
 import '../domain/frequency_stats.dart';
 import '../domain/pattern_stats.dart';
 
@@ -56,12 +57,13 @@ class _FrequencyTab extends ConsumerWidget {
     final async = ref.watch(frequencyStatsProvider);
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(e.toString())),
+      error: (e, _) => Center(child: Text(errorMessage(e))),
       data: (frequencies) {
         if (frequencies.isEmpty) {
           return const Center(child: Text('데이터가 없습니다'));
         }
-        final maxCount = frequencies.map((e) => e.count).reduce((a, b) => a > b ? a : b);
+        final maxCount =
+            frequencies.map((e) => e.count).reduce((a, b) => a > b ? a : b);
         return ListView.separated(
           padding: const EdgeInsets.all(8),
           itemCount: frequencies.length,
@@ -127,7 +129,7 @@ class _PatternTab extends ConsumerWidget {
     final async = ref.watch(patternStatsProvider);
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(e.toString())),
+      error: (e, _) => Center(child: Text(errorMessage(e))),
       data: (stats) => ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -144,7 +146,7 @@ class _PatternTab extends ConsumerWidget {
                 ),
               )),
           const SizedBox(height: 16),
-          _SectionHeader('합산 범위 패턴'),
+          const _SectionHeader('합산 범위 패턴'),
           const SizedBox(height: 8),
           ...stats.sumRangeStats.map((s) => Card(
                 child: ListTile(

@@ -4,6 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
+import '../../../core/error/app_exception.dart';
+
 part 'saved_screen.g.dart';
 
 @riverpod
@@ -46,7 +48,7 @@ class SavedScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('내 번호함')),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => Center(child: Text(errorMessage(e))),
         data: (list) => list.isEmpty
             ? const Center(
                 child: Column(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/api/api_client.dart';
+import '../../../core/error/app_exception.dart';
 import '../domain/recommend_request.dart';
 import '../domain/recommended_numbers.dart';
 import '../../saved/presentation/saved_screen.dart';
@@ -84,7 +85,7 @@ class _NumbersScreenState extends ConsumerState<NumbersScreen> {
             error: (e, _) => Card(
               child: ListTile(
                 leading: const Icon(Icons.error_outline, color: Colors.red),
-                title: Text(e.toString()),
+                title: Text(errorMessage(e)),
               ),
             ),
             data: (result) => result == null
