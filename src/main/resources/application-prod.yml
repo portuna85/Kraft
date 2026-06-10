@@ -41,7 +41,7 @@ kraft:
     enabled: ${KRAFT_HISTORY_INIT_ENABLED:false}
   api:
     client: ${KRAFT_API_CLIENT:real}
-    fallback-client: ${KRAFT_API_FALLBACK_CLIENT:smok}
+    fallback-client: ${KRAFT_API_FALLBACK_CLIENT:public-data}
   security:
     headers:
       hsts-enabled: ${KRAFT_SECURITY_HSTS_ENABLED:true}

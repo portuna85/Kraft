@@ -23,7 +23,7 @@ class FlywayMigrationIntegrationTest {
     WinningNumberRepository winningNumberRepository;
 
     @Test
-    @DisplayName("실제 MariaDB에서 Flyway 마이그레이션 7개가 모두 성공한다")
+    @DisplayName("실제 MariaDB에서 모든 Flyway 마이그레이션이 성공한다")
     void flywayMigrationsSucceed() {
         // 컨텍스트 로딩 = Flyway 마이그레이션 성공
     }

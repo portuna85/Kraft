@@ -74,8 +74,8 @@ class LatestRoundControllerTest {
         "2000000, 2000000",
         "50000000, 39000000",
         "300000000, 234000000",
-        "300000001, 201000000",
-        "2052166154, 1374951323"
+        "300000001, 234000001",
+        "2052166154, 1407951324"
     })
     @DisplayName("세후 금액을 세율에 따라 계산한다")
     void afterTaxCalculation(long prize, long expectedAfterTax) {

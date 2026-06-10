@@ -1,6 +1,7 @@
 package com.kraft.lotto.infra.config;
 
 import com.kraft.lotto.feature.winningnumber.application.LottoApiClientConfig;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -12,6 +13,7 @@ class ProdConfigValidator {
     private static final Set<String> WEAK_TOKEN_PATTERNS = Set.of(
             "changeme", "change-me", "password", "secret", "test", "admin", "token"
     );
+    private static final Set<String> BROAD_PROXY_CIDRS = Set.of("0.0.0.0/0", "::/0");
 
     private ProdConfigValidator() {
     }
@@ -39,6 +41,8 @@ class ProdConfigValidator {
                 "Recommend long-run threshold (env: KRAFT_RECOMMEND_RULE_LONG_RUN_THRESHOLD)", 2, 6);
         requireIntInRange(env, problems, "kraft.recommend.rules.decade-threshold",
                 "Recommend decade threshold (env: KRAFT_RECOMMEND_RULE_DECADE_THRESHOLD)", 3, 6);
+
+        warnBroadTrustedProxies(env, problems);
 
         String apiClient = RequiredConfigValidator.safeGet(env, "kraft.api.client");
         Set<String> allowedProdClients = LottoApiClientConfig.prodAllowedClientTokens();
@@ -73,6 +77,22 @@ class ProdConfigValidator {
                         "token looks like a placeholder — set a strong random token in prod profile"));
                 return;
             }
+        }
+    }
+
+    private static void warnBroadTrustedProxies(ConfigurableEnvironment env, List<String> problems) {
+        String key = "kraft.security.trusted-proxies";
+        String value = RequiredConfigValidator.safeGet(env, key);
+        if (value == null || value.isBlank()) {
+            return;
+        }
+        boolean hasBroad = Arrays.stream(value.split(","))
+                .map(String::trim)
+                .anyMatch(BROAD_PROXY_CIDRS::contains);
+        if (hasBroad) {
+            problems.add(RequiredConfigValidator.format(key,
+                    "Trusted proxy CIDRs (env: KRAFT_SECURITY_TRUSTED_PROXIES)",
+                    "contains an overly broad range (0.0.0.0/0 or ::/0) — set specific Caddy/proxy CIDRs only"));
         }
     }
 

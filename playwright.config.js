@@ -16,6 +16,8 @@ const springArgs = [
   '--spring.flyway.enabled=false',
   '--kraft.db.connectivity-check.enabled=false',
   '--kraft.security.ops.enabled=false',
+  '--kraft.admin.enabled=true',
+  '--kraft.admin.admin-password-hash={noop}kraft-e2e-admin',
 ];
 
 function buildServerCommand() {

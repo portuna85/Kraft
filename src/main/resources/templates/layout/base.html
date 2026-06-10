@@ -209,5 +209,6 @@
 <script th:src="@{/js/validation.js}" defer></script>
 <script th:src="@{/js/fragment-loader.js}" defer></script>
 <script th:src="@{/js/main.js}" defer></script>
+<script th:if="${isAdmin}" th:src="@{/js/admin-confirm.js}" defer></script>
 </body>
 </html>

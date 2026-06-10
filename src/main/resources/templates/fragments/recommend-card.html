@@ -49,6 +49,17 @@
       공동 당첨 시 분배 인원을 줄이는 데 목적이 있습니다.
       모든 조합의 1등 당첨 확률은 동일합니다(1/8,145,060).
     </p>
+    <details class="mb-2">
+      <summary class="kraft-summary-trigger text-secondary small">편향 회피 규칙 안내 (5가지)</summary>
+      <ul class="small text-secondary mt-2 mb-1 ps-3">
+        <li><strong>생일 편향 회피</strong> — 1~31에 치우친 조합을 제외합니다. 생일·기념일을 선택하는 구매자가 많아 이 구간의 공동 당첨 인원이 많습니다.</li>
+        <li><strong>연속수 제한</strong> — 3개 이상 연속된 번호를 포함한 조합을 제외합니다. 예: 5-6-7.</li>
+        <li><strong>등차수열 제거</strong> — 일정 간격으로 배열된 조합을 제외합니다. 예: 5-10-15-20-25-30.</li>
+        <li><strong>단일 십단위 집중 제거</strong> — 6개 번호 전체가 같은 십 단위(예: 1~9, 10~19)에 속하는 조합을 제외합니다.</li>
+        <li><strong>과거 당첨 조합 회피</strong> — 역대 1등 당첨 번호와 동일한 조합을 제외합니다.</li>
+      </ul>
+      <p class="small text-muted mb-0">당첨 확률은 어떤 조합을 선택해도 동일합니다(1/8,145,060). 이 규칙들은 공동 당첨 시 분배 인원을 줄이기 위한 편향 회피 필터입니다.</p>
+    </details>
     <div id="countInputFeedback" class="invalid-feedback d-block kraft-input-feedback visually-hidden" aria-live="polite" th:text="|1 ~ ${maxCount} 사이의 정수를 입력하세요.|">1 ~ 10 사이의 정수를 입력하세요.</div>
     <div id="recommend-loading" class="htmx-indicator kraft-state kraft-state-loading small">생성 중…</div>
     <div class="sets-grid" th:if="${combinations != null and !#lists.isEmpty(combinations)}">

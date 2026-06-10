@@ -141,7 +141,7 @@ src/main/resources/
 | `public-data` | 공공데이터포털 API (운영 fallback) |
 | `dhlottery` / `real` | 동행복권 공식 API |
 
-Primary 실패 시 `kraft.api.fallback-client`를 통해 자동 전환한다.
+Primary 실패 시 `kraft.api.fallback-client`를 통해 자동 전환한다. 권장 fallback은 `public-data`이며, `.env.prod.example`과 `render-env.sh`에 명시되어 있다. 운영 환경 파일에 `KRAFT_API_FALLBACK_CLIENT`를 반드시 명시할 것.
 
 Circuit Breaker 기본 정책: **5회 실패 → OPEN 30초**
 
@@ -149,7 +149,7 @@ Circuit Breaker 기본 정책: **5회 실패 → OPEN 30초**
 
 | 대상 | 기본 실행 시각 |
 |---|---|
-| 당첨번호 | 토요일 22:00, 일요일 06:00 |
+| 당첨번호 | 토요일 22:30, 일요일 07:00 |
 | 뉴스 | 매 6시간 |
 | 수집 로그 정리 | 매일 03:30 (기본 90일 보관) |
 
@@ -339,6 +339,8 @@ Flyway 마이그레이션은 `src/main/resources/db/` 아래에서 관리한다.
 
 공통 마이그레이션(`db/migration/`)은 모든 환경에 적용되고, 벤더별 마이그레이션(`db/vendor/{vendor}/`)은 해당 DB에만 적용된다.
 
+구조: 공통 V1–V14, V18–V20 / 벤더별 V15–V17
+
 | Version | 설명 |
 |---|---|
 | V1 | 기본 스키마: 당첨번호, 수집 로그, 판매점, 빈도 캐시, ShedLock |
@@ -358,6 +360,9 @@ Flyway 마이그레이션은 `src/main/resources/db/` 아래에서 관리한다.
 | V15 | 판매점 dedupe 컬럼 NOT NULL 정규화 (벤더별) |
 | V16 | 수집 로그 진단 컬럼 추가: `api_client`, `retry_count`, `latency_ms` (벤더별) |
 | V17 | 뉴스 title_hash 컬럼 추가 (벤더별) |
+| V18 | 뉴스 title_hash 인덱스 추가 (공통) |
+| V19 | 관리자 감사 로그 복합 인덱스 추가 (공통) |
+| V20 | 빈도 집계 뷰 및 뉴스 공개 인덱스 추가 (공통) |
 
 ---
 
