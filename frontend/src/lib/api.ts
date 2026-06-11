@@ -8,6 +8,7 @@ import type {
   CombinationPrizeHistoryDto,
   RecommendResponse,
   RecommendRequest,
+  ServiceStatusDto,
 } from './types'
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE ?? ''
@@ -51,5 +52,8 @@ export const api = {
   numbers: {
     recommend: (req: RecommendRequest) =>
       post<RecommendResponse>('/api/v1/numbers/recommend', req),
+  },
+  service: {
+    status: () => get<ServiceStatusDto>('/api/v1/status'),
   },
 }

@@ -12,6 +12,7 @@ const NAV = [
   { href: '/analysis', label: '번호 분석' },
   { href: '/companion', label: '동반 번호' },
   { href: '/stats', label: '패턴 통계' },
+  { href: '/status', label: '서비스 상태' },
 ]
 
 export default function Header() {

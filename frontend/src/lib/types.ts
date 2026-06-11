@@ -87,5 +87,24 @@ export interface RecommendRequest {
   sumMax?: number | null
 }
 
+export interface DataChangeLogEntry {
+  round: number
+  status: 'SUCCESS' | 'FAILED' | 'SKIPPED' | 'NOT_DRAWN'
+  statusLabel: string
+  statusCssClass: string
+  fetchedAtFormatted: string
+}
+
+export interface ServiceStatusDto {
+  latestRound: number | null
+  latestDrawDate: string | null
+  expectedRound: number
+  upToDate: boolean
+  roundsBehind: number
+  recentLogs: DataChangeLogEntry[]
+  appVersion: string | null
+  buildTime: string | null
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type int = number

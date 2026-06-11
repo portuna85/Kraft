@@ -1,7 +1,19 @@
 import { notFound } from 'next/navigation'
 import AdSlot from '@/components/AdSlot'
+import DataSourcePage from '@/components/DataSourcePage'
 
-const PAGES: Record<string, { title: string; content: React.ReactNode }> = {
+// --- 정적 페이지 데이터 ---
+
+function QA({ q, children }: { q: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <p className="font-semibold text-white">Q. {q}</p>
+      <p className="text-slate-400">{children}</p>
+    </div>
+  )
+}
+
+const STATIC_PAGES: Record<string, { title: string; content: React.ReactNode }> = {
   faq: {
     title: 'FAQ',
     content: (
@@ -69,12 +81,7 @@ const PAGES: Record<string, { title: string; content: React.ReactNode }> = {
   },
   'data-source': {
     title: '데이터 출처',
-    content: (
-      <div className="space-y-3 text-sm text-slate-300">
-        <p>모든 당첨 번호 데이터는 동행복권 공식 발표 기준입니다.</p>
-        <p>데이터는 자동으로 수집되며, 수집 시점에 따라 최신 회차 반영에 시간이 걸릴 수 있습니다.</p>
-      </div>
-    ),
+    content: null, // DataSourcePage (client component) 로 렌더링
   },
   'responsible-play': {
     title: '책임감 있는 플레이',
@@ -88,21 +95,12 @@ const PAGES: Record<string, { title: string; content: React.ReactNode }> = {
   },
 }
 
-function QA({ q, children }: { q: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <p className="font-semibold text-white">Q. {q}</p>
-      <p className="text-slate-400">{children}</p>
-    </div>
-  )
-}
-
 export function generateStaticParams() {
-  return Object.keys(PAGES).map((slug) => ({ slug }))
+  return Object.keys(STATIC_PAGES).map((slug) => ({ slug }))
 }
 
 export default function InfoPage({ params }: { params: { slug: string } }) {
-  const page = PAGES[params.slug]
+  const page = STATIC_PAGES[params.slug]
   if (!page) notFound()
 
   return (
@@ -112,7 +110,9 @@ export default function InfoPage({ params }: { params: { slug: string } }) {
         <h1 className="text-2xl font-bold">{page.title}</h1>
       </header>
       <AdSlot slotId={`info-${params.slug}-top`} />
-      <div className="card">{page.content}</div>
+      <div className="card">
+        {params.slug === 'data-source' ? <DataSourcePage /> : page.content}
+      </div>
     </div>
   )
 }
