@@ -65,7 +65,7 @@ function RoundsContent() {
           </header>
         </div>
         <section className="card space-y-4">
-          <span className="text-sm text-slate-500">{detail.drawDate} 추첨</span>
+          <span className="text-sm text-slate-400">{detail.drawDate} 추첨</span>
           <div className="flex items-center gap-2 flex-wrap">
             {detail.numbers.map((n) => <LottoBall key={n} number={n} size="lg" />)}
             <span className="text-slate-400">+</span>
@@ -78,7 +78,7 @@ function RoundsContent() {
               ['총 판매액', `${detail.totalSales.toLocaleString()}원`],
             ].map(([k, v]) => (
               <div key={k} className="bg-navy rounded p-2">
-                <dt className="text-xs text-slate-500">{k}</dt>
+                <dt className="text-xs text-slate-400">{k}</dt>
                 <dd className="font-mono text-xs mt-0.5">{v}</dd>
               </div>
             ))}
@@ -143,11 +143,11 @@ function RoundRow({ round: r }: { round: WinningNumberDto }) {
       <span className="text-sm font-semibold w-12 shrink-0">제 {r.round}회</span>
       <div className="flex gap-1 flex-wrap flex-1">
         {r.numbers.map((n) => <LottoBall key={n} number={n} size="sm" />)}
-        <span className="text-slate-500 text-xs self-center">+</span>
+        <span className="text-slate-400 text-xs self-center">+</span>
         <LottoBall number={r.bonusNumber} size="sm" bonus />
       </div>
-      <span className="text-xs text-slate-500 shrink-0">{r.drawDate}</span>
-      <span className="text-slate-500">›</span>
+      <span className="text-xs text-slate-400 shrink-0">{r.drawDate}</span>
+      <span className="text-slate-400">›</span>
     </li>
   )
 }

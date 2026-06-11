@@ -1,11 +1,12 @@
 'use client'
 
-const COLORS: Record<string, string> = {
-  yellow: '#F9A825',
-  blue: '#42A5F5',
-  red: '#EF5350',
-  gray: '#757575',
-  green: '#66BB6A',
+// bg/text 쌍: WCAG AA (4.5:1 이상) 대비율 확보
+const COLORS: Record<string, { bg: string; text: string }> = {
+  yellow: { bg: '#F9A825', text: '#1A1A2E' },
+  blue:   { bg: '#1565C0', text: '#FFFFFF' },
+  red:    { bg: '#B71C1C', text: '#FFFFFF' },
+  gray:   { bg: '#424242', text: '#FFFFFF' },
+  green:  { bg: '#1B5E20', text: '#FFFFFF' },
 }
 
 function ballColor(n: number) {
@@ -28,6 +29,7 @@ export default function LottoBall({ number, size = 'md', bonus = false }: Props)
   const px = SIZE[size]
   return (
     <span
+      role="img"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -35,8 +37,8 @@ export default function LottoBall({ number, size = 'md', bonus = false }: Props)
         width: px,
         height: px,
         borderRadius: '50%',
-        backgroundColor: ballColor(number),
-        color: '#fff',
+        backgroundColor: ballColor(number).bg,
+        color: ballColor(number).text,
         fontWeight: 700,
         fontSize: px * 0.38,
         outline: bonus ? '2px solid #FFC107' : undefined,

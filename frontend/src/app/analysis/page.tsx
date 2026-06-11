@@ -43,7 +43,7 @@ export default function AnalysisPage() {
       <div className="card space-y-4">
         <div className="flex gap-2 flex-wrap min-h-10">
           {selected.length === 0
-            ? <span className="text-slate-500 text-sm">번호를 6개 선택하세요</span>
+            ? <span className="text-slate-400 text-sm">번호를 6개 선택하세요</span>
             : selected.map((n) => <LottoBall key={n} number={n} />)}
         </div>
 
@@ -90,17 +90,17 @@ export default function AnalysisPage() {
           <h2 className="font-semibold">분석 결과</h2>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div className="bg-navy rounded p-3">
-              <dt className="text-xs text-slate-500">1등 당첨 이력</dt>
+              <dt className="text-xs text-slate-400">1등 당첨 이력</dt>
               <dd className="text-2xl font-bold text-gold mt-1">{result.firstPrizeCount}회</dd>
             </div>
             <div className="bg-navy rounded p-3">
-              <dt className="text-xs text-slate-500">2등 당첨 이력</dt>
+              <dt className="text-xs text-slate-400">2등 당첨 이력</dt>
               <dd className="text-2xl font-bold text-gold mt-1">{result.secondPrizeCount}회</dd>
             </div>
           </dl>
           {result.firstPrizeHits.length > 0 && (
             <div>
-              <h3 className="text-xs text-slate-500 mb-1">1등 회차</h3>
+              <h3 className="text-xs text-slate-400 mb-1">1등 회차</h3>
               <ul className="text-sm space-y-0.5">
                 {result.firstPrizeHits.map((h) => (
                   <li key={h.round} className="text-slate-300">

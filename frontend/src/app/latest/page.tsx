@@ -42,7 +42,7 @@ export default function LatestPage() {
       <section className="card space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h2 className="font-semibold">제 {data.round}회 당첨번호</h2>
-          <span className="text-sm text-slate-500">{data.drawDate} 추첨</span>
+          <span className="text-sm text-slate-400">{data.drawDate} 추첨</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {data.numbers.map((n) => <LottoBall key={n} number={n} size="lg" />)}
@@ -56,7 +56,7 @@ export default function LatestPage() {
             ['총 판매액', `${data.totalSales.toLocaleString()}원`],
           ].map(([k, v]) => (
             <div key={k} className="bg-navy rounded p-2">
-              <dt className="text-xs text-slate-500">{k}</dt>
+              <dt className="text-xs text-slate-400">{k}</dt>
               <dd className="font-mono text-xs mt-0.5">{v}</dd>
             </div>
           ))}
@@ -67,7 +67,7 @@ export default function LatestPage() {
         <h2 className="font-semibold text-sm text-slate-400 uppercase tracking-wide">
           세후 예상 수령액
         </h2>
-        <p className="text-xs text-slate-500">3억 초과 33%, 200만 초과 22% 원천징수 적용</p>
+        <p className="text-xs text-slate-400">3억 초과 33%, 200만 초과 22% 원천징수 적용</p>
         <div className="grid md:grid-cols-2 gap-4">
           {[
             { rank: '1등', prize: data.firstPrize, winners: data.firstWinners, info: first },

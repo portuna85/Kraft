@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title,description,content)"
-      th:with="reqPath=${currentPath != null ? currentPath : '/'},
+      th:with="reqPath=${currentPath != null ? currentPath : #request.requestURI},
                isAdmin=${#strings.startsWith(reqPath, '/admin')},
                baseUrl=${@environment.getProperty('kraft.public-base-url', 'https://www.kraft.io.kr')},
                canonicalUrl=${baseUrl + reqPath}">

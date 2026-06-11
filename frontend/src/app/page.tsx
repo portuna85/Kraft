@@ -43,19 +43,19 @@ export default function HomePage() {
 
       {/* 최신 회차 */}
       {latest && (
-        <section data-testid="latest-draw" className="card space-y-3">
+        <section data-testid="latest-draw" className="card space-y-3" aria-label={`제 ${latest.round}회 당첨번호`}>
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-sm text-slate-400 uppercase tracking-wide">
               제 {latest.round}회 당첨번호
             </h2>
-            <span className="text-xs text-slate-500">{latest.drawDate}</span>
+            <span className="text-xs text-slate-400">{latest.drawDate}</span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {latest.numbers.map((n) => <LottoBall key={n} number={n} />)}
-            <span className="text-slate-500 text-sm">+</span>
+            <span className="text-slate-400 text-sm">+</span>
             <LottoBall number={latest.bonusNumber} bonus />
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             1등 {latest.firstWinners}명 · {latest.firstPrize.toLocaleString()}원
           </p>
         </section>
@@ -64,11 +64,12 @@ export default function HomePage() {
       <AdSlot slotId="home-mid" />
 
       {/* 번호 추천 */}
-      <section data-testid="recommend-section" className="card space-y-4">
+      <section data-testid="recommend-section" className="card space-y-4" aria-label="번호 추천">
         <h2 className="font-semibold text-sm text-slate-400 uppercase tracking-wide">번호 추천</h2>
         <div className="space-y-2">
-          <label className="text-sm text-slate-300">조합 수: {count}줄</label>
+          <label htmlFor="count-range" className="text-sm text-slate-300">조합 수: {count}줄</label>
           <input
+            id="count-range"
             type="range" min={1} max={10} value={count}
             onChange={(e) => setCount(Number(e.target.value))}
             className="w-full accent-gold"
@@ -82,7 +83,7 @@ export default function HomePage() {
           <ul className="space-y-2 mt-2">
             {result.map((c, i) => (
               <li key={i} className="flex items-center gap-2 flex-wrap">
-                <span className="text-slate-500 text-sm w-5">{i + 1}</span>
+                <span className="text-slate-400 text-sm w-5">{i + 1}</span>
                 {c.numbers.map((n) => <LottoBall key={n} number={n} />)}
               </li>
             ))}

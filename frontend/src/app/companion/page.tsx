@@ -64,14 +64,14 @@ export default function CompanionPage() {
               <div key={d.number} className="flex flex-col items-center gap-1">
                 <LottoBall number={d.number} />
                 <span className="text-xs text-slate-400">{d.count}회</span>
-                <span className="text-xs text-slate-500">{d.percent.toFixed(1)}%</span>
+                <span className="text-xs text-slate-400">{d.percent.toFixed(1)}%</span>
               </div>
             ))}
           </div>
           <ul className="divide-y divide-[#0F3460] text-sm">
             {data.map((d) => (
               <li key={d.number} className="flex items-center gap-3 py-2">
-                <span className="w-4 text-slate-500 text-xs">{d.rank}</span>
+                <span className="w-4 text-slate-400 text-xs">{d.rank}</span>
                 <LottoBall number={d.number} size="sm" />
                 <div className="flex-1">
                   <div className="h-1.5 rounded-full bg-gold/70" style={{ width: `${d.percent}%` }} />

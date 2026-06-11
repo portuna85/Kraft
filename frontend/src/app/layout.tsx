@@ -28,15 +28,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1 py-6">
           <div className="page-container">{children}</div>
         </main>
-        <footer className="border-t border-[#0F3460] py-6 text-center text-xs text-slate-500">
+        <footer className="border-t border-[#0F3460] py-6 text-center text-xs text-slate-400">
           <div className="page-container space-y-1">
             <p>본 서비스는 당첨 번호를 예측하지 않습니다. 과거 통계 데이터 기반 참고 도구입니다.</p>
             <p>
-              <a href="/info/privacy" className="hover:text-slate-300">개인정보처리방침</a>
+              <a href="/info/privacy" className="underline hover:text-slate-200">개인정보처리방침</a>
               {' · '}
-              <a href="/info/terms" className="hover:text-slate-300">이용약관</a>
+              <a href="/info/terms" className="underline hover:text-slate-200">이용약관</a>
               {' · '}
-              <a href="/info/faq" className="hover:text-slate-300">FAQ</a>
+              <a href="/info/faq" className="underline hover:text-slate-200">FAQ</a>
             </p>
           </div>
         </footer>
