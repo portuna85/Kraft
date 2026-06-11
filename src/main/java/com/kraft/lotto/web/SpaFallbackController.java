@@ -1,18 +1,22 @@
 package com.kraft.lotto.web;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Set;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
- * SPA(Next.js) 클라이언트 라우팅 지원.
- * 요청 경로에 해당하는 정적 HTML(Next.js output: export의 페이지별 index.html)이 있으면
- * 그 파일을 서빙하고, 없으면 루트 index.html 을 폴백으로 반환한다.
+ * SPA(Next.js) client routes support.
+ * If a matching static HTML export exists, forward to it; otherwise forward to the public index page.
  */
 @Controller
 public class SpaFallbackController {
+
+    private static final Set<String> RESERVED_PREFIXES = Set.of("admin", "ops", "actuator", "api");
 
     private final ResourceLoader resourceLoader;
 
@@ -27,12 +31,24 @@ public class SpaFallbackController {
     })
     public String forward(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        // Next.js trailingSlash: true 로 빌드하므로 /path/index.html 구조
+        if (RESERVED_PREFIXES.contains(firstSegment(uri))) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
         String pagePath = uri.endsWith("/") ? uri + "index.html" : uri + "/index.html";
         Resource pageHtml = resourceLoader.getResource("classpath:/static" + pagePath);
         if (pageHtml.exists()) {
             return "forward:" + pagePath;
         }
         return "forward:/index.html";
+    }
+
+    private static String firstSegment(String uri) {
+        if (uri == null || uri.isBlank() || "/".equals(uri)) {
+            return "";
+        }
+        String normalized = uri.startsWith("/") ? uri.substring(1) : uri;
+        int slash = normalized.indexOf('/');
+        return slash >= 0 ? normalized.substring(0, slash) : normalized;
     }
 }
