@@ -55,14 +55,23 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         if (securityProperties.getHeaders().isEnabled()) {
-            String nonce = generateNonce();
-            request.setAttribute(CSP_NONCE_ATTRIBUTE, nonce);
-
             String baseCsp = securityProperties.getHeaders().getContentSecurityPolicy();
             if (adProperties.isEnabled() && !adProperties.getAdsenseClientId().isBlank()) {
                 baseCsp = appendAdsenseCsp(baseCsp);
             }
-            String csp = injectNonce(baseCsp, nonce);
+
+            String csp;
+            String uri = request.getRequestURI();
+            if (uri != null && uri.startsWith("/admin")) {
+                // Thymeleaf 렌더링 경로: nonce를 템플릿에서 사용
+                String nonce = generateNonce();
+                request.setAttribute(CSP_NONCE_ATTRIBUTE, nonce);
+                csp = injectNonce(baseCsp, nonce);
+            } else {
+                // React 정적 export 경로: inline <script> 태그에 nonce를 주입할 수 없으므로 'unsafe-inline' 사용
+                csp = injectUnsafeInline(baseCsp);
+            }
+
             response.setHeader("Content-Security-Policy", csp);
             response.setHeader("X-Frame-Options", securityProperties.getHeaders().getXFrameOptions());
             response.setHeader("Referrer-Policy", securityProperties.getHeaders().getReferrerPolicy());
@@ -88,6 +97,13 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         String nonceDirective = "'nonce-" + nonce + "'";
         if (csp.contains("script-src ")) {
             return csp.replace("script-src ", "script-src " + nonceDirective + " ");
+        }
+        return csp;
+    }
+
+    static String injectUnsafeInline(String csp) {
+        if (csp.contains("script-src ")) {
+            return csp.replace("script-src ", "script-src 'unsafe-inline' ");
         }
         return csp;
     }

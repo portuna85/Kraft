@@ -65,12 +65,12 @@ class SecurityHeadersFilterTest {
     }
 
     @Test
-    @DisplayName("요청마다 콘텐츠 보안 정책 논스를 생성해 요청 속성과 콘텐츠 보안 정책 헤더에 포함한다")
-    void nonceIsInjectedIntoCspAndRequestAttribute() throws Exception {
+    @DisplayName("어드민 경로 요청마다 논스를 생성해 요청 속성과 콘텐츠 보안 정책 헤더에 포함한다")
+    void nonceIsInjectedIntoCspAndRequestAttributeForAdminRoute() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         SecurityHeadersFilter filter = new SecurityHeadersFilter(properties, new KraftAdProperties());
 
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/admin/ops");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         filter.doFilter(request, response, new MockFilterChain());
@@ -81,19 +81,36 @@ class SecurityHeadersFilterTest {
     }
 
     @Test
-    @DisplayName("두 요청의 논스는 서로 다르다")
-    void eachRequestGetsDifferentNonce() throws Exception {
+    @DisplayName("두 어드민 요청의 논스는 서로 다르다")
+    void eachAdminRequestGetsDifferentNonce() throws Exception {
         KraftSecurityProperties properties = new KraftSecurityProperties();
         SecurityHeadersFilter filter = new SecurityHeadersFilter(properties, new KraftAdProperties());
 
-        MockHttpServletRequest req1 = new MockHttpServletRequest("GET", "/");
-        MockHttpServletRequest req2 = new MockHttpServletRequest("GET", "/");
+        MockHttpServletRequest req1 = new MockHttpServletRequest("GET", "/admin/ops");
+        MockHttpServletRequest req2 = new MockHttpServletRequest("GET", "/admin/ops");
         filter.doFilter(req1, new MockHttpServletResponse(), new MockFilterChain());
         filter.doFilter(req2, new MockHttpServletResponse(), new MockFilterChain());
 
         String nonce1 = (String) req1.getAttribute(SecurityHeadersFilter.CSP_NONCE_ATTRIBUTE);
         String nonce2 = (String) req2.getAttribute(SecurityHeadersFilter.CSP_NONCE_ATTRIBUTE);
         assertThat(nonce1).isNotEqualTo(nonce2);
+    }
+
+    @Test
+    @DisplayName("공개(React SPA) 경로는 논스 대신 unsafe-inline을 사용하며 논스 속성을 설정하지 않는다")
+    void publicRouteUsesUnsafeInlineInsteadOfNonce() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties, new KraftAdProperties());
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/latest");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(request.getAttribute(SecurityHeadersFilter.CSP_NONCE_ATTRIBUTE)).isNull();
+        String csp = response.getHeader("Content-Security-Policy");
+        assertThat(csp).contains("'unsafe-inline'");
+        assertThat(csp).doesNotContain("'nonce-");
     }
 
     @ParameterizedTest

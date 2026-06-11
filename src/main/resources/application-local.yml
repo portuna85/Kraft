@@ -8,6 +8,7 @@ spring:
     cache: false
   web:
     resources:
+      static-locations: classpath:/static/, file:./frontend/out/
       cache:
         period: 0
         cachecontrol:
