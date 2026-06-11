@@ -1,32 +1,94 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { api } from '@/lib/api'
 import type { WinningNumberDto, WinningNumberPageDto } from '@/lib/types'
 import LottoBall from '@/components/LottoBall'
 import AdSlot from '@/components/AdSlot'
 
-export default function RoundsPage() {
+function RoundsContent() {
   const router = useRouter()
+  const params = useSearchParams()
+  const idParam = params.get('id')
+
   const [data, setData] = useState<WinningNumberPageDto | null>(null)
+  const [detail, setDetail] = useState<WinningNumberDto | null>(null)
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
+  // 상세 모드
   useEffect(() => {
+    if (!idParam) { setDetail(null); setNotFound(false); return }
+    const n = parseInt(idParam, 10)
+    if (!n) { setNotFound(true); return }
+    setLoading(true)
+    api.rounds.get(n)
+      .then(setDetail)
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false))
+  }, [idParam])
+
+  // 목록 모드
+  useEffect(() => {
+    if (idParam) return
     setLoading(true)
     api.rounds.list(page)
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false))
-  }, [page])
+  }, [page, idParam])
 
   function onSearch() {
     const n = parseInt(search, 10)
-    if (n > 0) router.push(`/rounds/${n}`)
+    if (n > 0) router.push(`/rounds?id=${n}`)
   }
 
+  // 상세 뷰
+  if (idParam) {
+    if (loading) return <p className="text-slate-400 text-center py-12">불러오는 중…</p>
+    if (notFound || !detail) return (
+      <div className="text-center py-12 space-y-4">
+        <p className="text-slate-400">회차를 찾을 수 없습니다.</p>
+        <button className="btn-primary" onClick={() => router.push('/rounds')}>목록으로</button>
+      </div>
+    )
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push('/rounds')} className="text-slate-400 hover:text-white">‹</button>
+          <header>
+            <p className="eyebrow">회차 상세</p>
+            <h1 className="text-2xl font-bold">제 {detail.round}회</h1>
+          </header>
+        </div>
+        <section className="card space-y-4">
+          <span className="text-sm text-slate-500">{detail.drawDate} 추첨</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {detail.numbers.map((n) => <LottoBall key={n} number={n} size="lg" />)}
+            <span className="text-slate-400">+</span>
+            <LottoBall number={detail.bonusNumber} size="lg" bonus />
+          </div>
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            {[
+              ['1등 당첨금', `${detail.firstPrize.toLocaleString()}원`],
+              ['당첨자 수', `${detail.firstWinners}명`],
+              ['총 판매액', `${detail.totalSales.toLocaleString()}원`],
+            ].map(([k, v]) => (
+              <div key={k} className="bg-navy rounded p-2">
+                <dt className="text-xs text-slate-500">{k}</dt>
+                <dd className="font-mono text-xs mt-0.5">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      </div>
+    )
+  }
+
+  // 목록 뷰
   return (
     <div data-testid="rounds-page" className="space-y-4">
       <header className="space-y-1">
@@ -76,7 +138,7 @@ function RoundRow({ round: r }: { round: WinningNumberDto }) {
   return (
     <li
       className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#16213E] rounded px-2 transition-colors"
-      onClick={() => router.push(`/rounds/${r.round}`)}
+      onClick={() => router.push(`/rounds?id=${r.round}`)}
     >
       <span className="text-sm font-semibold w-12 shrink-0">제 {r.round}회</span>
       <div className="flex gap-1 flex-wrap flex-1">
@@ -87,5 +149,13 @@ function RoundRow({ round: r }: { round: WinningNumberDto }) {
       <span className="text-xs text-slate-500 shrink-0">{r.drawDate}</span>
       <span className="text-slate-500">›</span>
     </li>
+  )
+}
+
+export default function RoundsPage() {
+  return (
+    <Suspense fallback={<p className="text-slate-400 text-center py-12">불러오는 중…</p>}>
+      <RoundsContent />
+    </Suspense>
   )
 }
