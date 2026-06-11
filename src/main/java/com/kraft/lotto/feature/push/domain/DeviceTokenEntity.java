@@ -1,6 +1,5 @@
 package com.kraft.lotto.feature.push.domain;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,7 +12,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "device_tokens")
-@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "JPA entity — mutable by design")
 public class DeviceTokenEntity {
 
     @Id

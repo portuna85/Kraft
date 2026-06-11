@@ -64,6 +64,10 @@ public class SavedNumbersService {
     }
 
     public record SavedNumbersDto(Long id, List<Integer> numbers, String label, LocalDateTime savedAt) {
+        public SavedNumbersDto {
+            numbers = List.copyOf(numbers);
+        }
+
         static SavedNumbersDto from(SavedNumbersEntity e) {
             return new SavedNumbersDto(e.getId(), e.getNumbers(), e.getLabel(), e.getSavedAt());
         }

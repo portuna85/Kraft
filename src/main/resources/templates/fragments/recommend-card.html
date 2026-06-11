@@ -72,12 +72,6 @@
             </th:block>
           </div>
         </div>
-        <ul class="set-card-analysis-list" th:if="${not #lists.isEmpty(c.passedLabels)}">
-          <li th:each="label : ${c.passedLabels}" class="set-card-analysis-item">
-            <span class="set-card-analysis-check" aria-hidden="true">✓</span>
-            <span th:text="${label}">label</span>
-          </li>
-        </ul>
       </div>
     </div>
     <!-- 고급 설정: 규칙 on/off -->

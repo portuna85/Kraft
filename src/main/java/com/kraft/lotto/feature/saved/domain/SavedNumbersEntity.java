@@ -1,6 +1,5 @@
 package com.kraft.lotto.feature.saved.domain;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,7 +13,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "saved_numbers")
-@SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "JPA entity — mutable by design")
 public class SavedNumbersEntity {
 
     @Id
@@ -68,7 +66,9 @@ public class SavedNumbersEntity {
         Collections.sort(sorted);
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < sorted.size(); i++) {
-            if (i > 0) sb.append(',');
+            if (i > 0) {
+                sb.append(',');
+            }
             sb.append(sorted.get(i));
         }
         return sb.toString();

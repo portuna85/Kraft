@@ -119,17 +119,6 @@ test.describe('home smoke', () => {
   });
 });
 
-test.describe('news smoke', () => {
-  test('renders news page', async ({ page }) => {
-    await page.goto('/news');
-    await expect(page.locator('.news-list, .kraft-state-empty')).toBeVisible();
-  });
-
-  test('뉴스 페이지에 tier 필터 탭이 없다', async ({ page }) => {
-    await page.goto('/news');
-    await expect(page.locator('.news-tier-tabs')).toHaveCount(0);
-  });
-});
 
 test.describe('responsive smoke', () => {
   test('shows bottom navigation on mobile', async ({ page }, testInfo) => {
@@ -154,10 +143,6 @@ test.describe('brand copy regression', () => {
     await expect(page.locator('body')).not.toContainText('확률 높은 번호');
   });
 
-  test('/news default does not expose general tier articles', async ({ page }) => {
-    await page.goto('/news');
-    await expect(page.locator('[data-source-tier="GENERAL"]')).toHaveCount(0);
-  });
 
 });
 

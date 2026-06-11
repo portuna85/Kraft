@@ -60,5 +60,8 @@ public class SavedNumbersApiController {
             @NotEmpty List<Integer> numbers,
             @Size(max = 100) String label
     ) {
+        public SaveRequest {
+            numbers = List.copyOf(numbers);
+        }
     }
 }
