@@ -38,6 +38,9 @@ dependencies:
   firebase_messaging: ^15.2.5
   flutter_local_notifications: ^18.0.1
 
+  # 홈 위젯 (Android / iOS)
+  home_widget: ^0.7.0
+
   # 아이콘
   cupertino_icons: ^1.0.6
 

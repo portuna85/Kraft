@@ -7,6 +7,7 @@ import 'core/api/api_client.dart';
 import 'core/push/push_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widget/home_widget_service.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -32,14 +33,28 @@ class KraftLottoApp extends ConsumerStatefulWidget {
   ConsumerState<KraftLottoApp> createState() => _KraftLottoAppState();
 }
 
-class _KraftLottoAppState extends ConsumerState<KraftLottoApp> {
+class _KraftLottoAppState extends ConsumerState<KraftLottoApp>
+    with WidgetsBindingObserver {
   bool _fcmInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    // build 이후 첫 프레임에 FCM 초기화 — ref.read 사용
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _initFcm());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _updateWidget();
+    }
   }
 
   Future<void> _initFcm() async {
@@ -50,6 +65,16 @@ class _KraftLottoAppState extends ConsumerState<KraftLottoApp> {
       await PushNotificationService.initialize(client);
     } catch (_) {
       // FCM 초기화 실패는 앱 동작에 영향을 주지 않는다
+    }
+    _updateWidget();
+  }
+
+  Future<void> _updateWidget() async {
+    try {
+      final client = ref.read(kraftApiClientProvider);
+      await HomeWidgetService.update(client);
+    } catch (_) {
+      // 위젯 갱신 실패는 앱 동작에 영향을 주지 않는다
     }
   }
 

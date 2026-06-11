@@ -33,6 +33,18 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="draw_result" />
 
+        <!-- 홈 위젯 -->
+        <receiver
+            android:name=".LottoWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/lotto_widget_info" />
+        </receiver>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

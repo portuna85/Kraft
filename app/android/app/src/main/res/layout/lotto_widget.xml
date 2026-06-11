@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@drawable/widget_bg">
+
+    <!-- 헤더: 회차 + D-day -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="KRAFT 로또"
+            android:textSize="11sp"
+            android:textColor="#99FFFFFF"
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:id="@+id/widget_dday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="D-?"
+            android:textSize="13sp"
+            android:textColor="#FF90CAF9"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- 회차 + 날짜 -->
+    <TextView
+        android:id="@+id/widget_round"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="--회"
+        android:textSize="12sp"
+        android:textColor="#CCFFFFFF" />
+
+    <!-- 번호 볼 행 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="6dp">
+
+        <TextView android:id="@+id/ball1"
+            style="@style/BallStyle" android:layout_weight="1" android:text="?" />
+        <TextView android:id="@+id/ball2"
+            style="@style/BallStyle" android:layout_weight="1" android:text="?" />
+        <TextView android:id="@+id/ball3"
+            style="@style/BallStyle" android:layout_weight="1" android:text="?" />
+        <TextView android:id="@+id/ball4"
+            style="@style/BallStyle" android:layout_weight="1" android:text="?" />
+        <TextView android:id="@+id/ball5"
+            style="@style/BallStyle" android:layout_weight="1" android:text="?" />
+        <TextView android:id="@+id/ball6"
+            style="@style/BallStyle" android:layout_weight="1" android:text="?" />
+
+        <TextView
+            android:id="@+id/ball_plus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.6"
+            android:gravity="center"
+            android:text="+"
+            android:textSize="14sp"
+            android:textColor="#AAFFFFFF"
+            android:textStyle="bold" />
+
+        <TextView android:id="@+id/ball_bonus"
+            style="@style/BallStyle" android:layout_weight="1" android:text="?" />
+    </LinearLayout>
+
+</LinearLayout>
