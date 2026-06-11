@@ -37,8 +37,6 @@ class WinningStatisticsServiceTest {
     @Mock
     WinningNumberFrequencySummaryRepository summaryRepository;
 
-    // ---- WinningStatisticsCacheService 위임 로직 테스트 ----
-
     @Test
     @DisplayName("요약 데이터가 최신이면 요약 테이블을 사용한다")
     void usesSummaryWhenUpToDate() {
@@ -281,8 +279,6 @@ class WinningStatisticsServiceTest {
         assertThat(result.secondPrizeHits()).hasSize(1);
     }
 
-    // ---- WinningStatisticsService 조합 로직 테스트 ----
-
     @Test
     @DisplayName("빈도 요약는 출현 빈도가 낮은 번호 6개를 정렬된 상태로 반환한다")
     void frequencySummarySelectsLowest6() {
@@ -480,20 +476,9 @@ class WinningStatisticsServiceTest {
 
     private static WinningNumberRepository.PrizeHitWithRankRow prizeHitRow(int round, LocalDate drawDate, int prizeRank) {
         return new WinningNumberRepository.PrizeHitWithRankRow() {
-            @Override
-            public Integer getRound() {
-                return round;
-            }
-
-            @Override
-            public LocalDate getDrawDate() {
-                return drawDate;
-            }
-
-            @Override
-            public Integer getPrizeRank() {
-                return prizeRank;
-            }
+            @Override public Integer getRound() { return round; }
+            @Override public LocalDate getDrawDate() { return drawDate; }
+            @Override public Integer getPrizeRank() { return prizeRank; }
         };
     }
 
