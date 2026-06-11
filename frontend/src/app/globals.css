@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #1A1A2E;
+  --card: #16213E;
+  --border: #0F3460;
+  --gold: #FFC107;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* 데스크탑/모바일 강제 전환 */
+[data-view-mode="desktop"] .page-container {
+  max-width: 1280px;
+}
+[data-view-mode="mobile"] .page-container {
+  max-width: 480px;
+}
+
+.page-container {
+  width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+.btn-primary {
+  background-color: var(--gold);
+  color: #1A1A2E;
+  font-weight: 700;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s;
+}
+.btn-primary:hover {
+  background-color: #E6AC00;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* 광고 슬롯 */
+.ad-slot {
+  margin: 1rem 0;
+  min-height: 90px;
+  text-align: center;
+}

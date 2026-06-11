@@ -59,6 +59,12 @@ AGENTS.md
 CLAUDE.md
 .env
 
+# Next.js frontend build artifacts
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.env.local
+
 # Flutter app build artifacts
 app/build/
 app/.dart_tool/

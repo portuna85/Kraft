@@ -156,6 +156,40 @@ tasks.jacocoTestCoverageVerification {
     }
 }
 
+// ── 프론트엔드(Next.js) 빌드 통합 ──────────────────────────────────────────
+val frontendDir = file("frontend")
+val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+val npmCmd = if (isWindows) listOf("cmd", "/c", "npm") else listOf("npm")
+
+// SKIP_FRONTEND 환경변수 또는 frontend/ 폴더 없을 때 건너뜀
+val skipFrontendProvider = providers.environmentVariable("SKIP_FRONTEND")
+    .map { it.isNotBlank() }
+
+val npmCi = tasks.register<Exec>("npmCi") {
+    onlyIf { !skipFrontendProvider.getOrElse(false) && frontendDir.exists() }
+    workingDir(frontendDir)
+    commandLine(npmCmd + listOf("ci", "--prefer-offline"))
+}
+
+val buildFrontend = tasks.register<Exec>("buildFrontend") {
+    dependsOn(npmCi)
+    onlyIf { !skipFrontendProvider.getOrElse(false) && frontendDir.exists() }
+    workingDir(frontendDir)
+    commandLine(npmCmd + listOf("run", "build"))
+    environment("NODE_ENV", "production")
+}
+
+val copyFrontend = tasks.register<Copy>("copyFrontend") {
+    dependsOn(buildFrontend)
+    onlyIf { !skipFrontendProvider.getOrElse(false) && frontendDir.exists() }
+    from("$frontendDir/out")
+    into(layout.buildDirectory.dir("resources/main/static"))
+}
+
+tasks.named("processResources") {
+    finalizedBy(copyFrontend)
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     systemProperty("user.timezone", "Asia/Seoul")
