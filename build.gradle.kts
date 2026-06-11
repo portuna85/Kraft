@@ -18,6 +18,9 @@ group = "com.kraft"
 version = "0.2.0"
 
 extra["tomcat.version"] = "11.0.22"
+// CVE-2026-42583, CVE-2026-42584, CVE-2026-42587, CVE-2026-44249, CVE-2026-45416
+// io.netty 4.2.12.Final → 4.2.15.Final (Spring Boot BOM override)
+extra["netty.version"] = "4.2.15.Final"
 
 java {
     toolchain {
