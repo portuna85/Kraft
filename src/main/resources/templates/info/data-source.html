@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: layout('데이터 출처 - KRAFT Lotto', '로또 당첨번호 데이터의 출처, 수집 방식, 갱신 주기를 설명합니다.', ~{::section})}">
 <section class="kraft-page">
@@ -7,6 +7,8 @@
     <h1>데이터는 어디서 오나요?</h1>
     <p class="kraft-hero-description">당첨번호 데이터의 출처, 수집 방식, 갱신 주기를 안내합니다.</p>
   </header>
+
+  <div th:replace="~{fragments/ad-slot :: display('info-data-source-top')}"></div>
 
   <div class="card mb-4 kraft-section">
     <div class="card-body">

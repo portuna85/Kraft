@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: layout('알고리즘 설명 - KRAFT Lotto', '번호 추천 알고리즘의 규칙과 한계를 투명하게 설명합니다.', ~{::section})}">
 <section class="kraft-page">
@@ -7,6 +7,8 @@
     <h1>번호 추천은 어떻게 작동하나요?</h1>
     <p class="kraft-hero-description">추천 로직의 목적, 규칙, 한계를 투명하게 공개합니다.</p>
   </header>
+
+  <div th:replace="~{fragments/ad-slot :: display('info-methodology-top')}"></div>
 
   <div class="card mb-4 kraft-section border-warning">
     <div class="card-body">

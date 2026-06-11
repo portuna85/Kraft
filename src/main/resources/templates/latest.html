@@ -8,6 +8,8 @@
     <p class="kraft-hero-description">최신 로또 회차의 당첨번호와 세후 예상 수령액을 확인하세요.</p>
   </header>
 
+  <div th:replace="~{fragments/ad-slot :: display('latest-top')}"></div>
+
   <!-- 데이터 없음 -->
   <div class="card kraft-section" th:if="${latest == null}">
     <div class="card-body text-secondary small">수집된 회차 데이터가 없습니다.</div>

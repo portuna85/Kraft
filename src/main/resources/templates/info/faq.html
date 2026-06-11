@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: layout('FAQ - KRAFT Lotto', '자주 묻는 질문과 답변입니다.', ~{::section})}">
 <section class="kraft-page">
@@ -7,6 +7,8 @@
     <h1>자주 묻는 질문</h1>
     <p class="kraft-hero-description">이 서비스에 대해 자주 묻는 질문에 답변합니다.</p>
   </header>
+
+  <div th:replace="~{fragments/ad-slot :: display('info-faq-top')}"></div>
 
   <div class="card mb-3 kraft-section">
     <div class="card-body">
