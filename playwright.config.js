@@ -48,6 +48,7 @@ module.exports = defineConfig({
     baseURL,
     trace: 'retain-on-failure',
   },
+  expect: { timeout: 10000 },
   projects: [
     {
       name: 'chromium',

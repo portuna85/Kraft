@@ -31,7 +31,7 @@ export default function AnalysisPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div data-testid="analysis-page" className="space-y-6">
       <header className="space-y-1">
         <p className="eyebrow">번호 조합 분석</p>
         <h1 className="text-2xl font-bold">번호 조합 분석</h1>
@@ -48,25 +48,25 @@ export default function AnalysisPage() {
         </div>
 
         <div className="grid grid-cols-9 gap-1">
-          {Array.from({ length: 45 }, (_, i) => i + 1).map((n) => (
-            <button
-              key={n}
-              onClick={() => toggle(n)}
-              className={`aspect-square rounded-full text-xs font-bold transition-all ${
-                selected.includes(n)
-                  ? 'ring-2 ring-gold scale-110'
-                  : selected.length >= 6
-                  ? 'opacity-30 cursor-not-allowed'
-                  : 'hover:scale-105'
-              }`}
-              style={{
-                backgroundColor: ballBg(n),
-                color: '#fff',
-              }}
-            >
-              {n}
-            </button>
-          ))}
+          {Array.from({ length: 45 }, (_, i) => i + 1).map((n) => {
+            const c = ballBg(n)
+            return (
+              <button
+                key={n}
+                onClick={() => toggle(n)}
+                className={`aspect-square rounded-full text-xs font-bold transition-all ${
+                  selected.includes(n)
+                    ? 'ring-2 ring-gold scale-110'
+                    : selected.length >= 6
+                    ? 'opacity-30 cursor-not-allowed'
+                    : 'hover:scale-105'
+                }`}
+                style={{ backgroundColor: c.bg, color: c.text }}
+              >
+                {n}
+              </button>
+            )
+          })}
         </div>
 
         <div className="flex items-center justify-between">
@@ -116,10 +116,10 @@ export default function AnalysisPage() {
   )
 }
 
-function ballBg(n: number) {
-  if (n <= 10) return '#F9A825'
-  if (n <= 20) return '#42A5F5'
-  if (n <= 30) return '#EF5350'
-  if (n <= 40) return '#757575'
-  return '#66BB6A'
+function ballBg(n: number): { bg: string; text: string } {
+  if (n <= 10) return { bg: '#F9A825', text: '#1A1A2E' }
+  if (n <= 20) return { bg: '#1565C0', text: '#FFFFFF' }
+  if (n <= 30) return { bg: '#B71C1C', text: '#FFFFFF' }
+  if (n <= 40) return { bg: '#424242', text: '#FFFFFF' }
+  return { bg: '#1B5E20', text: '#FFFFFF' }
 }

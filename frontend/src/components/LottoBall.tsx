@@ -27,6 +27,7 @@ const SIZE = { sm: 28, md: 36, lg: 44 }
 
 export default function LottoBall({ number, size = 'md', bonus = false }: Props) {
   const px = SIZE[size]
+  const { bg, text } = ballColor(number)
   return (
     <span
       role="img"
@@ -37,8 +38,8 @@ export default function LottoBall({ number, size = 'md', bonus = false }: Props)
         width: px,
         height: px,
         borderRadius: '50%',
-        backgroundColor: ballColor(number).bg,
-        color: ballColor(number).text,
+        backgroundColor: bg,
+        color: text,
         fontWeight: 700,
         fontSize: px * 0.38,
         outline: bonus ? '2px solid #FFC107' : undefined,
