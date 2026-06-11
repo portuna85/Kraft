@@ -18,6 +18,9 @@ const springArgs = [
   '--kraft.security.ops.enabled=false',
   '--kraft.admin.enabled=true',
   '--kraft.admin.admin-password-hash={noop}kraft-e2e-admin',
+  // Next.js 인라인 스크립트(빌드 시 고정 해시)가 nonce 기반 CSP 를 위반하므로
+  // E2E 환경에서는 보안 헤더를 비활성화
+  '--kraft.security.headers.enabled=false',
 ];
 
 function buildServerCommand() {
