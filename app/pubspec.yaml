@@ -59,7 +59,7 @@ dev_dependencies:
   riverpod_lint: ^2.3.10
   mockito: ^5.4.4
   flutter_launcher_icons: ^0.14.4
-  flutter_native_splash: ^2.4.8
+  flutter_native_splash: ^2.4.7
 
 flutter:
   uses-material-design: true
