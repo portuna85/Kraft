@@ -197,8 +197,12 @@ val copyFrontend = tasks.register<Copy>("copyFrontend") {
     into(layout.buildDirectory.dir("resources/main/static"))
 }
 
-// test 태스크 그래프에서 프론트엔드 태스크를 제외: processResources → test 경로에서 분리
-// bootJar 만 copyFrontend 에 의존하여 CC 를 최대한 활용
+// resolveMainClassName 이 build/resources/main 을 읽고 copyFrontend 가 같은 경로에 쓰므로
+// CC 암묵적 의존관계 검증 오류를 피하기 위해 명시적 순서 선언
+tasks.named("resolveMainClassName") {
+    dependsOn(copyFrontend)
+}
+
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     dependsOn(copyFrontend)
 }
