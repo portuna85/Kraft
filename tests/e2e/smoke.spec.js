@@ -84,9 +84,10 @@ test.describe('네비게이션', () => {
   test('데스크탑 헤더 nav 링크 표시', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'mobile-chrome', '데스크탑 전용 테스트');
     await page.goto('/');
-    // md+ 뷰포트에서 데스크탑 nav 링크 표시 확인
-    await expect(page.locator('a:has-text("출현 빈도")')).toBeVisible();
-    await expect(page.locator('a:has-text("회차 검색")')).toBeVisible();
+    // desktop nav는 data-testid 없음, bottom-nav는 data-testid="bottom-nav" 로 구분
+    // 두 nav 모두 같은 링크를 가지므로 nav:not([data-testid])로 데스크탑 nav만 타겟
+    await expect(page.locator('nav:not([data-testid]) a:has-text("출현 빈도")')).toBeVisible();
+    await expect(page.locator('nav:not([data-testid]) a:has-text("회차 검색")')).toBeVisible();
   });
 
   test('모바일 하단 탭 표시 mobile', async ({ page }, testInfo) => {
