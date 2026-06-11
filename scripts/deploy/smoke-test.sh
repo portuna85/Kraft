@@ -40,9 +40,10 @@ check_http "/" "200" "홈 페이지"
 check_http "/latest" "200" "최신 회차 페이지"
 check_http "/rounds" "200" "회차 목록 페이지"
 check_http "/frequency" "200" "빈도 분석 페이지"
-check_http "/data-source" "200" "데이터 출처 페이지"
+check_http "/data-source" "302" "데이터 출처 리다이렉트 (/data-source → /info/data-source)"
+check_http "/info/data-source" "200" "데이터 출처 페이지 (/info/data-source)"
 # th:if 조건과 무관하게 항상 렌더링되는 텍스트로 검증
-check_body_contains "/data-source" "당첨번호 데이터" "data-source 콘텐츠 확인"
+check_body_contains "/info/data-source" "당첨번호 데이터" "data-source 콘텐츠 확인"
 
 # 보안 접근 제어 검증: 외부에서 보호 경로가 노출되지 않아야 함
 # /actuator 는 localhost(자기 자신)에서 접근 허용이 정상이므로 체크 제외
