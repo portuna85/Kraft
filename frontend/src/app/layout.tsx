@@ -12,14 +12,8 @@ const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="ko">
       <head>
-        {/* 뷰 모드 하이드레이션 플래시 방지 */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var m=localStorage.getItem('kraft.viewMode');if(m&&m!=='auto')document.documentElement.setAttribute('data-view-mode',m);})()`,
-          }}
-        />
         {adsenseId && (
           <Script
             async

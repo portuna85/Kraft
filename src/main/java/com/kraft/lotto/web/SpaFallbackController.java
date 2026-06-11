@@ -1,6 +1,5 @@
 package com.kraft.lotto.web;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -15,13 +14,7 @@ public class SpaFallbackController {
             "/{path:[^\\.]*}/{sub:[^\\.]*}",
             "/{path:[^\\.]*}/{sub:[^\\.]*}/{deep:[^\\.]*}",
     })
-    public String forward(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        if (uri.startsWith("/api/") || uri.startsWith("/admin/")
-                || uri.startsWith("/actuator/") || uri.equals("/sitemap.xml")
-                || uri.equals("/robots.txt")) {
-            return null;
-        }
+    public String forward() {
         return "forward:/index.html";
     }
 }

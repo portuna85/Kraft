@@ -43,7 +43,7 @@ export default function HomePage() {
 
       {/* 최신 회차 */}
       {latest && (
-        <section className="card space-y-3">
+        <section data-testid="latest-draw" className="card space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-sm text-slate-400 uppercase tracking-wide">
               제 {latest.round}회 당첨번호
@@ -64,7 +64,7 @@ export default function HomePage() {
       <AdSlot slotId="home-mid" />
 
       {/* 번호 추천 */}
-      <section className="card space-y-4">
+      <section data-testid="recommend-section" className="card space-y-4">
         <h2 className="font-semibold text-sm text-slate-400 uppercase tracking-wide">번호 추천</h2>
         <div className="space-y-2">
           <label className="text-sm text-slate-300">조합 수: {count}줄</label>

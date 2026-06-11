@@ -46,7 +46,7 @@ export default function Header() {
       </div>
 
       {/* 모바일 하단 탭 */}
-      <nav className="md:hidden flex border-t border-[#0F3460] overflow-x-auto">
+      <nav data-testid="bottom-nav" className="md:hidden flex border-t border-[#0F3460] overflow-x-auto">
         {NAV.map(({ href, label }) => (
           <Link
             key={href}

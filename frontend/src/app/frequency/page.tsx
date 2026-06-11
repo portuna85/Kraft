@@ -29,7 +29,7 @@ export default function FrequencyPage() {
   const max = data ? Math.max(...data.map((d) => d.count)) : 1
 
   return (
-    <div className="space-y-6">
+    <div data-testid="frequency-page" className="space-y-6">
       <header className="space-y-1">
         <p className="eyebrow">출현 빈도</p>
         <h1 className="text-2xl font-bold">번호별 출현 빈도</h1>

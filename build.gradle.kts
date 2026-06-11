@@ -157,37 +157,50 @@ tasks.jacocoTestCoverageVerification {
 }
 
 // ── 프론트엔드(Next.js) 빌드 통합 ──────────────────────────────────────────
-val frontendDir = file("frontend")
-val isWindows = System.getProperty("os.name").lowercase().contains("windows")
-val npmCmd = if (isWindows) listOf("cmd", "/c", "npm") else listOf("npm")
-
-// SKIP_FRONTEND 환경변수 또는 frontend/ 폴더 없을 때 건너뜀
-val skipFrontendProvider = providers.environmentVariable("SKIP_FRONTEND")
-    .map { it.isNotBlank() }
+// 설정 캐시 비호환 태스크: Exec/Copy 람다가 스크립트 객체를 캡처하므로
+// notCompatibleWithConfigurationCache 로 명시, bootJar 빌드 시에만 트리거됨.
+val frontendDirPath: String = projectDir.resolve("frontend").absolutePath
+val isWindowsBuild: Boolean = System.getProperty("os.name").lowercase().contains("windows")
 
 val npmCi = tasks.register<Exec>("npmCi") {
-    onlyIf { !skipFrontendProvider.getOrElse(false) && frontendDir.exists() }
-    workingDir(frontendDir)
-    commandLine(npmCmd + listOf("ci", "--prefer-offline"))
+    notCompatibleWithConfigurationCache("npm Exec 태스크는 설정 캐시 미지원")
+    onlyIf {
+        val skip = providers.environmentVariable("SKIP_FRONTEND").map { it.isNotBlank() }.getOrElse(false)
+        !skip && file(frontendDirPath).exists()
+    }
+    workingDir(frontendDirPath)
+    if (isWindowsBuild) commandLine("cmd", "/c", "npm", "ci", "--prefer-offline")
+    else commandLine("npm", "ci", "--prefer-offline")
 }
 
 val buildFrontend = tasks.register<Exec>("buildFrontend") {
+    notCompatibleWithConfigurationCache("npm Exec 태스크는 설정 캐시 미지원")
     dependsOn(npmCi)
-    onlyIf { !skipFrontendProvider.getOrElse(false) && frontendDir.exists() }
-    workingDir(frontendDir)
-    commandLine(npmCmd + listOf("run", "build"))
+    onlyIf {
+        val skip = providers.environmentVariable("SKIP_FRONTEND").map { it.isNotBlank() }.getOrElse(false)
+        !skip && file(frontendDirPath).exists()
+    }
+    workingDir(frontendDirPath)
+    if (isWindowsBuild) commandLine("cmd", "/c", "npm", "run", "build")
+    else commandLine("npm", "run", "build")
     environment("NODE_ENV", "production")
 }
 
 val copyFrontend = tasks.register<Copy>("copyFrontend") {
+    notCompatibleWithConfigurationCache("프론트엔드 Copy 태스크는 설정 캐시 미지원")
     dependsOn(buildFrontend)
-    onlyIf { !skipFrontendProvider.getOrElse(false) && frontendDir.exists() }
-    from("$frontendDir/out")
+    onlyIf {
+        val skip = providers.environmentVariable("SKIP_FRONTEND").map { it.isNotBlank() }.getOrElse(false)
+        !skip && file(frontendDirPath).exists()
+    }
+    from("$frontendDirPath/out")
     into(layout.buildDirectory.dir("resources/main/static"))
 }
 
-tasks.named("processResources") {
-    finalizedBy(copyFrontend)
+// test 태스크 그래프에서 프론트엔드 태스크를 제외: processResources → test 경로에서 분리
+// bootJar 만 copyFrontend 에 의존하여 CC 를 최대한 활용
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    dependsOn(copyFrontend)
 }
 
 tasks.withType<Test>().configureEach {

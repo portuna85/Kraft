@@ -28,7 +28,7 @@ export default function RoundsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div data-testid="rounds-page" className="space-y-4">
       <header className="space-y-1">
         <p className="eyebrow">회차 검색</p>
         <h1 className="text-2xl font-bold">회차 검색</h1>
