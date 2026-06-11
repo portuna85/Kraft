@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../data/rounds_repository.dart';
 import '../domain/page_result.dart';
 import '../domain/round.dart';
+import '../../../core/ads/native_ad_widget.dart';
 import '../../../core/error/app_exception.dart';
 
 part 'rounds_screen.g.dart';
@@ -64,12 +65,7 @@ class _RoundsScreenState extends ConsumerState<RoundsScreen> {
                 child: Column(
                   children: [
                     Expanded(
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount: page.content.length,
-                        itemBuilder: (_, i) =>
-                            _RoundTile(round: page.content[i]),
-                      ),
+                      child: _RoundsList(rounds: page.content),
                     ),
                     _Pagination(
                       current: _page,
@@ -114,6 +110,39 @@ class _SearchBar extends StatelessWidget {
               const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         ),
       ),
+    );
+  }
+}
+
+// 5번째 아이템마다 네이티브 광고를 삽입하는 리스트
+class _RoundsList extends StatelessWidget {
+  const _RoundsList({required this.rounds});
+  final List<Round> rounds;
+
+  static const int _adEvery = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    // 광고 포함 총 아이템 수: rounds.length + 광고 개수
+    final adCount = rounds.length ~/ _adEvery;
+    final total = rounds.length + adCount;
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: total,
+      itemBuilder: (_, virtualIndex) {
+        // virtualIndex에서 광고 위치인지 판별
+        if ((virtualIndex + 1) % (_adEvery + 1) == 0) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: NativeAdWidget(),
+          );
+        }
+        // 실제 rounds 인덱스 계산 (광고 슬롯 제외)
+        final adsBefore = virtualIndex ~/ (_adEvery + 1);
+        final roundIndex = virtualIndex - adsBefore;
+        if (roundIndex >= rounds.length) return const SizedBox.shrink();
+        return _RoundTile(round: rounds[roundIndex]);
+      },
     );
   }
 }

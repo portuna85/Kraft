@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../core/ads/ad_service.dart';
+import '../../../core/ads/banner_ad_widget.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/error/app_exception.dart';
 import '../domain/recommend_request.dart';
@@ -142,14 +144,17 @@ class _NumbersScreenState extends ConsumerState<NumbersScreen> {
                     child: FilledButton.icon(
                       onPressed: state.isLoading
                           ? null
-                          : () => ref
-                              .read(recommendNotifierProvider.notifier)
-                              .recommend(RecommendRequest(
-                                count: _count,
-                                oddCount: _oddCount,
-                                sumMin: _sumMin,
-                                sumMax: _sumMax,
-                              )),
+                          : () {
+                              AdService.onRecommendRequested();
+                              ref
+                                  .read(recommendNotifierProvider.notifier)
+                                  .recommend(RecommendRequest(
+                                    count: _count,
+                                    oddCount: _oddCount,
+                                    sumMin: _sumMin,
+                                    sumMax: _sumMax,
+                                  ));
+                            },
                       icon: state.isLoading
                           ? const SizedBox(
                               width: 18,
@@ -196,6 +201,8 @@ class _ResultList extends ConsumerWidget {
           '추천 결과 (${result.combinations.length}줄)',
           style: Theme.of(context).textTheme.titleSmall,
         ),
+        const SizedBox(height: 8),
+        const BannerAdWidget(),
         const SizedBox(height: 8),
         ...result.combinations.asMap().entries.map(
               (e) => Card(

@@ -71,6 +71,11 @@
           th:if="${pageJsonLd != null}" th:utext="${pageJsonLd}"></script>
   <script type="application/ld+json" th:attr="nonce=${cspNonce}"
           th:if="${breadcrumbJsonLd != null}" th:utext="${breadcrumbJsonLd}"></script>
+  <!-- Google AdSense — KRAFT_AD_ENABLED=true 일 때만 로드 -->
+  <script th:if="${adEnabled}"
+          async
+          th:attr="src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ${adsenseClientId}"
+          crossorigin="anonymous"></script>
 </head>
 <body>
 <a class="skip-to-content" href="#main-content">본문으로 건너뛰기</a>

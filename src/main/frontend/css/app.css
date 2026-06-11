@@ -33,3 +33,5 @@
 .changelog-skipped{background:var(--kraft-surface-muted,#edf2fb);color:var(--kraft-muted,#4f5e70);}
 .changelog-not-drawn{background:var(--kraft-surface-muted,#edf2fb);color:var(--kraft-muted,#4f5e70);}
 
+
+.ad-slot{margin:1rem 0;min-height:90px;text-align:center;}

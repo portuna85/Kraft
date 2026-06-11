@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  재사용 광고 슬롯 fragment
+  사용법: <div th:replace="~{fragments/ad-slot :: display('슬롯ID')}"></div>
+-->
+<div th:fragment="display(slotId)"
+     th:if="${adEnabled}"
+     class="ad-slot"
+     aria-label="광고">
+    <ins class="adsbygoogle"
+         style="display:block"
+         th:attr="data-ad-client=${adsenseClientId}, data-ad-slot=${slotId}"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+
+</body>
+</html>

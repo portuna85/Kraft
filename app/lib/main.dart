@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/ads/ad_service.dart';
 import 'core/api/api_client.dart';
 import 'core/push/push_notification_service.dart';
 import 'core/router/app_router.dart';
@@ -22,6 +23,8 @@ Future<void> main() async {
   } catch (_) {
     // firebase_options.dart가 플레이스홀더이거나 네트워크 문제 시 FCM 없이 기동
   }
+
+  await AdService.initialize();
 
   runApp(const ProviderScope(child: KraftLottoApp()));
 }

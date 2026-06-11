@@ -1,5 +1,6 @@
 package com.kraft.lotto.support;
 
+import com.kraft.lotto.infra.config.KraftAdProperties;
 import com.kraft.lotto.infra.config.KraftSecurityProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,15 +25,29 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int NONCE_BYTE_LENGTH = 16;
 
+    // AdSense가 요구하는 추가 CSP 지시문
+    private static final String ADSENSE_SCRIPT_SRC =
+            " https://pagead2.googlesyndication.com https://adservice.google.com";
+    private static final String ADSENSE_IMG_SRC =
+            " https://*.doubleclick.net https://*.googlesyndication.com";
+    private static final String ADSENSE_FRAME_SRC =
+            " https://googleads.g.doubleclick.net https://tpc.googlesyndication.com";
+    private static final String ADSENSE_CONNECT_SRC =
+            " https://pagead2.googlesyndication.com https://adservice.google.com https://*.doubleclick.net";
+
     private final KraftSecurityProperties securityProperties;
+    private final KraftAdProperties adProperties;
 
     @Autowired
-    public SecurityHeadersFilter(ObjectProvider<KraftSecurityProperties> securityPropertiesProvider) {
-        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new));
+    public SecurityHeadersFilter(ObjectProvider<KraftSecurityProperties> securityPropertiesProvider,
+                                  ObjectProvider<KraftAdProperties> adPropertiesProvider) {
+        this(securityPropertiesProvider.getIfAvailable(KraftSecurityProperties::new),
+             adPropertiesProvider.getIfAvailable(KraftAdProperties::new));
     }
 
-    SecurityHeadersFilter(KraftSecurityProperties securityProperties) {
+    SecurityHeadersFilter(KraftSecurityProperties securityProperties, KraftAdProperties adProperties) {
         this.securityProperties = securityProperties;
+        this.adProperties = adProperties;
     }
 
     @Override
@@ -43,7 +58,11 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
             String nonce = generateNonce();
             request.setAttribute(CSP_NONCE_ATTRIBUTE, nonce);
 
-            String csp = injectNonce(securityProperties.getHeaders().getContentSecurityPolicy(), nonce);
+            String baseCsp = securityProperties.getHeaders().getContentSecurityPolicy();
+            if (adProperties.isEnabled() && !adProperties.getAdsenseClientId().isBlank()) {
+                baseCsp = appendAdsenseCsp(baseCsp);
+            }
+            String csp = injectNonce(baseCsp, nonce);
             response.setHeader("Content-Security-Policy", csp);
             response.setHeader("X-Frame-Options", securityProperties.getHeaders().getXFrameOptions());
             response.setHeader("Referrer-Policy", securityProperties.getHeaders().getReferrerPolicy());
@@ -69,6 +88,22 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         String nonceDirective = "'nonce-" + nonce + "'";
         if (csp.contains("script-src ")) {
             return csp.replace("script-src ", "script-src " + nonceDirective + " ");
+        }
+        return csp;
+    }
+
+    private static String appendAdsenseCsp(String csp) {
+        csp = appendToDirective(csp, "script-src",  ADSENSE_SCRIPT_SRC);
+        csp = appendToDirective(csp, "img-src",     ADSENSE_IMG_SRC);
+        csp = appendToDirective(csp, "frame-src",   ADSENSE_FRAME_SRC);
+        csp = appendToDirective(csp, "connect-src", ADSENSE_CONNECT_SRC);
+        return csp;
+    }
+
+    private static String appendToDirective(String csp, String directive, String addition) {
+        String token = directive + " ";
+        if (csp.contains(token)) {
+            return csp.replace(token, token + addition.stripLeading() + " ");
         }
         return csp;
     }

@@ -8,6 +8,8 @@
     <p class="kraft-hero-description">과거 당첨 데이터를 기반으로 편향을 줄인 번호 조합을 제안합니다. 당첨 예측이 아닌 조합 점검 도구입니다.</p>
   </header>
 
+  <div th:replace="~{fragments/ad-slot :: display('home-mid')}"></div>
+
   <div id="recommend"
        hx-get="/fragments/recommend?count=5"
        hx-trigger="load"

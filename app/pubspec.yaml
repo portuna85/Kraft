@@ -41,6 +41,9 @@ dependencies:
   # 홈 위젯 (Android / iOS)
   home_widget: ^0.7.0
 
+  # 광고 (Google AdMob)
+  google_mobile_ads: ^5.1.0
+
   # 아이콘
   cupertino_icons: ^1.0.6
 
