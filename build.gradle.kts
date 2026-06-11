@@ -157,54 +157,47 @@ tasks.jacocoTestCoverageVerification {
 }
 
 // ── 프론트엔드(Next.js) 빌드 통합 ──────────────────────────────────────────
-// 설정 캐시 비호환 태스크: Exec/Copy 람다가 스크립트 객체를 캡처하므로
-// notCompatibleWithConfigurationCache 로 명시, bootJar 빌드 시에만 트리거됨.
+// 출력 경로를 build/frontend-out/ 으로 분리: build/resources/main/ 과 겹치지 않아
+// compileTestJava 등 컴파일 태스크의 암묵적 의존관계 검증 오류 발생 없음.
+// bootJar 가 build/frontend-out/ 을 BOOT-INF/classes/static/ 에 직접 포함.
 val frontendDirPath: String = projectDir.resolve("frontend").absolutePath
 val isWindowsBuild: Boolean = System.getProperty("os.name").lowercase().contains("windows")
+val skipFrontend: Boolean
+    get() = providers.environmentVariable("SKIP_FRONTEND").map { it.isNotBlank() }.getOrElse(false)
 
 val npmCi = tasks.register<Exec>("npmCi") {
-    notCompatibleWithConfigurationCache("npm Exec 태스크는 설정 캐시 미지원")
-    onlyIf {
-        val skip = providers.environmentVariable("SKIP_FRONTEND").map { it.isNotBlank() }.getOrElse(false)
-        !skip && file(frontendDirPath).exists()
-    }
+    onlyIf { !skipFrontend && file(frontendDirPath).exists() }
     workingDir(frontendDirPath)
     if (isWindowsBuild) commandLine("cmd", "/c", "npm", "ci", "--prefer-offline")
     else commandLine("npm", "ci", "--prefer-offline")
 }
 
 val buildFrontend = tasks.register<Exec>("buildFrontend") {
-    notCompatibleWithConfigurationCache("npm Exec 태스크는 설정 캐시 미지원")
     dependsOn(npmCi)
-    onlyIf {
-        val skip = providers.environmentVariable("SKIP_FRONTEND").map { it.isNotBlank() }.getOrElse(false)
-        !skip && file(frontendDirPath).exists()
-    }
+    onlyIf { !skipFrontend && file(frontendDirPath).exists() }
     workingDir(frontendDirPath)
     if (isWindowsBuild) commandLine("cmd", "/c", "npm", "run", "build")
     else commandLine("npm", "run", "build")
     environment("NODE_ENV", "production")
 }
 
-val copyFrontend = tasks.register<Copy>("copyFrontend") {
-    notCompatibleWithConfigurationCache("프론트엔드 Copy 태스크는 설정 캐시 미지원")
+// build/frontend-out/ : 컴파일 클래스패스와 겹치지 않는 별도 경로
+val copyFrontend = tasks.register<Sync>("copyFrontend") {
     dependsOn(buildFrontend)
-    onlyIf {
-        val skip = providers.environmentVariable("SKIP_FRONTEND").map { it.isNotBlank() }.getOrElse(false)
-        !skip && file(frontendDirPath).exists()
-    }
+    onlyIf { !skipFrontend && file(frontendDirPath).exists() }
     from("$frontendDirPath/out")
-    into(layout.buildDirectory.dir("resources/main/static"))
-}
-
-// resolveMainClassName 이 build/resources/main 을 읽고 copyFrontend 가 같은 경로에 쓰므로
-// CC 암묵적 의존관계 검증 오류를 피하기 위해 명시적 순서 선언
-tasks.named("resolveMainClassName") {
-    dependsOn(copyFrontend)
+    into(layout.buildDirectory.dir("frontend-out"))
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     dependsOn(copyFrontend)
+    // Next.js 정적 빌드 결과를 BOOT-INF/classes/static/ 에 포함 → classpath:/static/ 으로 서빙
+    val frontendOut = layout.buildDirectory.dir("frontend-out")
+    if (!skipFrontend && file(frontendDirPath).exists()) {
+        into("BOOT-INF/classes/static") {
+            from(frontendOut)
+        }
+    }
 }
 
 tasks.withType<Test>().configureEach {
