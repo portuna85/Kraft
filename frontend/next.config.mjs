@@ -1,12 +1,10 @@
-import type { NextConfig } from 'next'
-
+/** @type {import('next').NextConfig} */
 const isProd = process.env.NODE_ENV === 'production'
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   output: isProd ? 'export' : undefined,
   trailingSlash: true,
   images: { unoptimized: true },
-  // 개발 환경에서 Spring Boot API 프록시
   async rewrites() {
     if (isProd) return []
     return [
