@@ -17,7 +17,6 @@ const springArgs = [
   '--kraft.db.connectivity-check.enabled=false',
   '--kraft.security.ops.enabled=false',
   '--kraft.admin.enabled=true',
-  '--kraft.admin.admin-password-hash={noop}kraft-e2e-admin',
   // Next.js 인라인 스크립트(빌드 시 고정 해시)가 nonce 기반 CSP 를 위반하므로
   // E2E 환경에서는 보안 헤더를 비활성화
   '--kraft.security.headers.enabled=false',
@@ -25,11 +24,16 @@ const springArgs = [
 
 function buildServerCommand() {
   if (jarPath) {
-    // Escape semicolons so the shell does not treat them as command separators
-    const escaped = springArgs.map((a) => a.replace(/;/g, '\\;')).join(' ');
-    return `java -jar ${jarPath} ${escaped}`;
+    return ['java', '-jar', quoteShellArg(jarPath), ...springArgs.map(quoteShellArg)].join(' ');
   }
   return `${gradleCmd} bootRun --args="${springArgs.join(' ')}"`;
+}
+
+function quoteShellArg(value) {
+  if (process.platform === 'win32') {
+    return `"${value.replace(/"/g, '\\"')}"`;
+  }
+  return `'${value.replace(/'/g, "'\\''")}'`;
 }
 
 module.exports = defineConfig({
@@ -40,6 +44,10 @@ module.exports = defineConfig({
   reporter: 'list',
   webServer: externalServer ? undefined : {
     command: buildServerCommand(),
+    env: {
+      ...process.env,
+      KRAFT_ADMIN_PASSWORD_HASH: '{noop}kraft-e2e-admin',
+    },
     url: baseURL,
     reuseExistingServer: false,
     timeout: jarPath ? 60000 : 120000,
