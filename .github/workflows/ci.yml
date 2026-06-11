@@ -172,14 +172,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # C-5: 빌드 프로비넌스 어테스테이션
+      # C-5: 빌드 프로비넌스 어테스테이션 (rekor.sigstore.dev 네트워크 장애 시 비차단)
       - name: Attest jar provenance
         uses: actions/attest-build-provenance@v4
+        continue-on-error: true
         with:
           subject-path: build/libs/app.jar
 
       - name: Attest image provenance
         uses: actions/attest-build-provenance@v4
+        continue-on-error: true
         with:
           subject-name: ${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.docker-push.outputs.digest }}
