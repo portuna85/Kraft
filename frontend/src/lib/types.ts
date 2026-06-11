@@ -34,16 +34,19 @@ export interface NumberFrequencyDto {
 export interface OddEvenStatDto {
   oddCount: number
   evenCount: number
-  hits: number
-  rate: number
+  drawCount: number
+  percent: number
+  maxDrawCount: number
+  theoreticalPercent: number
 }
 
 export interface SumRangeStatDto {
-  label: string
-  min: number
-  max: number
-  hits: number
-  rate: number
+  rangeStart: number
+  rangeEnd: number
+  drawCount: number
+  percent: number
+  maxDrawCount: number
+  theoreticalPercent: number
 }
 
 export interface PatternStatDto {

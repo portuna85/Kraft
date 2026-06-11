@@ -34,15 +34,15 @@ export default function StatsPage() {
                 <div className="space-y-2">
                   {data.oddEvenStats
                     .slice()
-                    .sort((a, b) => b.hits - a.hits)
+                    .sort((a, b) => b.drawCount - a.drawCount)
                     .map((s) => (
                       <div key={`${s.oddCount}-${s.evenCount}`} className="flex items-center gap-3 text-sm">
                         <span className="w-16 text-slate-300 text-xs">홀 {s.oddCount} / 짝 {s.evenCount}</span>
                         <div className="flex-1">
-                          <div className="h-2 rounded-full bg-gold/70" style={{ width: `${s.rate}%` }} />
+                          <div className="h-2 rounded-full bg-gold/70" style={{ width: `${s.percent}%` }} />
                         </div>
                         <span className="font-mono text-xs text-slate-400 w-24 text-right">
-                          {s.hits}회 ({s.rate.toFixed(1)}%)
+                          {s.drawCount}회 ({s.percent.toFixed(1)}%)
                         </span>
                       </div>
                     ))}
@@ -56,15 +56,15 @@ export default function StatsPage() {
                 <div className="space-y-2">
                   {data.sumRangeStats
                     .slice()
-                    .sort((a, b) => b.hits - a.hits)
+                    .sort((a, b) => b.drawCount - a.drawCount)
                     .map((s) => (
-                      <div key={s.label} className="flex items-center gap-3 text-sm">
-                        <span className="w-24 text-slate-300 text-xs">{s.label}</span>
+                      <div key={s.rangeStart} className="flex items-center gap-3 text-sm">
+                        <span className="w-24 text-slate-300 text-xs">{s.rangeStart}~{s.rangeEnd}</span>
                         <div className="flex-1">
-                          <div className="h-2 rounded-full bg-blue-400/70" style={{ width: `${s.rate}%` }} />
+                          <div className="h-2 rounded-full bg-blue-400/70" style={{ width: `${s.percent}%` }} />
                         </div>
                         <span className="font-mono text-xs text-slate-400 w-24 text-right">
-                          {s.hits}회 ({s.rate.toFixed(1)}%)
+                          {s.drawCount}회 ({s.percent.toFixed(1)}%)
                         </span>
                       </div>
                     ))}
