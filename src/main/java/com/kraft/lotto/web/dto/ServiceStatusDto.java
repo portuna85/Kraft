@@ -12,4 +12,8 @@ public record ServiceStatusDto(
         List<DataChangeLogDto> recentLogs,
         String appVersion,
         String buildTime
-) {}
+) {
+    public ServiceStatusDto {
+        recentLogs = List.copyOf(recentLogs);
+    }
+}
