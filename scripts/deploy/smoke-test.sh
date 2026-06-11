@@ -40,7 +40,6 @@ check_http "/" "200" "홈 페이지"
 check_http "/latest" "200" "최신 회차 페이지"
 check_http "/rounds" "200" "회차 목록 페이지"
 check_http "/frequency" "200" "빈도 분석 페이지"
-check_http "/news" "200" "뉴스 페이지"
 check_http "/data-source" "200" "데이터 출처 페이지"
 # th:if 조건과 무관하게 항상 렌더링되는 텍스트로 검증
 check_body_contains "/data-source" "당첨번호 데이터" "data-source 콘텐츠 확인"

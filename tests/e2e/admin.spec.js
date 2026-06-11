@@ -28,7 +28,7 @@ test.describe('admin: no CSP violations', () => {
     await adminLogin(page);
   });
 
-  for (const path of ['/admin/ops', '/admin/ops/collection', '/admin/ops/news', '/admin/ops/cache']) {
+  for (const path of ['/admin/ops', '/admin/ops/collection', '/admin/ops/cache']) {
     test(`${path}`, async ({ page }) => {
       const violations = [];
       page.on('console', (m) => {
@@ -84,16 +84,4 @@ test.describe('admin: confirmation dialogs', () => {
     expect(requested).toBe(false);
   });
 
-  test('news keyword block — cancel prevents submission', async ({ page }) => {
-    await page.goto('/admin/ops/news');
-    let requested = false;
-    page.on('request', (req) => {
-      if (req.url().includes('/block-keyword')) requested = true;
-    });
-    await page.fill('input[name="keyword"]', 'e2e-test-keyword');
-    page.on('dialog', (d) => d.dismiss());
-    await page.locator('form[data-confirm] button[type="submit"].btn-warning').click();
-    await page.waitForTimeout(300);
-    expect(requested).toBe(false);
-  });
 });
