@@ -68,9 +68,9 @@ function RoundsContent() {
         <section className="card space-y-4">
           <span className="text-sm text-slate-400">{detail.drawDate} 추첨</span>
           <div className="flex items-center gap-2 flex-wrap">
-            {detail.numbers.map((n) => <LottoBall key={n} number={n} size="lg" />)}
+            {detail.numbers.map((n) => <LottoBall key={n} number={n} />)}
             <span className="text-slate-400">+</span>
-            <LottoBall number={detail.bonusNumber} size="lg" bonus />
+            <LottoBall number={detail.bonusNumber} bonus />
           </div>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             {[

@@ -7,8 +7,24 @@ import LottoBall from '@/components/LottoBall'
 import AdSlot from '@/components/AdSlot'
 import { getDeviceToken } from '@/lib/device'
 
+function taxInfo(prize: number) {
+  if (prize <= 0) return { rate: '-', tax: 0, after: 0 }
+  const rate = prize > 300_000_000 ? 0.33 : 0.22
+  const tax = Math.floor(prize * rate)
+  return { rate: `${rate * 100}%`, tax, after: prize - tax }
+}
+
+const RULE_LABELS: Record<string, string> = {
+  ArithmeticSequenceRule: '등차수열 제외',
+  BirthdayBiasRule: '생일 편향 제외',
+  LongRunRule: '연속 번호 제외',
+  PastWinningRule: '과거 당첨 제외',
+  SingleDecadeRule: '십의 자리 편중 제외',
+}
+
 export default function HomePage() {
   const [latest, setLatest] = useState<WinningNumberDto | null>(null)
+  const [latestLoading, setLatestLoading] = useState(true)
   const [count, setCount] = useState(5)
   const [showFilter, setShowFilter] = useState(false)
   const [oddCount, setOddCount] = useState<number | null>(null)
@@ -21,8 +37,16 @@ export default function HomePage() {
   const [savedIdx, setSavedIdx] = useState<Set<number>>(new Set())
 
   useEffect(() => {
-    api.rounds.latest().then(setLatest).catch(() => setLatest(null))
+    api.rounds.latest()
+      .then(setLatest)
+      .catch(() => setLatest(null))
+      .finally(() => setLatestLoading(false))
     api.numbers.rules().then(setRules).catch(() => setRules([]))
+    setRecommending(true)
+    api.numbers.recommend({ count: 5 })
+      .then(res => setResult(res.combinations))
+      .catch(e => setError(e instanceof Error ? e.message : '오류가 발생했습니다'))
+      .finally(() => setRecommending(false))
   }, [])
 
   async function recommend() {
@@ -55,35 +79,76 @@ export default function HomePage() {
     }
   }
 
+  const first = latest ? taxInfo(latest.firstPrize) : null
+  const second = latest ? taxInfo(latest.secondPrize) : null
+
   return (
     <div className="space-y-6">
-      {/* 히어로 */}
-      <header className="text-center space-y-2 py-4">
-        <p className="eyebrow">KRAFT Lotto</p>
-        <h1 className="text-2xl font-bold">로또 번호 분석 도구</h1>
-        <p className="text-slate-400 text-sm">
-          과거 당첨 데이터를 기반으로 번호 조합을 분석합니다.
-        </p>
+      {/* 최신 당첨 결과 */}
+      <header className="space-y-1">
+        <p className="eyebrow">최신 당첨 결과</p>
+        <h1 className="text-2xl font-bold">
+          {latestLoading ? '불러오는 중…' : latest ? `${latest.round}회 당첨번호` : '최신 결과 없음'}
+        </h1>
       </header>
 
-      {/* 최신 회차 */}
+      {!latestLoading && !latest && (
+        <p className="text-slate-400 text-center py-6">데이터가 없습니다.</p>
+      )}
+
       {latest && (
-        <section data-testid="latest-draw" className="card space-y-3" aria-label={`${latest.round}회 당첨번호`}>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-sm text-slate-400 uppercase tracking-wide">
-              {latest.round}회 당첨번호
-            </h2>
-            <span className="text-xs text-slate-400">{latest.drawDate}</span>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {latest.numbers.map((n) => <LottoBall key={n} number={n} />)}
-            <span className="text-slate-400 text-sm">+</span>
-            <LottoBall number={latest.bonusNumber} bonus />
-          </div>
-          <p className="text-xs text-slate-400">
-            1등 {latest.firstWinners}명 · {latest.firstPrize.toLocaleString()}원
-          </p>
-        </section>
+        <>
+          <section data-testid="latest-draw" className="card space-y-4" aria-label={`${latest.round}회 당첨번호`}>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h2 className="font-semibold">{latest.round}회 당첨번호</h2>
+              <span className="text-sm text-slate-400">{latest.drawDate} 추첨</span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {latest.numbers.map((n) => <LottoBall key={n} number={n} />)}
+              <span className="text-slate-400">+</span>
+              <LottoBall number={latest.bonusNumber} bonus />
+            </div>
+            <dl className="grid grid-cols-3 gap-3 text-sm">
+              {([
+                ['1등 당첨금', `${latest.firstPrize.toLocaleString()}원`],
+                ['당첨자 수', `${latest.firstWinners}명`],
+                ['총 판매액', `${latest.totalSales.toLocaleString()}원`],
+              ] as [string, string][]).map(([k, v]) => (
+                <div key={k} className="bg-navy rounded p-2">
+                  <dt className="text-xs text-slate-400">{k}</dt>
+                  <dd className="font-mono text-xs mt-0.5">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          <section className="card space-y-3">
+            <h2 className="font-semibold text-sm text-slate-400 uppercase tracking-wide">세후 예상 수령액</h2>
+            <p className="text-xs text-slate-400">3억 초과 33%, 200만 초과 22% 원천징수 적용</p>
+            <div className="grid md:grid-cols-2 gap-4">
+              {([
+                { rank: '1등', prize: latest.firstPrize, winners: latest.firstWinners, info: first! },
+                { rank: '2등', prize: latest.secondPrize, winners: latest.secondWinners, info: second! },
+              ]).map(({ rank, prize, winners, info }) => (
+                <dl key={rank} className="bg-navy rounded p-3 space-y-1 text-sm">
+                  <dt className="font-bold text-gold">{rank}</dt>
+                  {([
+                    ['세전 1인당', `${prize.toLocaleString()}원`],
+                    ['세율', info.rate],
+                    ['세금 공제', `${info.tax.toLocaleString()}원`],
+                    ['세후 수령액', `${info.after.toLocaleString()}원`],
+                    ['당첨자 수', `${winners}명`],
+                  ] as [string, string][]).map(([k, v]) => (
+                    <div key={k} className="flex justify-between">
+                      <span className="text-slate-400">{k}</span>
+                      <span className="font-mono">{v}</span>
+                    </div>
+                  ))}
+                </dl>
+              ))}
+            </div>
+          </section>
+        </>
       )}
 
       <AdSlot slotId="home-mid" />
@@ -100,7 +165,6 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* 필터 */}
         {showFilter && (
           <div className="bg-navy rounded p-3 space-y-3 text-sm">
             <div className="flex flex-wrap gap-4">
@@ -139,7 +203,7 @@ export default function HomePage() {
             </div>
             {rules.length > 0 && (
               <div className="text-xs text-slate-500">
-                적용 규칙: {rules.map((r) => r.name).join(', ')}
+                적용 규칙: {rules.map((r) => RULE_LABELS[r.name] ?? r.name).join(' · ')}
               </div>
             )}
           </div>

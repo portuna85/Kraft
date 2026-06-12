@@ -48,9 +48,9 @@ export default function LatestPage() {
               <span className="text-sm text-slate-400">{data.drawDate} 추첨</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              {data.numbers.map((n) => <LottoBall key={n} number={n} size="lg" />)}
+              {data.numbers.map((n) => <LottoBall key={n} number={n} />)}
               <span className="text-slate-400">+</span>
-              <LottoBall number={data.bonusNumber} size="lg" bonus />
+              <LottoBall number={data.bonusNumber} bonus />
             </div>
             <dl className="grid grid-cols-3 gap-3 text-sm">
               {[
