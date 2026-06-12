@@ -81,7 +81,7 @@ test.describe('recommendations', () => {
 
     await Promise.all([
       page.waitForResponse((response) => response.url().includes('/api/v1/numbers/recommend') && response.ok()),
-      section.locator('button').click(),
+      section.locator('.btn-primary').click(),
     ]);
 
     await expect(section.locator('li')).toHaveCount(5);
