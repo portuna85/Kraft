@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import ViewModeToggle from './ViewModeToggle'
 
 const NAV = [
-  { href: '/', label: '홈' },
   { href: '/', label: '최신 결과' },
   { href: '/rounds', label: '회차 검색' },
   { href: '/frequency', label: '출현 빈도' },
