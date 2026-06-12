@@ -55,7 +55,7 @@ dependencies {
     implementation("org.flywaydb:flyway-mysql")
     implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.2")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.9.2")
-    implementation("com.google.firebase:firebase-admin:9.4.3") {
+    implementation("com.google.firebase:firebase-admin:9.9.0") {
         // CVE-2025-55163: grpc-netty-shaded 1.69.0의 Netty HTTP/2 취약점 수정 (fix: 1.75.0)
         exclude(group = "io.grpc", module = "grpc-netty-shaded")
     }
