@@ -1,12 +1,12 @@
 'use client'
 
-// bg/text 쌍: WCAG AA (4.5:1 이상) 대비율 확보
+// bg 는 radial-gradient (하이라이트 → 기본색), text 는 WCAG AA 대비 확보
 const COLORS: Record<string, { bg: string; text: string }> = {
-  yellow: { bg: '#F9A825', text: '#1A1A2E' },
-  blue:   { bg: '#1565C0', text: '#FFFFFF' },
-  red:    { bg: '#B71C1C', text: '#FFFFFF' },
-  gray:   { bg: '#424242', text: '#FFFFFF' },
-  green:  { bg: '#1B5E20', text: '#FFFFFF' },
+  yellow: { bg: 'radial-gradient(circle at 35% 35%, #FFE082, #F9A825 70%)', text: '#1A1A2E' },
+  blue:   { bg: 'radial-gradient(circle at 35% 35%, #64B5F6, #1565C0 70%)', text: '#FFFFFF' },
+  red:    { bg: 'radial-gradient(circle at 35% 35%, #EF9A9A, #B71C1C 70%)', text: '#FFFFFF' },
+  gray:   { bg: 'radial-gradient(circle at 35% 35%, #9E9E9E, #424242 70%)', text: '#FFFFFF' },
+  green:  { bg: 'radial-gradient(circle at 35% 35%, #81C784, #1B5E20 70%)', text: '#FFFFFF' },
 }
 
 function ballColor(n: number) {
@@ -38,7 +38,7 @@ export default function LottoBall({ number, size = 'md', bonus = false }: Props)
         width: px,
         height: px,
         borderRadius: '50%',
-        backgroundColor: bg,
+        background: bg,
         color: text,
         fontWeight: 700,
         fontSize: px * 0.38,

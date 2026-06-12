@@ -54,24 +54,19 @@ export default function FrequencyPage() {
 
       {loading && <p className="text-slate-400 text-center py-8">불러오는 중…</p>}
       {data && (
-        <div className="card space-y-2">
-          {data
-            .slice()
-            .sort((a, b) => b.count - a.count)
-            .map((d) => (
-              <div key={d.number} className="flex items-center gap-3">
-                <LottoBall number={d.number} size="sm" />
-                <div className="flex-1">
-                  <div
-                    className="h-2 rounded-full bg-gold/80 transition-all"
-                    style={{ width: `${(d.count / max) * 100}%` }}
-                  />
+        <div className="card">
+          <div className="flex flex-wrap gap-4 justify-start">
+            {data
+              .slice()
+              .sort((a, b) => b.count - a.count)
+              .map((d) => (
+                <div key={d.number} className="flex flex-col items-center gap-1">
+                  <LottoBall number={d.number} size="sm" />
+                  <span className="text-xs text-slate-400 font-mono leading-tight">{d.count}회</span>
+                  <span className="text-xs text-slate-500 font-mono leading-tight">{d.rate.toFixed(1)}%</span>
                 </div>
-                <span className="text-xs text-slate-400 w-16 text-right font-mono">
-                  {d.count}회 ({d.rate.toFixed(1)}%)
-                </span>
-              </div>
-            ))}
+              ))}
+          </div>
         </div>
       )}
     </div>
