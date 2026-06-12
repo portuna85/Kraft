@@ -53,8 +53,8 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("org.flywaydb:flyway-mysql")
-    implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.2")
-    implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.9.2")
+    implementation("net.javacrumbs.shedlock:shedlock-spring:7.7.0")
+    implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.7.0")
     implementation("com.google.firebase:firebase-admin:9.4.3") {
         // CVE-2025-55163: grpc-netty-shaded 1.69.0의 Netty HTTP/2 취약점 수정 (fix: 1.75.0)
         exclude(group = "io.grpc", module = "grpc-netty-shaded")
