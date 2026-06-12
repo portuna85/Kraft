@@ -68,7 +68,7 @@ dependencies {
     // H2는 prod에서 사용하지 않으나 E2E(playwright)가 JAR를 H2 모드로 기동하므로 runtimeOnly 유지
     runtimeOnly("com.h2database:h2")
     compileOnly("org.projectlombok:lombok:$lombokVersion")
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.8")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.10.2")
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -78,7 +78,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers-mariadb")
     testCompileOnly("org.projectlombok:lombok:$lombokVersion")
-    testCompileOnly("com.github.spotbugs:spotbugs-annotations:4.9.8")
+    testCompileOnly("com.github.spotbugs:spotbugs-annotations:4.10.2")
     testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
     testRuntimeOnly("com.h2database:h2")
 }
