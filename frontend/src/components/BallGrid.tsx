@@ -19,7 +19,7 @@ export default function BallGrid({ selected, onToggle, max = 6 }: Props) {
             onClick={() => !isDisabled && onToggle(n)}
             disabled={isDisabled}
             aria-pressed={isSelected}
-            className={`aspect-square rounded-full text-xs font-bold transition-all ${
+            className={`w-8 h-8 rounded-full text-xs font-bold transition-all ${
               isSelected
                 ? 'ring-2 ring-gold scale-110'
                 : isDisabled

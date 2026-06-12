@@ -61,7 +61,7 @@ export default function AnalysisPage() {
         <div className="flex gap-2 flex-wrap min-h-10">
           {selected.length === 0
             ? <span className="text-slate-400 text-sm">번호를 6개 선택하세요</span>
-            : selected.map((n) => <LottoBall key={n} number={n} />)}
+            : selected.map((n) => <LottoBall key={n} number={n} size="sm" />)}
         </div>
 
         <BallGrid selected={selected} onToggle={toggle} max={6} />

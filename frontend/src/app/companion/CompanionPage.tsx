@@ -50,7 +50,7 @@ export default function CompanionPage() {
           <div className="flex flex-wrap gap-3">
             {data.slice(0, 10).map((d) => (
               <div key={d.number} className="flex flex-col items-center gap-1">
-                <LottoBall number={d.number} />
+                <LottoBall number={d.number} size="sm" />
                 <span className="text-xs text-slate-400">{d.count}회</span>
                 <span className="text-xs text-slate-400">{d.percent.toFixed(1)}%</span>
               </div>
