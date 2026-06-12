@@ -13,6 +13,7 @@ export default function AnalysisPage() {
   const [result, setResult] = useState<CombinationPrizeHistoryDto | null>(null)
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null)
 
   function toggle(n: number) {
     setSelected((prev) =>
@@ -35,10 +36,12 @@ export default function AnalysisPage() {
   async function analyze() {
     if (selected.length !== 6) return
     setLoading(true)
+    setAnalyzeError(null)
     try {
       setResult(await api.stats.analysis(selected))
-    } catch {
+    } catch (e) {
       setResult(null)
+      setAnalyzeError(e instanceof Error ? e.message : '분석 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
@@ -87,6 +90,8 @@ export default function AnalysisPage() {
           </div>
         </div>
       </div>
+
+      {analyzeError && <p className="text-red-400 text-sm">{analyzeError}</p>}
 
       {result && (
         <section className="card space-y-3">

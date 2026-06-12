@@ -62,7 +62,7 @@ function RoundsContent() {
           <button onClick={() => router.push('/rounds')} className="text-slate-400 hover:text-white">‹</button>
           <header>
             <p className="eyebrow">회차 상세</p>
-            <h1 className="text-2xl font-bold">제 {detail.round}회</h1>
+            <h1 className="text-2xl font-bold">{detail.round}회</h1>
           </header>
         </div>
         <section className="card space-y-4">
@@ -149,7 +149,7 @@ function RoundRow({ round: r }: { round: WinningNumberDto }) {
       className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#16213E] rounded px-2 transition-colors"
       onClick={() => router.push(`/rounds?id=${r.round}`)}
     >
-      <span className="text-sm font-semibold w-12 shrink-0">제 {r.round}회</span>
+      <span className="text-sm font-semibold w-12 shrink-0">{r.round}회</span>
       <div className="flex gap-1 flex-wrap flex-1">
         {r.numbers.map((n) => <LottoBall key={n} number={n} size="sm" />)}
         <span className="text-slate-400 text-xs self-center">+</span>

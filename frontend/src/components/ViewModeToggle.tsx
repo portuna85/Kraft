@@ -7,6 +7,18 @@ const MODES: Mode[] = ['auto', 'desktop', 'mobile']
 const LABELS: Record<Mode, string> = { auto: '자동', desktop: '데스크탑', mobile: '모바일' }
 const STORAGE_KEY = 'kraft.viewMode'
 
+function detectDevice(): 'desktop' | 'mobile' {
+  const isCoarse = window.matchMedia('(pointer: coarse)').matches
+  const isNarrow = window.innerWidth < 768
+  return (isCoarse || isNarrow) ? 'mobile' : 'desktop'
+}
+
+function applyMode(m: Mode) {
+  const html = document.documentElement
+  const effective = m === 'auto' ? detectDevice() : m
+  html.setAttribute('data-view-mode', effective)
+}
+
 export default function ViewModeToggle() {
   const [mode, setMode] = useState<Mode>('auto')
 
@@ -16,11 +28,13 @@ export default function ViewModeToggle() {
     applyMode(saved)
   }, [])
 
-  function applyMode(m: Mode) {
-    const html = document.documentElement
-    if (m === 'auto') html.removeAttribute('data-view-mode')
-    else html.setAttribute('data-view-mode', m)
-  }
+  useEffect(() => {
+    if (mode !== 'auto') return
+    const onResize = () => applyMode('auto')
+    applyMode('auto')
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [mode])
 
   function cycle() {
     const next = MODES[(MODES.indexOf(mode) + 1) % MODES.length]

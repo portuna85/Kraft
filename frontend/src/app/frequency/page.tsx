@@ -51,6 +51,9 @@ export default function FrequencyPage() {
       <AdSlot slotId="frequency-bottom" />
 
       {loading && <p className="text-slate-400 text-center py-8">불러오는 중…</p>}
+      {!loading && !data && (
+        <p className="text-slate-400 text-center py-8">데이터를 불러올 수 없습니다.</p>
+      )}
       {data && (
         <div className="card">
           <div className="flex flex-wrap gap-4 justify-start">
