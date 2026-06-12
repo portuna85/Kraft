@@ -53,6 +53,10 @@ public class LottoFetchLogRetentionScheduler {
             }
             fetchLogRepository.deleteAllByIdInBatch(ids);
             deleted += ids.size();
+            if (ids.size() == deleteBatchSize) {
+                // 대량 삭제 시 배치 사이에 짧은 대기로 DB 부하 분산
+                try { Thread.sleep(50); } catch (InterruptedException ex) { Thread.currentThread().interrupt(); break; }
+            }
         }
         if (deleted > 0) {
             log.info("lotto_fetch_logs retention purge done: deleted={}, cutoff={}", deleted, cutoff);

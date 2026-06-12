@@ -122,6 +122,26 @@ groups:
           summary: "최신 회차 미반영"
           description: "저장된 최신 회차({{ $value | printf \"%.0f\" }}회 차이)가 예상 회차보다 오래되었습니다. 수집 로그를 확인하세요."
 
+      # 번호 추천 생성 실패 — 5분 내 타임아웃 2회 이상
+      - alert: RecommendGenerationFailure
+        expr: increase(kraft_recommend_generation_failure_total[5m]) >= 2
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "번호 추천 생성 실패 반복"
+          description: "최근 5분 동안 추천 생성이 {{ $value | printf \"%.0f\" }}회 실패했습니다. 필터 조건 또는 서버 부하를 확인하세요."
+
+      # 수집 스케줄러 연속 오류 — 2시간 내 자동 수집 에러 3회 이상
+      - alert: CollectSchedulerError
+        expr: increase(kraft_collect_auto_error_total[2h]) >= 3
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "수집 스케줄러 연속 오류"
+          description: "최근 2시간 동안 자동 수집이 {{ $value | printf \"%.0f\" }}회 실패했습니다. 즉시 확인이 필요합니다."
+
       # 판매점 수집 실패 — 6시간 내 발생
       - alert: WinningStoreFetchFailure
         expr: increase(kraft_winning_store_fetch_failure_total[6h]) > 0
