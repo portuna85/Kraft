@@ -57,8 +57,9 @@ export default function FrequencyPage() {
             {data
               .slice()
               .sort((a, b) => b.count - a.count)
-              .map((d) => (
+              .map((d, i) => (
                 <div key={d.number} className="flex flex-col items-center gap-1">
+                  <span className="text-xs text-slate-600 font-mono leading-tight">{i + 1}위</span>
                   <LottoBall number={d.number} size="sm" />
                   <span className="text-xs text-slate-400 font-mono leading-tight">{d.count}회</span>
                   <span className="text-xs text-slate-500 font-mono leading-tight">{d.rate.toFixed(1)}%</span>

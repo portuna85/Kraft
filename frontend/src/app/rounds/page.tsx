@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { api } from '@/lib/api'
 import type { WinningNumberDto, WinningNumberPageDto } from '@/lib/types'
+import Link from 'next/link'
 import LottoBall from '@/components/LottoBall'
 import AdSlot from '@/components/AdSlot'
 
@@ -85,6 +86,12 @@ function RoundsContent() {
               </div>
             ))}
           </dl>
+          <Link
+            href="/analysis"
+            className="inline-block text-xs text-slate-400 hover:text-gold transition-colors"
+          >
+            이 번호 조합 분석하기 →
+          </Link>
         </section>
       </div>
     )

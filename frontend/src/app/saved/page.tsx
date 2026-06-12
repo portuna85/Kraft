@@ -10,6 +10,7 @@ export default function SavedPage() {
   const [list, setList] = useState<SavedNumbersDto[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<Set<number>>(new Set())
+  const [copied, setCopied] = useState<number | null>(null)
 
   useEffect(() => {
     const token = getDeviceToken()
@@ -27,6 +28,16 @@ export default function SavedPage() {
       setList((prev) => prev?.filter((s) => s.id !== id) ?? prev)
     } finally {
       setDeleting((prev) => { const next = new Set(prev); next.delete(id); return next })
+    }
+  }
+
+  async function copyNumbers(id: number, numbers: number[]) {
+    try {
+      await navigator.clipboard.writeText(numbers.join(', '))
+      setCopied(id)
+      setTimeout(() => setCopied((prev) => prev === id ? null : prev), 1500)
+    } catch {
+      // clipboard 권한 없음 — 무시
     }
   }
 
@@ -63,13 +74,21 @@ export default function SavedPage() {
                   <span>{formatDate(s.savedAt)}</span>
                 </div>
               </div>
-              <button
-                onClick={() => remove(s.id)}
-                disabled={deleting.has(s.id)}
-                className="text-xs text-slate-500 hover:text-red-400 transition-colors disabled:opacity-30 shrink-0"
-              >
-                {deleting.has(s.id) ? '삭제 중…' : '삭제'}
-              </button>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={() => copyNumbers(s.id, s.numbers)}
+                  className="text-xs text-slate-500 hover:text-gold transition-colors"
+                >
+                  {copied === s.id ? '복사됨 ✓' : '복사'}
+                </button>
+                <button
+                  onClick={() => remove(s.id)}
+                  disabled={deleting.has(s.id)}
+                  className="text-xs text-slate-500 hover:text-red-400 transition-colors disabled:opacity-30"
+                >
+                  {deleting.has(s.id) ? '삭제 중…' : '삭제'}
+                </button>
+              </div>
             </li>
           ))}
         </ul>
