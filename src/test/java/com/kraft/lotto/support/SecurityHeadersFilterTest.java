@@ -113,6 +113,76 @@ class SecurityHeadersFilterTest {
         assertThat(csp).doesNotContain("'nonce-");
     }
 
+    @Test
+    @DisplayName("헤더 비활성화 시 보안 헤더를 추가하지 않는다")
+    void doesNotAddHeadersWhenDisabled() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getHeaders().setEnabled(false);
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties, new KraftAdProperties());
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(response.getHeader("Content-Security-Policy")).isNull();
+        assertThat(response.getHeader("X-Frame-Options")).isNull();
+    }
+
+    @Test
+    @DisplayName("에드센스 활성화 시 에드센스 도메인이 콘텐츠 보안 정책에 추가된다")
+    void appendsAdsenseCspWhenEnabled() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        KraftAdProperties adProperties = new KraftAdProperties();
+        adProperties.setEnabled(true);
+        adProperties.setAdsenseClientId("ca-pub-1234567890");
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties, adProperties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        String csp = response.getHeader("Content-Security-Policy");
+        assertThat(csp).contains("pagead2.googlesyndication.com");
+        assertThat(csp).contains("doubleclick.net");
+    }
+
+    @Test
+    @DisplayName("에드센스 아이디가 비어 있으면 에드센스 도메인을 추가하지 않는다")
+    void doesNotAppendAdsenseCspWhenClientIdBlank() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        KraftAdProperties adProperties = new KraftAdProperties();
+        adProperties.setEnabled(true);
+        adProperties.setAdsenseClientId("  ");
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties, adProperties);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        String csp = response.getHeader("Content-Security-Policy");
+        assertThat(csp).doesNotContain("pagead2.googlesyndication.com");
+    }
+
+    @Test
+    @DisplayName("전송 보안 헤더 프리로드 플래그가 포함된다")
+    void hstsHeaderIncludesPreloadFlagWhenSet() throws Exception {
+        KraftSecurityProperties properties = new KraftSecurityProperties();
+        properties.getHeaders().setHstsEnabled(true);
+        properties.getHeaders().setHstsMaxAgeSeconds(31536000L);
+        properties.getHeaders().setHstsPreload(true);
+        SecurityHeadersFilter filter = new SecurityHeadersFilter(properties, new KraftAdProperties());
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(response.getHeader("Strict-Transport-Security")).contains("preload");
+    }
+
     @ParameterizedTest
     @DisplayName("논스 주입은 스크립트 출처 지시자에 논스를 주입한다")
     @ValueSource(strings = {
