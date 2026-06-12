@@ -4,15 +4,7 @@ import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 import type { SavedNumbersDto } from '@/lib/types'
 import LottoBall from '@/components/LottoBall'
-
-function getDeviceToken(): string {
-  let token = localStorage.getItem('deviceToken')
-  if (!token) {
-    token = crypto.randomUUID()
-    localStorage.setItem('deviceToken', token)
-  }
-  return token
-}
+import { getDeviceToken } from '@/lib/device'
 
 export default function SavedPage() {
   const [list, setList] = useState<SavedNumbersDto[] | null>(null)

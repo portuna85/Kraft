@@ -5,16 +5,7 @@ import { api } from '@/lib/api'
 import type { WinningNumberDto, CombinationDto, RuleDto } from '@/lib/types'
 import LottoBall from '@/components/LottoBall'
 import AdSlot from '@/components/AdSlot'
-
-function getDeviceToken(): string {
-  if (typeof window === 'undefined') return ''
-  let token = localStorage.getItem('deviceToken')
-  if (!token) {
-    token = crypto.randomUUID()
-    localStorage.setItem('deviceToken', token)
-  }
-  return token
-}
+import { getDeviceToken } from '@/lib/device'
 
 export default function HomePage() {
   const [latest, setLatest] = useState<WinningNumberDto | null>(null)

@@ -3,15 +3,7 @@
 import { useState } from 'react'
 import { api } from '@/lib/api'
 import type { CombinationPrizeHistoryDto } from '@/lib/types'
-
-function getDeviceToken(): string {
-  let token = localStorage.getItem('deviceToken')
-  if (!token) {
-    token = crypto.randomUUID()
-    localStorage.setItem('deviceToken', token)
-  }
-  return token
-}
+import { getDeviceToken } from '@/lib/device'
 import LottoBall from '@/components/LottoBall'
 import BallGrid from '@/components/BallGrid'
 import AdSlot from '@/components/AdSlot'
