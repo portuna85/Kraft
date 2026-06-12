@@ -15,32 +15,50 @@ import type {
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE ?? ''
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`)
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+async function get<T>(path: string, headers?: Record<string, string>): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { headers })
+  if (!res.ok) {
+    let message = `${res.status} ${res.statusText}`
+    try {
+      const json: ApiResponse<never> = await res.json()
+      if (json.error?.message) message = json.error.message
+    } catch { /* JSON 파싱 실패 — HTTP 상태 메시지 사용 */ }
+    throw new Error(message)
+  }
   const json: ApiResponse<T> = await res.json()
   if (!json.success || json.data == null) throw new Error(json.error?.message ?? 'API error')
   return json.data
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+async function post<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  if (!res.ok) {
+    let message = `${res.status} ${res.statusText}`
+    try {
+      const json: ApiResponse<never> = await res.json()
+      if (json.error?.message) message = json.error.message
+    } catch { /* JSON 파싱 실패 — HTTP 상태 메시지 사용 */ }
+    throw new Error(message)
+  }
   const json: ApiResponse<T> = await res.json()
   if (!json.success || json.data == null) throw new Error(json.error?.message ?? 'API error')
   return json.data
 }
 
-async function del<T>(path: string): Promise<T | null> {
-  const res = await fetch(`${BASE}${path}`, { method: 'DELETE' })
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-  const json: ApiResponse<T> = await res.json()
-  if (!json.success) throw new Error(json.error?.message ?? 'API error')
-  return json.data
+async function del(path: string, headers?: Record<string, string>): Promise<void> {
+  const res = await fetch(`${BASE}${path}`, { method: 'DELETE', headers })
+  if (!res.ok) {
+    let message = `${res.status} ${res.statusText}`
+    try {
+      const json: ApiResponse<never> = await res.json()
+      if (json.error?.message) message = json.error.message
+    } catch { /* JSON 파싱 실패 — HTTP 상태 메시지 사용 */ }
+    throw new Error(message)
+  }
 }
 
 export const api = {
@@ -66,11 +84,11 @@ export const api = {
   },
   saved: {
     list: (deviceToken: string) =>
-      get<SavedNumbersDto[]>(`/api/v1/saved?deviceToken=${encodeURIComponent(deviceToken)}`),
+      get<SavedNumbersDto[]>('/api/v1/saved', { 'X-Device-Token': deviceToken }),
     save: (deviceToken: string, numbers: number[], label?: string) =>
-      post<SavedNumbersDto>('/api/v1/saved', { deviceToken, numbers, label: label ?? null }),
+      post<SavedNumbersDto>('/api/v1/saved', { numbers, label: label ?? null }, { 'X-Device-Token': deviceToken }),
     delete: (id: number, deviceToken: string) =>
-      del<void>(`/api/v1/saved/${id}?deviceToken=${encodeURIComponent(deviceToken)}`),
+      del(`/api/v1/saved/${id}`, { 'X-Device-Token': deviceToken }),
   },
   service: {
     status: () => get<ServiceStatusDto>('/api/v1/status'),

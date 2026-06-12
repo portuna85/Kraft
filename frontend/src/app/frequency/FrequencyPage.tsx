@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from '@/lib/api'
 import type { NumberFrequencyDto } from '@/lib/types'
 import LottoBall from '@/components/LottoBall'
@@ -57,9 +57,7 @@ export default function FrequencyPage() {
       {data && (
         <div className="card">
           <div className="flex flex-wrap gap-4 justify-start">
-            {data
-              .slice()
-              .sort((a, b) => b.count - a.count)
+            {useMemo(() => data.slice().sort((a, b) => b.count - a.count), [data])
               .map((d, i) => (
                 <div key={d.number} className="flex flex-col items-center gap-1">
                   <span className="text-xs text-slate-600 font-mono leading-tight">{i + 1}위</span>

@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @PublicApi
@@ -30,19 +30,23 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Saved", description = "번호 저장함 관리")
 public class SavedNumbersApiController {
 
+    static final String DEVICE_TOKEN_HEADER = "X-Device-Token";
+
     private final SavedNumbersService savedNumbersService;
 
     @GetMapping
     @Operation(summary = "저장된 번호 목록 조회")
     public ResponseEntity<ApiResponse<List<SavedNumbersDto>>> list(
-            @RequestParam @NotBlank @Size(max = 255) String deviceToken) {
+            @RequestHeader(DEVICE_TOKEN_HEADER) @NotBlank @Size(max = 255) String deviceToken) {
         return ResponseEntity.ok(ApiResponse.success(savedNumbersService.list(deviceToken)));
     }
 
     @PostMapping
     @Operation(summary = "번호 저장")
-    public ResponseEntity<ApiResponse<SavedNumbersDto>> save(@RequestBody @Valid SaveRequest req) {
-        SavedNumbersDto saved = savedNumbersService.save(req.deviceToken(), req.numbers(), req.label());
+    public ResponseEntity<ApiResponse<SavedNumbersDto>> save(
+            @RequestHeader(DEVICE_TOKEN_HEADER) @NotBlank @Size(max = 255) String deviceToken,
+            @RequestBody @Valid SaveRequest req) {
+        SavedNumbersDto saved = savedNumbersService.save(deviceToken, req.numbers(), req.label());
         return ResponseEntity.ok(ApiResponse.success(saved));
     }
 
@@ -50,13 +54,12 @@ public class SavedNumbersApiController {
     @Operation(summary = "저장된 번호 삭제")
     public ResponseEntity<ApiResponse<Void>> delete(
             @PathVariable Long id,
-            @RequestParam @NotBlank @Size(max = 255) String deviceToken) {
+            @RequestHeader(DEVICE_TOKEN_HEADER) @NotBlank @Size(max = 255) String deviceToken) {
         savedNumbersService.delete(id, deviceToken);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     public record SaveRequest(
-            @NotBlank @Size(max = 255) String deviceToken,
             @NotEmpty List<Integer> numbers,
             @Size(max = 100) String label
     ) {

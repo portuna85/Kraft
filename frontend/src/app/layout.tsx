@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import Link from 'next/link'
 import Header from '@/components/Header'
 import './globals.css'
 
@@ -32,11 +33,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="page-container space-y-1">
             <p>본 서비스는 당첨 번호를 예측하지 않습니다. 과거 통계 데이터 기반 참고 도구입니다.</p>
             <p>
-              <a href="/info/privacy" className="underline hover:text-slate-200">개인정보처리방침</a>
+              <Link href="/info/privacy" className="underline hover:text-slate-200">개인정보처리방침</Link>
               {' · '}
-              <a href="/info/terms" className="underline hover:text-slate-200">이용약관</a>
+              <Link href="/info/terms" className="underline hover:text-slate-200">이용약관</Link>
               {' · '}
-              <a href="/info/faq" className="underline hover:text-slate-200">FAQ</a>
+              <Link href="/info/faq" className="underline hover:text-slate-200">FAQ</Link>
             </p>
           </div>
         </footer>

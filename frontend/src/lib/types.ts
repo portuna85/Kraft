@@ -56,7 +56,7 @@ export interface PatternStatDto {
 }
 
 export interface CompanionNumberDto {
-  number: int
+  number: number
   count: number
   percent: number
   rank: number
@@ -122,5 +122,3 @@ export interface ServiceStatusDto {
   buildTime: string | null
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type int = number

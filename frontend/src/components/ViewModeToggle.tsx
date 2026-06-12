@@ -30,10 +30,17 @@ export default function ViewModeToggle() {
 
   useEffect(() => {
     if (mode !== 'auto') return
-    const onResize = () => applyMode('auto')
+    let rafId: number
+    const onResize = () => {
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => applyMode('auto'))
+    }
     applyMode('auto')
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      cancelAnimationFrame(rafId)
+    }
   }, [mode])
 
   function cycle() {

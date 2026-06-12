@@ -1,12 +1,13 @@
 package com.kraft.lotto.support;
 
+import com.kraft.lotto.infra.config.KraftWebProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Locale;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -16,11 +17,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class WwwRedirectFilter extends OncePerRequestFilter {
 
-    @Value("${kraft.web.apex-host:kraft.io.kr}")
-    private String apexHost;
+    private final String apexHost;
+    private final String canonicalOrigin;
 
-    @Value("${kraft.web.canonical-origin:https://www.kraft.io.kr}")
-    private String canonicalOrigin;
+    @Autowired
+    public WwwRedirectFilter(KraftWebProperties webProperties) {
+        this.apexHost = webProperties.apexHost();
+        this.canonicalOrigin = webProperties.canonicalOrigin();
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

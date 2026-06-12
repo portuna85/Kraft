@@ -6,10 +6,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import com.kraft.lotto.infra.config.KraftWebProperties;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("더블유더블유더블유 리다이렉트 필터")
 class WwwRedirectFilterTest {
@@ -113,9 +113,6 @@ class WwwRedirectFilterTest {
     }
 
     private static WwwRedirectFilter configuredFilter(String apexHost, String canonicalOrigin) {
-        WwwRedirectFilter filter = new WwwRedirectFilter();
-        ReflectionTestUtils.setField(filter, "apexHost", apexHost);
-        ReflectionTestUtils.setField(filter, "canonicalOrigin", canonicalOrigin);
-        return filter;
+        return new WwwRedirectFilter(new KraftWebProperties(apexHost, canonicalOrigin));
     }
 }
