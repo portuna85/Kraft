@@ -9,6 +9,8 @@ import type {
   RecommendResponse,
   RecommendRequest,
   ServiceStatusDto,
+  RuleDto,
+  SavedNumbersDto,
 } from './types'
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE ?? ''
@@ -33,6 +35,14 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return json.data
 }
 
+async function del<T>(path: string): Promise<T | null> {
+  const res = await fetch(`${BASE}${path}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  const json: ApiResponse<T> = await res.json()
+  if (!json.success) throw new Error(json.error?.message ?? 'API error')
+  return json.data
+}
+
 export const api = {
   rounds: {
     latest: () => get<WinningNumberDto>('/api/v1/rounds/latest'),
@@ -52,6 +62,15 @@ export const api = {
   numbers: {
     recommend: (req: RecommendRequest) =>
       post<RecommendResponse>('/api/v1/numbers/recommend', req),
+    rules: () => get<RuleDto[]>('/api/v1/numbers/recommend/rules'),
+  },
+  saved: {
+    list: (deviceToken: string) =>
+      get<SavedNumbersDto[]>(`/api/v1/saved?deviceToken=${encodeURIComponent(deviceToken)}`),
+    save: (deviceToken: string, numbers: number[], label?: string) =>
+      post<SavedNumbersDto>('/api/v1/saved', { deviceToken, numbers, label: label ?? null }),
+    delete: (id: number, deviceToken: string) =>
+      del<void>(`/api/v1/saved/${id}?deviceToken=${encodeURIComponent(deviceToken)}`),
   },
   service: {
     status: () => get<ServiceStatusDto>('/api/v1/status'),

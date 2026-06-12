@@ -152,7 +152,7 @@ test.describe('navigation mobile', () => {
 
     const nav = page.locator('[data-testid="bottom-nav"]');
     await expect(nav).toBeVisible();
-    await expect(nav.locator('a')).toHaveCount(7);
+    await expect(nav.locator('a')).toHaveCount(8);
   });
 
   test('renders admin login form mobile', async ({ page }) => {

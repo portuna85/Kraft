@@ -88,6 +88,19 @@ export interface RecommendRequest {
   oddCount?: number | null
   sumMin?: number | null
   sumMax?: number | null
+  disabledRules?: string[]
+}
+
+export interface RuleDto {
+  name: string
+  reason: string
+}
+
+export interface SavedNumbersDto {
+  id: number
+  numbers: number[]
+  label: string | null
+  savedAt: string
 }
 
 export interface DataChangeLogEntry {
