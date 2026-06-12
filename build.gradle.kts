@@ -4,7 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     jacoco
     checkstyle
-    id("com.github.spotbugs") version "6.5.4"
+    id("com.github.spotbugs") version "6.5.6"
 }
 
 val strictStatic = providers.gradleProperty("strictStatic")
