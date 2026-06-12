@@ -3,6 +3,15 @@
 import { useState } from 'react'
 import { api } from '@/lib/api'
 import type { CombinationPrizeHistoryDto } from '@/lib/types'
+
+function getDeviceToken(): string {
+  let token = localStorage.getItem('deviceToken')
+  if (!token) {
+    token = crypto.randomUUID()
+    localStorage.setItem('deviceToken', token)
+  }
+  return token
+}
 import LottoBall from '@/components/LottoBall'
 import BallGrid from '@/components/BallGrid'
 import AdSlot from '@/components/AdSlot'
@@ -11,12 +20,24 @@ export default function AnalysisPage() {
   const [selected, setSelected] = useState<number[]>([])
   const [result, setResult] = useState<CombinationPrizeHistoryDto | null>(null)
   const [loading, setLoading] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   function toggle(n: number) {
     setSelected((prev) =>
       prev.includes(n) ? prev.filter((x) => x !== n) : prev.length < 6 ? [...prev, n] : prev
     )
     setResult(null)
+    setSaved(false)
+  }
+
+  async function saveNumbers() {
+    const token = getDeviceToken()
+    try {
+      await api.saved.save(token, selected)
+      setSaved(true)
+    } catch {
+      // 저장 실패 무시
+    }
   }
 
   async function analyze() {
@@ -55,8 +76,17 @@ export default function AnalysisPage() {
           <div className="flex gap-2">
             <button
               className="px-3 py-1 rounded text-sm bg-[#16213E] text-slate-400 hover:text-white"
-              onClick={() => { setSelected([]); setResult(null) }}
+              onClick={() => { setSelected([]); setResult(null); setSaved(false) }}
             >초기화</button>
+            {selected.length === 6 && (
+              <button
+                onClick={saveNumbers}
+                disabled={saved}
+                className={`px-3 py-1 rounded text-sm transition-colors ${
+                  saved ? 'text-slate-500 cursor-default' : 'text-slate-400 hover:text-gold hover:bg-gold/10'
+                }`}
+              >{saved ? '저장됨' : '저장'}</button>
+            )}
             <button
               className="btn-primary px-4 py-1.5 text-sm"
               onClick={analyze}

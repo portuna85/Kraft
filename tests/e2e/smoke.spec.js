@@ -9,6 +9,7 @@ const publicRoutes = [
   { path: '/stats', marker: '[data-testid="stats-page"]' },
   { path: '/analysis', marker: '[data-testid="analysis-page"]' },
   { path: '/companion', marker: '[data-testid="companion-page"]' },
+  { path: '/saved', marker: '[data-testid="saved-page"]' },
   { path: '/info/faq', marker: 'main h1' },
 ];
 

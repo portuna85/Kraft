@@ -74,7 +74,9 @@ function RoundsContent() {
           <dl className="grid grid-cols-2 gap-3 text-sm">
             {[
               ['1등 당첨금', `${detail.firstPrize.toLocaleString()}원`],
-              ['당첨자 수', `${detail.firstWinners}명`],
+              ['1등 당첨자', `${detail.firstWinners}명`],
+              ['2등 당첨금', `${detail.secondPrize.toLocaleString()}원`],
+              ['2등 당첨자', `${detail.secondWinners}명`],
               ['총 판매액', `${detail.totalSales.toLocaleString()}원`],
             ].map(([k, v]) => (
               <div key={k} className="bg-navy rounded p-2">

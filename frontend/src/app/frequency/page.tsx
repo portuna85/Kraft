@@ -26,8 +26,6 @@ export default function FrequencyPage() {
       .finally(() => setLoading(false))
   }, [period])
 
-  const max = data ? Math.max(...data.map((d) => d.count)) : 1
-
   return (
     <div data-testid="frequency-page" className="space-y-6">
       <header className="space-y-1">
