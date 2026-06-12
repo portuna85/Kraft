@@ -18,6 +18,11 @@ export default function FrequencyPage() {
   const [data, setData] = useState<NumberFrequencyDto[] | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const sortedData = useMemo(
+    () => data ? data.slice().sort((a, b) => b.count - a.count) : null,
+    [data],
+  )
+
   useEffect(() => {
     setLoading(true)
     api.stats.frequency(period)
@@ -54,11 +59,10 @@ export default function FrequencyPage() {
       {!loading && !data && (
         <p className="text-slate-400 text-center py-8">데이터를 불러올 수 없습니다.</p>
       )}
-      {data && (
+      {sortedData && (
         <div className="card">
           <div className="flex flex-wrap gap-4 justify-start">
-            {useMemo(() => data.slice().sort((a, b) => b.count - a.count), [data])
-              .map((d, i) => (
+            {sortedData.map((d, i) => (
                 <div key={d.number} className="flex flex-col items-center gap-1">
                   <span className="text-xs text-slate-600 font-mono leading-tight">{i + 1}위</span>
                   <LottoBall number={d.number} size="sm" />

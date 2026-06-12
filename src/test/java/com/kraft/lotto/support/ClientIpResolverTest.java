@@ -59,7 +59,7 @@ class ClientIpResolverTest {
 
     @Test
     @DisplayName("다중 홉: 모든 전달 아이피가 신뢰 프록시이면 가장 왼쪽 아이피를 반환한다")
-    void allForwardedIpsTrusted_returnsLeftmost() {
+    void allForwardedIpsTrustedReturnsLeftmost() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
         request.setRemoteAddr("10.0.0.3");
         request.addHeader("X-Forwarded-For", "10.0.0.1, 10.0.0.2");

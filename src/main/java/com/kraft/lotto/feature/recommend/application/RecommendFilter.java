@@ -8,7 +8,6 @@ import java.util.Set;
 
 public record RecommendFilter(Integer oddCount, Integer sumMin, Integer sumMax, Set<String> disabledRules) {
 
-    public static final RecommendFilter NONE = new RecommendFilter(null, null, null, Set.of());
     private static final int MIN_ODD_COUNT = 0;
     private static final int MAX_ODD_COUNT = 6;
     private static final int MIN_SUM = 21;
@@ -25,6 +24,8 @@ public record RecommendFilter(Integer oddCount, Integer sumMin, Integer sumMax, 
         {27, 249}, // oddCount=5: 홀수 5 + 짝수 1
         {36, 240}, // oddCount=6: 홀수 6개
     };
+
+    public static final RecommendFilter NONE = new RecommendFilter(null, null, null, Set.of());
 
     public RecommendFilter {
         validateRange("oddCount", oddCount, MIN_ODD_COUNT, MAX_ODD_COUNT);
