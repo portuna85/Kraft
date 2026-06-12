@@ -105,6 +105,19 @@ test.describe('round lookup', () => {
   });
 });
 
+test.describe('round lookup error', () => {
+  test.beforeEach(({ }, testInfo) => {
+    test.skip(testInfo.project.name.includes('mobile'), 'covered on desktop to avoid duplicate API load');
+  });
+
+  test('shows not-found message for nonexistent round', async ({ page }) => {
+    await page.goto('/rounds?id=9999999');
+
+    await expect(page.locator('main')).toContainText('회차를 찾을 수 없습니다.');
+    await expect(page.locator('main button')).toContainText('목록으로');
+  });
+});
+
 test.describe('analysis tools', () => {
   test.beforeEach(({ }, testInfo) => {
     test.skip(testInfo.project.name.includes('mobile'), 'covered on desktop to avoid duplicate API load');

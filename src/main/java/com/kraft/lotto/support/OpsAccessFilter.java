@@ -122,9 +122,13 @@ public class OpsAccessFilter extends OncePerRequestFilter {
     }
 
     private static boolean tokensMatch(String expected, String actual) {
-        byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
-        byte[] actualBytes = actual.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(expectedBytes, actualBytes);
+        byte[] e = expected.getBytes(StandardCharsets.UTF_8);
+        byte[] a = actual.getBytes(StandardCharsets.UTF_8);
+        if (e.length != a.length) {
+            MessageDigest.isEqual(e, e); // 길이가 달라도 constant-time 유지용 더미 비교
+            return false;
+        }
+        return MessageDigest.isEqual(e, a);
     }
 
 }

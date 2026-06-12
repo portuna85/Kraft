@@ -14,7 +14,11 @@ const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <head>
+      <body className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 py-6">
+          <div className="page-container">{children}</div>
+        </main>
         {adsenseId && (
           <Script
             async
@@ -23,12 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             strategy="lazyOnload"
           />
         )}
-      </head>
-      <body className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 py-6">
-          <div className="page-container">{children}</div>
-        </main>
         <footer className="border-t border-[#0F3460] py-6 text-center text-xs text-slate-400">
           <div className="page-container space-y-1">
             <p>본 서비스는 당첨 번호를 예측하지 않습니다. 과거 통계 데이터 기반 참고 도구입니다.</p>

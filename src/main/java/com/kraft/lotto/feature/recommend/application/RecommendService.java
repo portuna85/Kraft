@@ -66,7 +66,8 @@ public class RecommendService {
             List<ExclusionRule> effectiveRules = Stream.concat(activeRules.stream(), filterRules.stream()).toList();
 
             List<String> activePassed = activeRules.stream().map(ExclusionRule::label).toList();
-            List<LottoCombination> generated = activeRules.size() == rules.size()
+            boolean allRulesActive = activeRules.size() == rules.size();
+            List<LottoCombination> generated = allRulesActive
                     ? recommender.recommend(validatedCount, filterRules)
                     : recommender.recommendWithRules(validatedCount, effectiveRules);
 
