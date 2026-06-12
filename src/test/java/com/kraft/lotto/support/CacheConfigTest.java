@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.kraft.lotto.infra.config.KraftCacheProperties;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -18,7 +17,6 @@ class CacheConfigTest {
 
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
             .withUserConfiguration(CacheConfig.class, CachePropsConfig.class)
-            .withBean(SimpleMeterRegistry.class)
             .withPropertyValues(
                     "kraft.cache.winning-number-frequency.ttl-minutes=5",
                     "kraft.cache.winning-number-frequency.max-size=1000",
@@ -57,21 +55,22 @@ class CacheConfigTest {
     }
 
     @Test
-    @DisplayName("캐시 메트릭이 미터 레지스트리에 바인딩된다")
-    void cacheMetricsAreBoundToMeterRegistry() {
+    @DisplayName("캐시 통계 수집이 활성화되어 Spring Boot CacheMetricsAutoConfiguration이 바인딩할 수 있다")
+    void cacheHasRecordStatsEnabledForAutoMetrics() {
         runner.run(context -> {
             CacheManager cacheManager = context.getBean(CacheManager.class);
-            SimpleMeterRegistry meterRegistry = context.getBean(SimpleMeterRegistry.class);
             CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache("winningNumberFrequency");
             Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
 
             nativeCache.get("key", key -> "value");
 
-            assertThat(meterRegistry.find("cache.gets").tag("cache", "winningNumberFrequency").meter()).isNotNull();
+            // recordStats()가 활성화되어 있어야 Spring Boot CacheMetricsAutoConfiguration이
+            // Prometheus에 메트릭을 일관된 태그 구조로 등록할 수 있다
+            assertThat(nativeCache.stats().requestCount()).isPositive();
         });
     }
 
-    @Configuration
+@Configuration
     static class CachePropsConfig {
         @Bean
         KraftCacheProperties kraftCacheProperties() {
