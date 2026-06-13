@@ -9,10 +9,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,6 +45,11 @@ class GlobalExceptionHandlerTest {
         void throwNoResource() throws NoResourceFoundException {
             throw new NoResourceFoundException(HttpMethod.GET, "/test/no-resource", null);
         }
+
+        record BodyDto(String value) {}
+
+        @PostMapping(value = "/test/body", consumes = MediaType.APPLICATION_JSON_VALUE)
+        void acceptBody(@RequestBody BodyDto body) {}
     }
 
     @BeforeEach
@@ -89,5 +97,27 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
                 .andExpect(jsonPath("$.message").value("예상하지 못한 서버 오류가 발생했습니다."));
+    }
+
+    @Test
+    @DisplayName("잘못된 JSON 바디 전송 시 400 상태 코드를 반환하는지 확인")
+    void handleNotReadable_returns400() throws Exception {
+        mockMvc.perform(post("/test/body")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ invalid json }"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"))
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @DisplayName("지원되지 않는 Content-Type 사용 시 415 상태 코드를 반환하는지 확인")
+    void handleUnsupportedMediaType_returns415() throws Exception {
+        mockMvc.perform(post("/test/body")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("plain text"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"))
+                .andExpect(jsonPath("$.status").value(415));
     }
 }

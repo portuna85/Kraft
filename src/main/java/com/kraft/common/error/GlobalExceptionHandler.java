@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -70,6 +72,23 @@ public class GlobalExceptionHandler {
         log.info("제약 조건 위반: path={} message={}", request.getRequestURI(), exception.getMessage());
         return ResponseEntity.badRequest()
                 .body(errorBody(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", exception.getMessage(), request));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ApiErrorResponse> handleNotReadable(HttpMessageNotReadableException exception,
+                                                       HttpServletRequest request) {
+        log.debug("요청 바디 파싱 실패: path={} message={}", request.getRequestURI(), exception.getMessage());
+        return ResponseEntity.badRequest()
+                .body(errorBody(HttpStatus.BAD_REQUEST, "INVALID_REQUEST_BODY", "요청 바디를 읽을 수 없습니다.", request));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    ResponseEntity<ApiErrorResponse> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException exception,
+                                                                HttpServletRequest request) {
+        log.debug("지원되지 않는 Content-Type: contentType={} path={}", exception.getContentType(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(errorBody(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE",
+                        "지원되지 않는 Content-Type입니다.", request));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

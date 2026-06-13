@@ -30,7 +30,10 @@ public class WinningNumberFreshnessScheduler {
         winningNumberRepository.findTopByOrderByRoundDesc().ifPresent(latest -> {
             LocalDate today = LocalDate.now(clock.withZone(KST));
             LocalDate expected = today.with(DayOfWeek.SATURDAY);
-            if (today.getDayOfWeek().getValue() < DayOfWeek.SATURDAY.getValue()) {
+            // Saturday draw happens at ~20:35 KST; checking at 09:00 means today's draw
+            // has not yet occurred. Use <= so Saturday morning also looks at last week's draw.
+            // Sunday (value=7) naturally resolves with(SATURDAY) to yesterday within the same ISO week.
+            if (today.getDayOfWeek().getValue() <= DayOfWeek.SATURDAY.getValue()) {
                 expected = expected.minusWeeks(1);
             }
             if (latest.getDrawDate().isBefore(expected)) {
