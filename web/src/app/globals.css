@@ -619,6 +619,35 @@ input {
   font-size: 0.9rem;
 }
 
+/* Round detail */
+.round-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.round-detail-cell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.round-detail-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 4px;
+}
+
+.round-detail-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
 @media (max-width: 900px) {
   .hero,
   .grid-3,
@@ -657,5 +686,9 @@ input {
 
   .frequency-item .freq-pct {
     display: none;
+  }
+
+  .round-detail-grid {
+    grid-template-columns: 1fr;
   }
 }

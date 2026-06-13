@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
+import { LottoBalls } from "@/components/lotto-balls";
 
 type SavedNumber = {
   id: number;
@@ -136,10 +137,10 @@ export function SavedNumbersClient() {
         {items.map((item) => (
           <li key={item.id} className="saved-item">
             <div>
-              <strong>{item.numbers.join(", ")}</strong>
-              <p>{item.label ?? "메모 없음"}</p>
+              <LottoBalls numbers={item.numbers} />
+              <p className="muted">{item.label ?? "메모 없음"}</p>
             </div>
-            <button type="button" onClick={() => handleDelete(item.id)}>
+            <button type="button" className="secondary" onClick={() => handleDelete(item.id)}>
               삭제
             </button>
           </li>

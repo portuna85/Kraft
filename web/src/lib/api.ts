@@ -7,6 +7,10 @@ export type WinningNumber = {
   numbers: number[];
   bonusNumber: number;
   firstPrizeAmount: number;
+  secondPrize: number;
+  secondWinners: number;
+  totalSales: number;
+  firstAccumAmount: number;
 };
 
 export type WinningNumberList = {
