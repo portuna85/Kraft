@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +25,7 @@ public class WinningNumberFreshnessScheduler {
     }
 
     @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Seoul")
+    @SchedulerLock(name = "check-freshness", lockAtMostFor = "PT5M")
     public void warnWhenStale() {
         winningNumberRepository.findTopByOrderByRoundDesc().ifPresent(latest -> {
             LocalDate today = LocalDate.now(clock.withZone(KST));

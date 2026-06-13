@@ -1,7 +1,7 @@
 package com.kraft.admin;
 
+import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -10,18 +10,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AdminAuditLogService {
 
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
-
     private final AdminAuditLogRepository repo;
+    private final Clock clock;
 
-    public AdminAuditLogService(AdminAuditLogRepository repo) {
+    public AdminAuditLogService(AdminAuditLogRepository repo, Clock clock) {
         this.repo = repo;
+        this.clock = clock;
     }
 
     @Transactional
     public void record(String adminUser, String action, String target, String detail, String ip) {
         repo.save(new AdminAuditLog(adminUser, action, target, detail, ip,
-                OffsetDateTime.now(KST)));
+                OffsetDateTime.now(clock)));
     }
 
     @Transactional(readOnly = true)

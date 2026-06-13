@@ -27,19 +27,19 @@ public class SavedNumbersController {
     }
 
     @GetMapping
-    public List<SavedNumberResponse> list(@RequestHeader(name = "X-Device-Token", required = false) String deviceToken) {
+    public List<SavedNumberResponse> list(@RequestHeader(name = "X-Device-Token", required = true) String deviceToken) {
         return savedNumbersService.list(deviceTokenSupport.requireHashedToken(deviceToken));
     }
 
     @PostMapping
-    public ResponseEntity<SavedNumberResponse> save(@RequestHeader(name = "X-Device-Token", required = false) String deviceToken,
+    public ResponseEntity<SavedNumberResponse> save(@RequestHeader(name = "X-Device-Token", required = true) String deviceToken,
                                                     @Valid @RequestBody CreateSavedNumberRequest request) {
         SaveNumberResult result = savedNumbersService.save(deviceTokenSupport.requireHashedToken(deviceToken), request);
         return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK).body(result.savedNumber());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@RequestHeader(name = "X-Device-Token", required = false) String deviceToken,
+    public ResponseEntity<Void> delete(@RequestHeader(name = "X-Device-Token", required = true) String deviceToken,
                                        @PathVariable long id) {
         savedNumbersService.delete(deviceTokenSupport.requireHashedToken(deviceToken), id);
         return ResponseEntity.noContent().build();

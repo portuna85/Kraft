@@ -168,7 +168,6 @@ public class WinningStatisticsCacheService {
     // ──────────────────────────────────────────────
 
     private void rebuildFrequency(List<WinningNumber> rounds, int latestRound, OffsetDateTime now) {
-        // 공 번호(1-45)별 출현 횟수 집계
         Map<Integer, Integer> freqMap = new HashMap<>();
         Map<Integer, Integer> lastRoundMap = new HashMap<>();
 
@@ -179,16 +178,23 @@ public class WinningStatisticsCacheService {
             }
         }
 
+        // Load all existing rows in one query instead of 45 individual lookups
+        Map<Integer, FrequencySummary> existing = frequencySummaryRepository.findAll().stream()
+                .collect(java.util.stream.Collectors.toMap(FrequencySummary::getBallNumber, s -> s));
+
+        List<FrequencySummary> toSave = new ArrayList<>();
         for (int ball = 1; ball <= 45; ball++) {
-            final int freq = freqMap.getOrDefault(ball, 0);
-            final int last = lastRoundMap.getOrDefault(ball, 0);
-            final int ballFinal = ball;
-            frequencySummaryRepository.findByBallNumber(ball)
-                    .ifPresentOrElse(
-                            s -> s.update(freq, last, now),
-                            () -> frequencySummaryRepository.save(new FrequencySummary(ballFinal, freq, last, now))
-                    );
+            int freq = freqMap.getOrDefault(ball, 0);
+            int last = lastRoundMap.getOrDefault(ball, 0);
+            FrequencySummary row = existing.get(ball);
+            if (row != null) {
+                row.update(freq, last, now);
+            } else {
+                toSave.add(new FrequencySummary(ball, freq, last, now));
+            }
         }
+        frequencySummaryRepository.saveAll(existing.values());
+        frequencySummaryRepository.saveAll(toSave);
     }
 
     private void rebuildPatterns(List<WinningNumber> rounds, OffsetDateTime now) {
@@ -216,15 +222,22 @@ public class WinningStatisticsCacheService {
     }
 
     private void upsertPatternRows(String statType, Map<String, Integer> data, OffsetDateTime now) {
+        // Load existing rows for this statType in one query
+        Map<String, PatternStatsSummary> existing = patternStatsSummaryRepository
+                .findByStatTypeOrderByBucketKeyAsc(statType).stream()
+                .collect(java.util.stream.Collectors.toMap(PatternStatsSummary::getBucketKey, s -> s));
+
+        List<PatternStatsSummary> toSave = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : data.entrySet()) {
-            patternStatsSummaryRepository
-                    .findByStatTypeAndBucketKey(statType, entry.getKey())
-                    .ifPresentOrElse(
-                            s -> s.update(entry.getValue(), now),
-                            () -> patternStatsSummaryRepository.save(
-                                    new PatternStatsSummary(statType, entry.getKey(), entry.getValue(), now))
-                    );
+            PatternStatsSummary row = existing.get(entry.getKey());
+            if (row != null) {
+                row.update(entry.getValue(), now);
+            } else {
+                toSave.add(new PatternStatsSummary(statType, entry.getKey(), entry.getValue(), now));
+            }
         }
+        patternStatsSummaryRepository.saveAll(existing.values());
+        patternStatsSummaryRepository.saveAll(toSave);
     }
 
     private void rebuildCompanions(List<WinningNumber> rounds, OffsetDateTime now) {
@@ -244,14 +257,23 @@ public class WinningStatisticsCacheService {
             }
         }
 
+        // Load all existing rows in one query instead of per-pair lookups
+        Map<String, CompanionPairSummary> existing = companionPairSummaryRepository.findAll().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        p -> p.getBallA() + "_" + p.getBallB(), p -> p));
+
+        List<CompanionPairSummary> toSave = new ArrayList<>();
         for (int[] pair : pairMap.values()) {
             int a = pair[0], b = pair[1], count = pair[2];
-            companionPairSummaryRepository.findByBallAAndBallB(a, b)
-                    .ifPresentOrElse(
-                            s -> s.update(count, now),
-                            () -> companionPairSummaryRepository.save(new CompanionPairSummary(a, b, count, now))
-                    );
+            CompanionPairSummary row = existing.get(a + "_" + b);
+            if (row != null) {
+                row.update(count, now);
+            } else {
+                toSave.add(new CompanionPairSummary(a, b, count, now));
+            }
         }
+        companionPairSummaryRepository.saveAll(existing.values());
+        companionPairSummaryRepository.saveAll(toSave);
     }
 
     // ──────────────────────────────────────────────
