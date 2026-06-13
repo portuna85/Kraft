@@ -78,13 +78,13 @@ export function SavedNumbersClient() {
       })
     });
 
-    const payload = await response.json();
+    const payload = await response.json() as { created?: boolean; message?: string };
     if (!response.ok) {
       setMessage(payload.message ?? "번호를 저장하지 못했습니다.");
       return;
     }
 
-    setMessage(response.status === 201 ? "번호를 저장했습니다." : "이미 저장된 번호입니다.");
+    setMessage(payload.created ? "번호를 저장했습니다." : "이미 저장된 번호입니다.");
     setNumbers("");
     setLabel("");
     await loadSavedNumbers();
@@ -131,7 +131,7 @@ export function SavedNumbersClient() {
         </button>
       </form>
 
-      {message ? <p className="status-text">{message}</p> : null}
+      {message ? <p className="status-text" role="status" aria-live="polite">{message}</p> : null}
 
       <ul className="saved-list">
         {items.map((item) => (

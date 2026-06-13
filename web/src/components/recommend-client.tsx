@@ -110,7 +110,7 @@ export function RecommendClient() {
         </button>
       </form>
 
-      {message ? <p className="status-text">{message}</p> : null}
+      {message ? <p className="status-text" role="status" aria-live="polite">{message}</p> : null}
 
       {recommendations.length > 0 && (
         <div className="recommend-grid">

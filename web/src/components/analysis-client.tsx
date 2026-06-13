@@ -57,7 +57,7 @@ export function AnalysisClient() {
         </button>
       </form>
 
-      {error ? <p className="status-text error">{error}</p> : null}
+      {error ? <p className="status-text error" role="alert" aria-live="assertive">{error}</p> : null}
 
       {result ? (
         <div className="analysis-result">
