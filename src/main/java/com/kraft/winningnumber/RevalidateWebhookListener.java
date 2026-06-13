@@ -1,13 +1,16 @@
 package com.kraft.winningnumber;
 
 import com.kraft.common.config.RevalidateProperties;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.web.client.RestClient;
 
 /**
@@ -21,14 +24,21 @@ public class RevalidateWebhookListener {
     private static final List<String> REVALIDATE_PATHS = List.of("/", "/latest", "/rounds");
 
     private final RevalidateProperties revalidateProperties;
-    private final RestClient restClient = RestClient.builder().build();
+    private final RestClient restClient;
 
     public RevalidateWebhookListener(RevalidateProperties revalidateProperties) {
         this.revalidateProperties = revalidateProperties;
+        var factory = new JdkClientHttpRequestFactory(
+                java.net.http.HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(2))
+                        .build()
+        );
+        factory.setReadTimeout(Duration.ofSeconds(5));
+        this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
-    @Async
-    @EventListener
+    @Async("eventTaskExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCollected(WinningNumbersCollectedEvent event) {
         if (!event.dataChanged() || !revalidateProperties.enabled()) {
             return;

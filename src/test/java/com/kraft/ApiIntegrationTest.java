@@ -118,7 +118,8 @@ class ApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.numbers", hasSize(6)))
+                .andExpect(jsonPath("$.created", is(true)))
+                .andExpect(jsonPath("$.savedNumber.numbers", hasSize(6)))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
@@ -130,7 +131,8 @@ class ApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is((int) savedId)));
+                .andExpect(jsonPath("$.created", is(false)))
+                .andExpect(jsonPath("$.savedNumber.id", is((int) savedId)));
 
         mockMvc.perform(get("/api/v1/saved").header("X-Device-Token", "device-1"))
                 .andExpect(status().isOk())
@@ -401,8 +403,10 @@ class ApiIntegrationTest {
     }
 
     private long extractId(String response) {
-        int marker = response.indexOf("\"id\":");
-        int start = marker + 5;
+        // W-5: 바디 구조가 {savedNumber: {id: ...}, created: ...}로 변경됨
+        int marker = response.indexOf("\"savedNumber\":");
+        int idMarker = response.indexOf("\"id\":", marker);
+        int start = idMarker + 5;
         int end = response.indexOf(",", start);
         if (end < 0) {
             end = response.indexOf("}", start);

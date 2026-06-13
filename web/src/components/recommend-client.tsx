@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
-
-type RecommendationResponse = {
-  recommendations: number[][];
-};
+import type { RecommendationResponse } from "@/lib/api";
 
 const deviceStorageKey = "kraft-device-token";
 
@@ -72,13 +69,14 @@ export function RecommendClient() {
         },
         body: JSON.stringify({ numbers, label: `추천 조합 ${index + 1}`, source: "RECOMMEND" }),
       });
-      const payload = await res.json() as { message?: string };
+      const payload = await res.json() as { created?: boolean; message?: string };
       if (!res.ok) {
         setMessage(payload.message ?? "저장하지 못했습니다.");
         return;
       }
       setSavedIndexes((prev) => new Set(prev).add(index));
-      setMessage(res.status === 201 ? "저장함에 추가했습니다." : "이미 저장된 번호입니다.");
+      // W-5: 상태코드 대신 바디의 created 플래그로 신규/중복 구분
+      setMessage(payload.created ? "저장함에 추가했습니다." : "이미 저장된 번호입니다.");
     } catch {
       setMessage("네트워크 오류가 발생했습니다.");
     } finally {

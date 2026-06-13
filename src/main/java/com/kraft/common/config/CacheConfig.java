@@ -1,8 +1,12 @@
 package com.kraft.common.config;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -30,6 +34,17 @@ public class CacheConfig {
         manager.registerCustomCache(STATS_COMPANION, cache(10, TimeUnit.MINUTES, 1));
         manager.registerCustomCache(RECOMMEND_RULES, cache(1, TimeUnit.HOURS, 1));
         return manager;
+    }
+
+    // P-4: Caffeine 캐시 적중률을 Prometheus에 노출
+    @Bean
+    ApplicationRunner cacheMicroMeterBinder(CacheManager cacheManager, MeterRegistry registry) {
+        return args -> cacheManager.getCacheNames().forEach(name -> {
+            @SuppressWarnings("unchecked")
+            Cache<Object, Object> native_ = (Cache<Object, Object>)
+                    Objects.requireNonNull(cacheManager.getCache(name)).getNativeCache();
+            CaffeineCacheMetrics.monitor(registry, native_, name);
+        });
     }
 
     private static Cache<Object, Object> cache(long duration, TimeUnit unit, long maximumSize) {

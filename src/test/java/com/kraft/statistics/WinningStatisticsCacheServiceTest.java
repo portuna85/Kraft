@@ -25,6 +25,9 @@ class WinningStatisticsCacheServiceTest {
     private WinningStatisticsCacheService service;
 
     @Autowired
+    private StatisticsSummaryRebuilder summaryRebuilder;
+
+    @Autowired
     private WinningNumberRepository winningNumberRepository;
 
     @Autowired
@@ -54,7 +57,7 @@ class WinningStatisticsCacheServiceTest {
     @Test
     @DisplayName("전체 요약 재생성 시 모든 번호의 출현 빈도가 올바르게 집계되는지 확인")
     void rebuildAllSummaries_populatesFrequencyForAllBalls() {
-        service.rebuildAllSummaries();
+        summaryRebuilder.rebuildAllSummaries();
 
         List<FrequencySummary> all = frequencySummaryRepository.findAllByOrderByBallNumberAsc();
         assertThat(all).hasSize(45);
@@ -77,7 +80,7 @@ class WinningStatisticsCacheServiceTest {
     @Test
     @DisplayName("전체 요약 재생성 시 패턴 통계가 올바르게 집계되는지 확인")
     void rebuildAllSummaries_populatesPatternStats() {
-        service.rebuildAllSummaries();
+        summaryRebuilder.rebuildAllSummaries();
 
         // 회차 1: 홀수 3개(1,3,5)
         List<PatternStatsSummary> oddRows = patternStatsSummaryRepository
@@ -93,7 +96,7 @@ class WinningStatisticsCacheServiceTest {
     @Test
     @DisplayName("전체 요약 재생성 시 동반 출연 쌍이 올바르게 집계되는지 확인")
     void rebuildAllSummaries_populatesCompanionPairs() {
-        service.rebuildAllSummaries();
+        summaryRebuilder.rebuildAllSummaries();
 
         // 회차 1: 1-2가 동반 출현
         CompanionPairSummary pair12 = companionPairSummaryRepository

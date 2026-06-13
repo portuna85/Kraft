@@ -31,12 +31,49 @@ type RequestInitWithNext = RequestInit & {
   };
 };
 
+// W-3: 백엔드 에러 코드/메시지를 보존하는 커스텀 에러
+export class BackendError extends Error {
+  constructor(
+    public readonly code: string,
+    message: string,
+    public readonly status: number
+  ) {
+    super(message);
+    this.name = "BackendError";
+  }
+}
+
 async function fetchJson<T>(path: string, init?: RequestInitWithNext): Promise<T> {
-  const response = await fetch(`${backendBaseUrl}${path}`, init);
+  // W-1: SSR 렌더 무한 대기 방지
+  const signal = AbortSignal.timeout(5000);
+  const response = await fetch(`${backendBaseUrl}${path}`, { signal, ...init });
   if (!response.ok) {
-    throw new Error(`Backend request failed: ${path} (${response.status})`);
+    let code = "BACKEND_ERROR";
+    let message = `Backend request failed: ${path} (${response.status})`;
+    try {
+      const body = await response.clone().json() as { code?: string; message?: string };
+      if (body.code) code = body.code;
+      if (body.message) message = body.message;
+    } catch {
+      // 바디 파싱 실패 시 기본 메시지 유지
+    }
+    throw new BackendError(code, message, response.status);
   }
   return response.json() as Promise<T>;
+}
+
+// W-2: POST 요청을 fetchJson으로 통합
+async function fetchJsonPost<T>(
+  path: string,
+  body: unknown,
+  headers?: Record<string, string>
+): Promise<T> {
+  return fetchJson<T>(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
 }
 
 export function getPublicBaseUrl(): string {
@@ -113,17 +150,12 @@ export async function getCompanionStats(): Promise<CompanionStatsResponse> {
   });
 }
 
+// W-2: analyzeNumbers를 fetchJsonPost로 통합
 export async function analyzeNumbers(numbers: number[]): Promise<AnalysisResponse> {
-  const response = await fetch(`${backendBaseUrl}/api/v1/stats/analysis`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ numbers }),
-    cache: "no-store"
-  });
-  if (!response.ok) throw new Error(`Analysis failed (${response.status})`);
-  return response.json() as Promise<AnalysisResponse>;
+  return fetchJsonPost<AnalysisResponse>("/api/v1/stats/analysis", { numbers });
 }
 
+// W-2: getOpsSummary를 fetchJson으로 통합
 export async function getOpsSummary(token: string): Promise<{
   service: string;
   timezone: string;
@@ -134,9 +166,7 @@ export async function getOpsSummary(token: string): Promise<{
   fresh: boolean;
 }> {
   return fetchJson("/ops/summary", {
-    headers: {
-      "X-Ops-Token": token
-    },
-    cache: "no-store"
+    headers: { "X-Ops-Token": token },
+    cache: "no-store",
   });
 }

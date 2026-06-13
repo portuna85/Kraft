@@ -44,7 +44,7 @@ class StatisticsApiControllerTest {
     private CompanionPairSummaryRepository companionPairSummaryRepository;
 
     @Autowired
-    private WinningStatisticsCacheService statisticsService;
+    private StatisticsSummaryRebuilder summaryRebuilder;
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
@@ -77,7 +77,7 @@ class StatisticsApiControllerTest {
     @Test
     @DisplayName("패턴 통계 조회 시 200을 반환하는지 확인")
     void getPatterns_returns200() throws Exception {
-        statisticsService.rebuildAllSummaries();
+        summaryRebuilder.rebuildAllSummaries();
         mockMvc.perform(get("/api/v1/stats/patterns"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalRounds").value(2));
@@ -86,7 +86,7 @@ class StatisticsApiControllerTest {
     @Test
     @DisplayName("동반 출연 번호 조회 시 200을 반환하는지 확인")
     void getCompanion_returns200() throws Exception {
-        statisticsService.rebuildAllSummaries();
+        summaryRebuilder.rebuildAllSummaries();
         mockMvc.perform(get("/api/v1/stats/companion"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalRounds").value(2));

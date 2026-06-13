@@ -21,6 +21,8 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         response.setHeader("X-Frame-Options", "DENY");
         response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
         response.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+        // S-4: API/actuator 응답에 최소 CSP 적용 (브라우저 직접 접근 시 렌더링 표면 최소화)
+        response.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
         chain.doFilter(request, response);
     }
 }

@@ -4,11 +4,13 @@ import com.kraft.common.config.ExternalLottoProperties;
 import com.kraft.common.error.ApiException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -17,7 +19,7 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
 
     private static final Logger log = LoggerFactory.getLogger(HttpExternalWinningNumberFetchClient.class);
 
-    private final RestClient restClient = RestClient.builder().build();
+    private final RestClient restClient;
     private final ExternalLottoProperties externalLottoProperties;
     private final ExternalWinningNumberPayloadMapper payloadMapper;
 
@@ -25,6 +27,13 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
                                                 ExternalWinningNumberPayloadMapper payloadMapper) {
         this.externalLottoProperties = externalLottoProperties;
         this.payloadMapper = payloadMapper;
+        var factory = new JdkClientHttpRequestFactory(
+                java.net.http.HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(3))
+                        .build()
+        );
+        factory.setReadTimeout(Duration.ofSeconds(5));
+        this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
     @Override

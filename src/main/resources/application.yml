@@ -54,6 +54,7 @@ resilience4j:
         register-health-indicator: true
 
 kraft:
+  public-base-url: ${KRAFT_PUBLIC_BASE_URL:}
   external-lotto:
     url-template: ${KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE:}
     auto-collect-cron: ${KRAFT_EXTERNAL_LOTTO_AUTO_COLLECT_CRON:0 35 22 * * SAT}

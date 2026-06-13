@@ -32,10 +32,10 @@ public class SavedNumbersController {
     }
 
     @PostMapping
-    public ResponseEntity<SavedNumberResponse> save(@RequestHeader(name = "X-Device-Token", required = true) String deviceToken,
-                                                    @Valid @RequestBody CreateSavedNumberRequest request) {
+    public ResponseEntity<SaveNumberResult> save(@RequestHeader(name = "X-Device-Token", required = true) String deviceToken,
+                                                 @Valid @RequestBody CreateSavedNumberRequest request) {
         SaveNumberResult result = savedNumbersService.save(deviceTokenSupport.requireHashedToken(deviceToken), request);
-        return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK).body(result.savedNumber());
+        return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK).body(result);
     }
 
     @DeleteMapping("/{id}")

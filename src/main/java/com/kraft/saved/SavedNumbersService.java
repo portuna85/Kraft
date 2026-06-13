@@ -3,6 +3,7 @@ package com.kraft.saved;
 import com.kraft.common.config.SavedProperties;
 import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
+import org.springframework.dao.DataIntegrityViolationException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -59,14 +60,21 @@ public class SavedNumbersService {
 
         String source = request.source() == null || request.source().isBlank() ? "MANUAL" : request.source().trim();
         String label = request.label() == null || request.label().isBlank() ? null : request.label().trim();
-        SavedNumber savedNumber = savedNumberRepository.save(new SavedNumber(
-                clientTokenHash,
-                normalizedNumbers,
-                label,
-                source,
-                OffsetDateTime.now(clock)
-        ));
-        return new SaveNumberResult(toResponse(savedNumber), true);
+        try {
+            SavedNumber savedNumber = savedNumberRepository.save(new SavedNumber(
+                    clientTokenHash,
+                    normalizedNumbers,
+                    label,
+                    source,
+                    OffsetDateTime.now(clock)
+            ));
+            return new SaveNumberResult(toResponse(savedNumber), true);
+        } catch (DataIntegrityViolationException ex) {
+            // 동시 저장 레이스로 unique 제약 위반 시 기존 행을 반환하여 멱등 처리
+            return savedNumberRepository.findByClientTokenHashAndNumbers(clientTokenHash, normalizedNumbers)
+                    .map(existing -> new SaveNumberResult(toResponse(existing), false))
+                    .orElseThrow(() -> ex);
+        }
     }
 
     private SavedNumberResponse toResponse(SavedNumber savedNumber) {
