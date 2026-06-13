@@ -21,7 +21,9 @@ import org.springframework.web.client.RestClient;
 public class RevalidateWebhookListener {
 
     private static final Logger log = LoggerFactory.getLogger(RevalidateWebhookListener.class);
-    private static final List<String> REVALIDATE_PATHS = List.of("/", "/latest", "/rounds");
+    private static final List<String> REVALIDATE_PATHS = List.of(
+            "/", "/latest", "/rounds", "/frequency", "/stats", "/companion"
+    );
 
     private final RevalidateProperties revalidateProperties;
     private final RestClient restClient;

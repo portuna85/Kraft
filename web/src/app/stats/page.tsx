@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getPatternStats, type PatternBucket } from "@/lib/api";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "패턴 통계 | KRAFT Lotto",

@@ -1,0 +1,37 @@
+export default function Loading() {
+  return (
+    <section className="panel">
+      <div className="skeleton-line skeleton-eyebrow" />
+      <div className="skeleton-line skeleton-h1" style={{ marginTop: "10px" }} />
+      <div className="skeleton-line skeleton-body" style={{ marginTop: "14px", width: "50%" }} />
+      <div className="freq-summary" style={{ marginTop: "24px" }}>
+        <div className="freq-rank-group">
+          <div className="skeleton-line skeleton-caption" style={{ width: "100px" }} />
+          <div className="skeleton-balls" style={{ marginTop: "10px" }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="skeleton-ball skeleton-ball-sm" />
+            ))}
+          </div>
+        </div>
+        <div className="freq-rank-group">
+          <div className="skeleton-line skeleton-caption" style={{ width: "120px" }} />
+          <div className="skeleton-balls" style={{ marginTop: "10px" }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="skeleton-ball skeleton-ball-sm" />
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="frequency-grid" style={{ marginTop: "28px" }}>
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div key={i} className="frequency-item">
+            <div className="skeleton-ball skeleton-ball-sm" />
+            <div className="skeleton-line" style={{ height: "8px", borderRadius: "999px" }} />
+            <div className="skeleton-line skeleton-caption" style={{ width: "40px" }} />
+            <div className="skeleton-line skeleton-caption" style={{ width: "36px" }} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}

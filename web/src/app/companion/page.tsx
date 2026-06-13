@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getCompanionStats } from "@/lib/api";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "동반 출현 통계 | KRAFT Lotto",
