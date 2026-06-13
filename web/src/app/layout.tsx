@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { JsonLdWebSite } from "@/components/json-ld";
 import { getPublicBaseUrl } from "@/lib/api";
@@ -40,9 +41,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main className="page">
           <div className="shell">{children}</div>
         </main>
-        <footer className="footer">
-          <div className="shell">모든 시간 표시는 KST(Asia/Seoul) 기준입니다.</div>
-        </footer>
+        <Footer />
       </body>
     </html>
   );

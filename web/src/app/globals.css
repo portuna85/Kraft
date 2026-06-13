@@ -358,6 +358,39 @@ input {
   color: var(--muted);
 }
 
+.site-footer-bottom {
+  padding: 36px 0 60px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.footer-inner {
+  display: grid;
+  gap: 16px;
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.footer-nav a {
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.footer-nav a:hover {
+  color: var(--text);
+}
+
+.footer-copy {
+  font-size: 0.78rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
 /* ── Ball color variants ─────────────────────────────────────────── */
 .ball-sm {
   width: 34px;
