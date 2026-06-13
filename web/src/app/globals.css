@@ -652,6 +652,25 @@ input {
   font-size: 0.9rem;
 }
 
+/* 404 not-found */
+.not-found {
+  min-height: 40vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.not-found-title {
+  font-size: clamp(3rem, 8vw, 6rem);
+}
+
+.not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
 /* Info pages */
 .info-article {
   margin-top: 24px;
