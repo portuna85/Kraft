@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { LottoBalls } from "@/components/lotto-balls";
-import { getLatestWinningNumber } from "@/lib/api";
+import { getLatestWinningNumber, WinningNumber } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
+import logger from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const latest = await getLatestWinningNumber();
+  let latest: WinningNumber | null = null;
+  try {
+    latest = await getLatestWinningNumber();
+  } catch (err) {
+    logger.warn({ err }, "최신 당첨번호 조회 실패 (데이터 없음)");
+  }
 
   return (
     <div className="grid">
@@ -25,11 +31,21 @@ export default async function HomePage() {
           </div>
         </div>
         <aside className="hero-side">
-          <p className="eyebrow">최근 추첨</p>
-          <h2>{latest.round}회</h2>
-          <p className="muted">{formatDrawDate(latest.drawDate)}</p>
-          <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
-          <p className="muted">1등 당첨금 {formatCurrency(latest.firstPrizeAmount)}</p>
+          {latest ? (
+            <>
+              <p className="eyebrow">최근 추첨</p>
+              <h2>{latest.round}회</h2>
+              <p className="muted">{formatDrawDate(latest.drawDate)}</p>
+              <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
+              <p className="muted">1등 당첨금 {formatCurrency(latest.firstPrizeAmount)}</p>
+            </>
+          ) : (
+            <>
+              <p className="eyebrow">최근 추첨</p>
+              <p className="muted">아직 당첨번호 데이터가 없습니다.</p>
+              <Link href="/rounds" className="button secondary">회차 목록 보기</Link>
+            </>
+          )}
         </aside>
       </section>
 
