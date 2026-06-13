@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -14,9 +15,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@DisplayName("당첨 번호 수집 서비스 테스트")
 class WinningNumberCollectionServiceTest {
 
     @Test
+    @DisplayName("최신 회차 수집 시 저장소의 마지막 회차 다음 번호를 사용하는지 확인")
     void collectLatestUsesNextRoundFromRepository() {
         WinningNumberRepository repository = mock(WinningNumberRepository.class);
         ExternalWinningNumberFetchClient fetchClient = mock(ExternalWinningNumberFetchClient.class);

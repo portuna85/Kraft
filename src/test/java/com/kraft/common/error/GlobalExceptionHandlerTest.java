@@ -1,5 +1,6 @@
 package com.kraft.common.error;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -15,6 +16,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@DisplayName("글로벌 예외 핸들러 테스트")
 class GlobalExceptionHandlerTest {
 
     private MockMvc mockMvc;
@@ -51,6 +53,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("ApiException 발생 시 올바른 상태 코드와 응답 바디를 반환하는지 확인 (4xx)")
     void handleApiException_returnsCorrectStatusAndBody_for4xx() throws Exception {
         mockMvc.perform(get("/test/not-found").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -61,6 +64,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("ApiException 발생 시 서버 오류에 대해 5xx 상태 코드를 반환하는지 확인")
     void handleApiException_returns5xxStatus_forServerError() throws Exception {
         mockMvc.perform(get("/test/server-error").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError())
@@ -69,6 +73,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("리소스를 찾을 수 없을 때 404 상태 코드를 반환하는지 확인")
     void handleNoResourceFound_returns404() throws Exception {
         mockMvc.perform(get("/test/no-resource").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -78,6 +83,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("예상치 못한 예외 발생 시 500 상태 코드를 반환하는지 확인")
     void handleUnexpected_returns500() throws Exception {
         mockMvc.perform(get("/test/unexpected").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError())

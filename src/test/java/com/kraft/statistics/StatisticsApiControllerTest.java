@@ -6,6 +6,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@DisplayName("통계 API 컨트롤러 테스트")
 class StatisticsApiControllerTest {
 
     @Autowired
@@ -64,6 +66,7 @@ class StatisticsApiControllerTest {
     }
 
     @Test
+    @DisplayName("번호별 출현 빈도 조회 시 비어있으면 재생성하고 200을 반환하는지 확인")
     void getFrequency_returns200_andTriggersRebuildWhenEmpty() throws Exception {
         mockMvc.perform(get("/api/v1/stats/frequency"))
                 .andExpect(status().isOk())
@@ -72,6 +75,7 @@ class StatisticsApiControllerTest {
     }
 
     @Test
+    @DisplayName("패턴 통계 조회 시 200을 반환하는지 확인")
     void getPatterns_returns200() throws Exception {
         statisticsService.rebuildAllSummaries();
         mockMvc.perform(get("/api/v1/stats/patterns"))
@@ -80,6 +84,7 @@ class StatisticsApiControllerTest {
     }
 
     @Test
+    @DisplayName("동반 출연 번호 조회 시 200을 반환하는지 확인")
     void getCompanion_returns200() throws Exception {
         statisticsService.rebuildAllSummaries();
         mockMvc.perform(get("/api/v1/stats/companion"))
@@ -88,6 +93,7 @@ class StatisticsApiControllerTest {
     }
 
     @Test
+    @DisplayName("유효한 입력에 대해 번호 분석 결과가 올바른지 확인")
     void analysis_returnsCorrectMetrics_forValidInput() throws Exception {
         String body = "{\"numbers\":[1,2,3,4,5,6]}";
 
@@ -105,6 +111,7 @@ class StatisticsApiControllerTest {
     }
 
     @Test
+    @DisplayName("범위를 벗어난 번호 입력 시 400 에러를 반환하는지 확인")
     void analysis_returns400_forNumberOutOfRange() throws Exception {
         String body = "{\"numbers\":[1,2,3,4,5,46]}";
 
@@ -116,6 +123,7 @@ class StatisticsApiControllerTest {
     }
 
     @Test
+    @DisplayName("중복된 번호 입력 시 400 에러를 반환하는지 확인")
     void analysis_returns400_forDuplicateNumbers() throws Exception {
         String body = "{\"numbers\":[1,2,3,4,5,5]}";
 
@@ -127,6 +135,7 @@ class StatisticsApiControllerTest {
     }
 
     @Test
+    @DisplayName("잘못된 번호 개수 입력 시 400 에러를 반환하는지 확인")
     void analysis_returns400_forWrongCount() throws Exception {
         String body = "{\"numbers\":[1,2,3,4,5]}";
 

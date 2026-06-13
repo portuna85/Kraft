@@ -10,16 +10,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExternalWinningNumberPayloadMapper {
 
+    // Parses both the old common.do format and the new lt645/selectPstLt645InfoNew.do item format.
     public WinningNumberUpsertRequest toRequest(Map<String, Object> payload) {
         String returnValue = asString(payload.get("returnValue"));
         if (returnValue != null && !returnValue.isBlank() && !"success".equalsIgnoreCase(returnValue)) {
             throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_INVALID", "외부 응답이 성공 상태가 아닙니다.");
         }
 
-        Integer round = asInteger(firstOf(payload, "round", "drwNo"));
-        String drawDate = asString(firstOf(payload, "drawDate", "drwNoDate"));
-        Integer bonusNumber = asInteger(firstOf(payload, "bonusNumber", "bnusNo"));
-        Long firstPrizeAmount = asLong(firstOf(payload, "firstPrizeAmount", "firstWinamnt", "firstWinAmount"));
+        Integer round = asInteger(firstOf(payload, "ltEpsd", "round", "drwNo"));
+        String drawDate = normalizeDate(asString(firstOf(payload, "ltRflYmd", "drawDate", "drwNoDate")));
+        Integer bonusNumber = asInteger(firstOf(payload, "bnsWnNo", "bonusNumber", "bnusNo"));
+        Long firstPrizeAmount = asLong(firstOf(payload, "rnk1WnAmt", "firstPrizeAmount", "firstWinamnt", "firstWinAmount"));
 
         List<Integer> numbers = extractNumbers(payload);
 
@@ -27,10 +28,10 @@ public class ExternalWinningNumberPayloadMapper {
             throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_INVALID", "외부 응답 필드가 누락되었습니다.");
         }
 
-        Long secondPrize = asLong(firstOf(payload, "secondPrize", "secondWinamnt"));
-        Integer secondWinners = asInteger(firstOf(payload, "secondWinners", "secondPrzwnerCo"));
-        Long totalSales = asLong(firstOf(payload, "totalSales", "totSellamnt"));
-        Long firstAccumAmount = asLong(firstOf(payload, "firstAccumAmount", "firstAccumamnt"));
+        Long secondPrize = asLong(firstOf(payload, "rnk2WnAmt", "secondPrize", "secondWinamnt"));
+        Integer secondWinners = asInteger(firstOf(payload, "rnk2WnNope", "secondWinners", "secondPrzwnerCo"));
+        Long totalSales = asLong(firstOf(payload, "rlvtEpsdSumNtslAmt", "totalSales", "totSellamnt"));
+        Long firstAccumAmount = asLong(firstOf(payload, "rnk1SumWnAmt", "firstAccumAmount", "firstAccumamnt"));
 
         return new WinningNumberUpsertRequest(
                 round,
@@ -51,7 +52,18 @@ public class ExternalWinningNumberPayloadMapper {
         if (directNumbers instanceof List<?> values) {
             return values.stream().map(this::asInteger).toList();
         }
-
+        // New format: tm1WnNo - tm6WnNo
+        if (payload.containsKey("tm1WnNo")) {
+            return List.of(
+                    asInteger(payload.get("tm1WnNo")),
+                    asInteger(payload.get("tm2WnNo")),
+                    asInteger(payload.get("tm3WnNo")),
+                    asInteger(payload.get("tm4WnNo")),
+                    asInteger(payload.get("tm5WnNo")),
+                    asInteger(payload.get("tm6WnNo"))
+            );
+        }
+        // Old format: drwtNo1 - drwtNo6
         return List.of(
                 asInteger(payload.get("drwtNo1")),
                 asInteger(payload.get("drwtNo2")),
@@ -60,6 +72,15 @@ public class ExternalWinningNumberPayloadMapper {
                 asInteger(payload.get("drwtNo5")),
                 asInteger(payload.get("drwtNo6"))
         );
+    }
+
+    // Converts YYYYMMDD (new API) to YYYY-MM-DD; passes through YYYY-MM-DD as-is.
+    private String normalizeDate(String raw) {
+        if (raw == null) return null;
+        if (raw.length() == 8 && !raw.contains("-")) {
+            return raw.substring(0, 4) + "-" + raw.substring(4, 6) + "-" + raw.substring(6, 8);
+        }
+        return raw;
     }
 
     private Object firstOf(Map<String, Object> payload, String... keys) {

@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@DisplayName("당첨 통계 캐시 서비스 테스트")
 class WinningStatisticsCacheServiceTest {
 
     @Autowired
@@ -50,6 +52,7 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("전체 요약 재생성 시 모든 번호의 출현 빈도가 올바르게 집계되는지 확인")
     void rebuildAllSummaries_populatesFrequencyForAllBalls() {
         service.rebuildAllSummaries();
 
@@ -72,6 +75,7 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("전체 요약 재생성 시 패턴 통계가 올바르게 집계되는지 확인")
     void rebuildAllSummaries_populatesPatternStats() {
         service.rebuildAllSummaries();
 
@@ -87,6 +91,7 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("전체 요약 재생성 시 동반 출연 쌍이 올바르게 집계되는지 확인")
     void rebuildAllSummaries_populatesCompanionPairs() {
         service.rebuildAllSummaries();
 
@@ -102,6 +107,7 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("빈도 통계 조회 시 데이터가 없으면 재생성을 시도하는지 확인")
     void getFrequencyStats_fallsBackToRebuildWhenEmpty() {
         FrequencyStatsResponse response = service.getFrequencyStats();
 
@@ -110,6 +116,7 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("번호 분석 시 메트릭이 정확하게 계산되는지 확인")
     void analyze_returnsCorrectMetrics() {
         AnalysisResponse result = service.analyze(List.of(1, 2, 3, 4, 5, 6));
 

@@ -9,6 +9,7 @@ import com.kraft.winningnumber.WinningNumberUpsertRequest;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@DisplayName("API 통합 테스트")
 class ApiIntegrationTest {
 
     @Autowired
@@ -74,6 +76,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("최신 회차 조회 엔드포인트가 최신 회차 정보와 요청 ID를 반환하는지 확인")
     void latestRoundEndpointReturnsLatestRoundAndRequestId() throws Exception {
         mockMvc.perform(get("/api/v1/rounds/latest"))
                 .andExpect(status().isOk())
@@ -84,6 +87,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("번호 추천 엔드포인트가 요청된 개수만큼 번호를 반환하는지 확인")
     void recommendEndpointReturnsRequestedCount() throws Exception {
         mockMvc.perform(post("/api/v1/numbers/recommend")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -99,6 +103,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("번호 저장 엔드포인트가 디바이스 토큰별로 해싱되며 멱등성을 유지하는지 확인")
     void savedNumbersEndpointsHashByDeviceTokenAndAreIdempotent() throws Exception {
         String payload = """
                 {
@@ -141,6 +146,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("번호 저장 시 디바이스 토큰 헤더가 필수인지 확인")
     void savedNumbersRequireDeviceTokenHeader() throws Exception {
         mockMvc.perform(get("/api/v1/saved"))
                 .andExpect(status().isBadRequest())
@@ -149,6 +155,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("운영 요약 정보 조회 시 토큰이 필요하며 최신 회차 정보를 반환하는지 확인")
     void opsSummaryRequiresTokenAndReturnsLatestRound() throws Exception {
         mockMvc.perform(get("/ops/summary"))
                 .andExpect(status().isUnauthorized())
@@ -162,6 +169,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("운영 로그 조회 시 토큰이 필요하며 최근 항목을 반환하는지 확인")
     void opsLogsRequiresTokenAndReturnsRecentEntries() throws Exception {
         MvcResult result = mockMvc.perform(post("/ops/rounds")
                         .header("X-Ops-Token", "test-ops-token")
@@ -200,6 +208,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("운영 로그 조회 시 유형, 상태, 회차별 필터링을 지원하는지 확인")
     void opsLogsSupportsFilteringByTypeStatusAndRound() throws Exception {
         mockMvc.perform(post("/ops/rounds")
                         .header("X-Ops-Token", "test-ops-token")
@@ -233,6 +242,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("운영 로그 조회 시 알 수 없는 필터 값에 대해 에러를 반환하는지 확인")
     void opsLogsRejectsUnknownFilterValues() throws Exception {
         mockMvc.perform(get("/ops/logs")
                         .header("X-Ops-Token", "test-ops-token")
@@ -248,6 +258,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("운영 로그 조회 시 한국 표준시(KST) 기준 날짜 범위 필터링을 지원하는지 확인")
     void opsLogsSupportsDateRangeFilteringInKst() throws Exception {
         String today = LocalDate.now(ZoneId.of("Asia/Seoul")).toString();
 
@@ -283,6 +294,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("운영 로그 조회 시 잘못된 날짜 형식의 필터에 대해 에러를 반환하는지 확인")
     void opsLogsRejectsInvalidDateFilters() throws Exception {
         mockMvc.perform(get("/ops/logs")
                         .header("X-Ops-Token", "test-ops-token")
@@ -298,6 +310,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("운영 회차 수동 등록 시 회차가 생성되거나 업데이트되는지 확인")
     void opsRoundUpsertCreatesAndUpdatesRound() throws Exception {
         mockMvc.perform(post("/ops/rounds")
                         .header("X-Ops-Token", "test-ops-token")
@@ -342,6 +355,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("최신 회차 수집 시 외부 소스를 사용하고 회차 정보를 저장하는지 확인")
     void opsCollectLatestUsesExternalSourceAndPersistsRound() throws Exception {
         mockMvc.perform(post("/ops/collect/latest")
                         .header("X-Ops-Token", "test-ops-token"))
@@ -360,6 +374,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("특정 회차 수집 시 요청된 회차를 가져와서 저장하는지 확인")
     void opsCollectSpecificRoundFetchesAndUpsertsRequestedRound() throws Exception {
         mockMvc.perform(post("/ops/collect/1305")
                         .header("X-Ops-Token", "test-ops-token"))
@@ -374,6 +389,7 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("특정 회차 수집 시 잘못된 회차 번호에 대해 에러를 반환하는지 확인")
     void opsCollectSpecificRoundRejectsInvalidRound() throws Exception {
         mockMvc.perform(post("/ops/collect/0")
                         .header("X-Ops-Token", "test-ops-token"))

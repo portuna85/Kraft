@@ -2,6 +2,7 @@ package com.kraft.winningnumber;
 
 import com.kraft.common.config.ExternalLottoProperties;
 import com.kraft.common.error.ApiException;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,17 +34,46 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
         String url = externalLottoProperties.urlTemplate().replace("{round}", Integer.toString(round));
         log.info("외부 회차 수집 요청 시작: round={} url={}", round, url);
 
-        Map<String, Object> payload = restClient.get()
+        Map<String, Object> body = restClient.get()
                 .uri(url)
+                // Required by dhlottery.co.kr's new API (lt645/selectPstLt645InfoNew.do)
+                .header("Accept", "application/json, text/javascript, */*; q=0.01")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .header("Referer", "https://www.dhlottery.co.kr/lt645/result")
                 .retrieve()
                 .body(Map.class);
 
-        if (payload == null || payload.isEmpty()) {
+        if (body == null || body.isEmpty()) {
             throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_EMPTY", "외부 수집 응답이 비어 있습니다.");
         }
 
+        Map<String, Object> payload = extractPayloadForRound(body, round);
         WinningNumberUpsertRequest request = payloadMapper.toRequest(payload);
         log.info("외부 회차 수집 요청 완료: round={} drawDate={}", request.round(), request.drawDate());
         return request;
+    }
+
+    // Handles both the new { data: { list: [...] } } envelope and the old flat response.
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractPayloadForRound(Map<String, Object> body, int round) {
+        Object dataObj = body.get("data");
+        if (!(dataObj instanceof Map<?, ?> dataMap)) {
+            return body;
+        }
+        Object listObj = ((Map<String, Object>) dataMap).get("list");
+        if (!(listObj instanceof List<?> list)) {
+            return body;
+        }
+        for (Object item : list) {
+            if (item instanceof Map<?, ?> itemMap) {
+                Map<String, Object> itemData = (Map<String, Object>) itemMap;
+                Object ltEpsd = itemData.get("ltEpsd");
+                if (ltEpsd != null && Integer.parseInt(ltEpsd.toString()) == round) {
+                    return itemData;
+                }
+            }
+        }
+        throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_ROUND_NOT_FOUND",
+                "응답 목록에서 회차 %d를 찾을 수 없습니다.".formatted(round));
     }
 }
