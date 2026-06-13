@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import { headers } from "next/headers";
 import { Footer } from "@/components/footer";
@@ -15,6 +15,12 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 const baseUrl = getPublicBaseUrl();
+
+export const viewport: Viewport = {
+  themeColor: "#c94f24",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
