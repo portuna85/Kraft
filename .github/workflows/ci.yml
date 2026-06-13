@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-build-test:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: temurin
+          cache: gradle
+      - name: Build & test
+        run: ./gradlew test bootJar -PstrictCoverage=true --no-daemon
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: build/reports/tests/
+
+  web-build-test:
+    name: Web Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm run build
+        env:
+          KRAFT_BACKEND_INTERNAL_URL: http://localhost:8080
+          KRAFT_PUBLIC_BASE_URL: http://localhost
+
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    needs: backend-build-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: temurin
+          cache: gradle
+      - name: SpotBugs + Checkstyle
+        run: ./gradlew check -PstrictStatic=true --no-daemon -x test
+
+  caddy-validate:
+    name: Caddy Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Caddyfile
+        run: docker run --rm -v "$PWD/caddy:/etc/caddy" caddy:latest caddy validate --config /etc/caddy/Caddyfile
+
+  removed-feature-guard:
+    name: Removed Feature Guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check no removed features
+        run: bash scripts/check-no-removed-features.sh
+
+  docker-publish:
+    name: Docker Publish
+    runs-on: ubuntu-latest
+    needs: [backend-build-test, web-build-test, static-analysis, caddy-validate]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+      - name: Build & push web
+        uses: docker/build-push-action@v6
+        with:
+          context: web
+          file: web/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/web:${{ github.sha }}
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: docker-publish
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy scan backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+      - name: Trivy scan web
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/web:${{ github.sha }}
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+
+  promote:
+    name: Promote to latest
+    runs-on: ubuntu-latest
+    needs: [security-scan, removed-feature-guard]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      packages: write
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Promote backend
+        run: |
+          docker pull ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+          docker tag ghcr.io/${{ github.repository }}/backend:${{ github.sha }} \
+                     ghcr.io/${{ github.repository }}/backend:latest
+          docker push ghcr.io/${{ github.repository }}/backend:latest
+      - name: Promote web
+        run: |
+          docker pull ghcr.io/${{ github.repository }}/web:${{ github.sha }}
+          docker tag ghcr.io/${{ github.repository }}/web:${{ github.sha }} \
+                     ghcr.io/${{ github.repository }}/web:latest
+          docker push ghcr.io/${{ github.repository }}/web:latest

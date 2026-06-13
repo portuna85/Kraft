@@ -1,0 +1,326 @@
+"use client";
+
+import { useState } from "react";
+import { LottoBalls } from "@/components/lotto-balls";
+import { formatCurrency, formatDateTime, formatDrawDate } from "@/lib/format";
+
+type OpsSummary = {
+  service: string;
+  timezone: string;
+  status: string;
+  latestRound: number | null;
+  latestDrawDate: string | null;
+  checkedAt: string;
+  fresh: boolean;
+};
+
+type WinningNumber = {
+  round: number;
+  drawDate: string;
+  numbers: number[];
+  bonusNumber: number;
+  firstPrizeAmount: number;
+};
+
+type ApiError = {
+  message?: string;
+};
+
+type ManualEntryForm = {
+  round: string;
+  drawDate: string;
+  numbers: string;
+  bonusNumber: string;
+  firstPrizeAmount: string;
+};
+
+const initialManualEntryForm: ManualEntryForm = {
+  round: "",
+  drawDate: "",
+  numbers: "",
+  bonusNumber: "",
+  firstPrizeAmount: ""
+};
+
+async function readJson<T>(response: Response): Promise<T | ApiError> {
+  return response.json() as Promise<T | ApiError>;
+}
+
+function parseNumbersInput(value: string): number[] {
+  return value
+    .split(",")
+    .map((item) => Number(item.trim()))
+    .filter((item) => !Number.isNaN(item));
+}
+
+export function OpsDashboardClient() {
+  const [token, setToken] = useState("");
+  const [round, setRound] = useState("");
+  const [manualEntry, setManualEntry] = useState<ManualEntryForm>(initialManualEntryForm);
+  const [summary, setSummary] = useState<OpsSummary | null>(null);
+  const [lastCollected, setLastCollected] = useState<WinningNumber | null>(null);
+  const [message, setMessage] = useState("");
+  const [loadingAction, setLoadingAction] = useState<"summary" | "latest" | "round" | "manual" | null>(null);
+
+  async function loadSummary() {
+    setLoadingAction("summary");
+    setMessage("");
+
+    const response = await fetch("/ops-api/summary", {
+      headers: {
+        "X-Ops-Token": token
+      },
+      cache: "no-store"
+    });
+    const payload = await readJson<OpsSummary>(response);
+    setLoadingAction(null);
+
+    if (!response.ok) {
+      setMessage((payload as ApiError).message ?? "운영 상태를 조회하지 못했습니다.");
+      return;
+    }
+
+    setSummary(payload as OpsSummary);
+    setMessage("운영 상태를 불러왔습니다.");
+  }
+
+  async function collectLatest() {
+    setLoadingAction("latest");
+    setMessage("");
+
+    const response = await fetch("/ops-api/collect/latest", {
+      method: "POST",
+      headers: {
+        "X-Ops-Token": token
+      }
+    });
+    const payload = await readJson<WinningNumber>(response);
+    setLoadingAction(null);
+
+    if (!response.ok) {
+      setMessage((payload as ApiError).message ?? "최신 회차를 수집하지 못했습니다.");
+      return;
+    }
+
+    setLastCollected(payload as WinningNumber);
+    setMessage("최신 회차를 수집했습니다.");
+    await loadSummary();
+  }
+
+  async function collectRound() {
+    const roundNumber = Number(round);
+    if (!Number.isInteger(roundNumber) || roundNumber < 1) {
+      setMessage("수집할 회차는 1 이상의 정수여야 합니다.");
+      return;
+    }
+
+    setLoadingAction("round");
+    setMessage("");
+
+    const response = await fetch(`/ops-api/collect/${roundNumber}`, {
+      method: "POST",
+      headers: {
+        "X-Ops-Token": token
+      }
+    });
+    const payload = await readJson<WinningNumber>(response);
+    setLoadingAction(null);
+
+    if (!response.ok) {
+      setMessage((payload as ApiError).message ?? "지정 회차를 수집하지 못했습니다.");
+      return;
+    }
+
+    setLastCollected(payload as WinningNumber);
+    setMessage(`${roundNumber}회차를 수집했습니다.`);
+    await loadSummary();
+  }
+
+  async function submitManualEntry(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const requestBody = {
+      round: Number(manualEntry.round),
+      drawDate: manualEntry.drawDate,
+      numbers: parseNumbersInput(manualEntry.numbers),
+      bonusNumber: Number(manualEntry.bonusNumber),
+      firstPrizeAmount: Number(manualEntry.firstPrizeAmount)
+    };
+
+    setLoadingAction("manual");
+    setMessage("");
+
+    const response = await fetch("/ops-api/rounds", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Ops-Token": token
+      },
+      body: JSON.stringify(requestBody)
+    });
+    const payload = await readJson<WinningNumber>(response);
+    setLoadingAction(null);
+
+    if (!response.ok) {
+      setMessage((payload as ApiError).message ?? "수동 회차 적재에 실패했습니다.");
+      return;
+    }
+
+    setLastCollected(payload as WinningNumber);
+    setManualEntry(initialManualEntryForm);
+    setMessage(`${(payload as WinningNumber).round}회차를 수동으로 저장했습니다.`);
+    await loadSummary();
+  }
+
+  return (
+    <section className="ops-grid">
+      <article className="panel">
+        <p className="eyebrow">운영 인증</p>
+        <h2 className="ops-title">Ops 토큰 입력</h2>
+        <p className="page-subtitle">토큰은 브라우저에만 머무르며 서버 환경변수로 주입하지 않습니다.</p>
+        <div className="ops-controls">
+          <label className="ops-field">
+            <span>운영 토큰</span>
+            <input
+              type="password"
+              value={token}
+              onChange={(event) => setToken(event.target.value)}
+              placeholder="X-Ops-Token 값을 입력하세요"
+            />
+          </label>
+          <button type="button" onClick={loadSummary} disabled={!token || loadingAction !== null}>
+            {loadingAction === "summary" ? "조회 중..." : "상태 조회"}
+          </button>
+        </div>
+      </article>
+
+      <article className="panel">
+        <p className="eyebrow">수집 작업</p>
+        <h2 className="ops-title">회차 수집 실행</h2>
+        <div className="ops-actions">
+          <button type="button" onClick={collectLatest} disabled={!token || loadingAction !== null}>
+            {loadingAction === "latest" ? "수집 중..." : "최신 회차 수집"}
+          </button>
+          <div className="ops-inline">
+            <label className="ops-field">
+              <span>특정 회차</span>
+              <input
+                type="number"
+                min="1"
+                value={round}
+                onChange={(event) => setRound(event.target.value)}
+                placeholder="예: 1201"
+              />
+            </label>
+            <button type="button" onClick={collectRound} disabled={!token || loadingAction !== null}>
+              {loadingAction === "round" ? "수집 중..." : "해당 회차 수집"}
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <article className="panel">
+        <p className="eyebrow">수동 적재</p>
+        <h2 className="ops-title">회차 직접 입력</h2>
+        <p className="page-subtitle">외부 수집이 막히거나 운영 보정이 필요할 때 직접 upsert합니다.</p>
+        <form className="ops-manual-form" onSubmit={submitManualEntry}>
+          <label className="ops-field">
+            <span>회차</span>
+            <input
+              type="number"
+              min="1"
+              value={manualEntry.round}
+              onChange={(event) => setManualEntry((current) => ({ ...current, round: event.target.value }))}
+              placeholder="예: 1201"
+            />
+          </label>
+          <label className="ops-field">
+            <span>추첨일</span>
+            <input
+              type="date"
+              value={manualEntry.drawDate}
+              onChange={(event) => setManualEntry((current) => ({ ...current, drawDate: event.target.value }))}
+            />
+          </label>
+          <label className="ops-field">
+            <span>당첨 번호 6개</span>
+            <input
+              value={manualEntry.numbers}
+              onChange={(event) => setManualEntry((current) => ({ ...current, numbers: event.target.value }))}
+              placeholder="예: 3, 11, 19, 28, 34, 42"
+            />
+          </label>
+          <label className="ops-field">
+            <span>보너스 번호</span>
+            <input
+              type="number"
+              min="1"
+              max="45"
+              value={manualEntry.bonusNumber}
+              onChange={(event) => setManualEntry((current) => ({ ...current, bonusNumber: event.target.value }))}
+              placeholder="예: 7"
+            />
+          </label>
+          <label className="ops-field">
+            <span>1등 총액</span>
+            <input
+              type="number"
+              min="0"
+              value={manualEntry.firstPrizeAmount}
+              onChange={(event) => setManualEntry((current) => ({ ...current, firstPrizeAmount: event.target.value }))}
+              placeholder="예: 2100000000"
+            />
+          </label>
+          <button type="submit" disabled={!token || loadingAction !== null}>
+            {loadingAction === "manual" ? "저장 중..." : "수동 저장"}
+          </button>
+        </form>
+      </article>
+
+      {message ? <p className="status-text ops-status">{message}</p> : null}
+
+      {summary ? (
+        <article className="panel">
+          <p className="eyebrow">운영 상태</p>
+          <h2 className="ops-title">{summary.service}</h2>
+          <div className="ops-summary-grid">
+            <div className="ops-summary-card">
+              <strong>서비스 상태</strong>
+              <span>{summary.status}</span>
+            </div>
+            <div className="ops-summary-card">
+              <strong>시간대</strong>
+              <span>{summary.timezone}</span>
+            </div>
+            <div className="ops-summary-card">
+              <strong>최신 저장 회차</strong>
+              <span>{summary.latestRound === null ? "없음" : `${summary.latestRound}회`}</span>
+            </div>
+            <div className="ops-summary-card">
+              <strong>최신 추첨일</strong>
+              <span>{summary.latestDrawDate ? formatDrawDate(summary.latestDrawDate) : "없음"}</span>
+            </div>
+            <div className="ops-summary-card">
+              <strong>신선도</strong>
+              <span>{summary.fresh ? "정상" : "확인 필요"}</span>
+            </div>
+            <div className="ops-summary-card">
+              <strong>확인 시각</strong>
+              <span>{formatDateTime(summary.checkedAt)}</span>
+            </div>
+          </div>
+        </article>
+      ) : null}
+
+      {lastCollected ? (
+        <article className="panel">
+          <p className="eyebrow">최근 반영 결과</p>
+          <h2 className="ops-title">{lastCollected.round}회차</h2>
+          <p className="page-subtitle">{formatDrawDate(lastCollected.drawDate)} 기준 데이터</p>
+          <LottoBalls numbers={lastCollected.numbers} bonusNumber={lastCollected.bonusNumber} />
+          <p className="muted">1등 총액 {formatCurrency(lastCollected.firstPrizeAmount)}</p>
+        </article>
+      ) : null}
+    </section>
+  );
+}

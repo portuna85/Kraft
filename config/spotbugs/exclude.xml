@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!-- JPA entities use mutable state by design -->
+  <Match>
+    <Class name="~com\.kraft\..*"/>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+  </Match>
+
+  <!-- Spring @Configuration classes use method calls that look like object reuse -->
+  <Match>
+    <Class name="~com\.kraft\.common\.config\..*"/>
+    <Bug pattern="BC_UNCONFIRMED_CAST_OF_RETURN_VALUE"/>
+  </Match>
+
+  <!-- Thymeleaf template controllers return view names (not used as return values) -->
+  <Match>
+    <Class name="~com\.kraft\.admin\..*Controller"/>
+    <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
+  </Match>
+</FindBugsFilter>

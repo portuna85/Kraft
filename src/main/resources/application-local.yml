@@ -1,0 +1,34 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    # Default: localhost for direct local dev. Set KRAFT_DB_URL=jdbc:mariadb://mariadb:3306/...
+    # in .env when running inside Docker Compose (service name 'mariadb' only resolves there).
+    url: ${KRAFT_DB_URL:jdbc:mariadb://localhost:3306/kraft_lotto?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul}
+    username: ${KRAFT_DB_USERNAME:kraft_lotto}
+    password: ${KRAFT_DB_PASSWORD:}
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      # Fail quickly in local dev rather than waiting 30s default
+      connection-timeout: 5000
+      initialization-fail-timeout: 5000
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+        format_sql: true
+  sql:
+    init:
+      mode: never
+
+logging:
+  level:
+    root: info
+    com.kraft: debug
+    org.hibernate.SQL: debug
+    # Suppress expected WARN noise when DB is temporarily unreachable at startup
+    org.hibernate.orm.jdbc.error: error
+    org.hibernate.orm.jdbc: error
+    com.zaxxer.hikari: warn

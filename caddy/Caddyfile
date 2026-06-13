@@ -1,0 +1,45 @@
+{$KRAFT_DOMAIN} {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	encode zstd gzip
+
+	@blocked path /actuator* /ops* /admin*
+	respond @blocked 403
+
+	handle /api/v1/* {
+		reverse_proxy backend:8080 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	handle {
+		reverse_proxy web:3000 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+}
+
+{$KRAFT_ADMIN_DOMAIN} {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	encode zstd gzip
+
+	@blocked path /actuator*
+	respond @blocked 403
+
+	handle /api/v1/* {
+		reverse_proxy backend:8080 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	handle_path /ops-api/* {
+		reverse_proxy backend:8080 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	handle {
+		reverse_proxy web:3000 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+}

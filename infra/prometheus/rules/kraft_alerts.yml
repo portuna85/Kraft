@@ -1,0 +1,45 @@
+groups:
+  - name: kraft_backend
+    rules:
+      - alert: BackendDown
+        expr: up{job="kraft-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "KRAFT backend is down"
+          description: "Backend has been unreachable for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status=~"5..",job="kraft-backend"}[5m]))
+          / sum(rate(http_server_requests_seconds_count{job="kraft-backend"}[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx error rate ({{ $value | humanizePercentage }})"
+          description: "Backend 5xx rate exceeded 5% for 2 minutes."
+
+      - alert: SlowResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_server_requests_seconds_bucket{job="kraft-backend"}[5m])) by (le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 response time > 2s"
+          description: "95th percentile response time has exceeded 2 seconds for 5 minutes."
+
+      - alert: HighHeapUsage
+        expr: |
+          jvm_memory_used_bytes{area="heap",job="kraft-backend"}
+          / jvm_memory_max_bytes{area="heap",job="kraft-backend"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM heap usage > 85%"
+          description: "JVM heap memory utilisation has been above 85% for 5 minutes."

@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<module name="Checker">
+  <property name="severity" value="error"/>
+  <property name="fileExtensions" value="java"/>
+
+  <module name="LineLength">
+    <property name="max" value="140"/>
+    <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+  </module>
+
+  <!-- Allow snake_case test method names (e.g. method_expectedBehavior_givenCondition) -->
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value="MethodName"/>
+    <property name="files" value=".*Test\.java$"/>
+  </module>
+
+  <module name="TreeWalker">
+    <!-- Imports -->
+    <module name="UnusedImports"/>
+    <module name="IllegalImport"/>
+    <module name="RedundantImport"/>
+
+    <!-- Naming -->
+    <module name="ConstantName">
+      <!-- Allow 'log' / 'logger' as logger field names (community convention) -->
+      <property name="format" value="^log(ger)?$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+    </module>
+    <module name="LocalVariableName"/>
+    <module name="MemberName"/>
+    <module name="MethodName"/>
+    <module name="PackageName"/>
+    <module name="ParameterName"/>
+    <module name="StaticVariableName"/>
+    <module name="TypeName"/>
+
+    <!-- Code quality -->
+    <module name="EmptyBlock">
+      <property name="option" value="TEXT"/>
+      <property name="tokens" value="LITERAL_WHILE, LITERAL_TRY, LITERAL_FINALLY, LITERAL_DO, LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, INSTANCE_INIT, STATIC_INIT, LITERAL_SWITCH, LITERAL_SYNCHRONIZED"/>
+    </module>
+    <module name="NeedBraces"/>
+    <module name="LeftCurly">
+      <!-- Exclude METHOD_DEF and CTOR_DEF to allow single-line getter/setter methods -->
+      <property name="tokens" value="ANNOTATION_DEF,CLASS_DEF,ENUM_DEF,INTERFACE_DEF,LAMBDA,LITERAL_CATCH,LITERAL_DO,LITERAL_ELSE,LITERAL_FINALLY,LITERAL_FOR,LITERAL_IF,LITERAL_SWITCH,LITERAL_SYNCHRONIZED,LITERAL_TRY,LITERAL_WHILE"/>
+    </module>
+    <module name="RightCurly"/>
+    <module name="EqualsHashCode"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="StringLiteralEquality"/>
+
+    <!-- Whitespace -->
+    <module name="NoWhitespaceAfter"/>
+    <module name="NoWhitespaceBefore"/>
+    <module name="WhitespaceAround">
+      <property name="allowEmptyConstructors" value="true"/>
+      <property name="allowEmptyMethods" value="true"/>
+      <property name="allowEmptyTypes" value="true"/>
+      <property name="allowEmptyLambdas" value="true"/>
+    </module>
+  </module>
+</module>

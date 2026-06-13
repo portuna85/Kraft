@@ -1,0 +1,29 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${KRAFT_DB_URL}
+    username: ${KRAFT_DB_USERNAME}
+    password: ${KRAFT_DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 600000
+  jpa:
+    # ddl-auto: validate is inherited from application.yml base config
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+        format_sql: false
+  sql:
+    init:
+      mode: never
+
+logging:
+  level:
+    root: warn
+    com.kraft: info

@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: kraft-lotto
+  config:
+    import: optional:file:.env[.properties]
+  threads:
+    virtual:
+      enabled: true
+  main:
+    keep-alive: true
+  jackson:
+    time-zone: Asia/Seoul
+    locale: ko-KR
+  jpa:
+    open-in-view: false
+    # Explicit dialect prevents cascading "Unable to determine Dialect without JDBC metadata"
+    # error that obscures the real root cause (DB unreachable) in startup logs.
+    database-platform: org.hibernate.dialect.MariaDBDialect
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    hikari:
+      # Validate connections before borrow to detect stale connections early
+      connection-test-query: SELECT 1
+      max-lifetime: 1800000
+      keepalive-time: 30000
+  flyway:
+    enabled: true
+  profiles:
+    default: local
+
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+logging:
+  file:
+    path: ${KRAFT_LOG_PATH:logs}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+kraft:
+  external-lotto:
+    url-template: ${KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE:}
+    auto-collect-cron: ${KRAFT_EXTERNAL_LOTTO_AUTO_COLLECT_CRON:0 35 22 * * SAT}
+  ops:
+    token: ${KRAFT_OPS_TOKEN:}
+  saved:
+    max-per-client: ${KRAFT_SAVED_MAX_PER_CLIENT:100}
+  security:
+    trusted-proxy-cidr: ${KRAFT_SECURITY_TRUSTED_PROXY_CIDR:172.28.0.0/16}
+    rate-limit-per-minute: ${KRAFT_SECURITY_RATE_LIMIT_PER_MINUTE:120}
+    rate-limit-max-keys: ${KRAFT_SECURITY_RATE_LIMIT_MAX_KEYS:10000}
+  revalidate:
+    secret: ${KRAFT_REVALIDATE_SECRET:}
+    web-url: ${KRAFT_BACKEND_INTERNAL_URL:http://web:3000}

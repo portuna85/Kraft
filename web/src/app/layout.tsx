@@ -1,0 +1,48 @@
+import type { Metadata } from "next";
+import { Header } from "@/components/header";
+import { getPublicBaseUrl } from "@/lib/api";
+import "./globals.css";
+
+const baseUrl = getPublicBaseUrl();
+
+export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: "KRAFT Lotto | 한국 로또 번호 조회",
+    template: "%s | KRAFT Lotto"
+  },
+  description: "KST 기준 최신 로또 회차, 번호 추천, 저장함을 제공하는 KRAFT Lotto입니다.",
+  alternates: {
+    canonical: "/"
+  },
+  openGraph: {
+    title: "KRAFT Lotto",
+    description: "최신 회차 조회와 번호 추천, 저장함까지 한 번에 확인합니다.",
+    url: baseUrl,
+    siteName: "KRAFT Lotto",
+    locale: "ko_KR",
+    type: "website",
+    images: [{ url: "/images/og-kraft-lotto-1200x630.png", width: 1200, height: 630 }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "KRAFT Lotto",
+    description: "최신 회차 조회와 번호 추천, 저장함까지 한 번에 확인합니다."
+  }
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="ko">
+      <body>
+        <Header />
+        <main className="page">
+          <div className="shell">{children}</div>
+        </main>
+        <footer className="footer">
+          <div className="shell">모든 시간 표시는 KST(Asia/Seoul) 기준입니다.</div>
+        </footer>
+      </body>
+    </html>
+  );
+}

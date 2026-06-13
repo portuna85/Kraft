@@ -1,0 +1,27 @@
+import { OpsDashboardClient } from "@/components/ops-dashboard-client";
+
+export const metadata = {
+  title: "운영 대시보드",
+  description: "운영 토큰으로 회차 상태를 조회하고 수집 작업을 실행합니다.",
+  robots: {
+    index: false,
+    follow: false
+  }
+};
+
+export default function OpsPage() {
+  return (
+    <section className="grid">
+      <div className="panel">
+        <p className="eyebrow">내부 운영</p>
+        <h1 className="page-title">회차 수집 대시보드</h1>
+        <p className="page-subtitle">
+          이 화면은 admin 도메인 전용입니다. 공개 도메인에서는 계속 차단되며, 실제 운영 API 호출은
+          <code> /ops-api/* </code>
+          프록시로만 전달됩니다.
+        </p>
+      </div>
+      <OpsDashboardClient />
+    </section>
+  );
+}
