@@ -25,6 +25,8 @@ spring:
       mode: never
   flyway:
     enabled: ${KRAFT_FLYWAY_ENABLED:false}
+    baseline-on-migrate: ${KRAFT_FLYWAY_BASELINE_ON_MIGRATE:false}
+    baseline-version: ${KRAFT_FLYWAY_BASELINE_VERSION:1}
 
 logging:
   level:
