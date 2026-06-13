@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { AnalysisClient } from "@/components/analysis-client";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "번호 조합 분석",
   description: "입력한 번호 조합의 통계적 특성을 분석합니다.",

@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getRounds } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "전체 회차 목록 | KRAFT Lotto",
+  description: "로또 6/45 제1회부터 최신 회차까지 전체 당첨번호 목록입니다.",
+  alternates: { canonical: "/rounds" },
+};
 
 type Props = {
   searchParams: Promise<{ page?: string }>;

@@ -1,6 +1,7 @@
+import type { Metadata } from "next";
 import { RecommendClient } from "@/components/recommend-client";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "번호 추천",
   description: "제외 번호를 반영해 로또 추천 번호를 생성하고 바로 저장합니다.",
   alternates: {

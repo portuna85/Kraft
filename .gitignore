@@ -49,6 +49,7 @@ bin/
 !.env.prod.example
 node_modules/
 .next/
+*.tsbuildinfo
 
 ### Generated infra configs (rendered from .tmpl at deploy time) ###
 infra/alertmanager/alertmanager.yml

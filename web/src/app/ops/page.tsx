@@ -1,6 +1,7 @@
+import type { Metadata } from "next";
 import { OpsDashboardClient } from "@/components/ops-dashboard-client";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "운영 대시보드",
   description: "운영 토큰으로 회차 상태를 조회하고 수집 작업을 실행합니다.",
   robots: {

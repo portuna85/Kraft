@@ -1,6 +1,7 @@
+import type { Metadata } from "next";
 import { SavedNumbersClient } from "@/components/saved-numbers-client";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "저장함",
   description: "브라우저 기준으로 저장한 로또 번호를 확인하고 삭제합니다.",
   robots: {
