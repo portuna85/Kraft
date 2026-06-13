@@ -1,8 +1,6 @@
 spring:
   application:
     name: kraft-lotto
-  config:
-    import: optional:file:.env[.properties]
   threads:
     virtual:
       enabled: true
@@ -13,9 +11,6 @@ spring:
     locale: ko-KR
   jpa:
     open-in-view: false
-    # Explicit dialect prevents cascading "Unable to determine Dialect without JDBC metadata"
-    # error that obscures the real root cause (DB unreachable) in startup logs.
-    database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: validate
   datasource:
