@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AnalysisClient } from "@/components/analysis-client";
 
-export const revalidate = 1800;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "번호 조합 분석",

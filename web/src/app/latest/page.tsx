@@ -4,7 +4,7 @@ import { JsonLdLottoRound } from "@/components/json-ld";
 import { getLatestWinningNumber, getPublicBaseUrl } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const latest = await getLatestWinningNumber();

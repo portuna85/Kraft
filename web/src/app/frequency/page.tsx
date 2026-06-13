@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getFrequencyStats } from "@/lib/api";
 
-export const revalidate = 1800;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "번호 빈도 통계",

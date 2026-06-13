@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getPatternStats } from "@/lib/api";
 
-export const revalidate = 1800;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "패턴 통계",
