@@ -312,6 +312,48 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("번호 저장 시 번호 개수 및 범위 검증이 동작하는지 확인")
+    void savedNumbersValidatesCountAndRange() throws Exception {
+        mockMvc.perform(post("/api/v1/saved")
+                        .header("X-Device-Token", "device-v")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"numbers":[1,2,3,4,5],"source":"MANUAL"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is("VALIDATION_ERROR")));
+
+        mockMvc.perform(post("/api/v1/saved")
+                        .header("X-Device-Token", "device-v")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"numbers":[1,2,3,4,5,46],"source":"MANUAL"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is("VALIDATION_ERROR")));
+    }
+
+    @Test
+    @DisplayName("번호 추천 시 최대 10세트까지 허용하는지 확인")
+    void recommendAllowsUpToTenSets() throws Exception {
+        mockMvc.perform(post("/api/v1/numbers/recommend")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"count":10}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recommendations", hasSize(10)));
+
+        mockMvc.perform(post("/api/v1/numbers/recommend")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"count":11}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is("VALIDATION_ERROR")));
+    }
+
+    @Test
     @DisplayName("운영 회차 수동 등록 시 회차가 생성되거나 업데이트되는지 확인")
     void opsRoundUpsertCreatesAndUpdatesRound() throws Exception {
         mockMvc.perform(post("/ops/rounds")
