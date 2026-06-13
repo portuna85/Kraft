@@ -53,7 +53,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test:4.1.0")
     testImplementation("org.springframework.boot:spring-boot-webmvc-test:4.1.0")
     testImplementation("com.fasterxml.jackson.core:jackson-databind")
-    testImplementation(platform("org.testcontainers:testcontainers-bom:1.21.1"))
+    testImplementation(platform("org.testcontainers:testcontainers-bom:2.0.5"))
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mariadb")
 }
