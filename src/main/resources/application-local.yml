@@ -4,17 +4,17 @@ spring:
       on-profile: local
     import: optional:file:.env.local[.properties]
   datasource:
-    # All credentials must be supplied via .env.local or environment variables.
-    # No sensitive defaults here — copy .env.local.example to .env.local and fill in values.
-    # Inside Docker Compose the container receives KRAFT_DB_* via the environment: block.
-    url: ${KRAFT_DB_URL:jdbc:mariadb://localhost:3306/kraft_lotto?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul}
-    username: ${KRAFT_DB_USERNAME}
-    password: ${KRAFT_DB_PASSWORD}
-    driver-class-name: org.mariadb.jdbc.Driver
+    # Direct bootRun works with embedded H2 by default.
+    # Set KRAFT_DB_* to use MariaDB from Docker Compose or a local database.
+    url: ${KRAFT_DB_URL:jdbc:h2:file:./build/local-db/kraft-lotto;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}
+    username: ${KRAFT_DB_USERNAME:sa}
+    password: ${KRAFT_DB_PASSWORD:}
     hikari:
       connection-timeout: 5000
       initialization-fail-timeout: 5000
   jpa:
+    hibernate:
+      ddl-auto: ${KRAFT_JPA_DDL_AUTO:update}
     properties:
       hibernate:
         jdbc:
@@ -23,6 +23,8 @@ spring:
   sql:
     init:
       mode: never
+  flyway:
+    enabled: ${KRAFT_FLYWAY_ENABLED:false}
 
 logging:
   level:

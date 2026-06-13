@@ -35,13 +35,28 @@ public class RequestIdFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             long elapsedMs = (System.nanoTime() - startedAt) / 1_000_000;
-            log.info("HTTP {} {} -> status={} durationMs={} remote={}",
-                    request.getMethod(),
-                    request.getRequestURI(),
-                    response.getStatus(),
-                    elapsedMs,
-                    request.getRemoteAddr());
+            logRequest(request, response, elapsedMs);
             MDC.remove(MDC_KEY);
         }
+    }
+
+    private void logRequest(HttpServletRequest request, HttpServletResponse response, long elapsedMs) {
+        int status = response.getStatus();
+        String method = request.getMethod();
+        String path = request.getRequestURI();
+        String remote = request.getRemoteAddr();
+
+        if (status >= 500) {
+            log.error("HTTP {} {} -> status={} durationMs={} remote={}",
+                    method, path, status, elapsedMs, remote);
+            return;
+        }
+        if (status >= 400) {
+            log.debug("HTTP {} {} -> status={} durationMs={} remote={}",
+                    method, path, status, elapsedMs, remote);
+            return;
+        }
+        log.info("HTTP {} {} -> status={} durationMs={} remote={}",
+                method, path, status, elapsedMs, remote);
     }
 }

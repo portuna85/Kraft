@@ -43,6 +43,7 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.3.0")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:4.1.0")
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
+    runtimeOnly("com.h2database:h2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:4.1.0")
     testImplementation("org.springframework.boot:spring-boot-webmvc-test:4.1.0")
@@ -50,7 +51,6 @@ dependencies {
     testImplementation(platform("org.testcontainers:testcontainers-bom:1.21.1"))
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mariadb")
-    testRuntimeOnly("com.h2database:h2")
 }
 
 tasks.withType<Test> {

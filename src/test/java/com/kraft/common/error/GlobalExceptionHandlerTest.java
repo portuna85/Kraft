@@ -2,12 +2,14 @@ package com.kraft.common.error;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -33,6 +35,11 @@ class GlobalExceptionHandlerTest {
         void throwUnexpected() {
             throw new RuntimeException("unexpected boom");
         }
+
+        @GetMapping("/test/no-resource")
+        void throwNoResource() throws NoResourceFoundException {
+            throw new NoResourceFoundException(HttpMethod.GET, "/test/no-resource", null);
+        }
     }
 
     @BeforeEach
@@ -57,7 +64,17 @@ class GlobalExceptionHandlerTest {
     void handleApiException_returns5xxStatus_forServerError() throws Exception {
         mockMvc.perform(get("/test/server-error").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"));
+                .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
+                .andExpect(jsonPath("$.message").value("서버 오류"));
+    }
+
+    @Test
+    void handleNoResourceFound_returns404() throws Exception {
+        mockMvc.perform(get("/test/no-resource").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("리소스를 찾을 수 없습니다."))
+                .andExpect(jsonPath("$.path").value("/test/no-resource"));
     }
 
     @Test

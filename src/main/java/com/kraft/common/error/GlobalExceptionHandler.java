@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -27,7 +28,7 @@ public class GlobalExceptionHandler {
                     request.getRequestURI(),
                     exception.getMessage());
         } else {
-            log.warn("API 예외 발생: status={} code={} path={} message={}",
+            log.info("API 예외 발생: status={} code={} path={} message={}",
                     exception.getStatus().value(),
                     exception.getCode(),
                     request.getRequestURI(),
@@ -45,7 +46,7 @@ public class GlobalExceptionHandler {
                 : exception.getBindingResult().getFieldErrors().stream()
                         .map(e -> e.getField() + ": " + e.getDefaultMessage())
                         .collect(Collectors.joining(", "));
-        log.warn("검증 예외 발생: path={} message={}", request.getRequestURI(), message);
+        log.info("검증 예외 발생: path={} message={}", request.getRequestURI(), message);
         return ResponseEntity.badRequest()
                 .body(errorBody(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", message, request));
     }
@@ -66,9 +67,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException exception,
                                                                HttpServletRequest request) {
-        log.warn("제약 조건 위반: path={} message={}", request.getRequestURI(), exception.getMessage());
+        log.info("제약 조건 위반: path={} message={}", request.getRequestURI(), exception.getMessage());
         return ResponseEntity.badRequest()
                 .body(errorBody(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", exception.getMessage(), request));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    ResponseEntity<ApiErrorResponse> handleNoResourceFound(NoResourceFoundException exception,
+                                                           HttpServletRequest request) {
+        log.debug("리소스를 찾을 수 없습니다: method={} path={} resource={}",
+                exception.getHttpMethod(),
+                request.getRequestURI(),
+                exception.getResourcePath());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(errorBody(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "리소스를 찾을 수 없습니다.", request));
     }
 
     @ExceptionHandler(Exception.class)
