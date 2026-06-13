@@ -13,7 +13,9 @@ FROM node:24-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
-RUN useradd --create-home --uid 10001 nextjs
+RUN useradd --create-home --uid 10001 nextjs \
+    && mkdir -p /app/logs/web \
+    && chown -R nextjs:nextjs /app/logs
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public

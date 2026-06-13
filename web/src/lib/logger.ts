@@ -12,15 +12,19 @@ const logDir = process.env.KRAFT_LOG_PATH
 function buildStream() {
   if (isDev) return process.stdout;
 
-  mkdirSync(logDir, { recursive: true });
-  const rotating = createStream({
-    filename: "web.log",
-    interval: "1d",
-    rotate: 30,
-    path: logDir,
-    compress: "gzip",
-  });
-  return pino.multistream([{ stream: process.stdout }, { stream: rotating }]);
+  try {
+    mkdirSync(logDir, { recursive: true });
+    const rotating = createStream({
+      filename: "web.log",
+      interval: "1d",
+      rotate: 30,
+      path: logDir,
+      compress: "gzip",
+    });
+    return pino.multistream([{ stream: process.stdout }, { stream: rotating }]);
+  } catch {
+    return process.stdout;
+  }
 }
 
 const logger = pino(
