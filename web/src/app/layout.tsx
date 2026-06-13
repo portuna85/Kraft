@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
+import { Noto_Sans_KR } from "next/font/google";
 import { headers } from "next/headers";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { JsonLdWebSite } from "@/components/json-ld";
 import { getPublicBaseUrl } from "@/lib/api";
 import "./globals.css";
+
+const notoSansKR = Noto_Sans_KR({
+  subsets: ["latin"],
+  weight: ["400", "700", "800"],
+  display: "swap",
+  variable: "--font-sans",
+});
 
 const baseUrl = getPublicBaseUrl();
 
@@ -36,7 +44,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
-    <html lang="ko">
+    <html lang="ko" className={notoSansKR.variable}>
       <body>
         <JsonLdWebSite baseUrl={baseUrl} nonce={nonce} />
         <Header />

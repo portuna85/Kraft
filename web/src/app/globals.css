@@ -19,7 +19,7 @@
 }
 
 html {
-  font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  font-family: var(--font-sans), "Pretendard", system-ui, sans-serif;
 }
 
 body {
@@ -69,6 +69,11 @@ a {
   gap: 18px;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.nav a[aria-current="page"] {
+  color: var(--text);
+  font-weight: 700;
 }
 
 .page {

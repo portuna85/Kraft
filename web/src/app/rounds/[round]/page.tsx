@@ -4,7 +4,7 @@ import { LottoBalls } from "@/components/lotto-balls";
 import { getRound } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 type Props = {
   params: Promise<{
