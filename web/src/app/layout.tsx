@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/header";
+import { JsonLdWebSite } from "@/components/json-ld";
 import { getPublicBaseUrl } from "@/lib/api";
 import "./globals.css";
 
@@ -22,7 +23,6 @@ export const metadata: Metadata = {
     siteName: "KRAFT Lotto",
     locale: "ko_KR",
     type: "website",
-    images: [{ url: "/images/og-kraft-lotto-1200x630.png", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
@@ -35,6 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ko">
       <body>
+        <JsonLdWebSite baseUrl={baseUrl} />
         <Header />
         <main className="page">
           <div className="shell">{children}</div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LottoBalls } from "@/components/lotto-balls";
-import { getLatestWinningNumber } from "@/lib/api";
+import { JsonLdLottoRound } from "@/components/json-ld";
+import { getLatestWinningNumber, getPublicBaseUrl } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 
 export const revalidate = 300;
@@ -22,14 +23,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function LatestPage() {
   const latest = await getLatestWinningNumber();
+  const baseUrl = getPublicBaseUrl();
 
   return (
-    <section className="panel">
-      <p className="eyebrow">최신 회차</p>
-      <h1 className="page-title">{latest.round}회 로또 번호</h1>
-      <p className="page-subtitle">{formatDrawDate(latest.drawDate)} 추첨 결과</p>
-      <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
-      <p className="muted">1등 당첨금 {formatCurrency(latest.firstPrizeAmount)}</p>
-    </section>
+    <>
+      <JsonLdLottoRound baseUrl={baseUrl} round={latest.round} drawDate={latest.drawDate} />
+      <section className="panel">
+        <p className="eyebrow">최신 회차</p>
+        <h1 className="page-title">{latest.round}회 로또 번호</h1>
+        <p className="page-subtitle">{formatDrawDate(latest.drawDate)} 추첨 결과</p>
+        <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
+        <p className="muted">1등 당첨금 {formatCurrency(latest.firstPrizeAmount)}</p>
+      </section>
+    </>
   );
 }
