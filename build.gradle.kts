@@ -9,6 +9,11 @@ plugins {
 group = "com.kraft"
 version = "1.0-SNAPSHOT"
 
+// Lock runtime and compile classpaths for reproducible Dockerfile builds (blueprint §10.3)
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 repositories {
     mavenCentral()
 }
