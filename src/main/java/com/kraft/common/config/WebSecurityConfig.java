@@ -13,6 +13,11 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
+    // CSRF is intentionally disabled for this stateless REST API chain.
+    // SessionCreationPolicy.STATELESS means no session cookie is ever issued,
+    // so cross-site requests cannot piggyback on an authenticated session —
+    // the precondition for a CSRF attack does not exist here.
+    // The admin UI chain (Order 1) uses form-login + sessions and keeps CSRF enabled.
     @Bean
     @Order(2)
     SecurityFilterChain publicApiFilterChain(HttpSecurity http) throws Exception {
