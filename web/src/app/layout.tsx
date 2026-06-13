@@ -47,8 +47,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="ko" className={notoSansKR.variable}>
       <body>
         <JsonLdWebSite baseUrl={baseUrl} nonce={nonce} />
+        <a href="#main-content" className="skip-nav">본문으로 건너뛰기</a>
         <Header />
-        <main className="page">
+        <main id="main-content" className="page">
           <div className="shell">{children}</div>
         </main>
         <Footer />

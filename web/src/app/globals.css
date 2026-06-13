@@ -64,6 +64,27 @@ a {
   letter-spacing: -0.04em;
 }
 
+/* ── Skip navigation ─────────────────────────────────────────────── */
+.skip-nav {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 100;
+  padding: 10px 18px;
+  background: var(--text);
+  color: #fff;
+  border-radius: 0 0 12px 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: top 0.15s;
+}
+.skip-nav:focus {
+  top: 0;
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Navigation ──────────────────────────────────────────────────── */
 .nav {
   display: flex;
   gap: 18px;
@@ -74,6 +95,54 @@ a {
 .nav a[aria-current="page"] {
   color: var(--text);
   font-weight: 700;
+}
+
+/* hamburger button — hidden on desktop */
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hamburger {
+  display: block;
+  position: relative;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+.hamburger::before,
+.hamburger::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.2s, top 0.2s;
+}
+.hamburger::before { top: -6px; }
+.hamburger::after  { top:  6px; }
+
+.hamburger.open               { background: transparent; }
+.hamburger.open::before       { transform: rotate(45deg);  top: 0; }
+.hamburger.open::after        { transform: rotate(-45deg); top: 0; }
+
+/* mobile nav drawer */
+.nav-backdrop {
+  display: none;
+}
+.nav-mobile {
+  display: none;
 }
 
 .page {
@@ -840,15 +909,56 @@ input {
     grid-template-columns: 1fr;
   }
 
-  .header-inner,
   .round-meta,
   .saved-item {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .nav {
-    flex-wrap: wrap;
+  /* hide desktop nav, show hamburger */
+  .nav-desktop { display: none; }
+  .nav-toggle  { display: flex; }
+
+  /* full-width drawer below sticky header */
+  .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 8;
+  }
+
+  .nav-mobile {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 73px;
+    left: 0;
+    right: 0;
+    z-index: 9;
+    background: rgba(246, 241, 232, 0.97);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 16px 20px;
+    gap: 2px;
+  }
+
+  .nav-mobile a {
+    padding: 12px 8px;
+    border-radius: 10px;
+    font-size: 1rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav-mobile a:last-child {
+    border-bottom: none;
+  }
+
+  .nav-mobile a[aria-current="page"] {
+    color: var(--text);
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.5);
   }
 
   .pattern-item {
