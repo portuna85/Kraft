@@ -277,7 +277,7 @@ export function OpsDashboardClient() {
         </form>
       </article>
 
-      {message ? <p className="status-text ops-status">{message}</p> : null}
+      {message ? <p className="status-text ops-status" role="status" aria-live="polite">{message}</p> : null}
 
       {summary ? (
         <article className="panel">

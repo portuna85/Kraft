@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getLatestWinningNumber, WinningNumber } from "@/lib/api";
@@ -5,6 +6,28 @@ import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const latest = await getLatestWinningNumber();
+    return {
+      title: `제${latest.round}회 로또 당첨번호 (${latest.drawDate}) | KRAFT Lotto`,
+      description: `제${latest.round}회 로또 6/45 당첨번호를 KST 기준으로 확인하세요. 번호 추천, 빈도 통계, 저장함 기능을 무료로 제공합니다.`,
+      alternates: { canonical: "/" },
+      openGraph: {
+        title: `제${latest.round}회 로또 당첨번호 | KRAFT Lotto`,
+        description: `제${latest.round}회 당첨번호 ${[...latest.numbers, latest.bonusNumber].join(", ")}`,
+        url: "/",
+      },
+    };
+  } catch {
+    return {
+      title: "KRAFT Lotto | 한국 로또 번호 조회",
+      description: "매주 토요일 최신 로또 회차를 KST 기준으로 자동 업데이트합니다. 번호 추천, 빈도 통계, 저장함 기능을 무료로 제공합니다.",
+      alternates: { canonical: "/" },
+    };
+  }
+}
 
 export default async function HomePage() {
   let latest: WinningNumber | null = null;
@@ -18,11 +41,11 @@ export default async function HomePage() {
     <div className="grid">
       <section className="hero">
         <div>
-          <div className="eyebrow">KST / 한국어 기준 서비스</div>
-          <h1>최신 로또 회차와 저장한 번호를 한 화면에서 관리합니다.</h1>
+          <div className="eyebrow">KST 기준 · 매주 토요일 자동 업데이트</div>
+          <h1>로또 6/45 당첨번호 조회와 번호 추천을 한 번에</h1>
           <p>
-            현재 저장소의 백엔드 API와 직접 연결된 SSR 웹 앱입니다.
-            최신 회차, 추천 번호, 저장함을 공개 도메인에서 바로 제공합니다.
+            최신 회차부터 제1회까지 전체 당첨번호를 확인하고,
+            통계 기반 분석과 무작위 번호 추천을 무료로 이용하세요.
           </p>
           <div className="hero-actions">
             <Link href="/latest" className="button">최신 회차 보기</Link>
@@ -52,18 +75,18 @@ export default async function HomePage() {
       <section className="grid grid-3">
         <article className="stat-card">
           <p className="eyebrow">조회</p>
-          <h3>최신 회차 / 과거 회차</h3>
-          <p className="muted">SSR로 최신 회차를 즉시 렌더링하고, 회차 목록 페이지에서 과거 데이터까지 이어서 탐색합니다.</p>
+          <h3>최신 · 전체 회차</h3>
+          <p className="muted">제1회부터 최신 회차까지 모든 당첨번호를 조회하고, 회차별 상세 정보와 당첨금을 확인하세요.</p>
         </article>
         <article className="stat-card">
           <p className="eyebrow">추천</p>
-          <h3>API 기반 번호 추천</h3>
-          <p className="muted">백엔드 추천 API를 기준으로 동작하며, 추천 결과를 저장함으로 바로 넘길 수 있게 연결했습니다.</p>
+          <h3>무작위 번호 추천</h3>
+          <p className="muted">제외할 번호를 지정해 최대 10세트까지 추천받고, 마음에 드는 번호를 저장함으로 바로 보낼 수 있습니다.</p>
         </article>
         <article className="stat-card">
-          <p className="eyebrow">저장</p>
-          <h3>기기 토큰 해시 저장</h3>
-          <p className="muted">저장함은 브라우저 토큰을 직접 보내되 서버에는 SHA-256 해시만 남기도록 연결했습니다.</p>
+          <p className="eyebrow">통계</p>
+          <h3>빈도 · 패턴 · 동반 분석</h3>
+          <p className="muted">번호별 출현 빈도, 홀짝 분포, 자주 함께 나오는 번호 쌍 등 전체 회차 통계를 무료로 열람하세요.</p>
         </article>
       </section>
     </div>
