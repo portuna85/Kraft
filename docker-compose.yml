@@ -70,6 +70,7 @@ services:
       KRAFT_BACKEND_INTERNAL_URL: ${KRAFT_BACKEND_INTERNAL_URL:-http://backend:8080}
       KRAFT_PUBLIC_BASE_URL: ${KRAFT_PUBLIC_BASE_URL:-http://localhost}
       KRAFT_REVALIDATE_SECRET: ${KRAFT_REVALIDATE_SECRET:-}
+      KRAFT_OPS_ALLOWED_HOST: ${KRAFT_OPS_ALLOWED_HOST:-}
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
       interval: 15s
