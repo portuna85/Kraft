@@ -4,8 +4,12 @@ const links = [
   { href: "/", label: "홈" },
   { href: "/latest", label: "최신 회차" },
   { href: "/rounds", label: "회차 목록" },
+  { href: "/frequency", label: "빈도" },
+  { href: "/stats", label: "패턴" },
+  { href: "/companion", label: "동반" },
+  { href: "/analysis", label: "조합 분석" },
   { href: "/recommend", label: "번호 추천" },
-  { href: "/saved", label: "저장함" }
+  { href: "/saved", label: "저장함" },
 ];
 
 export function Header() {
