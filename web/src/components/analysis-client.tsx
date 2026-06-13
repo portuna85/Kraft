@@ -25,11 +25,12 @@ export function AnalysisClient() {
         const res = await fetch("/api/v1/stats/analysis", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ numbers: parts })
+          body: JSON.stringify({ numbers: parts }),
+          cache: "no-store"
         });
         if (!res.ok) {
-          const body = await res.json();
-          setError(body.message ?? "분석 요청에 실패했습니다.");
+          const body = await res.json().catch(() => ({}));
+          setError((body as { message?: string }).message ?? "분석 요청에 실패했습니다.");
           return;
         }
         setResult(await res.json());
@@ -47,10 +48,13 @@ export function AnalysisClient() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="예: 3,11,19,28,34,42"
+            placeholder="예: 3, 11, 19, 28, 34, 42"
+            autoComplete="off"
           />
         </label>
-        <button type="submit" disabled={isPending}>분석</button>
+        <button type="submit" disabled={isPending}>
+          {isPending ? "분석 중…" : "분석"}
+        </button>
       </form>
 
       {error ? <p className="status-text error">{error}</p> : null}
@@ -58,25 +62,44 @@ export function AnalysisClient() {
       {result ? (
         <div className="analysis-result">
           <h2 className="section-title">분석 결과</h2>
-          <dl className="result-dl">
-            <dt>번호</dt>
-            <dd>{result.numbers.join(", ")}</dd>
-            <dt>홀수 / 짝수</dt>
-            <dd>{result.oddCount}개 / {result.evenCount}개</dd>
-            <dt>저번호(1-22) / 고번호(23-45)</dt>
-            <dd>{result.lowCount}개 / {result.highCount}개</dd>
-            <dt>합계</dt>
-            <dd>{result.sumOfNumbers} ({result.sumBucket} 구간)</dd>
-            <dt>연속 번호 쌍</dt>
-            <dd>{result.consecutivePairCount}쌍</dd>
-            <dt>번호대 분포</dt>
-            <dd>
-              {result.rangeDistribution
-                .filter((r) => r.count > 0)
-                .map((r) => `${r.range}: ${r.count}개`)
-                .join(", ")}
-            </dd>
-          </dl>
+
+          <div className="result-grid">
+            <div className="result-cell">
+              <span className="result-label">홀수 / 짝수</span>
+              <span className="result-value">{result.oddCount} / {result.evenCount}</span>
+            </div>
+            <div className="result-cell">
+              <span className="result-label">저번호(1-22) / 고번호(23-45)</span>
+              <span className="result-value">{result.lowCount} / {result.highCount}</span>
+            </div>
+            <div className="result-cell">
+              <span className="result-label">합계</span>
+              <span className="result-value">{result.sumOfNumbers}</span>
+              <span className="result-sub">{result.sumBucket} 구간</span>
+            </div>
+            <div className="result-cell">
+              <span className="result-label">연속 번호 쌍</span>
+              <span className="result-value">{result.consecutivePairCount}쌍</span>
+            </div>
+          </div>
+
+          <div>
+            <p className="section-title" style={{ marginBottom: "10px" }}>번호대 분포</p>
+            <ul className="range-dist-list">
+              {result.rangeDistribution.map((r) => (
+                <li key={r.range} className="range-dist-item">
+                  <span className="range-label">{r.range}</span>
+                  <div className="bar-track">
+                    <div
+                      className="bar-fill"
+                      style={{ width: `${Math.round((r.count / 6) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="range-count">{r.count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       ) : null}
     </div>

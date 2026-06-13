@@ -358,6 +358,225 @@ input {
   color: var(--muted);
 }
 
+/* ── Ball color variants ─────────────────────────────────────────── */
+.ball-sm {
+  width: 34px;
+  height: 34px;
+  font-size: 0.82rem;
+}
+.ball-blue  { background: #4a90d9; color: #fff; }
+.ball-red   { background: #e14d2a; color: #fff; }
+.ball-gray  { background: #9b9b9b; color: #fff; }
+.ball-green { background: var(--bonus); color: #fff; }
+
+/* ── Frequency page ──────────────────────────────────────────────── */
+.freq-summary {
+  display: flex;
+  gap: 28px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+.freq-rank-group { display: grid; gap: 10px; }
+.freq-rank-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.frequency-grid {
+  display: grid;
+  gap: 5px;
+  margin-top: 28px;
+}
+.frequency-item {
+  display: grid;
+  grid-template-columns: 34px 1fr 52px 44px;
+  align-items: center;
+  gap: 12px;
+}
+.bar-track {
+  height: 8px;
+  background: var(--bg-strong);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+.freq-count {
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+.freq-pct {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+/* ── Stats / pattern page ────────────────────────────────────────── */
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0 0 14px;
+}
+.pattern-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.pattern-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.pattern-item {
+  display: grid;
+  grid-template-columns: 80px 1fr 50px 52px;
+  align-items: center;
+  gap: 10px;
+}
+.pattern-key {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.pattern-count {
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: right;
+}
+.pattern-pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ── Companion page ──────────────────────────────────────────────── */
+.companion-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: grid;
+  gap: 8px;
+}
+.companion-item {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.rank {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--muted);
+  text-align: center;
+}
+.pair-balls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pair-sep {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.pair-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.pair-count {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.pair-pct {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* ── Analysis page ───────────────────────────────────────────────── */
+.analysis-wrap { margin-top: 24px; display: grid; gap: 20px; }
+.analysis-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+.analysis-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.analysis-result {
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  display: grid;
+  gap: 16px;
+}
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.result-cell {
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: grid;
+  gap: 4px;
+}
+.result-label {
+  font-size: 0.76rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+.result-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.result-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.range-dist-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.range-dist-item {
+  display: grid;
+  grid-template-columns: 68px 1fr 24px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+}
+.range-label { font-weight: 600; color: var(--muted); }
+.range-count { font-weight: 800; text-align: right; }
+.error { color: var(--accent); font-weight: 700; }
+
 @media (max-width: 900px) {
   .hero,
   .grid-3,
@@ -379,5 +598,22 @@ input {
 
   .nav {
     flex-wrap: wrap;
+  }
+
+  .pattern-item {
+    grid-template-columns: 72px 1fr 44px 44px;
+  }
+
+  .analysis-form,
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .frequency-item {
+    grid-template-columns: 34px 1fr 50px;
+  }
+
+  .frequency-item .freq-pct {
+    display: none;
   }
 }
