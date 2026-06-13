@@ -2,6 +2,8 @@ package com.kraft.winningnumber;
 
 import com.kraft.common.config.ExternalLottoProperties;
 import com.kraft.common.error.ApiException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -26,6 +28,7 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
     }
 
     @Override
+    @CircuitBreaker(name = "externalLotto", fallbackMethod = "fetchRoundFallback")
     public WinningNumberUpsertRequest fetchRound(int round) {
         if (!externalLottoProperties.enabled()) {
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "LOTTO_SOURCE_DISABLED", "외부 수집 URL이 설정되지 않았습니다.");
@@ -51,6 +54,14 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
         WinningNumberUpsertRequest request = payloadMapper.toRequest(payload);
         log.info("외부 회차 수집 요청 완료: round={} drawDate={}", request.round(), request.drawDate());
         return request;
+    }
+
+    // B-5: circuit breaker open → propagate as BAD_GATEWAY so callers handle uniformly
+    @SuppressWarnings("unused")
+    private WinningNumberUpsertRequest fetchRoundFallback(int round, CallNotPermittedException ex) {
+        log.warn("외부 수집 서킷브레이커 OPEN: round={}", round);
+        throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_CIRCUIT_OPEN",
+                "외부 수집 서킷브레이커가 열려 있습니다. 잠시 후 다시 시도하세요.");
     }
 
     // Handles both the new { data: { list: [...] } } envelope and the old flat response.

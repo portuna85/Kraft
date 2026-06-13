@@ -42,6 +42,17 @@ management:
       probes:
         enabled: true
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      externalLotto:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 5
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 2
+        register-health-indicator: true
+
 kraft:
   external-lotto:
     url-template: ${KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE:}

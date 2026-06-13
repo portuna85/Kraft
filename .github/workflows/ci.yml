@@ -42,6 +42,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
+      - run: npm test
       - run: npm run build
         env:
           KRAFT_BACKEND_INTERNAL_URL: http://localhost:8080
