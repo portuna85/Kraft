@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { JsonLdWebSite } from "@/components/json-ld";
@@ -32,11 +33,12 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="ko">
       <body>
-        <JsonLdWebSite baseUrl={baseUrl} />
+        <JsonLdWebSite baseUrl={baseUrl} nonce={nonce} />
         <Header />
         <main className="page">
           <div className="shell">{children}</div>

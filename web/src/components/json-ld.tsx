@@ -1,8 +1,9 @@
 type JsonLdWebSiteProps = {
   baseUrl: string;
+  nonce?: string;
 };
 
-export function JsonLdWebSite({ baseUrl }: JsonLdWebSiteProps) {
+export function JsonLdWebSite({ baseUrl, nonce }: JsonLdWebSiteProps) {
   const schema = {
     "@context": "https://schema.org",
     "@graph": [
@@ -26,6 +27,7 @@ export function JsonLdWebSite({ baseUrl }: JsonLdWebSiteProps) {
   return (
     <script
       type="application/ld+json"
+      nonce={nonce}
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );
@@ -35,9 +37,10 @@ type JsonLdLottoRoundProps = {
   baseUrl: string;
   round: number;
   drawDate: string;
+  nonce?: string;
 };
 
-export function JsonLdLottoRound({ baseUrl, round, drawDate }: JsonLdLottoRoundProps) {
+export function JsonLdLottoRound({ baseUrl, round, drawDate, nonce }: JsonLdLottoRoundProps) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -59,6 +62,7 @@ export function JsonLdLottoRound({ baseUrl, round, drawDate }: JsonLdLottoRoundP
   return (
     <script
       type="application/ld+json"
+      nonce={nonce}
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );

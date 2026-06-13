@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { LottoBalls } from "@/components/lotto-balls";
 import { JsonLdLottoRound } from "@/components/json-ld";
 import { getLatestWinningNumber, getPublicBaseUrl } from "@/lib/api";
@@ -36,6 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LatestPage() {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   let latest: WinningNumber | null = null;
   try {
     latest = await getLatestWinningNumber();
@@ -56,7 +58,7 @@ export default async function LatestPage() {
 
   return (
     <>
-      <JsonLdLottoRound baseUrl={baseUrl} round={latest.round} drawDate={latest.drawDate} />
+      <JsonLdLottoRound baseUrl={baseUrl} round={latest.round} drawDate={latest.drawDate} nonce={nonce} />
       <section className="panel">
         <p className="eyebrow">최신 회차</p>
         <h1 className="page-title">{latest.round}회 로또 번호</h1>
