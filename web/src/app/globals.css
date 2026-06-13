@@ -577,6 +577,48 @@ input {
 .range-count { font-weight: 800; text-align: right; }
 .error { color: var(--accent); font-weight: 700; }
 
+/* ── Pagination ──────────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pagination-btn:hover:not(.disabled):not(.active) {
+  background: var(--bg-strong);
+}
+.pagination-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.pagination-btn.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.pagination-ellipsis {
+  color: var(--muted);
+  padding: 0 2px;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 900px) {
   .hero,
   .grid-3,
