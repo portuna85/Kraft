@@ -59,9 +59,6 @@ public class WinningNumber {
     @Column(name = "first_accum_amount", nullable = false)
     private Long firstAccumAmount;
 
-    @Column(name = "raw_json", columnDefinition = "TEXT")
-    private String rawJson;
-
     @jakarta.persistence.Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -86,7 +83,6 @@ public class WinningNumber {
                          Integer secondWinners,
                          Long totalSales,
                          Long firstAccumAmount,
-                         String rawJson,
                          OffsetDateTime createdAt) {
         this.round = round;
         this.drawDate = drawDate;
@@ -102,7 +98,6 @@ public class WinningNumber {
         this.secondWinners = secondWinners;
         this.totalSales = totalSales;
         this.firstAccumAmount = firstAccumAmount;
-        this.rawJson = rawJson;
         this.createdAt = createdAt;
     }
 
@@ -118,8 +113,7 @@ public class WinningNumber {
                        Long secondPrize,
                        Integer secondWinners,
                        Long totalSales,
-                       Long firstAccumAmount,
-                       String rawJson) {
+                       Long firstAccumAmount) {
         this.drawDate = drawDate;
         this.n1 = n1;
         this.n2 = n2;
@@ -133,7 +127,6 @@ public class WinningNumber {
         this.secondWinners = secondWinners;
         this.totalSales = totalSales;
         this.firstAccumAmount = firstAccumAmount;
-        this.rawJson = rawJson;
     }
 
     public Long getId() {
@@ -194,10 +187,6 @@ public class WinningNumber {
 
     public Long getFirstAccumAmount() {
         return firstAccumAmount;
-    }
-
-    public String getRawJson() {
-        return rawJson;
     }
 
     public Long getVersion() {

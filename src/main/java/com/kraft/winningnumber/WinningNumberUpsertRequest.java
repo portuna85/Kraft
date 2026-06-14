@@ -15,7 +15,6 @@ public record WinningNumberUpsertRequest(
         @Min(0) Long secondPrize,
         @Min(0) Integer secondWinners,
         @Min(0) Long totalSales,
-        @Min(0) Long firstAccumAmount,
-        String rawJson
+        @Min(0) Long firstAccumAmount
 ) {
 }

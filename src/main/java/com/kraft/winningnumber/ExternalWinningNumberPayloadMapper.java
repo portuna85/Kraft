@@ -42,8 +42,7 @@ public class ExternalWinningNumberPayloadMapper {
                 secondPrize,
                 secondWinners,
                 totalSales,
-                firstAccumAmount,
-                null
+                firstAccumAmount
         );
     }
 

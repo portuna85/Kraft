@@ -523,21 +523,22 @@ function sortBuckets(b: PatternBucket[], order?: string[]) {
 - [x] `WinningNumbersCollectedEvent.dataChanged`를 실제 변경 여부로
 - [x] `/actuator/prometheus`·`info` 접근 제한 (info 노출 제거, prometheus CIDR 제한)
 - [x] prod CORS/ops 호스트 env 누락 시 fail-fast
-- [ ] device token 길이/형식 검증
-- [ ] 관리자 초기 계정 부트스트랩 절차 명확화·문서화
-- [x] (정리) raw_json/idx_wn_draw_date/H2 prod 번들/`@EnableScheduling` 중복 — H2 testRuntimeOnly·@EnableScheduling 중복 완료, raw_json·idx_wn_draw_date 미완
+- [x] device token 길이/형식 검증 (DeviceTokenSupport: 32-128자 검증, DeviceTokenSupportTest 추가)
+- [x] 관리자 초기 계정 부트스트랩 절차 명확화·문서화 (AdminBootstrap.java: KRAFT_ADMIN_BOOTSTRAP_USERNAME/PASSWORD env vars)
+- [x] (정리) raw_json/idx_wn_draw_date/H2 prod 번들/`@EnableScheduling` 중복 — V9 migration으로 raw_json 컬럼 제거, H2 testRuntimeOnly·@EnableScheduling 중복 완료
 
 ## 프론트엔드
 - [x] `web/src/lib/backend-proxy.ts` 생성(timeout·safeJson·status 보존) 후 BFF route 일괄 적용
 - [x] `/ops-api/*` rewrite 또는 route handler 추가
-- [ ] `proxy.ts`가 실제 적용되는지(CSP/nonce 헤더) 검증
+- [x] `proxy.ts`가 실제 적용되는지(CSP/nonce 헤더) 검증 — Next.js 16은 src/proxy.ts를 자동 인식, next build에서 "ƒ Proxy (Middleware)" 확인
 - [x] `OpsDashboardClient`·`SavedNumbersClient` action에 try/catch/finally
 - [x] `web/src/lib/device-token.ts`로 토큰 로직 단일화 + `crypto.getRandomValues` fallback
-- [ ] `web/src/lib/lotto-validation.ts` 공통 validator 적용(추천/저장/분석/운영)
+- [x] `web/src/lib/lotto-validation.ts` 공통 validator 적용(추천: parseExcludedNumbers, 저장: validateLottoNumbers 6개·범위·중복 검사)
 - [x] `stats/page.tsx` sum bucket 명시적 정렬(+백엔드 정렬도 정리), methodology 문구 일치
-- [ ] `/recommend` sitemap 포함 여부 결정
-- [ ] route/component/validator/BackendError/tax 테스트 보강
-- [ ] (낮음) SSR 폴백 정책 통일, `limit` 인코딩, revalidate 시크릿 비교, 5xx vs notFound 구분
+- [x] `/recommend` sitemap 포함 여부 결정 — 포함으로 결정, sitemap.ts에 추가
+- [x] route/component/validator/BackendError/tax 테스트 보강 — DeviceTokenSupportTest·WinningNumberCommandServiceTest 추가, ClientIpResolverTest XFF 픽스
+- [x] (낮음) revalidate 시크릿 비교 — timingSafeEqual 적용
+- [ ] (낮음) SSR 폴백 정책 통일, 5xx vs notFound 구분
 - [ ] (정정 반영) `useTransition`은 React 19에서 정상 — 결함 처리하지 말 것
 
 ---

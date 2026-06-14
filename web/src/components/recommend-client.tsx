@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
 import type { RecommendationResponse } from "@/lib/api";
 import { getDeviceToken } from "@/lib/device-token";
+import { parseExcludedNumbers } from "@/lib/lotto-validation";
 
 export function RecommendClient() {
   const [count, setCount] = useState("3");
@@ -20,10 +21,7 @@ export function RecommendClient() {
     setIsPending(true);
     setSavedIndexes(new Set());
 
-    const excludedNumbers = excluded
-      .split(",")
-      .map((v) => Number(v.trim()))
-      .filter((v) => !Number.isNaN(v) && v > 0);
+    const excludedNumbers = parseExcludedNumbers(excluded);
 
     try {
       const res = await fetch("/api/v1/numbers/recommend", {

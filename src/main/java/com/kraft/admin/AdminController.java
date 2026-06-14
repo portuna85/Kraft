@@ -2,6 +2,7 @@ package com.kraft.admin;
 
 import com.kraft.common.web.ClientIpResolver;
 import com.kraft.winningnumber.WinningNumberCollectionService;
+import com.kraft.winningnumber.WinningNumberListResponse;
 import com.kraft.winningnumber.WinningNumberQueryService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.PageRequest;

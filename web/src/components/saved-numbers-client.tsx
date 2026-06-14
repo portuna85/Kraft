@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
+import { validateLottoNumbers } from "@/lib/lotto-validation";
 
 type SavedNumber = {
   id: number;
@@ -45,10 +46,13 @@ export function SavedNumbersClient() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
-    const parsedNumbers = numbers
-      .split(",")
-      .map((value) => Number(value.trim()))
-      .filter((value) => !Number.isNaN(value));
+    const validation = validateLottoNumbers(
+      numbers.split(",").map((v) => Number(v.trim()))
+    );
+    if (!validation.ok) {
+      setMessage(validation.message);
+      return;
+    }
     try {
       const response = await fetch("/api/v1/saved", {
         method: "POST",
@@ -56,7 +60,7 @@ export function SavedNumbersClient() {
           "Content-Type": "application/json",
           "X-Device-Token": getDeviceToken()
         },
-        body: JSON.stringify({ numbers: parsedNumbers, label: label || null, source: "MANUAL" })
+        body: JSON.stringify({ numbers: validation.numbers, label: label || null, source: "MANUAL" })
       });
       const payload = await response.json() as { created?: boolean; message?: string };
       if (!response.ok) {

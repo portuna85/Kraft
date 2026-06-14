@@ -46,6 +46,7 @@ class ClientIpResolverTest {
     @DisplayName("신뢰할 수 없는 단일 XFF IP가 있을 때 해당 IP를 반환하는지 확인")
     void resolve_returnsClientIp_whenSingleXffNotTrusted() {
         HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getRemoteAddr()).thenReturn("172.28.0.1"); // trusted proxy peer
         when(req.getHeader("X-Forwarded-For")).thenReturn("203.0.113.10");
 
         assertThat(resolver.resolve(req)).isEqualTo("203.0.113.10");
@@ -56,6 +57,7 @@ class ClientIpResolverTest {
     void resolve_skipsTrustedProxy_inXffChain() {
         // XFF: client → proxy1(trusted) → caddy(trusted)
         HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getRemoteAddr()).thenReturn("172.28.0.1"); // trusted proxy peer
         when(req.getHeader("X-Forwarded-For"))
                 .thenReturn("203.0.113.10, 172.28.0.10, 172.28.0.1");
 

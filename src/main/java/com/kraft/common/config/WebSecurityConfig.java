@@ -3,11 +3,13 @@ package com.kraft.common.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 @Configuration
@@ -38,7 +40,10 @@ public class WebSecurityConfig {
                         // health 엔드포인트: 로드밸런서·k8s probe용 공개
                         .requestMatchers("/actuator/health/**").permitAll()
                         // prometheus 스크래핑: 내부 Docker 네트워크(trusted CIDR)만 허용
-                        .requestMatchers("/actuator/**").hasIpAddress(securityProperties.trustedProxyCidr())
+                        .requestMatchers("/actuator/**").access((a, ctx) -> {
+                            var matcher = new IpAddressMatcher(securityProperties.trustedProxyCidr());
+                            return new AuthorizationDecision(matcher.matches(ctx.getRequest()));
+                        })
                         .anyRequest().permitAll())
                 .build();
     }

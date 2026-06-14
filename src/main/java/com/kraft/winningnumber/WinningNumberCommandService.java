@@ -82,8 +82,7 @@ public class WinningNumberCommandService {
                 orZero(request.secondPrize()),
                 orZeroInt(request.secondWinners()),
                 orZero(request.totalSales()),
-                orZero(request.firstAccumAmount()),
-                request.rawJson()
+                orZero(request.firstAccumAmount())
         );
     }
 
@@ -103,7 +102,6 @@ public class WinningNumberCommandService {
                 orZeroInt(request.secondWinners()),
                 orZero(request.totalSales()),
                 orZero(request.firstAccumAmount()),
-                request.rawJson(),
                 OffsetDateTime.now(clock)
         );
     }

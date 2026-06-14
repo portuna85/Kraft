@@ -18,7 +18,11 @@ public class DeviceTokenSupport {
         if (token == null || token.isBlank()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "DEVICE_TOKEN_REQUIRED", "X-Device-Token 헤더가 필요합니다.");
         }
-        return sha256Hex(token.trim());
+        String trimmed = token.trim();
+        if (trimmed.length() < 32 || trimmed.length() > 128) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_DEVICE_TOKEN", "잘못된 기기 식별 토큰입니다.");
+        }
+        return sha256Hex(trimmed);
     }
 
     private String sha256Hex(String value) {

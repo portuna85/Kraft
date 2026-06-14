@@ -57,11 +57,11 @@ class StatisticsApiControllerTest {
 
         winningNumberRepository.save(new WinningNumber(1, LocalDate.of(2026, 1, 4),
                 1, 2, 3, 4, 5, 6, 7,
-                1_000_000_000L, 0L, 0, 0L, 0L, null,
+                1_000_000_000L, 0L, 0, 0L, 0L,
                 OffsetDateTime.now(Clock.system(KST))));
         winningNumberRepository.save(new WinningNumber(2, LocalDate.of(2026, 1, 11),
                 10, 20, 30, 40, 41, 42, 43,
-                2_000_000_000L, 0L, 0, 0L, 0L, null,
+                2_000_000_000L, 0L, 0, 0L, 0L,
                 OffsetDateTime.now(Clock.system(KST))));
     }
 

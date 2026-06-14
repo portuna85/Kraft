@@ -9,8 +9,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -38,7 +38,7 @@ class AdminControllerSmokeTest {
         commandService.upsert(new WinningNumberUpsertRequest(
                 1, LocalDate.of(2024, 1, 6),
                 List.of(1, 2, 3, 4, 5, 6), 7,
-                1_000_000_000L, null, null, null, null, null
+                1_000_000_000L, null, null, null, null
         ));
     }
 

@@ -22,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/stats`, lastModified: lastMod },
     { url: `${baseUrl}/analysis`, lastModified: lastMod },
     { url: `${baseUrl}/companion`, lastModified: lastMod },
+    { url: `${baseUrl}/recommend`, lastModified: lastMod },
 
     { url: `${baseUrl}/info/data-source`, changeFrequency: "monthly" },
     { url: `${baseUrl}/info/methodology`, changeFrequency: "monthly" },

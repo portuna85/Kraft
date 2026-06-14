@@ -32,7 +32,7 @@ class WinningNumberCollectionServiceTest {
                 3, 11, 19, 28, 34, 42,
                 7,
                 2_000_000_000L,
-                0L, 0, 0L, 0L, null,
+                0L, 0, 0L, 0L,
                 OffsetDateTime.now(ZoneId.of("Asia/Seoul"))
         )));
 
@@ -42,7 +42,7 @@ class WinningNumberCollectionServiceTest {
                 java.util.List.of(5, 12, 18, 27, 36, 44),
                 9,
                 2_100_000_000L,
-                null, null, null, null, null
+                null, null, null, null
         );
         when(fetchClient.fetchRound(1201)).thenReturn(fetched);
         when(commandService.upsert(fetched)).thenReturn(new WinningNumberResponse(
