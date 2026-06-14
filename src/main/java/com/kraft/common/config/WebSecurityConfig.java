@@ -5,14 +5,20 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
-import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
+
+    private final SecurityProperties securityProperties;
+
+    public WebSecurityConfig(SecurityProperties securityProperties) {
+        this.securityProperties = securityProperties;
+    }
 
     // This chain is fully stateless (STATELESS session policy) — no session cookie
     // is ever issued, so cross-site requests cannot piggyback on an authenticated
@@ -28,7 +34,12 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.requireCsrfProtectionMatcher(
                         new NegatedRequestMatcher(AnyRequestMatcher.INSTANCE)))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> auth
+                        // health 엔드포인트: 로드밸런서·k8s probe용 공개
+                        .requestMatchers("/actuator/health/**").permitAll()
+                        // prometheus 스크래핑: 내부 Docker 네트워크(trusted CIDR)만 허용
+                        .requestMatchers("/actuator/**").hasIpAddress(securityProperties.trustedProxyCidr())
+                        .anyRequest().permitAll())
                 .build();
     }
 }
