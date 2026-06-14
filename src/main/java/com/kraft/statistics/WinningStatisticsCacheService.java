@@ -3,7 +3,10 @@ package com.kraft.statistics;
 import com.kraft.common.config.CacheConfig;
 import com.kraft.winningnumber.WinningNumber;
 import com.kraft.winningnumber.WinningNumberRepository;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -58,6 +61,36 @@ public class WinningStatisticsCacheService {
         List<BallFrequencyDto> frequencies = summaries.stream()
                 .map(s -> new BallFrequencyDto(s.getBallNumber(), s.getFrequency(), s.getLastRound()))
                 .toList();
+        return new FrequencyStatsResponse(latestRound(), frequencies);
+    }
+
+    @Cacheable(value = CacheConfig.STATS_FREQUENCY, key = "#limit")
+    public FrequencyStatsResponse getFrequencyStatsByLimit(int limit) {
+        List<WinningNumber> rounds = winningNumberRepository
+                .findAllByOrderByRoundDesc(PageRequest.of(0, limit))
+                .getContent();
+        return computeFrequencyResponse(rounds);
+    }
+
+    private FrequencyStatsResponse computeFrequencyResponse(List<WinningNumber> rounds) {
+        Map<Integer, Integer> freqMap = new HashMap<>();
+        Map<Integer, Integer> lastRoundMap = new HashMap<>();
+
+        for (WinningNumber w : rounds) {
+            for (int ball : List.of(w.getN1(), w.getN2(), w.getN3(), w.getN4(), w.getN5(), w.getN6())) {
+                freqMap.merge(ball, 1, Integer::sum);
+                lastRoundMap.merge(ball, w.getRound(), Math::max);
+            }
+        }
+
+        List<BallFrequencyDto> frequencies = new ArrayList<>();
+        for (int ball = 1; ball <= 45; ball++) {
+            frequencies.add(new BallFrequencyDto(
+                    ball,
+                    freqMap.getOrDefault(ball, 0),
+                    lastRoundMap.getOrDefault(ball, 0)
+            ));
+        }
         return new FrequencyStatsResponse(latestRound(), frequencies);
     }
 

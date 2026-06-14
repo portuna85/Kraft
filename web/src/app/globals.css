@@ -521,6 +521,42 @@ input:focus-visible {
 .ball-gray  { background: #9b9b9b; color: #fff; }
 .ball-green { background: var(--bonus); color: #fff; }
 
+/* ── Frequency filter tabs ───────────────────────────────────────── */
+.freq-filter-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.freq-filter-tab {
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-card-sm);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.freq-filter-tab:hover:not(:disabled) {
+  background: var(--surface-card);
+}
+.freq-filter-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.freq-filter-tab:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.freq-filter-desc {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+
 /* ── Frequency page ──────────────────────────────────────────────── */
 .freq-summary {
   display: flex;

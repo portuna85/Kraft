@@ -10,11 +10,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/stats")
 public class StatisticsApiController {
+
+    private static final Set<Integer> ALLOWED_LIMITS = Set.of(100, 200, 500);
 
     private final WinningStatisticsCacheService statisticsService;
 
@@ -23,8 +26,15 @@ public class StatisticsApiController {
     }
 
     @GetMapping("/frequency")
-    public FrequencyStatsResponse frequency() {
-        return statisticsService.getFrequencyStats();
+    public FrequencyStatsResponse frequency(@RequestParam(required = false) Integer limit) {
+        if (limit == null) {
+            return statisticsService.getFrequencyStats();
+        }
+        if (!ALLOWED_LIMITS.contains(limit)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_LIMIT",
+                    "limit 허용값: 100, 200, 500");
+        }
+        return statisticsService.getFrequencyStatsByLimit(limit);
     }
 
     @GetMapping("/patterns")
