@@ -155,18 +155,3 @@ export async function analyzeNumbers(numbers: number[]): Promise<AnalysisRespons
   return fetchJsonPost<AnalysisResponse>("/api/v1/stats/analysis", { numbers });
 }
 
-// W-2: getOpsSummary를 fetchJson으로 통합
-export async function getOpsSummary(token: string): Promise<{
-  service: string;
-  timezone: string;
-  status: string;
-  latestRound: number | null;
-  latestDrawDate: string | null;
-  checkedAt: string;
-  fresh: boolean;
-}> {
-  return fetchJson("/ops/summary", {
-    headers: { "X-Ops-Token": token },
-    cache: "no-store",
-  });
-}
