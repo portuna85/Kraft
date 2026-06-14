@@ -4,17 +4,20 @@ spring:
       on-profile: local
     import: optional:file:.env.local[.properties]
   datasource:
-    # Direct bootRun works with embedded H2 by default.
-    # Set KRAFT_DB_* to use MariaDB from Docker Compose or a local database.
-    url: ${KRAFT_DB_URL:jdbc:h2:file:./build/local-db/kraft-lotto;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}
-    username: ${KRAFT_DB_USERNAME:sa}
+    # IntelliJ 로컬 실행 시 Docker MariaDB(localhost:3306) 기본 연결.
+    # H2 임베디드를 사용하려면 .env.local 에서 아래 값을 덮어쓰세요:
+    #   KRAFT_DB_URL=jdbc:h2:file:./build/local-db/kraft-lotto;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    #   KRAFT_DB_USERNAME=sa
+    #   KRAFT_DB_PASSWORD=
+    url: ${KRAFT_DB_URL:jdbc:mariadb://localhost:3306/kraft_lotto?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul}
+    username: ${KRAFT_DB_USERNAME:kraft_lotto}
     password: ${KRAFT_DB_PASSWORD:}
     hikari:
       connection-timeout: 5000
       initialization-fail-timeout: 5000
   jpa:
     hibernate:
-      ddl-auto: ${KRAFT_JPA_DDL_AUTO:update}
+      ddl-auto: ${KRAFT_JPA_DDL_AUTO:validate}
     properties:
       hibernate:
         jdbc:
@@ -24,9 +27,9 @@ spring:
     init:
       mode: never
   flyway:
-    enabled: ${KRAFT_FLYWAY_ENABLED:false}
-    baseline-on-migrate: ${KRAFT_FLYWAY_BASELINE_ON_MIGRATE:false}
-    baseline-version: ${KRAFT_FLYWAY_BASELINE_VERSION:1}
+    enabled: ${KRAFT_FLYWAY_ENABLED:true}
+    baseline-on-migrate: ${KRAFT_FLYWAY_BASELINE_ON_MIGRATE:true}
+    baseline-version: ${KRAFT_FLYWAY_BASELINE_VERSION:7}
 
 logging:
   level:

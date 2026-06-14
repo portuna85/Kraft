@@ -43,20 +43,24 @@ public class RequestIdFilter extends OncePerRequestFilter {
     private void logRequest(HttpServletRequest request, HttpServletResponse response, long elapsedMs) {
         int status = response.getStatus();
         String method = request.getMethod();
-        String path = request.getRequestURI();
+        String path = buildPath(request);
         String remote = request.getRemoteAddr();
 
         if (status >= 500) {
             log.error("HTTP {} {} -> status={} durationMs={} remote={}",
                     method, path, status, elapsedMs, remote);
-            return;
-        }
-        if (status >= 400) {
-            log.debug("HTTP {} {} -> status={} durationMs={} remote={}",
+        } else if (status >= 400) {
+            log.warn("HTTP {} {} -> status={} durationMs={} remote={}",
                     method, path, status, elapsedMs, remote);
-            return;
+        } else {
+            log.info("HTTP {} {} -> status={} durationMs={} remote={}",
+                    method, path, status, elapsedMs, remote);
         }
-        log.info("HTTP {} {} -> status={} durationMs={} remote={}",
-                method, path, status, elapsedMs, remote);
+    }
+
+    private String buildPath(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String query = request.getQueryString();
+        return (query != null && !query.isBlank()) ? uri + "?" + query : uri;
     }
 }

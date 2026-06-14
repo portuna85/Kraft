@@ -24,13 +24,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiErrorResponse> handleApiException(ApiException exception, HttpServletRequest request) {
         if (exception.getStatus().is5xxServerError()) {
-            log.error("API 예외 발생: status={} code={} path={} message={}",
+            log.error("API 예외: status={} code={} path={} message={}",
                     exception.getStatus().value(),
                     exception.getCode(),
                     request.getRequestURI(),
                     exception.getMessage());
         } else {
-            log.info("API 예외 발생: status={} code={} path={} message={}",
+            log.warn("API 예외: status={} code={} path={} message={}",
                     exception.getStatus().value(),
                     exception.getCode(),
                     request.getRequestURI(),
@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
                 : exception.getBindingResult().getFieldErrors().stream()
                         .map(e -> e.getField() + ": " + e.getDefaultMessage())
                         .collect(Collectors.joining(", "));
-        log.info("검증 예외 발생: path={} message={}", request.getRequestURI(), message);
+        log.warn("검증 예외: path={} message={}", request.getRequestURI(), message);
         return ResponseEntity.badRequest()
                 .body(errorBody(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", message, request));
     }
@@ -69,7 +69,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException exception,
                                                                HttpServletRequest request) {
-        log.info("제약 조건 위반: path={} message={}", request.getRequestURI(), exception.getMessage());
+        log.warn("제약 조건 위반: path={} message={}", request.getRequestURI(), exception.getMessage());
         return ResponseEntity.badRequest()
                 .body(errorBody(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", exception.getMessage(), request));
     }
