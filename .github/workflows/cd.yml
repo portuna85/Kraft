@@ -1,0 +1,115 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+# 동시 배포 방지 — 진행 중인 배포는 취소하지 않음
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment:
+      name: production
+      url: ${{ secrets.KRAFT_PUBLIC_BASE_URL }}
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          # 배포 대상 SHA (CI가 빌드·푸시한 이미지 태그와 일치)
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+          KRAFT_BACKEND_IMAGE_REF: ghcr.io/${{ github.repository }}/backend
+          KRAFT_WEB_IMAGE_REF:     ghcr.io/${{ github.repository }}/web
+          KRAFT_BACKEND_IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+          KRAFT_WEB_IMAGE_TAG:     ${{ github.event.workflow_run.head_sha }}
+          # DB / 서비스 시크릿
+          MARIADB_ROOT_PASSWORD: ${{ secrets.MARIADB_ROOT_PASSWORD }}
+          MARIADB_PASSWORD:      ${{ secrets.MARIADB_PASSWORD }}
+          KRAFT_DB_URL:          ${{ secrets.KRAFT_DB_URL }}
+          KRAFT_DB_USERNAME:     ${{ secrets.KRAFT_DB_USERNAME }}
+          KRAFT_DB_PASSWORD:     ${{ secrets.KRAFT_DB_PASSWORD }}
+          KRAFT_OPS_TOKEN:       ${{ secrets.KRAFT_OPS_TOKEN }}
+          KRAFT_REVALIDATE_SECRET: ${{ secrets.KRAFT_REVALIDATE_SECRET }}
+          # 도메인 / 네트워크
+          KRAFT_PUBLIC_BASE_URL:             ${{ secrets.KRAFT_PUBLIC_BASE_URL }}
+          KRAFT_DOMAIN:                      ${{ secrets.KRAFT_DOMAIN }}
+          KRAFT_ADMIN_DOMAIN:                ${{ secrets.KRAFT_ADMIN_DOMAIN }}
+          KRAFT_SECURITY_TRUSTED_PROXY_CIDR: ${{ secrets.KRAFT_SECURITY_TRUSTED_PROXY_CIDR }}
+          # 외부 API
+          KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE: ${{ secrets.KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE }}
+          # 모니터링
+          GRAFANA_ADMIN_PASSWORD:         ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+          ALERTMANAGER_SLACK_WEBHOOK_URL: ${{ secrets.ALERTMANAGER_SLACK_WEBHOOK_URL }}
+          # GHCR 인증 (private 이미지 pull)
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_USER:  ${{ github.repository_owner }}
+        with:
+          host:     ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key:      ${{ secrets.DEPLOY_SSH_KEY }}
+          port:     ${{ secrets.DEPLOY_PORT }}
+          envs: >-
+            DEPLOY_SHA,
+            KRAFT_BACKEND_IMAGE_REF,KRAFT_WEB_IMAGE_REF,
+            KRAFT_BACKEND_IMAGE_TAG,KRAFT_WEB_IMAGE_TAG,
+            MARIADB_ROOT_PASSWORD,MARIADB_PASSWORD,
+            KRAFT_DB_URL,KRAFT_DB_USERNAME,KRAFT_DB_PASSWORD,
+            KRAFT_OPS_TOKEN,KRAFT_REVALIDATE_SECRET,
+            KRAFT_PUBLIC_BASE_URL,KRAFT_DOMAIN,KRAFT_ADMIN_DOMAIN,
+            KRAFT_SECURITY_TRUSTED_PROXY_CIDR,
+            KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE,
+            GRAFANA_ADMIN_PASSWORD,ALERTMANAGER_SLACK_WEBHOOK_URL,
+            GHCR_TOKEN,GHCR_USER
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /srv/kraft
+
+            echo "==> [1/6] GHCR 인증"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+            echo "==> [2/6] 배포 전 현재 이미지 참조 저장 (롤백용)"
+            PREV_BACKEND=$(docker inspect --format '{{.Config.Image}}' kraft-backend 2>/dev/null || echo "")
+            PREV_WEB=$(docker inspect --format '{{.Config.Image}}'    kraft-web     2>/dev/null || echo "")
+            echo "  이전 backend: ${PREV_BACKEND:-없음}"
+            echo "  이전 web:     ${PREV_WEB:-없음}"
+
+            echo "==> [3/6] 코드 업데이트 (SHA: ${DEPLOY_SHA})"
+            git fetch --depth=1 origin main
+            git reset --hard "$DEPLOY_SHA"
+
+            echo "==> [4/6] 환경 설정 렌더링"
+            bash scripts/deploy/render-env.sh .env.prod.example .env.prod
+            bash scripts/deploy/render-alertmanager.sh
+
+            echo "==> [5/6] 이미지 풀 및 서비스 재기동"
+            if ! bash scripts/deploy/pull-and-up.sh; then
+              echo "==> [FAIL] 배포 실패 — 롤백 시작" >&2
+
+              if [[ -n "$PREV_BACKEND" ]]; then
+                echo "롤백 backend → $PREV_BACKEND"
+                bash scripts/deploy/rollback.sh backend "$PREV_BACKEND" || true
+              fi
+              if [[ -n "$PREV_WEB" ]]; then
+                echo "롤백 web → $PREV_WEB"
+                bash scripts/deploy/rollback.sh web "$PREV_WEB" || true
+              fi
+              exit 1
+            fi
+
+            echo "==> [6/6] 배포 완료 (SHA: ${DEPLOY_SHA})"
+            docker logout ghcr.io
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "::error::Production deploy failed for SHA ${{ github.event.workflow_run.head_sha }}"
+          echo "::error::Run rollback manually if needed: bash scripts/deploy/rollback.sh <service> <image-ref>"
