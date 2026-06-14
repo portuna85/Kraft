@@ -37,13 +37,16 @@ public class LottoRecommendationService {
     }
 
     private List<Integer> generateOne(Set<Integer> excluded) {
-        Set<Integer> numbers = new HashSet<>();
-        while (numbers.size() < 6) {
-            int candidate = random.nextInt(45) + 1;
-            if (!excluded.contains(candidate)) {
-                numbers.add(candidate);
-            }
+        List<Integer> candidates = new ArrayList<>(45 - excluded.size());
+        for (int i = 1; i <= 45; i++) {
+            if (!excluded.contains(i)) candidates.add(i);
         }
-        return lottoNumberCodec.normalize(new ArrayList<>(numbers));
+        for (int i = candidates.size() - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            int tmp = candidates.get(i);
+            candidates.set(i, candidates.get(j));
+            candidates.set(j, tmp);
+        }
+        return lottoNumberCodec.normalize(candidates.subList(0, 6));
     }
 }

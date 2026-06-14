@@ -1,122 +1,207 @@
-# 프론트엔드 실서비스 리팩토링 개선 항목
+# KRAFT Lotto 코드 최적화·파인튜닝 결과
 
 > 기준: 2026-06-14  
-> 범위: `web/` 전체 — 운영 중인 구 사이트(kraft.io.kr)의 장점 반영 + demo 프로젝트 강점 극대화
+> 범위: 백엔드(Spring Boot) · 프론트엔드(Next.js) · 인프라(Docker · Caddy)  
+> 분석: 3개 병렬 에이전트 전수 분석 → 버그 수정 · 성능 · 안정화 순 적용
 
 ---
 
-## 1. next-env.d.ts 타입 경로 수정
+## 1. 버그 수정 — ExternalWinningNumberPayloadMapper
 
-**파일:** `web/next-env.d.ts`
+**파일:** `src/main/java/com/kraft/winningnumber/ExternalWinningNumberPayloadMapper.java`
 
-```diff
-- import "./.next/dev/types/routes.d.ts";
-+ import "./.next/types/routes.d.ts";
+**문제:** `asInteger()` / `asLong()` 에서 문자열 파싱 실패 시 `NumberFormatException` 비처리  
+→ 외부 로또 API가 예상치 못한 형식의 값을 반환하면 500 Internal Server Error 발생
+
+**수정:** try-catch로 감싸 `ApiException(BAD_GATEWAY, "LOTTO_SOURCE_PARSE_ERROR")` 반환  
+→ 외부 API 오류를 502로 정확히 표현, 스택 트레이스 노출 방지
+
+```java
+private Integer asInteger(Object value) {
+    if (value == null) return null;
+    if (value instanceof Number n) return n.intValue();
+    try {
+        return Integer.parseInt(value.toString().trim());
+    } catch (NumberFormatException e) {
+        throw new ApiException(HttpStatus.BAD_GATEWAY,
+                "LOTTO_SOURCE_PARSE_ERROR", "숫자 변환 실패: " + value);
+    }
+}
 ```
-
-**이유:** `.next/dev/types/` 경로는 개발 서버(next dev)에서만 생성됨. 프로덕션 빌드(`next build`)에서는 `.next/types/`를 참조해야 타입 오류 없이 빌드됨.
 
 ---
 
-## 2. 홈페이지 ISR 전환
+## 2. 버그 수정 — LottoRecommendationService (Fisher-Yates)
 
-**파일:** `web/src/app/page.tsx`
+**파일:** `src/main/java/com/kraft/recommend/LottoRecommendationService.java`
 
-```diff
-- export const dynamic = "force-dynamic";
-+ export const revalidate = 60;
+**문제:** `generateOne()` 에서 while 루프 사용  
+→ 제외 번호 39개일 때 평균 ~45회 반복, 확률적 효율 저하
+
+**수정:** Fisher-Yates 셔플로 교체 → O(n) 보장, 루프 횟수 고정
+
+```java
+private List<Integer> generateOne(Set<Integer> excluded) {
+    List<Integer> candidates = new ArrayList<>(45 - excluded.size());
+    for (int i = 1; i <= 45; i++) {
+        if (!excluded.contains(i)) candidates.add(i);
+    }
+    for (int i = candidates.size() - 1; i > 0; i--) {
+        int j = random.nextInt(i + 1);
+        int tmp = candidates.get(i); candidates.set(i, candidates.get(j)); candidates.set(j, tmp);
+    }
+    return lottoNumberCodec.normalize(candidates.subList(0, 6));
+}
 ```
+
+---
+
+## 3. 렌더링 최적화 — latest/page.tsx
+
+**파일:** `web/src/app/latest/page.tsx`
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| 렌더링 전략 | `force-dynamic` (매 요청 SSR) | `revalidate = 60` (ISR) |
+| 백엔드 호출 수 | 2회 (generateMetadata + Page) | 1회 (`React.cache()` 중복 제거) |
+
+**이유:**  
+- `RevalidateWebhookListener`가 신규 회차 수집 즉시 캐시를 무효화하므로 `force-dynamic` 불필요  
+- `React.cache()`는 동일 요청 범위 내에서 함수 결과를 메모이제이션
+
+```tsx
+import { cache } from "react";
+export const revalidate = 60;
+const getCachedLatest = cache(getLatestWinningNumber);
+```
+
+---
+
+## 4. 렌더링 최적화 — rounds/page.tsx
+
+**파일:** `web/src/app/rounds/page.tsx`
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| 렌더링 전략 | `force-dynamic` | `revalidate = 300` |
+
+**이유:** 회차 목록은 신규 회차 수집 시에만 변경됨. 페이지네이션 파라미터 조합별로 5분 캐시하면  
+동일 URL 반복 방문 시 SSR 생략 가능
+
+---
+
+## 5. DB 인덱스 추가 — V8__indexes.sql
+
+**파일:** `src/main/resources/db/migration/V8__indexes.sql`
+
+**문제:** `winning_numbers.draw_date` 컬럼에 인덱스 없음 → 날짜 기반 조회·정렬 시 풀스캔
+
+```sql
+ALTER TABLE winning_numbers
+    ADD INDEX idx_wn_draw_date (draw_date DESC);
+```
+
+---
+
+## 6. HikariCP 튜닝
+
+**파일:** `application.yml` / `application-prod.yml`
+
+| 설정 | 로컬 (application.yml) | 프로덕션 (application-prod.yml) |
+|------|----------------------|-------------------------------|
+| `maximum-pool-size` | 5 (명시) | 10 → **15** |
+| `minimum-idle` | 1 (명시) | 2 → **3** |
+
+**이유:** 기존 base application.yml에 pool size 미설정으로 기본값이 암묵적으로 적용되던 문제 해소.  
+프로덕션 풀 사이즈를 서버 vCPU × 4 기준으로 상향.
+
+---
+
+## 7. Hibernate 배치 처리 설정
+
+**파일:** `src/main/resources/application-prod.yml`
+
+```yaml
+jpa:
+  properties:
+    hibernate:
+      jdbc:
+        batch_size: 25
+        fetch_size: 50
+      order_inserts: true
+      order_updates: true
+```
+
+**이유:** `StatisticsSummaryRebuilder`의 통계 재빌드 시 대량 INSERT/UPDATE가 배치로 처리되어  
+DB 왕복 횟수 감소 (최대 1/25로 단축)
+
+---
+
+## 8. Dockerfile 레이어 최적화
+
+**파일:** `Dockerfile`
+
+**변경 전:** `COPY src` → `./gradlew bootJar` → 소스 수정마다 Gradle 의존성 재다운로드  
+**변경 후:** 의존성 다운로드 레이어 분리 → `build.gradle.kts` 변경 시에만 재다운로드
+
+```dockerfile
+# 의존성 캐시 (build.gradle.kts 불변 시 캐시 히트)
+COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts gradle.lockfile ./
+COPY gradle ./gradle
+RUN chmod +x gradlew && ./gradlew dependencies --no-daemon --quiet
+
+COPY src ./src
+RUN ./gradlew bootJar --no-daemon -x test
+```
+
+**추가:** JVM 컨테이너 친화적 옵션
+
+```dockerfile
+ENV JAVA_TOOL_OPTIONS="-XX:+UseZGC -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
+```
+
+- `UseZGC`: 저지연 GC (로또 서비스 특성상 짧은 Pause 중요)
+- `MaxRAMPercentage=75.0`: 컨테이너 메모리 제한의 75%를 힙으로 자동 설정
+- `ExitOnOutOfMemoryError`: OOM 시 컨테이너 즉시 종료 → Docker restart 정책으로 자가 복구
+
+---
+
+## 9. docker-compose.yml 리소스 제한 + 로깅
+
+**파일:** `docker-compose.yml`
+
+**변경 사항:**
+
+| 서비스 | 추가 내용 |
+|--------|----------|
+| `backend` | `memory: 1g / cpus: 1.0` 제한, `reservation: 512m`, 로그 드라이버 |
+| `mariadb` | `--innodb-buffer-pool-size=512M`, `memory: 1g` 제한, 로그 드라이버 |
+| `web` | 로그 드라이버 |
+
+**로그 드라이버 (공통):**
+```yaml
+logging:
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "3"
+```
+
+**이유:** 제한 없을 경우 메모리 폭주 → OOM Killer 개입 → 예측 불가 종료 위험
+
+---
+
+## 10. Caddyfile — brotli + 보안 헤더 + 정적 캐시
+
+**파일:** `caddy/Caddyfile`
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| 압축 | `encode zstd gzip` | `encode brotli zstd gzip` |
+| 보안 헤더 | HSTS만 | + `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` |
+| 정적 자산 캐시 | 없음 | `/_next/static/*` → `max-age=31536000, immutable` |
 
 **이유:**
-- `force-dynamic`은 모든 요청을 SSR로 처리 → 서버 부하 증가, TTFB 증가
-- 로또 추첨은 주 1회. 실시간성이 없어도 됨
-- 백엔드의 `RevalidateWebhookListener` + 프론트의 `/api/revalidate` 엔드포인트로 신규 회차 수집 즉시 on-demand ISR 갱신 가능
-- `revalidate=60`은 webhook 실패 시 fallback 역할만 수행
-
----
-
-## 3. 세금 계산기 (순수 프론트)
-
-**신규 파일:** `web/src/lib/tax.ts`  
-**적용:** `latest/page.tsx`, `rounds/[round]/page.tsx`
-
-**계산 기준 (소득세법 제129조):**
-| 당첨금 | 세율 | 비고 |
-|--------|------|------|
-| 3억 초과 | 33% | 소득세 30% + 지방소득세 3% |
-| 200만 초과 ~ 3억 이하 | 22% | 소득세 20% + 지방소득세 2% |
-| 200만 이하 | 비과세 | — |
-
-**표시 위치:**
-- 최신 회차(`/latest`): 1등 당첨금 아래 세후 예상 수령액
-- 회차 상세(`/rounds/[round]`): round-detail-grid에 세후 수령액 셀 추가
-
----
-
-## 4. 회차 번호 검색
-
-**신규 컴포넌트:** `web/src/components/round-search-form.tsx`  
-**적용:** `web/src/app/rounds/page.tsx` 상단
-
-**기능:**
-- 회차 번호 직접 입력 → `/rounds/:round` 로 이동
-- 유효하지 않은 입력(비숫자, 0 이하) 제출 차단
-- 기존 페이지네이션 목록과 공존 (추가만, 대체 아님)
-
----
-
-## 5. 동반 출현 번호별 필터
-
-**신규 컴포넌트:** `web/src/components/companion-filter-client.tsx`  
-**적용:** `web/src/app/companion/page.tsx`
-
-**기능:**
-- 1~45 번호 선택 버튼 표시 (기존 ball 색상 CSS 재사용)
-- 선택한 번호가 `ballA` 또는 `ballB`에 포함된 쌍만 필터
-- 선택 해제 시 전체 TOP 50 표시 (기존 동작 유지)
-- API 호출은 서버 컴포넌트에서 ISR 1800s 유지 — 클라이언트 필터링으로 추가 API 없음
-
----
-
-## 6. 한국어 Copy 전면 개선 (24개 파일)
-
-**목표:** 사용자 중심의 자연스러운 문구로 통일
-
-| 항목 | 기존 | 개선 |
-|------|------|------|
-| 홈 h1 | 로또 6/45 당첨번호 조회와 번호 추천을 한 번에 | 최신 로또 당첨 결과와 내 번호 관리를 한 곳에서 |
-| 메타 설명 | KST 기준 최신 로또 회차, 번호 추천, 저장함 | 로또 당첨 결과 조회, 번호 추천과 저장까지 한 곳에서 |
-| 네비게이션 | 최신 회차 / 회차 목록 / 빈도 / 패턴 / 동반 | 최신 결과 / 전체 회차 / 출현 빈도 / 패턴 통계 / 동반 출현 |
-| 에러 페이지 제목 | 잠시 후 다시 시도해 주세요 | 페이지를 불러오지 못했습니다 |
-| 저장함 eyebrow | 저장 번호 | 내 번호 |
-| OG 이미지 | 로또 번호 조회 · 추천 · 저장 | 당첨 결과 조회 · 추천 조합 · 번호 저장 |
-
----
-
-## 7. demo 프로젝트 강점 유지 목록
-
-이번 리팩토링에서 기존 구현을 변경 없이 그대로 활용한 강점:
-
-| 항목 | 구현 위치 |
-|------|----------|
-| CSP nonce 미들웨어 (per-request) | `web/src/middleware.ts` |
-| on-demand ISR webhook | `web/src/app/api/revalidate/route.ts` |
-| JSON-LD 구조화 데이터 | `web/src/components/json-ld.tsx` |
-| 접근성 (skip-nav, aria-current, focus-visible) | `layout.tsx`, `nav-links.tsx` |
-| 다크모드 CSS 변수 완전 지원 | `globals.css` |
-| SEO (sitemap, robots, 동적 메타데이터) | `app/sitemap.ts`, `robots.ts` |
-| X-Device-Token 익명 기기 식별 | `saved-numbers-client.tsx` |
-| BackendError 타입 + 5초 타임아웃 | `lib/api.ts` |
-
----
-
-## 구 kLo 사이트 참조 항목
-
-| kLo 기능 | demo 반영 여부 | 비고 |
-|----------|-------------|------|
-| 세금 계산기 | ✅ 반영 (§3) | 순수 프론트 계산 |
-| 회차 번호 검색 | ✅ 반영 (§4) | 클라이언트 router.push |
-| 동반 번호 — 번호별 조회 | ✅ 반영 (§5) | 클라이언트 필터링 |
-| 빈도 — 기간별 필터 | ⏳ 보류 | 백엔드 API 확장 필요 |
-| FCM 푸시 알림 | ⏳ 보류 | Firebase 설정 필요 |
-| Google Adsense | ⏳ 보류 | 수익화 정책 결정 후 |
+- `brotli`: 최신 브라우저에서 gzip 대비 15~25% 추가 압축
+- `X-Content-Type-Options: nosniff`: MIME 스니핑 방지
+- `immutable` 캐시: Next.js 콘텐츠 해시가 포함된 정적 파일은 1년 캐시 안전

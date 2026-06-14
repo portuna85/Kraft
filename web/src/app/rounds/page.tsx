@@ -5,7 +5,7 @@ import { getRounds } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import { RoundSearchForm } from "@/components/round-search-form";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "전체 회차 목록 | KRAFT Lotto",

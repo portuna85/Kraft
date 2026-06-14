@@ -3,6 +3,10 @@ services:
     image: mariadb:11.7
     container_name: kraft-mariadb
     restart: unless-stopped
+    command:
+      - --max-connections=100
+      - --innodb-buffer-pool-size=512M
+      - --innodb-log-file-size=128M
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DATABASE:-kraft_lotto}
@@ -10,6 +14,16 @@ services:
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     volumes:
       - mariadb-data:/var/lib/mysql
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     healthcheck:
       test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u$$MARIADB_USER -p$$MARIADB_PASSWORD --silent"]
       interval: 10s
@@ -50,6 +64,18 @@ services:
       KRAFT_PUBLIC_BASE_URL: ${KRAFT_PUBLIC_BASE_URL:-http://localhost}
     volumes:
       - backend-logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 512m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
       interval: 15s
@@ -86,6 +112,11 @@ services:
       KRAFT_PUBLIC_BASE_URL: ${KRAFT_PUBLIC_BASE_URL:-http://localhost}
       KRAFT_REVALIDATE_SECRET: ${KRAFT_REVALIDATE_SECRET:-}
       KRAFT_OPS_ALLOWED_HOST: ${KRAFT_OPS_ALLOWED_HOST:-}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
       interval: 15s

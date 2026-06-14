@@ -93,23 +93,25 @@ public class ExternalWinningNumberPayloadMapper {
     }
 
     private Integer asInteger(Object value) {
-        if (value == null) {
-            return null;
+        if (value == null) return null;
+        if (value instanceof Number number) return number.intValue();
+        try {
+            return Integer.parseInt(value.toString().trim());
+        } catch (NumberFormatException e) {
+            throw new ApiException(HttpStatus.BAD_GATEWAY,
+                    "LOTTO_SOURCE_PARSE_ERROR", "숫자 변환 실패: " + value);
         }
-        if (value instanceof Number number) {
-            return number.intValue();
-        }
-        return Integer.parseInt(value.toString());
     }
 
     private Long asLong(Object value) {
-        if (value == null) {
-            return null;
+        if (value == null) return null;
+        if (value instanceof Number number) return number.longValue();
+        try {
+            return Long.parseLong(value.toString().trim());
+        } catch (NumberFormatException e) {
+            throw new ApiException(HttpStatus.BAD_GATEWAY,
+                    "LOTTO_SOURCE_PARSE_ERROR", "숫자 변환 실패: " + value);
         }
-        if (value instanceof Number number) {
-            return number.longValue();
-        }
-        return Long.parseLong(value.toString());
     }
 
     private String asString(Object value) {
