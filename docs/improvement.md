@@ -511,17 +511,17 @@ function sortBuckets(b: PatternBucket[], order?: string[]) {
 ## 백엔드
 - [x] `dashboard.html`·`rounds.html`을 현재 DTO(`numbers`/`bonusNumber`/`items`/`page`)로 수정 — `audit.html`은 변경 불필요
 - [x] 관리자 전용 ViewModel 도입 검토 (`AdminRoundView`·`AdminRoundPageView` 도입)
-- [ ] `/admin/dashboard`·`/admin/rounds` 렌더 200 스모크 테스트 추가
+- [x] `/admin/dashboard`·`/admin/rounds` 렌더 200 스모크 테스트 추가
 - [x] `rebuildAllSummaries()`에 `REQUIRES_NEW` 적용(또는 read 경로에서 rebuild 제거)
 - [x] 운영 토큰 비교 `MessageDigest.isEqual`로 변경
 - [x] `/ops/*` rate limit + 토큰 실패 audit + 보안 체인 명시
 - [x] `ClientIpResolver`: 직전 피어가 신뢰 프록시일 때만 XFF 사용
 - [x] admin lockout/audit(+RequestIdFilter 로그)도 `ClientIpResolver` 사용
-- [ ] Testcontainers MariaDB + Flyway 스모크 테스트(死 의존성 활성화)
+- [x] Testcontainers MariaDB + Flyway 스모크 테스트(死 의존성 활성화)
 - [x] `upsert`에 보너스↔본번호 중복 400 검증
 - [x] pattern/companion 재계산 시 stale row 제거(스냅샷 재생성)
 - [x] `WinningNumbersCollectedEvent.dataChanged`를 실제 변경 여부로
-- [ ] `/actuator/prometheus`·`info` 접근 제한
+- [x] `/actuator/prometheus`·`info` 접근 제한 (info 노출 제거, prometheus CIDR 제한)
 - [x] prod CORS/ops 호스트 env 누락 시 fail-fast
 - [ ] device token 길이/형식 검증
 - [ ] 관리자 초기 계정 부트스트랩 절차 명확화·문서화
