@@ -509,32 +509,32 @@ function sortBuckets(b: PatternBucket[], order?: string[]) {
 # 5. 체크리스트
 
 ## 백엔드
-- [ ] `dashboard.html`·`rounds.html`을 현재 DTO(`numbers`/`bonusNumber`/`items`/`page`)로 수정 — `audit.html`은 변경 불필요
-- [ ] 관리자 전용 ViewModel 도입 검토
+- [x] `dashboard.html`·`rounds.html`을 현재 DTO(`numbers`/`bonusNumber`/`items`/`page`)로 수정 — `audit.html`은 변경 불필요
+- [x] 관리자 전용 ViewModel 도입 검토 (`AdminRoundView`·`AdminRoundPageView` 도입)
 - [ ] `/admin/dashboard`·`/admin/rounds` 렌더 200 스모크 테스트 추가
-- [ ] `rebuildAllSummaries()`에 `REQUIRES_NEW` 적용(또는 read 경로에서 rebuild 제거)
-- [ ] 운영 토큰 비교 `MessageDigest.isEqual`로 변경
-- [ ] `/ops/*` rate limit + 토큰 실패 audit + 보안 체인 명시
-- [ ] `ClientIpResolver`: 직전 피어가 신뢰 프록시일 때만 XFF 사용
-- [ ] admin lockout/audit(+RequestIdFilter 로그)도 `ClientIpResolver` 사용
+- [x] `rebuildAllSummaries()`에 `REQUIRES_NEW` 적용(또는 read 경로에서 rebuild 제거)
+- [x] 운영 토큰 비교 `MessageDigest.isEqual`로 변경
+- [x] `/ops/*` rate limit + 토큰 실패 audit + 보안 체인 명시
+- [x] `ClientIpResolver`: 직전 피어가 신뢰 프록시일 때만 XFF 사용
+- [x] admin lockout/audit(+RequestIdFilter 로그)도 `ClientIpResolver` 사용
 - [ ] Testcontainers MariaDB + Flyway 스모크 테스트(死 의존성 활성화)
-- [ ] `upsert`에 보너스↔본번호 중복 400 검증
-- [ ] pattern/companion 재계산 시 stale row 제거(스냅샷 재생성)
-- [ ] `WinningNumbersCollectedEvent.dataChanged`를 실제 변경 여부로
+- [x] `upsert`에 보너스↔본번호 중복 400 검증
+- [x] pattern/companion 재계산 시 stale row 제거(스냅샷 재생성)
+- [x] `WinningNumbersCollectedEvent.dataChanged`를 실제 변경 여부로
 - [ ] `/actuator/prometheus`·`info` 접근 제한
-- [ ] prod CORS/ops 호스트 env 누락 시 fail-fast
+- [x] prod CORS/ops 호스트 env 누락 시 fail-fast
 - [ ] device token 길이/형식 검증
 - [ ] 관리자 초기 계정 부트스트랩 절차 명확화·문서화
-- [ ] (정리) raw_json/idx_wn_draw_date/H2 prod 번들/`@EnableScheduling` 중복
+- [x] (정리) raw_json/idx_wn_draw_date/H2 prod 번들/`@EnableScheduling` 중복 — H2 testRuntimeOnly·@EnableScheduling 중복 완료, raw_json·idx_wn_draw_date 미완
 
 ## 프론트엔드
-- [ ] `web/src/lib/backend-proxy.ts` 생성(timeout·safeJson·status 보존) 후 BFF route 일괄 적용
-- [ ] `/ops-api/*` rewrite 또는 route handler 추가
+- [x] `web/src/lib/backend-proxy.ts` 생성(timeout·safeJson·status 보존) 후 BFF route 일괄 적용
+- [x] `/ops-api/*` rewrite 또는 route handler 추가
 - [ ] `proxy.ts`가 실제 적용되는지(CSP/nonce 헤더) 검증
-- [ ] `OpsDashboardClient`·`SavedNumbersClient` action에 try/catch/finally
-- [ ] `web/src/lib/device-token.ts`로 토큰 로직 단일화 + `crypto.getRandomValues` fallback
+- [x] `OpsDashboardClient`·`SavedNumbersClient` action에 try/catch/finally
+- [x] `web/src/lib/device-token.ts`로 토큰 로직 단일화 + `crypto.getRandomValues` fallback
 - [ ] `web/src/lib/lotto-validation.ts` 공통 validator 적용(추천/저장/분석/운영)
-- [ ] `stats/page.tsx` sum bucket 명시적 정렬(+백엔드 정렬도 정리), methodology 문구 일치
+- [x] `stats/page.tsx` sum bucket 명시적 정렬(+백엔드 정렬도 정리), methodology 문구 일치
 - [ ] `/recommend` sitemap 포함 여부 결정
 - [ ] route/component/validator/BackendError/tax 테스트 보강
 - [ ] (낮음) SSR 폴백 정책 통일, `limit` 인코딩, revalidate 시크릿 비교, 5xx vs notFound 구분
