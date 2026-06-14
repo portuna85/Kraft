@@ -2,7 +2,8 @@
 
 > 기준: 2026-06-14  
 > 범위: 백엔드(Spring Boot) · 프론트엔드(Next.js) · 인프라(Docker · Caddy)  
-> 분석: 3개 병렬 에이전트 전수 분석 → 버그 수정 · 성능 · 안정화 순 적용
+> 분석: 3개 병렬 에이전트 전수 분석 → 버그 수정 · 성능 · 안정화 순 적용  
+> 총 12개 항목
 
 ---
 
@@ -191,7 +192,30 @@ logging:
 
 ---
 
-## 10. Caddyfile — brotli + 보안 헤더 + 정적 캐시
+## 10. docker-compose.prod.yml — 프로덕션 컴포즈 완성
+
+**파일:** `docker-compose.prod.yml`
+
+**문제:** 프로덕션 컴포즈에 리소스 제한·MariaDB 성능 옵션·로깅·모니터링 스택 누락  
+→ 로컬 `docker-compose.yml`과 설정 불일치, 운영 환경에서 메모리 무제한·성능 튜닝 미적용 상태
+
+**변경 사항:**
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| MariaDB 성능 옵션 | 없음 | `--innodb-buffer-pool-size=512M`, `--innodb-log-file-size=128M` |
+| 리소스 제한 | 없음 | backend `1g/1.0cpu`, mariadb `1g`, web `256m/0.5cpu`, caddy `128m` |
+| 로깅 드라이버 | 없음 | json-file (max-size/max-file) 전 서비스 적용 |
+| 모니터링 스택 | 없음 | prometheus / grafana / alertmanager / node-exporter 추가 |
+| web 보안 옵션 | 없음 | `read_only`, `tmpfs`, `cap_drop: ALL`, `no-new-privileges` 추가 |
+| caddy 포트 | `80/443` | + `127.0.0.1:2019` (Prometheus caddy 메트릭 수집용) |
+
+**이유:** 로컬과 프로덕션 컴포즈 파일의 설정 격차 해소.  
+운영 환경에서 동일한 리소스 보호·성능 튜닝·관측성이 보장되어야 한다.
+
+---
+
+## 11. Caddyfile — brotli + 보안 헤더 + 정적 캐시
 
 **파일:** `caddy/Caddyfile`
 
@@ -205,3 +229,27 @@ logging:
 - `brotli`: 최신 브라우저에서 gzip 대비 15~25% 추가 압축
 - `X-Content-Type-Options: nosniff`: MIME 스니핑 방지
 - `immutable` 캐시: Next.js 콘텐츠 해시가 포함된 정적 파일은 1년 캐시 안전
+
+---
+
+## 12. Caddyfile — admin 도메인 Grafana 서브패스 라우팅
+
+**파일:** `caddy/Caddyfile`
+
+**문제:** Grafana가 `docker-compose.prod.yml`에 포함되었으나 Caddy 라우팅 누락  
+→ admin 도메인에서 Grafana 대시보드 접근 불가
+
+**수정:** admin 도메인 블록에 `/grafana/*` → `grafana:3000` 핸들러 추가
+
+```caddyfile
+handle /grafana/* {
+    reverse_proxy grafana:3000 {
+        header_up X-Real-IP {remote_host}
+    }
+}
+```
+
+Grafana는 `GF_SERVER_ROOT_URL`과 `GF_SERVER_SERVE_FROM_SUB_PATH=true` 설정으로  
+`/grafana/` 서브패스에서 정상 동작한다 (`docker-compose.prod.yml` 환경변수 참고).
+
+접근 URL: `https://<KRAFT_ADMIN_DOMAIN>/grafana/`
