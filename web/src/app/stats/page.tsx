@@ -9,16 +9,22 @@ export const metadata: Metadata = {
   alternates: { canonical: "/stats" }
 };
 
+const SUM_ORDER = ["21-65", "66-110", "111-155", "156-200", "201-255"];
+
 function PatternSection({
   title,
   buckets,
   totalRounds,
+  sortOrder,
 }: {
   title: string;
   buckets: PatternBucket[];
   totalRounds: number;
+  sortOrder?: string[];
 }) {
-  const sorted = [...buckets].sort((a, b) => a.bucketKey.localeCompare(b.bucketKey));
+  const sorted = sortOrder
+    ? [...buckets].sort((a, b) => sortOrder.indexOf(a.bucketKey) - sortOrder.indexOf(b.bucketKey))
+    : [...buckets].sort((a, b) => Number(a.bucketKey) - Number(b.bucketKey));
   const maxCount = Math.max(...sorted.map((b) => b.count), 1);
 
   return (
@@ -68,6 +74,7 @@ export default async function StatsPage() {
         title="번호 합계 구간 분포"
         buckets={stats.sumBuckets}
         totalRounds={stats.totalRounds}
+        sortOrder={SUM_ORDER}
       />
     </section>
   );

@@ -24,10 +24,10 @@
     </tr>
     </thead>
     <tbody>
-    <tr th:each="r : ${rounds.content}">
+    <tr th:each="r : ${rounds.items}">
       <td th:text="${r.round}"></td>
       <td th:text="${r.drawDate}"></td>
-      <td th:text="${r.num1}+', '+${r.num2}+', '+${r.num3}+', '+${r.num4}+', '+${r.num5}+', '+${r.num6}+' + '+${r.bonusNum}"></td>
+      <td th:text="${r.num1}+', '+${r.num2}+', '+${r.num3}+', '+${r.num4}+', '+${r.num5}+', '+${r.num6}+' + '+${r.bonusNumber}"></td>
       <td th:text="${#numbers.formatDecimal(r.firstPrizeAmount,0,'COMMA',0,'POINT')} + '원'"></td>
     </tr>
     </tbody>
@@ -35,9 +35,9 @@
 
   <div class="pagination">
     <span th:text="'총 ' + ${rounds.totalElements} + '건'"></span>
-    <a th:if="${rounds.number > 0}" th:href="@{/admin/rounds(page=${rounds.number - 1})}">이전</a>
-    <span th:text="${rounds.number + 1} + ' / ' + ${rounds.totalPages} + ' 페이지'"></span>
-    <a th:if="${rounds.number + 1 < rounds.totalPages}" th:href="@{/admin/rounds(page=${rounds.number + 1})}">다음</a>
+    <a th:if="${rounds.page > 0}" th:href="@{/admin/rounds(page=${rounds.page - 1})}">이전</a>
+    <span th:text="${rounds.page + 1} + ' / ' + ${rounds.totalPages} + ' 페이지'"></span>
+    <a th:if="${rounds.page + 1 < rounds.totalPages}" th:href="@{/admin/rounds(page=${rounds.page + 1})}">다음</a>
   </div>
 </th:block>
 </html>

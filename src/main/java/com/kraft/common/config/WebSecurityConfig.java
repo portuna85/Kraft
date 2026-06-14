@@ -24,7 +24,7 @@ public class WebSecurityConfig {
     @Order(2)
     SecurityFilterChain publicApiFilterChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher("/api/**", "/actuator/**")
+                .securityMatcher("/api/**", "/actuator/**", "/ops/**")
                 .csrf(csrf -> csrf.requireCsrfProtectionMatcher(
                         new NegatedRequestMatcher(AnyRequestMatcher.INSTANCE)))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

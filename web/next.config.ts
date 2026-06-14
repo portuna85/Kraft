@@ -14,6 +14,16 @@ const nextConfig: NextConfig = {
         permanent: true
       }
     ];
+  },
+  async rewrites() {
+    const backendUrl =
+      process.env.KRAFT_BACKEND_INTERNAL_URL ?? "http://backend:8080";
+    return [
+      {
+        source: "/ops-api/:path*",
+        destination: `${backendUrl}/ops/:path*`
+      }
+    ];
   }
 };
 

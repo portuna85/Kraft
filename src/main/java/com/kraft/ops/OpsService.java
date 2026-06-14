@@ -12,6 +12,8 @@ import com.kraft.winningnumber.WinningNumberCommandService;
 import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumberResponse;
 import com.kraft.winningnumber.WinningNumberUpsertRequest;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -155,7 +157,9 @@ public class OpsService {
         if (expected == null || expected.isBlank()) {
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "OPS_DISABLED", "운영 API 토큰이 설정되지 않았습니다.");
         }
-        if (token == null || !expected.equals(token)) {
+        if (token == null || !MessageDigest.isEqual(
+                expected.getBytes(StandardCharsets.UTF_8),
+                token.getBytes(StandardCharsets.UTF_8))) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "OPS_UNAUTHORIZED", "운영 API 인증에 실패했습니다.");
         }
     }

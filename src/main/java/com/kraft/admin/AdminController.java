@@ -1,7 +1,7 @@
 package com.kraft.admin;
 
+import com.kraft.common.web.ClientIpResolver;
 import com.kraft.winningnumber.WinningNumberCollectionService;
-import com.kraft.winningnumber.WinningNumberListResponse;
 import com.kraft.winningnumber.WinningNumberQueryService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.PageRequest;
@@ -22,13 +22,16 @@ public class AdminController {
     private final WinningNumberQueryService queryService;
     private final WinningNumberCollectionService collectionService;
     private final AdminAuditLogService auditLogService;
+    private final ClientIpResolver ipResolver;
 
     public AdminController(WinningNumberQueryService queryService,
                            WinningNumberCollectionService collectionService,
-                           AdminAuditLogService auditLogService) {
+                           AdminAuditLogService auditLogService,
+                           ClientIpResolver ipResolver) {
         this.queryService = queryService;
         this.collectionService = collectionService;
         this.auditLogService = auditLogService;
+        this.ipResolver = ipResolver;
     }
 
     @GetMapping({"", "/"})
@@ -43,7 +46,7 @@ public class AdminController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        model.addAttribute("latest", queryService.getLatest());
+        model.addAttribute("latest", AdminRoundView.from(queryService.getLatest()));
         return "admin/dashboard";
     }
 
@@ -52,7 +55,8 @@ public class AdminController {
                          @RequestParam(defaultValue = "20") int size,
                          Model model) {
         WinningNumberListResponse list = queryService.list(page, Math.min(size, 100));
-        model.addAttribute("rounds", list);
+        var items = list.items().stream().map(AdminRoundView::from).toList();
+        model.addAttribute("rounds", new AdminRoundPageView(items, list.page(), list.totalElements(), list.totalPages()));
         return "admin/rounds";
     }
 
@@ -65,12 +69,12 @@ public class AdminController {
             if (round != null) {
                 collectionService.collectRound(round);
                 auditLogService.record(user.getUsername(), "COLLECT_ROUND",
-                        "round=" + round, null, req.getRemoteAddr());
+                        "round=" + round, null, ipResolver.resolve(req));
                 redirect.addFlashAttribute("success", round + "회차 수집 완료");
             } else {
                 var resp = collectionService.collectLatest();
                 auditLogService.record(user.getUsername(), "COLLECT_LATEST",
-                        "round=" + resp.round(), null, req.getRemoteAddr());
+                        "round=" + resp.round(), null, ipResolver.resolve(req));
                 redirect.addFlashAttribute("success", resp.round() + "회차 수집 완료");
             }
         } catch (Exception e) {

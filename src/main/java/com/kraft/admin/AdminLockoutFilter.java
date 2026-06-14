@@ -1,5 +1,6 @@
 package com.kraft.admin;
 
+import com.kraft.common.web.ClientIpResolver;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,9 +16,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class AdminLockoutFilter extends OncePerRequestFilter {
 
     private final AdminLoginAttemptService lockout;
+    private final ClientIpResolver ipResolver;
 
-    public AdminLockoutFilter(AdminLoginAttemptService lockout) {
+    public AdminLockoutFilter(AdminLoginAttemptService lockout, ClientIpResolver ipResolver) {
         this.lockout = lockout;
+        this.ipResolver = ipResolver;
     }
 
     @Override
@@ -28,7 +31,7 @@ public class AdminLockoutFilter extends OncePerRequestFilter {
         if ("POST".equalsIgnoreCase(req.getMethod())
                 && "/admin/login".equals(req.getServletPath())) {
             String username = req.getParameter("username");
-            String ip = req.getRemoteAddr();
+            String ip = ipResolver.resolve(req);
             if (username != null && lockout.isLockedOut(username, ip)) {
                 res.sendRedirect("/admin/login?locked");
                 return;

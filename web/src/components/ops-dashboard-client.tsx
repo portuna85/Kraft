@@ -65,46 +65,46 @@ export function OpsDashboardClient() {
   async function loadSummary() {
     setLoadingAction("summary");
     setMessage("");
-
-    const response = await fetch("/ops-api/summary", {
-      headers: {
-        "X-Ops-Token": token
-      },
-      cache: "no-store"
-    });
-    const payload = await readJson<OpsSummary>(response);
-    setLoadingAction(null);
-
-    if (!response.ok) {
-      setMessage((payload as ApiError).message ?? "운영 상태를 확인하지 못했습니다.");
-      return;
+    try {
+      const response = await fetch("/ops-api/summary", {
+        headers: { "X-Ops-Token": token },
+        cache: "no-store"
+      });
+      const payload = await readJson<OpsSummary>(response);
+      if (!response.ok) {
+        setMessage((payload as ApiError).message ?? "운영 상태를 확인하지 못했습니다.");
+        return;
+      }
+      setSummary(payload as OpsSummary);
+      setMessage("운영 상태를 불러왔습니다.");
+    } catch {
+      setMessage("네트워크 오류가 발생했습니다.");
+    } finally {
+      setLoadingAction(null);
     }
-
-    setSummary(payload as OpsSummary);
-    setMessage("운영 상태를 불러왔습니다.");
   }
 
   async function collectLatest() {
     setLoadingAction("latest");
     setMessage("");
-
-    const response = await fetch("/ops-api/collect/latest", {
-      method: "POST",
-      headers: {
-        "X-Ops-Token": token
+    try {
+      const response = await fetch("/ops-api/collect/latest", {
+        method: "POST",
+        headers: { "X-Ops-Token": token }
+      });
+      const payload = await readJson<WinningNumber>(response);
+      if (!response.ok) {
+        setMessage((payload as ApiError).message ?? "최신 회차 데이터를 수집하지 못했습니다.");
+        return;
       }
-    });
-    const payload = await readJson<WinningNumber>(response);
-    setLoadingAction(null);
-
-    if (!response.ok) {
-      setMessage((payload as ApiError).message ?? "최신 회차 데이터를 수집하지 못했습니다.");
-      return;
+      setLastCollected(payload as WinningNumber);
+      setMessage("최신 회차 데이터를 반영했습니다.");
+      await loadSummary();
+    } catch {
+      setMessage("네트워크 오류가 발생했습니다.");
+    } finally {
+      setLoadingAction(null);
     }
-
-    setLastCollected(payload as WinningNumber);
-    setMessage("최신 회차 데이터를 반영했습니다.");
-    await loadSummary();
   }
 
   async function collectRound() {
@@ -113,32 +113,30 @@ export function OpsDashboardClient() {
       setMessage("수집할 회차는 1 이상의 정수여야 합니다.");
       return;
     }
-
     setLoadingAction("round");
     setMessage("");
-
-    const response = await fetch(`/ops-api/collect/${roundNumber}`, {
-      method: "POST",
-      headers: {
-        "X-Ops-Token": token
+    try {
+      const response = await fetch(`/ops-api/collect/${roundNumber}`, {
+        method: "POST",
+        headers: { "X-Ops-Token": token }
+      });
+      const payload = await readJson<WinningNumber>(response);
+      if (!response.ok) {
+        setMessage((payload as ApiError).message ?? "지정한 회차 데이터를 수집하지 못했습니다.");
+        return;
       }
-    });
-    const payload = await readJson<WinningNumber>(response);
-    setLoadingAction(null);
-
-    if (!response.ok) {
-      setMessage((payload as ApiError).message ?? "지정한 회차 데이터를 수집하지 못했습니다.");
-      return;
+      setLastCollected(payload as WinningNumber);
+      setMessage(`${roundNumber}회차 데이터를 반영했습니다.`);
+      await loadSummary();
+    } catch {
+      setMessage("네트워크 오류가 발생했습니다.");
+    } finally {
+      setLoadingAction(null);
     }
-
-    setLastCollected(payload as WinningNumber);
-    setMessage(`${roundNumber}회차 데이터를 반영했습니다.`);
-    await loadSummary();
   }
 
   async function submitManualEntry(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     const requestBody = {
       round: Number(manualEntry.round),
       drawDate: manualEntry.drawDate,
@@ -146,30 +144,28 @@ export function OpsDashboardClient() {
       bonusNumber: Number(manualEntry.bonusNumber),
       firstPrizeAmount: Number(manualEntry.firstPrizeAmount)
     };
-
     setLoadingAction("manual");
     setMessage("");
-
-    const response = await fetch("/ops-api/rounds", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Ops-Token": token
-      },
-      body: JSON.stringify(requestBody)
-    });
-    const payload = await readJson<WinningNumber>(response);
-    setLoadingAction(null);
-
-    if (!response.ok) {
-      setMessage((payload as ApiError).message ?? "수동 회차 등록에 실패했습니다.");
-      return;
+    try {
+      const response = await fetch("/ops-api/rounds", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Ops-Token": token },
+        body: JSON.stringify(requestBody)
+      });
+      const payload = await readJson<WinningNumber>(response);
+      if (!response.ok) {
+        setMessage((payload as ApiError).message ?? "수동 회차 등록에 실패했습니다.");
+        return;
+      }
+      setLastCollected(payload as WinningNumber);
+      setManualEntry(initialManualEntryForm);
+      setMessage(`${(payload as WinningNumber).round}회차 데이터를 수동으로 저장했습니다.`);
+      await loadSummary();
+    } catch {
+      setMessage("네트워크 오류가 발생했습니다.");
+    } finally {
+      setLoadingAction(null);
     }
-
-    setLastCollected(payload as WinningNumber);
-    setManualEntry(initialManualEntryForm);
-    setMessage(`${(payload as WinningNumber).round}회차 데이터를 수동으로 저장했습니다.`);
-    await loadSummary();
   }
 
   return (

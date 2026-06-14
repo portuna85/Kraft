@@ -3,6 +3,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
+import { getDeviceToken } from "@/lib/device-token";
 
 type SavedNumber = {
   id: number;
@@ -11,21 +12,6 @@ type SavedNumber = {
   source: string;
   createdAt: string;
 };
-
-const storageKey = "kraft-device-token";
-
-function getDeviceToken(): string {
-  const existing = window.localStorage.getItem(storageKey);
-  if (existing) {
-    return existing;
-  }
-
-  const created = typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  window.localStorage.setItem(storageKey, created);
-  return created;
-}
 
 export function SavedNumbersClient() {
   const [items, setItems] = useState<SavedNumber[]>([]);
@@ -59,52 +45,48 @@ export function SavedNumbersClient() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
-
     const parsedNumbers = numbers
       .split(",")
       .map((value) => Number(value.trim()))
       .filter((value) => !Number.isNaN(value));
-
-    const response = await fetch("/api/v1/saved", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Device-Token": getDeviceToken()
-      },
-      body: JSON.stringify({
-        numbers: parsedNumbers,
-        label: label || null,
-        source: "MANUAL"
-      })
-    });
-
-    const payload = await response.json() as { created?: boolean; message?: string };
-    if (!response.ok) {
-      setMessage(payload.message ?? "번호를 저장하지 못했습니다.");
-      return;
+    try {
+      const response = await fetch("/api/v1/saved", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Device-Token": getDeviceToken()
+        },
+        body: JSON.stringify({ numbers: parsedNumbers, label: label || null, source: "MANUAL" })
+      });
+      const payload = await response.json() as { created?: boolean; message?: string };
+      if (!response.ok) {
+        setMessage(payload.message ?? "번호를 저장하지 못했습니다.");
+        return;
+      }
+      setMessage(payload.created ? "번호를 저장 목록에 추가했습니다." : "이미 저장된 번호입니다.");
+      setNumbers("");
+      setLabel("");
+      await loadSavedNumbers();
+    } catch {
+      setMessage("네트워크 오류가 발생했습니다.");
     }
-
-    setMessage(payload.created ? "번호를 저장 목록에 추가했습니다." : "이미 저장된 번호입니다.");
-    setNumbers("");
-    setLabel("");
-    await loadSavedNumbers();
   }
 
   async function handleDelete(id: number) {
-    const response = await fetch(`/api/v1/saved/${id}`, {
-      method: "DELETE",
-      headers: {
-        "X-Device-Token": getDeviceToken()
+    try {
+      const response = await fetch(`/api/v1/saved/${id}`, {
+        method: "DELETE",
+        headers: { "X-Device-Token": getDeviceToken() }
+      });
+      if (!response.ok) {
+        setMessage("선택한 번호를 삭제하지 못했습니다.");
+        return;
       }
-    });
-
-    if (!response.ok) {
-      setMessage("선택한 번호를 삭제하지 못했습니다.");
-      return;
+      setMessage("번호를 저장 목록에서 삭제했습니다.");
+      await loadSavedNumbers();
+    } catch {
+      setMessage("네트워크 오류가 발생했습니다.");
     }
-
-    setMessage("번호를 저장 목록에서 삭제했습니다.");
-    await loadSavedNumbers();
   }
 
   return (

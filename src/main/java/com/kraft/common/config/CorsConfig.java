@@ -1,9 +1,12 @@
 package com.kraft.common.config;
 
+import jakarta.annotation.PostConstruct;
+import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -13,6 +16,21 @@ public class CorsConfig {
 
     @Value("${kraft.public-base-url:}")
     private String publicBaseUrl;
+
+    private final Environment env;
+
+    public CorsConfig(Environment env) {
+        this.env = env;
+    }
+
+    @PostConstruct
+    void validate() {
+        if (Arrays.asList(env.getActiveProfiles()).contains("prod")
+                && (publicBaseUrl == null || publicBaseUrl.isBlank())) {
+            throw new IllegalStateException(
+                    "KRAFT_PUBLIC_BASE_URL is required in prod profile but is not set.");
+        }
+    }
 
     @Bean
     CorsFilter corsFilter() {

@@ -3,19 +3,7 @@
 import { useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
 import type { RecommendationResponse } from "@/lib/api";
-
-const deviceStorageKey = "kraft-device-token";
-
-function getDeviceToken(): string {
-  const existing = window.localStorage.getItem(deviceStorageKey);
-  if (existing) return existing;
-  const created =
-    typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  window.localStorage.setItem(deviceStorageKey, created);
-  return created;
-}
+import { getDeviceToken } from "@/lib/device-token";
 
 export function RecommendClient() {
   const [count, setCount] = useState("3");

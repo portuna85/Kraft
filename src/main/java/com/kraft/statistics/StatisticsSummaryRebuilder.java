@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -40,6 +41,7 @@ public class StatisticsSummaryRebuilder {
         this.clock = clock;
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @CacheEvict(value = {CacheConfig.STATS_FREQUENCY, CacheConfig.STATS_PATTERN, CacheConfig.STATS_COMPANION},
                 allEntries = true)
     public void rebuildAllSummaries() {
@@ -106,26 +108,20 @@ public class StatisticsSummaryRebuilder {
             sumBucketMap.merge(bucket, 1, Integer::sum);
         }
 
-        upsertPatternRows(WinningStatisticsCacheService.TYPE_ODD_COUNT, oddCountMap, now);
-        upsertPatternRows(WinningStatisticsCacheService.TYPE_HIGH_COUNT, highCountMap, now);
-        upsertPatternRows(WinningStatisticsCacheService.TYPE_SUM_BUCKET, sumBucketMap, now);
-    }
-
-    private void upsertPatternRows(String statType, Map<String, Integer> data, OffsetDateTime now) {
-        Map<String, PatternStatsSummary> existing = patternStatsSummaryRepository
-                .findByStatTypeOrderByBucketKeyAsc(statType).stream()
-                .collect(java.util.stream.Collectors.toMap(PatternStatsSummary::getBucketKey, s -> s));
+        patternStatsSummaryRepository.deleteAllInBatch();
 
         List<PatternStatsSummary> toSave = new ArrayList<>();
-        for (Map.Entry<String, Integer> entry : data.entrySet()) {
-            PatternStatsSummary row = existing.get(entry.getKey());
-            if (row != null) {
-                row.update(entry.getValue(), now);
-            } else {
-                toSave.add(new PatternStatsSummary(statType, entry.getKey(), entry.getValue(), now));
-            }
-        }
+        buildPatternRows(WinningStatisticsCacheService.TYPE_ODD_COUNT, oddCountMap, now, toSave);
+        buildPatternRows(WinningStatisticsCacheService.TYPE_HIGH_COUNT, highCountMap, now, toSave);
+        buildPatternRows(WinningStatisticsCacheService.TYPE_SUM_BUCKET, sumBucketMap, now, toSave);
         patternStatsSummaryRepository.saveAll(toSave);
+    }
+
+    private void buildPatternRows(String statType, Map<String, Integer> data,
+                                  OffsetDateTime now, List<PatternStatsSummary> out) {
+        for (Map.Entry<String, Integer> entry : data.entrySet()) {
+            out.add(new PatternStatsSummary(statType, entry.getKey(), entry.getValue(), now));
+        }
     }
 
     private void rebuildCompanions(List<WinningNumber> rounds, OffsetDateTime now) {
@@ -145,19 +141,11 @@ public class StatisticsSummaryRebuilder {
             }
         }
 
-        Map<String, CompanionPairSummary> existing = companionPairSummaryRepository.findAll().stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        p -> p.getBallA() + "_" + p.getBallB(), p -> p));
+        companionPairSummaryRepository.deleteAllInBatch();
 
         List<CompanionPairSummary> toSave = new ArrayList<>();
         for (int[] pair : pairMap.values()) {
-            int a = pair[0], b = pair[1], count = pair[2];
-            CompanionPairSummary row = existing.get(a + "_" + b);
-            if (row != null) {
-                row.update(count, now);
-            } else {
-                toSave.add(new CompanionPairSummary(a, b, count, now));
-            }
+            toSave.add(new CompanionPairSummary(pair[0], pair[1], pair[2], now));
         }
         companionPairSummaryRepository.saveAll(toSave);
     }

@@ -44,15 +44,16 @@ public class WinningNumberCollectionService {
         log.info("회차 수집 시작: round={}", round);
         try {
             WinningNumberUpsertRequest request = externalWinningNumberFetchClient.fetchRound(round);
-            WinningNumberResponse response = winningNumberCommandService.upsert(request);
+            WinningNumberUpsertResult result = winningNumberCommandService.upsertWithResult(request);
+            WinningNumberResponse response = result.response();
             winningNumberOperationLogService.logSuccess(
                     WinningNumberOperationType.EXTERNAL_COLLECT,
                     response.round(),
                     "external-source",
                     "외부 회차 수집 및 저장에 성공했습니다."
             );
-            log.info("회차 수집 완료: round={} drawDate={}", response.round(), response.drawDate());
-            eventPublisher.publishEvent(new WinningNumbersCollectedEvent(round, true));
+            log.info("회차 수집 완료: round={} drawDate={} changed={}", response.round(), response.drawDate(), result.changed());
+            eventPublisher.publishEvent(new WinningNumbersCollectedEvent(round, result.changed()));
             return response;
         } catch (RuntimeException exception) {
             winningNumberOperationLogService.logFailure(

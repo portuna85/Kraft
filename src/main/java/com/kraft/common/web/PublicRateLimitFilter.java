@@ -40,7 +40,7 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return !path.startsWith("/api/");
+        return !path.startsWith("/api/") && !path.startsWith("/ops/");
     }
 
     @Override

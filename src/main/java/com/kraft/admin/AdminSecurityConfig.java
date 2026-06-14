@@ -1,5 +1,6 @@
 package com.kraft.admin;
 
+import com.kraft.common.web.ClientIpResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -19,13 +20,16 @@ public class AdminSecurityConfig {
     private final AdminUserDetailsService userDetailsService;
     private final AdminLoginHandler loginHandler;
     private final AdminLoginAttemptService lockout;
+    private final ClientIpResolver ipResolver;
 
     public AdminSecurityConfig(AdminUserDetailsService userDetailsService,
                                AdminLoginHandler loginHandler,
-                               AdminLoginAttemptService lockout) {
+                               AdminLoginAttemptService lockout,
+                               ClientIpResolver ipResolver) {
         this.userDetailsService = userDetailsService;
         this.loginHandler = loginHandler;
         this.lockout = lockout;
+        this.ipResolver = ipResolver;
     }
 
     @Bean
@@ -45,7 +49,7 @@ public class AdminSecurityConfig {
     SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/admin/**")
-                .addFilterBefore(new AdminLockoutFilter(lockout),
+                .addFilterBefore(new AdminLockoutFilter(lockout, ipResolver),
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login").permitAll()

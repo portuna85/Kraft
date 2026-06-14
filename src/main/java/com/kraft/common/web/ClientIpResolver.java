@@ -15,6 +15,10 @@ public class ClientIpResolver {
     }
 
     public String resolve(HttpServletRequest request) {
+        String remote = request.getRemoteAddr();
+        if (!isTrustedProxy(remote)) {
+            return remote;
+        }
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {
             // XFF: 우→좌 순회로 신뢰 프록시를 건너뛰고 실제 클라이언트 IP 추출
@@ -26,7 +30,7 @@ public class ClientIpResolver {
                 }
             }
         }
-        return request.getRemoteAddr();
+        return remote;
     }
 
     public boolean isTrustedProxy(String ip) {

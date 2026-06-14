@@ -1,8 +1,10 @@
 package com.kraft.winningnumber;
 
+import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,18 +25,50 @@ public class WinningNumberCommandService {
     }
 
     public WinningNumberResponse upsert(WinningNumberUpsertRequest request) {
-        var normalized = lottoNumberCodec.normalize(request.numbers());
-
-        WinningNumber winningNumber = winningNumberRepository.findByRound(request.round())
-                .map(existing -> updateExisting(existing, request, normalized))
-                .orElseGet(() -> createNew(request, normalized));
-
-        return WinningNumberResponse.from(winningNumberRepository.save(winningNumber));
+        return upsertWithResult(request).response();
     }
 
-    private WinningNumber updateExisting(WinningNumber existing,
-                                         WinningNumberUpsertRequest request,
-                                         java.util.List<Integer> normalized) {
+    public WinningNumberUpsertResult upsertWithResult(WinningNumberUpsertRequest request) {
+        var normalized = lottoNumberCodec.normalize(request.numbers());
+        if (normalized.contains(request.bonusNumber())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_BONUS_NUMBER",
+                    "보너스 번호는 당첨 번호 6개와 중복될 수 없습니다.");
+        }
+
+        boolean[] changed = {false};
+        WinningNumber winningNumber = winningNumberRepository.findByRound(request.round())
+                .map(existing -> {
+                    changed[0] = hasChanges(existing, request, normalized);
+                    if (changed[0]) {
+                        updateExisting(existing, request, normalized);
+                    }
+                    return existing;
+                })
+                .orElseGet(() -> {
+                    changed[0] = true;
+                    return createNew(request, normalized);
+                });
+
+        WinningNumberResponse response = WinningNumberResponse.from(winningNumberRepository.save(winningNumber));
+        return new WinningNumberUpsertResult(response, changed[0]);
+    }
+
+    private boolean hasChanges(WinningNumber existing, WinningNumberUpsertRequest request,
+                               java.util.List<Integer> normalized) {
+        return !existing.getDrawDate().equals(request.drawDate())
+                || !existing.getN1().equals(normalized.get(0))
+                || !existing.getN2().equals(normalized.get(1))
+                || !existing.getN3().equals(normalized.get(2))
+                || !existing.getN4().equals(normalized.get(3))
+                || !existing.getN5().equals(normalized.get(4))
+                || !existing.getN6().equals(normalized.get(5))
+                || !existing.getBonusNumber().equals(request.bonusNumber())
+                || !existing.getFirstPrizeAmount().equals(request.firstPrizeAmount());
+    }
+
+    private void updateExisting(WinningNumber existing,
+                                WinningNumberUpsertRequest request,
+                                java.util.List<Integer> normalized) {
         existing.update(
                 request.drawDate(),
                 normalized.get(0),
@@ -51,7 +85,6 @@ public class WinningNumberCommandService {
                 orZero(request.firstAccumAmount()),
                 request.rawJson()
         );
-        return existing;
     }
 
     private WinningNumber createNew(WinningNumberUpsertRequest request, java.util.List<Integer> normalized) {
