@@ -40,6 +40,7 @@ export default async function RoundsPage({ searchParams }: Props) {
     <section className="panel">
       <p className="eyebrow">회차 목록</p>
       <h1 className="page-title">전체 회차 기록</h1>
+      <p className="page-subtitle">회차 번호로 바로 이동하거나 목록에서 찾아볼 수 있습니다.</p>
       <RoundSearchForm />
 
       <p className="muted" style={{ marginTop: "20px" }}>

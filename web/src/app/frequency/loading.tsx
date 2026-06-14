@@ -5,28 +5,22 @@ export default function Loading() {
       <div className="skeleton-line skeleton-h1" style={{ marginTop: "10px" }} />
       <div className="skeleton-line skeleton-body" style={{ marginTop: "14px", width: "50%" }} />
       <div className="freq-summary" style={{ marginTop: "24px" }}>
-        <div className="freq-rank-group">
-          <div className="skeleton-line skeleton-caption" style={{ width: "100px" }} />
-          <div className="skeleton-balls" style={{ marginTop: "10px" }}>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="skeleton-ball skeleton-ball-sm" />
-            ))}
+        {[100, 120].map((w, i) => (
+          <div key={i} className="freq-rank-group">
+            <div className="skeleton-line skeleton-caption" style={{ width: `${w}px` }} />
+            <div className="skeleton-balls" style={{ marginTop: "10px" }}>
+              {Array.from({ length: 5 }).map((_, j) => (
+                <div key={j} className="skeleton-ball skeleton-ball-sm" />
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="freq-rank-group">
-          <div className="skeleton-line skeleton-caption" style={{ width: "120px" }} />
-          <div className="skeleton-balls" style={{ marginTop: "10px" }}>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="skeleton-ball skeleton-ball-sm" />
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
       <div className="frequency-grid" style={{ marginTop: "28px" }}>
         {Array.from({ length: 20 }).map((_, i) => (
           <div key={i} className="frequency-item">
             <div className="skeleton-ball skeleton-ball-sm" />
-            <div className="skeleton-line" style={{ height: "8px", borderRadius: "999px" }} />
+            <div className="skeleton-line" style={{ height: "7px", borderRadius: "999px" }} />
             <div className="skeleton-line skeleton-caption" style={{ width: "40px" }} />
             <div className="skeleton-line skeleton-caption" style={{ width: "36px" }} />
           </div>

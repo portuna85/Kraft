@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_KR } from "next/font/google";
+import { Noto_Sans_KR, Noto_Serif_KR, Space_Grotesk } from "next/font/google";
 import { headers } from "next/headers";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -14,6 +14,20 @@ const notoSansKR = Noto_Sans_KR({
   variable: "--font-sans",
 });
 
+const notoSerifKR = Noto_Serif_KR({
+  subsets: ["latin"],
+  weight: ["500", "700"],
+  display: "swap",
+  variable: "--font-display",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "700"],
+  display: "swap",
+  variable: "--font-accent",
+});
+
 const baseUrl = getPublicBaseUrl();
 
 export const viewport: Viewport = {
@@ -25,16 +39,16 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "KRAFT Lotto | 로또 당첨 결과와 번호 관리",
-    template: "%s | KRAFT Lotto"
+    default: "KRAFT Lotto | 로또 결과와 번호 관리",
+    template: "%s | KRAFT Lotto",
   },
-  description: "최신 로또 당첨 결과 조회, 회차별 기록 확인, 번호 추천과 저장까지 한 곳에서 관리하세요.",
+  description: "최신 결과 확인, 회차 조회, 번호 추천, 저장 기능을 한 곳에서 제공합니다.",
   alternates: {
-    canonical: "/"
+    canonical: "/",
   },
   openGraph: {
     title: "KRAFT Lotto",
-    description: "당첨 결과 조회부터 번호 추천과 저장까지, 로또 확인에 필요한 기능을 한 곳에 모았습니다.",
+    description: "로또 결과 확인, 번호 추천, 저장 기능을 한 곳에서 제공합니다.",
     url: baseUrl,
     siteName: "KRAFT Lotto",
     locale: "ko_KR",
@@ -43,14 +57,15 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "KRAFT Lotto",
-    description: "당첨 결과 조회부터 번호 추천과 저장까지, 로또 확인에 필요한 기능을 한 곳에 모았습니다."
-  }
+    description: "로또 결과 확인, 번호 추천, 저장 기능을 한 곳에서 제공합니다.",
+  },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
-    <html lang="ko" className={notoSansKR.variable}>
+    <html lang="ko" className={`${notoSansKR.variable} ${notoSerifKR.variable} ${spaceGrotesk.variable}`}>
       <body>
         <JsonLdWebSite baseUrl={baseUrl} nonce={nonce} />
         <a href="#main-content" className="skip-nav">본문으로 건너뛰기</a>

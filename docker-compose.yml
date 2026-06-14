@@ -64,6 +64,8 @@ services:
       KRAFT_PUBLIC_BASE_URL: ${KRAFT_PUBLIC_BASE_URL:-http://localhost}
     volumes:
       - backend-logs:/app/logs
+    ports:
+      - "8080:8080"
     deploy:
       resources:
         limits:
@@ -104,6 +106,8 @@ services:
     volumes:
       - web-next-cache:/app/.next/cache
       - web-logs:/app/logs/web
+    ports:
+      - "3000:3000"
     depends_on:
       backend:
         condition: service_healthy

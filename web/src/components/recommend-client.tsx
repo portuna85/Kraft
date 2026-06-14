@@ -31,13 +31,13 @@ export function RecommendClient() {
       });
       const payload = await res.json() as RecommendationResponse | { message?: string };
       if (!res.ok) {
-        setMessage((payload as { message?: string }).message ?? "추천 조합을 생성하지 못했습니다.");
+        setMessage((payload as { message?: string }).message ?? "추천 생성에 실패했습니다.");
         return;
       }
       setRecommendations((payload as RecommendationResponse).recommendations);
       setMessage("");
     } catch {
-      setMessage("네트워크 문제로 추천 조합을 불러오지 못했습니다.");
+      setMessage("추천 결과를 불러오지 못했습니다.");
     } finally {
       setIsPending(false);
     }
@@ -57,13 +57,13 @@ export function RecommendClient() {
       });
       const payload = await res.json() as { created?: boolean; message?: string };
       if (!res.ok) {
-        setMessage(payload.message ?? "선택한 조합을 저장하지 못했습니다.");
+        setMessage(payload.message ?? "저장에 실패했습니다.");
         return;
       }
       setSavedIndexes((prev) => new Set(prev).add(index));
-      setMessage(payload.created ? "저장 목록에 추가했습니다." : "이미 저장된 조합입니다.");
+      setMessage(payload.created ? "저장했습니다." : "이미 저장된 조합입니다.");
     } catch {
-      setMessage("네트워크 문제로 저장 요청을 완료하지 못했습니다.");
+      setMessage("저장하지 못했습니다.");
     } finally {
       setSavingIndex(null);
     }
@@ -73,7 +73,7 @@ export function RecommendClient() {
     <div style={{ marginTop: "24px", display: "grid", gap: "20px" }}>
       <form className="recommend-form" onSubmit={handleRecommend}>
         <label>
-          만들 조합 수
+          조합 수
           <input
             type="number"
             min="1"
@@ -83,7 +83,7 @@ export function RecommendClient() {
           />
         </label>
         <label>
-          제외할 번호
+          제외 번호
           <input
             value={excluded}
             onChange={(e) => setExcluded(e.target.value)}
@@ -91,7 +91,7 @@ export function RecommendClient() {
           />
         </label>
         <button type="submit" disabled={isPending}>
-          {isPending ? "조합 생성 중…" : "추천 조합 만들기"}
+          {isPending ? "생성 중…" : "추천받기"}
         </button>
       </form>
 
@@ -110,10 +110,10 @@ export function RecommendClient() {
                 className={savedIndexes.has(index) ? "secondary" : ""}
               >
                 {savedIndexes.has(index)
-                  ? "✓ 저장 완료"
+                  ? "저장됨"
                   : savingIndex === index
                   ? "저장 중…"
-                  : "이 조합 저장"}
+                  : "저장"}
               </button>
             </article>
           ))}

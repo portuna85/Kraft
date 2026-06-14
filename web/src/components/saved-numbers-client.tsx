@@ -24,8 +24,8 @@ export function SavedNumbersClient() {
   async function loadSavedNumbers() {
     const response = await fetch("/api/v1/saved", {
       headers: {
-        "X-Device-Token": getDeviceToken()
-      }
+        "X-Device-Token": getDeviceToken(),
+      },
     });
 
     if (!response.ok) {
@@ -47,32 +47,33 @@ export function SavedNumbersClient() {
     event.preventDefault();
     setMessage("");
     const validation = validateLottoNumbers(
-      numbers.split(",").map((v) => Number(v.trim()))
+      numbers.split(",").map((v) => Number(v.trim())),
     );
     if (!validation.ok) {
       setMessage(validation.message);
       return;
     }
+
     try {
       const response = await fetch("/api/v1/saved", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Device-Token": getDeviceToken()
+          "X-Device-Token": getDeviceToken(),
         },
-        body: JSON.stringify({ numbers: validation.numbers, label: label || null, source: "MANUAL" })
+        body: JSON.stringify({ numbers: validation.numbers, label: label || null, source: "MANUAL" }),
       });
       const payload = await response.json() as { created?: boolean; message?: string };
       if (!response.ok) {
-        setMessage(payload.message ?? "번호를 저장하지 못했습니다.");
+        setMessage(payload.message ?? "저장에 실패했습니다.");
         return;
       }
-      setMessage(payload.created ? "번호를 저장 목록에 추가했습니다." : "이미 저장된 번호입니다.");
+      setMessage(payload.created ? "저장했습니다." : "이미 저장된 번호입니다.");
       setNumbers("");
       setLabel("");
       await loadSavedNumbers();
     } catch {
-      setMessage("네트워크 오류가 발생했습니다.");
+      setMessage("저장하지 못했습니다.");
     }
   }
 
@@ -80,16 +81,16 @@ export function SavedNumbersClient() {
     try {
       const response = await fetch(`/api/v1/saved/${id}`, {
         method: "DELETE",
-        headers: { "X-Device-Token": getDeviceToken() }
+        headers: { "X-Device-Token": getDeviceToken() },
       });
       if (!response.ok) {
-        setMessage("선택한 번호를 삭제하지 못했습니다.");
+        setMessage("삭제에 실패했습니다.");
         return;
       }
-      setMessage("번호를 저장 목록에서 삭제했습니다.");
+      setMessage("삭제했습니다.");
       await loadSavedNumbers();
     } catch {
-      setMessage("네트워크 오류가 발생했습니다.");
+      setMessage("삭제하지 못했습니다.");
     }
   }
 
@@ -113,7 +114,7 @@ export function SavedNumbersClient() {
           />
         </label>
         <button type="submit" disabled={isPending}>
-          번호 저장
+          저장
         </button>
       </form>
 
@@ -124,7 +125,7 @@ export function SavedNumbersClient() {
           <li key={item.id} className="saved-item">
             <div>
               <LottoBalls numbers={item.numbers} />
-              <p className="muted">{item.label ?? "메모 없이 저장한 조합"}</p>
+              <p className="muted">{item.label ?? "메모 없음"}</p>
             </div>
             <button type="button" className="secondary" onClick={() => handleDelete(item.id)}>
               삭제

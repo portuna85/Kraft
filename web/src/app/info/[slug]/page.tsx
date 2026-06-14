@@ -337,8 +337,9 @@ export default async function InfoPage({ params }: Props) {
 
   return (
     <section className="panel">
-      <p className="eyebrow">안내</p>
+      <p className="eyebrow">서비스 안내</p>
       <h1 className="page-title">{info.title}</h1>
+      <p className="page-subtitle">{info.description}</p>
       {info.content}
     </section>
   );
