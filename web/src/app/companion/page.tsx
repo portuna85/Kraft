@@ -1,21 +1,14 @@
 import type { Metadata } from "next";
 import { getCompanionStats } from "@/lib/api";
+import { CompanionFilterClient } from "@/components/companion-filter-client";
 
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "동반 출현 통계 | KRAFT Lotto",
-  description: "두 번호가 함께 당첨되는 빈도를 분석합니다.",
+  description: "같은 회차에서 함께 나온 번호 조합을 기준으로 동반 출현 빈도를 확인합니다.",
   alternates: { canonical: "/companion" }
 };
-
-function ballColorClass(n: number): string {
-  if (n <= 10) return "";
-  if (n <= 20) return "ball-blue";
-  if (n <= 30) return "ball-red";
-  if (n <= 40) return "ball-gray";
-  return "ball-green";
-}
 
 export default async function CompanionPage() {
   const stats = await getCompanionStats();
@@ -24,35 +17,12 @@ export default async function CompanionPage() {
   return (
     <section className="panel">
       <p className="eyebrow">통계</p>
-      <h1 className="page-title">동반 출현</h1>
+      <h1 className="page-title">동반 출현 상위 조합</h1>
       <p className="page-subtitle">
-        총 {stats.totalRounds}회차 기준 — 가장 자주 함께 당첨된 번호 쌍 상위 {pairs.length}개입니다.
+        총 {stats.totalRounds}회 기준으로 같은 회차에 자주 함께 등장한 번호 쌍 {pairs.length}개를 보여줍니다.
+        번호를 선택하면 해당 번호가 포함된 쌍만 필터합니다.
       </p>
-      <ol className="companion-list">
-        {pairs.map((pair, idx) => {
-          const pct = stats.totalRounds > 0
-            ? ((pair.coCount / stats.totalRounds) * 100).toFixed(1)
-            : "0.0";
-          return (
-            <li key={`${pair.ballA}-${pair.ballB}`} className="companion-item">
-              <span className="rank">{idx + 1}</span>
-              <div className="pair-balls">
-                <span className={`ball ball-sm ${ballColorClass(pair.ballA)}`}>
-                  {pair.ballA}
-                </span>
-                <span className="pair-sep">×</span>
-                <span className={`ball ball-sm ${ballColorClass(pair.ballB)}`}>
-                  {pair.ballB}
-                </span>
-              </div>
-              <div className="pair-info">
-                <span className="pair-count">{pair.coCount}회 동반</span>
-                <span className="pair-pct">{pct}%</span>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+      <CompanionFilterClient pairs={pairs} totalRounds={stats.totalRounds} />
     </section>
   );
 }

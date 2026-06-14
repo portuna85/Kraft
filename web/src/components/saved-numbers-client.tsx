@@ -43,7 +43,7 @@ export function SavedNumbersClient() {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message ?? "저장함을 불러오지 못했습니다.");
+      throw new Error(error.message ?? "저장한 번호를 불러오지 못했습니다.");
     }
 
     const payload = (await response.json()) as SavedNumber[];
@@ -84,7 +84,7 @@ export function SavedNumbersClient() {
       return;
     }
 
-    setMessage(payload.created ? "번호를 저장했습니다." : "이미 저장된 번호입니다.");
+    setMessage(payload.created ? "번호를 저장 목록에 추가했습니다." : "이미 저장된 번호입니다.");
     setNumbers("");
     setLabel("");
     await loadSavedNumbers();
@@ -99,11 +99,11 @@ export function SavedNumbersClient() {
     });
 
     if (!response.ok) {
-      setMessage("번호를 삭제하지 못했습니다.");
+      setMessage("선택한 번호를 삭제하지 못했습니다.");
       return;
     }
 
-    setMessage("번호를 삭제했습니다.");
+    setMessage("번호를 저장 목록에서 삭제했습니다.");
     await loadSavedNumbers();
   }
 
@@ -115,7 +115,7 @@ export function SavedNumbersClient() {
           <input
             value={numbers}
             onChange={(event) => setNumbers(event.target.value)}
-            placeholder="예: 3,11,19,28,34,42"
+            placeholder="예: 3, 11, 19, 28, 34, 42"
           />
         </label>
         <label>
@@ -123,11 +123,11 @@ export function SavedNumbersClient() {
           <input
             value={label}
             onChange={(event) => setLabel(event.target.value)}
-            placeholder="직접 조합"
+            placeholder="예: 자동 추천 1번"
           />
         </label>
         <button type="submit" disabled={isPending}>
-          저장
+          번호 저장
         </button>
       </form>
 
@@ -138,7 +138,7 @@ export function SavedNumbersClient() {
           <li key={item.id} className="saved-item">
             <div>
               <LottoBalls numbers={item.numbers} />
-              <p className="muted">{item.label ?? "메모 없음"}</p>
+              <p className="muted">{item.label ?? "메모 없이 저장한 조합"}</p>
             </div>
             <button type="button" className="secondary" onClick={() => handleDelete(item.id)}>
               삭제

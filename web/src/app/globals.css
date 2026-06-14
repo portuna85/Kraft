@@ -660,6 +660,67 @@ input:focus-visible {
   color: var(--muted);
 }
 
+/* ── Companion filter ────────────────────────────────────────────── */
+.companion-filter {
+  margin-top: 20px;
+}
+.companion-filter-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 10px;
+}
+.companion-filter-balls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.companion-filter-balls .ball {
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, opacity 0.15s;
+}
+.companion-filter-balls .ball:hover {
+  opacity: 0.85;
+}
+.ball-selected {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* ── Round search form ───────────────────────────────────────────── */
+.round-search-form {
+  margin-top: 20px;
+  margin-bottom: 4px;
+  display: grid;
+  gap: 8px;
+}
+.round-search-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.round-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.round-search-input {
+  width: 140px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.round-search-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ── Analysis page ───────────────────────────────────────────────── */
 .analysis-wrap { margin-top: 24px; display: grid; gap: 20px; }
 .analysis-form {

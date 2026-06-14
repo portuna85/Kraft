@@ -12,12 +12,12 @@ export default function NotFound() {
       <p className="eyebrow">오류 404</p>
       <h1 className="page-title not-found-title">페이지를<br />찾을 수 없습니다</h1>
       <p className="page-subtitle">
-        요청하신 주소가 존재하지 않거나 이동되었습니다.
+        요청하신 페이지가 없거나 주소가 변경되었습니다. 아래 메뉴에서 다시 이동해 주세요.
       </p>
       <div className="not-found-actions">
-        <Link href="/" className="button">홈으로</Link>
-        <Link href="/latest" className="button secondary">최신 회차</Link>
-        <Link href="/rounds" className="button secondary">회차 목록</Link>
+        <Link href="/" className="button">홈으로 이동</Link>
+        <Link href="/latest" className="button secondary">최신 결과 보기</Link>
+        <Link href="/rounds" className="button secondary">전체 회차 보기</Link>
       </div>
     </section>
   );

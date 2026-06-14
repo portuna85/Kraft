@@ -6,14 +6,14 @@ import { usePathname } from "next/navigation";
 
 const links = [
   { href: "/", label: "홈" },
-  { href: "/latest", label: "최신 회차" },
-  { href: "/rounds", label: "회차 목록" },
-  { href: "/frequency", label: "빈도" },
-  { href: "/stats", label: "패턴" },
-  { href: "/companion", label: "동반" },
-  { href: "/analysis", label: "조합 분석" },
+  { href: "/latest", label: "최신 결과" },
+  { href: "/rounds", label: "전체 회차" },
+  { href: "/frequency", label: "출현 빈도" },
+  { href: "/stats", label: "패턴 통계" },
+  { href: "/companion", label: "동반 출현" },
+  { href: "/analysis", label: "번호 분석" },
   { href: "/recommend", label: "번호 추천" },
-  { href: "/saved", label: "저장함" },
+  { href: "/saved", label: "내 저장 번호" },
 ];
 
 function isCurrent(href: string, pathname: string): boolean {

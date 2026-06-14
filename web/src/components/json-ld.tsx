@@ -12,7 +12,7 @@ export function JsonLdWebSite({ baseUrl, nonce }: JsonLdWebSiteProps) {
         "@id": `${baseUrl}/#website`,
         url: baseUrl,
         name: "KRAFT Lotto",
-        description: "KST 기준 최신 로또 회차, 번호 추천, 저장함을 제공합니다.",
+        description: "로또 당첨 결과 조회, 추천 조합 생성, 저장 번호 관리를 제공하는 서비스입니다.",
         inLanguage: "ko-KR",
       },
       {
@@ -47,14 +47,14 @@ export function JsonLdLottoRound({ baseUrl, round, drawDate, nonce }: JsonLdLott
     "@id": `${baseUrl}/latest`,
     url: `${baseUrl}/latest`,
     name: `제${round}회 로또 당첨번호 (${drawDate})`,
-    description: `제${round}회 로또 당첨 번호와 보너스 번호, 추첨일을 KST 기준으로 확인합니다.`,
+    description: `제${round}회 로또 당첨 번호, 보너스 번호, 추첨일과 회차 정보를 확인할 수 있습니다.`,
     inLanguage: "ko-KR",
     isPartOf: { "@id": `${baseUrl}/#website` },
     breadcrumb: {
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "홈", item: baseUrl },
-        { "@type": "ListItem", position: 2, name: "최신 회차", item: `${baseUrl}/latest` },
+        { "@type": "ListItem", position: 2, name: "최신 결과", item: `${baseUrl}/latest` },
       ],
     },
   };

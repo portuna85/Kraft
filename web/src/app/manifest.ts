@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "KRAFT Lotto",
     short_name: "KRAFT",
-    description: "KST 기준 최신 로또 회차, 번호 추천, 저장함",
+    description: "로또 당첨 결과 조회, 번호 추천, 저장 번호 관리",
     start_url: "/",
     display: "standalone",
     background_color: "#f6f1e8",

@@ -25,16 +25,16 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "KRAFT Lotto | 한국 로또 번호 조회",
+    default: "KRAFT Lotto | 로또 당첨 결과와 번호 관리",
     template: "%s | KRAFT Lotto"
   },
-  description: "KST 기준 최신 로또 회차, 번호 추천, 저장함을 제공하는 KRAFT Lotto입니다.",
+  description: "최신 로또 당첨 결과 조회, 회차별 기록 확인, 번호 추천과 저장까지 한 곳에서 관리하세요.",
   alternates: {
     canonical: "/"
   },
   openGraph: {
     title: "KRAFT Lotto",
-    description: "최신 회차 조회와 번호 추천, 저장함까지 한 번에 확인합니다.",
+    description: "당첨 결과 조회부터 번호 추천과 저장까지, 로또 확인에 필요한 기능을 한 곳에 모았습니다.",
     url: baseUrl,
     siteName: "KRAFT Lotto",
     locale: "ko_KR",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "KRAFT Lotto",
-    description: "최신 회차 조회와 번호 추천, 저장함까지 한 번에 확인합니다."
+    description: "당첨 결과 조회부터 번호 추천과 저장까지, 로또 확인에 필요한 기능을 한 곳에 모았습니다."
   }
 };
 

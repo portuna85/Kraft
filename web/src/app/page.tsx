@@ -5,25 +5,25 @@ import { getLatestWinningNumber, WinningNumber } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const latest = await getLatestWinningNumber();
     return {
       title: `제${latest.round}회 로또 당첨번호 (${latest.drawDate}) | KRAFT Lotto`,
-      description: `제${latest.round}회 로또 6/45 당첨번호를 KST 기준으로 확인하세요. 번호 추천, 빈도 통계, 저장함 기능을 무료로 제공합니다.`,
+      description: `제${latest.round}회 로또 6/45 당첨 결과를 확인하고 추천 번호와 통계 기능까지 함께 이용하세요.`,
       alternates: { canonical: "/" },
       openGraph: {
         title: `제${latest.round}회 로또 당첨번호 | KRAFT Lotto`,
-        description: `제${latest.round}회 당첨번호 ${[...latest.numbers, latest.bonusNumber].join(", ")}`,
+        description: `제${latest.round}회 당첨 번호 ${[...latest.numbers, latest.bonusNumber].join(", ")}`,
         url: "/",
       },
     };
   } catch {
     return {
-      title: "KRAFT Lotto | 한국 로또 번호 조회",
-      description: "매주 토요일 최신 로또 회차를 KST 기준으로 자동 업데이트합니다. 번호 추천, 빈도 통계, 저장함 기능을 무료로 제공합니다.",
+      title: "KRAFT Lotto | 로또 당첨 결과와 번호 관리",
+      description: "최신 회차부터 전체 기록까지 확인하고, 번호 추천과 저장 기능까지 한 번에 이용하세요.",
       alternates: { canonical: "/" },
     };
   }
@@ -41,22 +41,22 @@ export default async function HomePage() {
     <div className="grid">
       <section className="hero">
         <div>
-          <div className="eyebrow">KST 기준 · 매주 토요일 자동 업데이트</div>
-          <h1>로또 6/45 당첨번호 조회와 번호 추천을 한 번에</h1>
+          <div className="eyebrow">공식 발표 기준 · KST 반영</div>
+          <h1>최신 로또 당첨 결과와 내 번호 관리를 한 곳에서</h1>
           <p>
-            최신 회차부터 제1회까지 전체 당첨번호를 확인하고,
-            통계 기반 분석과 무작위 번호 추천을 무료로 이용하세요.
+            최신 회차 확인, 과거 기록 탐색, 추천 번호 생성, 저장한 조합 관리까지
+            실제 구매 전에 필요한 흐름을 간결하게 정리했습니다.
           </p>
           <div className="hero-actions">
-            <Link href="/latest" className="button">최신 회차 보기</Link>
-            <Link href="/recommend" className="button secondary">번호 추천 받기</Link>
-            <Link href="/saved" className="button secondary">저장함 열기</Link>
+            <Link href="/latest" className="button">최신 결과 확인</Link>
+            <Link href="/recommend" className="button secondary">추천 번호 만들기</Link>
+            <Link href="/saved" className="button secondary">내 번호 모아보기</Link>
           </div>
         </div>
         <aside className="hero-side">
           {latest ? (
             <>
-              <p className="eyebrow">최근 추첨</p>
+              <p className="eyebrow">가장 최근 추첨</p>
               <h2>{latest.round}회</h2>
               <p className="muted">{formatDrawDate(latest.drawDate)}</p>
               <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
@@ -64,9 +64,9 @@ export default async function HomePage() {
             </>
           ) : (
             <>
-              <p className="eyebrow">최근 추첨</p>
-              <p className="muted">아직 당첨번호 데이터가 없습니다.</p>
-              <Link href="/rounds" className="button secondary">회차 목록 보기</Link>
+              <p className="eyebrow">가장 최근 추첨</p>
+              <p className="muted">표시할 당첨 결과가 아직 준비되지 않았습니다.</p>
+              <Link href="/rounds" className="button secondary">전체 회차 둘러보기</Link>
             </>
           )}
         </aside>
@@ -75,18 +75,18 @@ export default async function HomePage() {
       <section className="grid grid-3">
         <article className="stat-card">
           <p className="eyebrow">조회</p>
-          <h3>최신 · 전체 회차</h3>
-          <p className="muted">제1회부터 최신 회차까지 모든 당첨번호를 조회하고, 회차별 상세 정보와 당첨금을 확인하세요.</p>
+          <h3>최신 결과부터 과거 기록까지</h3>
+          <p className="muted">최신 회차는 바로 확인하고, 필요한 경우 과거 회차 상세와 당첨 금액까지 이어서 살펴볼 수 있습니다.</p>
         </article>
         <article className="stat-card">
           <p className="eyebrow">추천</p>
-          <h3>무작위 번호 추천</h3>
-          <p className="muted">제외할 번호를 지정해 최대 10세트까지 추천받고, 마음에 드는 번호를 저장함으로 바로 보낼 수 있습니다.</p>
+          <h3>조건을 반영한 추천 번호</h3>
+          <p className="muted">제외하고 싶은 숫자를 반영해 여러 조합을 만들고, 괜찮은 조합은 바로 저장해 다시 꺼내볼 수 있습니다.</p>
         </article>
         <article className="stat-card">
           <p className="eyebrow">통계</p>
-          <h3>빈도 · 패턴 · 동반 분석</h3>
-          <p className="muted">번호별 출현 빈도, 홀짝 분포, 자주 함께 나오는 번호 쌍 등 전체 회차 통계를 무료로 열람하세요.</p>
+          <h3>빈도와 패턴을 빠르게 확인</h3>
+          <p className="muted">출현 빈도, 번호 분포, 함께 나온 번호 조합을 한눈에 보고 참고용 통계로 활용할 수 있습니다.</p>
         </article>
       </section>
     </div>

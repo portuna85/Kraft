@@ -3,12 +3,13 @@ import Link from "next/link";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getRounds } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
+import { RoundSearchForm } from "@/components/round-search-form";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "전체 회차 목록 | KRAFT Lotto",
-  description: "로또 6/45 제1회부터 최신 회차까지 전체 당첨번호 목록입니다.",
+  description: "제1회부터 최신 회차까지 로또 당첨 결과를 회차별로 확인할 수 있습니다.",
   alternates: { canonical: "/rounds" },
 };
 
@@ -38,8 +39,10 @@ export default async function RoundsPage({ searchParams }: Props) {
   return (
     <section className="panel">
       <p className="eyebrow">회차 목록</p>
-      <h1 className="page-title">전체 회차</h1>
-      <p className="muted">
+      <h1 className="page-title">전체 회차 기록</h1>
+      <RoundSearchForm />
+
+      <p className="muted" style={{ marginTop: "20px" }}>
         총 {rounds.totalElements.toLocaleString()}회 ·&nbsp;
         {currentPage} / {totalPages} 페이지
       </p>
@@ -53,7 +56,7 @@ export default async function RoundsPage({ searchParams }: Props) {
                 <p className="muted">{formatDrawDate(item.drawDate)}</p>
               </div>
               <Link href={`/rounds/${item.round}`} className="button secondary">
-                상세 보기
+                결과 상세
               </Link>
             </div>
             <LottoBalls numbers={item.numbers} bonusNumber={item.bonusNumber} />

@@ -5,7 +5,7 @@ export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "번호 빈도 통계 | KRAFT Lotto",
-  description: "로또 번호별 출현 빈도를 분석합니다.",
+  description: "번호별 출현 빈도를 기준으로 자주 나온 번호와 드물게 나온 번호를 확인합니다.",
   alternates: { canonical: "/frequency" }
 };
 
@@ -26,14 +26,14 @@ export default async function FrequencyPage() {
   return (
     <section className="panel">
       <p className="eyebrow">통계</p>
-      <h1 className="page-title">번호 빈도</h1>
+      <h1 className="page-title">번호별 출현 빈도</h1>
       <p className="page-subtitle">
-        총 {stats.totalRounds}회차 기준 — 각 번호가 당첨번호에 포함된 누적 횟수입니다.
+        총 {stats.totalRounds}회 기준으로 각 번호가 당첨 번호에 포함된 누적 횟수를 보여줍니다.
       </p>
 
       <div className="freq-summary">
         <div className="freq-rank-group">
-          <p className="freq-rank-label">자주 출현 TOP 5</p>
+          <p className="freq-rank-label">가장 자주 나온 번호 TOP 5</p>
           <div className="balls">
             {byFrequency.slice(0, 5).map((item) => (
               <span key={item.ballNumber} className={`ball ${ballColorClass(item.ballNumber)}`}>
@@ -43,7 +43,7 @@ export default async function FrequencyPage() {
           </div>
         </div>
         <div className="freq-rank-group">
-          <p className="freq-rank-label">드물게 출현 BOTTOM 5</p>
+          <p className="freq-rank-label">가장 적게 나온 번호 BOTTOM 5</p>
           <div className="balls">
             {[...byFrequency].reverse().slice(0, 5).map((item) => (
               <span key={item.ballNumber} className={`ball ${ballColorClass(item.ballNumber)}`}>

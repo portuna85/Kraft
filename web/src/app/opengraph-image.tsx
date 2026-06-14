@@ -52,7 +52,7 @@ export default function OgImage() {
           KRAFT Lotto
         </div>
         <div style={{ fontSize: 34, color: "#c94f24" }}>
-          로또 번호 조회 · 추천 · 저장
+          당첨 결과 조회 · 추천 조합 · 번호 저장
         </div>
       </div>
     ),

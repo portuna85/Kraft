@@ -16,7 +16,7 @@ export function AnalysisClient() {
 
     const parts = input.split(",").map((v) => parseInt(v.trim(), 10));
     if (parts.length !== 6 || parts.some(isNaN)) {
-      setError("번호 6개를 쉼표로 구분해 입력하세요. 예: 3,11,19,28,34,42");
+      setError("번호 6개를 쉼표로 구분해 입력해 주세요. 예: 3, 11, 19, 28, 34, 42");
       return;
     }
 
@@ -30,12 +30,12 @@ export function AnalysisClient() {
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          setError((body as { message?: string }).message ?? "분석 요청에 실패했습니다.");
+          setError((body as { message?: string }).message ?? "번호 분석을 완료하지 못했습니다.");
           return;
         }
         setResult(await res.json());
       } catch {
-        setError("네트워크 오류가 발생했습니다.");
+        setError("네트워크 문제로 분석 결과를 불러오지 못했습니다.");
       }
     });
   }
@@ -44,7 +44,7 @@ export function AnalysisClient() {
     <div className="analysis-wrap">
       <form onSubmit={handleSubmit} className="analysis-form">
         <label>
-          번호 6개 (쉼표 구분)
+          분석할 번호 6개
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -53,7 +53,7 @@ export function AnalysisClient() {
           />
         </label>
         <button type="submit" disabled={isPending}>
-          {isPending ? "분석 중…" : "분석"}
+          {isPending ? "분석 중…" : "분석 시작"}
         </button>
       </form>
 
@@ -61,7 +61,7 @@ export function AnalysisClient() {
 
       {result ? (
         <div className="analysis-result">
-          <h2 className="section-title">분석 결과</h2>
+          <h2 className="section-title">조합 분석 결과</h2>
 
           <div className="result-grid">
             <div className="result-cell">
@@ -78,13 +78,13 @@ export function AnalysisClient() {
               <span className="result-sub">{result.sumBucket} 구간</span>
             </div>
             <div className="result-cell">
-              <span className="result-label">연속 번호 쌍</span>
+              <span className="result-label">연속 번호</span>
               <span className="result-value">{result.consecutivePairCount}쌍</span>
             </div>
           </div>
 
           <div>
-            <p className="section-title" style={{ marginBottom: "10px" }}>번호대 분포</p>
+            <p className="section-title" style={{ marginBottom: "10px" }}>번호 구간 분포</p>
             <ul className="range-dist-list">
               {result.rangeDistribution.map((r) => (
                 <li key={r.range} className="range-dist-item">

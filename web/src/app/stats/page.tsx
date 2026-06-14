@@ -5,7 +5,7 @@ export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "패턴 통계 | KRAFT Lotto",
-  description: "홀짝 분포, 번호대 분포 등 로또 패턴 통계를 분석합니다.",
+  description: "홀짝 비율, 고저 분포, 합계 구간 등 회차 패턴을 통계로 확인합니다.",
   alternates: { canonical: "/stats" }
 };
 
@@ -53,19 +53,19 @@ export default async function StatsPage() {
     <section className="panel">
       <p className="eyebrow">통계</p>
       <h1 className="page-title">패턴 통계</h1>
-      <p className="page-subtitle">총 {stats.totalRounds}회차 기준 패턴 분포입니다.</p>
+      <p className="page-subtitle">총 {stats.totalRounds}회 기준으로 당첨 번호 조합의 분포를 정리했습니다.</p>
       <PatternSection
         title="홀수 개수 분포"
         buckets={stats.oddCounts}
         totalRounds={stats.totalRounds}
       />
       <PatternSection
-        title="고번호(23-45) 개수 분포"
+        title="고번호(23-45) 포함 개수"
         buckets={stats.highCounts}
         totalRounds={stats.totalRounds}
       />
       <PatternSection
-        title="합계 구간 분포"
+        title="번호 합계 구간 분포"
         buckets={stats.sumBuckets}
         totalRounds={stats.totalRounds}
       />

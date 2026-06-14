@@ -76,7 +76,7 @@ export function OpsDashboardClient() {
     setLoadingAction(null);
 
     if (!response.ok) {
-      setMessage((payload as ApiError).message ?? "운영 상태를 조회하지 못했습니다.");
+      setMessage((payload as ApiError).message ?? "운영 상태를 확인하지 못했습니다.");
       return;
     }
 
@@ -98,12 +98,12 @@ export function OpsDashboardClient() {
     setLoadingAction(null);
 
     if (!response.ok) {
-      setMessage((payload as ApiError).message ?? "최신 회차를 수집하지 못했습니다.");
+      setMessage((payload as ApiError).message ?? "최신 회차 데이터를 수집하지 못했습니다.");
       return;
     }
 
     setLastCollected(payload as WinningNumber);
-    setMessage("최신 회차를 수집했습니다.");
+    setMessage("최신 회차 데이터를 반영했습니다.");
     await loadSummary();
   }
 
@@ -127,12 +127,12 @@ export function OpsDashboardClient() {
     setLoadingAction(null);
 
     if (!response.ok) {
-      setMessage((payload as ApiError).message ?? "지정 회차를 수집하지 못했습니다.");
+      setMessage((payload as ApiError).message ?? "지정한 회차 데이터를 수집하지 못했습니다.");
       return;
     }
 
     setLastCollected(payload as WinningNumber);
-    setMessage(`${roundNumber}회차를 수집했습니다.`);
+    setMessage(`${roundNumber}회차 데이터를 반영했습니다.`);
     await loadSummary();
   }
 
@@ -162,13 +162,13 @@ export function OpsDashboardClient() {
     setLoadingAction(null);
 
     if (!response.ok) {
-      setMessage((payload as ApiError).message ?? "수동 회차 적재에 실패했습니다.");
+      setMessage((payload as ApiError).message ?? "수동 회차 등록에 실패했습니다.");
       return;
     }
 
     setLastCollected(payload as WinningNumber);
     setManualEntry(initialManualEntryForm);
-    setMessage(`${(payload as WinningNumber).round}회차를 수동으로 저장했습니다.`);
+    setMessage(`${(payload as WinningNumber).round}회차 데이터를 수동으로 저장했습니다.`);
     await loadSummary();
   }
 
@@ -177,7 +177,7 @@ export function OpsDashboardClient() {
       <article className="panel">
         <p className="eyebrow">운영 인증</p>
         <h2 className="ops-title">Ops 토큰 입력</h2>
-        <p className="page-subtitle">토큰은 브라우저에만 머무르며 서버 환경변수로 주입하지 않습니다.</p>
+        <p className="page-subtitle">입력한 토큰은 현재 브라우저 세션에서만 사용되며 별도로 저장하지 않습니다.</p>
         <div className="ops-controls">
           <label className="ops-field">
             <span>운영 토큰</span>
@@ -189,7 +189,7 @@ export function OpsDashboardClient() {
             />
           </label>
           <button type="button" onClick={loadSummary} disabled={!token || loadingAction !== null}>
-            {loadingAction === "summary" ? "조회 중..." : "상태 조회"}
+            {loadingAction === "summary" ? "조회 중..." : "운영 상태 확인"}
           </button>
         </div>
       </article>
@@ -199,7 +199,7 @@ export function OpsDashboardClient() {
         <h2 className="ops-title">회차 수집 실행</h2>
         <div className="ops-actions">
           <button type="button" onClick={collectLatest} disabled={!token || loadingAction !== null}>
-            {loadingAction === "latest" ? "수집 중..." : "최신 회차 수집"}
+            {loadingAction === "latest" ? "수집 중..." : "최신 회차 반영"}
           </button>
           <div className="ops-inline">
             <label className="ops-field">
@@ -213,7 +213,7 @@ export function OpsDashboardClient() {
               />
             </label>
             <button type="button" onClick={collectRound} disabled={!token || loadingAction !== null}>
-              {loadingAction === "round" ? "수집 중..." : "해당 회차 수집"}
+              {loadingAction === "round" ? "수집 중..." : "지정 회차 반영"}
             </button>
           </div>
         </div>
@@ -222,7 +222,7 @@ export function OpsDashboardClient() {
       <article className="panel">
         <p className="eyebrow">수동 적재</p>
         <h2 className="ops-title">회차 직접 입력</h2>
-        <p className="page-subtitle">외부 수집이 막히거나 운영 보정이 필요할 때 직접 upsert합니다.</p>
+        <p className="page-subtitle">외부 수집 실패나 데이터 보정이 필요한 경우 회차 정보를 직접 등록합니다.</p>
         <form className="ops-manual-form" onSubmit={submitManualEntry}>
           <label className="ops-field">
             <span>회차</span>
@@ -262,7 +262,7 @@ export function OpsDashboardClient() {
             />
           </label>
           <label className="ops-field">
-            <span>1등 총액</span>
+            <span>1등 당첨금</span>
             <input
               type="number"
               min="0"
@@ -272,7 +272,7 @@ export function OpsDashboardClient() {
             />
           </label>
           <button type="submit" disabled={!token || loadingAction !== null}>
-            {loadingAction === "manual" ? "저장 중..." : "수동 저장"}
+            {loadingAction === "manual" ? "저장 중..." : "수동 등록"}
           </button>
         </form>
       </article>
@@ -302,7 +302,7 @@ export function OpsDashboardClient() {
             </div>
             <div className="ops-summary-card">
               <strong>신선도</strong>
-              <span>{summary.fresh ? "정상" : "확인 필요"}</span>
+              <span>{summary.fresh ? "최신 상태" : "점검 필요"}</span>
             </div>
             <div className="ops-summary-card">
               <strong>확인 시각</strong>
@@ -316,9 +316,9 @@ export function OpsDashboardClient() {
         <article className="panel">
           <p className="eyebrow">최근 반영 결과</p>
           <h2 className="ops-title">{lastCollected.round}회차</h2>
-          <p className="page-subtitle">{formatDrawDate(lastCollected.drawDate)} 기준 데이터</p>
+          <p className="page-subtitle">{formatDrawDate(lastCollected.drawDate)} 기준 반영 데이터</p>
           <LottoBalls numbers={lastCollected.numbers} bonusNumber={lastCollected.bonusNumber} />
-          <p className="muted">1등 총액 {formatCurrency(lastCollected.firstPrizeAmount)}</p>
+          <p className="muted">1등 당첨금 {formatCurrency(lastCollected.firstPrizeAmount)}</p>
         </article>
       ) : null}
     </section>
