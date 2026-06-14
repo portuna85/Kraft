@@ -45,7 +45,7 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.0")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.9.0")
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.3.0")
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.4.0")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:4.1.0")
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
     runtimeOnly("com.h2database:h2")
