@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
 import type { RecommendationResponse } from "@/lib/api";
 import { getDeviceToken } from "@/lib/device-token";
 import { parseExcludedNumbers } from "@/lib/lotto-validation";
 
 export function RecommendClient() {
-  const [count, setCount] = useState("3");
+  const [count, setCount] = useState("5");
   const [excluded, setExcluded] = useState("");
   const [maximizePrize, setMaximizePrize] = useState(false);
   const [recommendations, setRecommendations] = useState<number[][]>([]);
@@ -16,22 +16,15 @@ export function RecommendClient() {
   const [savedIndexes, setSavedIndexes] = useState<Set<number>>(new Set());
   const [isPending, setIsPending] = useState(false);
 
-  async function handleRecommend(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function fetchRecommendations(reqCount: number, reqExcluded: number[], reqMaximizePrize: boolean) {
     setMessage("");
     setIsPending(true);
     setSavedIndexes(new Set());
-
-    const { valid: excludedNumbers, ignored } = parseExcludedNumbers(excluded);
-    if (ignored.length > 0) {
-      setMessage(`무시된 입력값 (1-45 범위 외): ${ignored.join(", ")}`);
-    }
-
     try {
       const res = await fetch("/api/v1/numbers/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: Number(count), excludedNumbers, maximizePrize }),
+        body: JSON.stringify({ count: reqCount, excludedNumbers: reqExcluded, maximizePrize: reqMaximizePrize }),
       });
       const payload = await res.json() as RecommendationResponse | { message?: string };
       if (!res.ok) {
@@ -39,12 +32,25 @@ export function RecommendClient() {
         return;
       }
       setRecommendations((payload as RecommendationResponse).recommendations);
-      if (ignored.length === 0) setMessage("");
     } catch {
       setMessage("추천 결과를 불러오지 못했습니다.");
     } finally {
       setIsPending(false);
     }
+  }
+
+  useEffect(() => {
+    void fetchRecommendations(5, [], false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleRecommend(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const { valid: excludedNumbers, ignored } = parseExcludedNumbers(excluded);
+    if (ignored.length > 0) {
+      setMessage(`무시된 입력값 (1-45 범위 외): ${ignored.join(", ")}`);
+    }
+    await fetchRecommendations(Number(count), excludedNumbers, maximizePrize);
   }
 
   async function handleSave(numbers: number[], index: number) {
