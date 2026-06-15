@@ -13,8 +13,7 @@ export default function RecommendPage() {
   return (
     <section className="panel">
       <p className="eyebrow">번호 추천</p>
-      <h1 className="page-title">추천 조합을 간편하게 만들어 보세요</h1>
-      <p className="page-subtitle">제외 번호를 반영해 조합을 만들고 바로 저장할 수 있습니다.</p>
+      <h1 className="page-title">번호 추천</h1>
       <RecommendClient />
     </section>
   );

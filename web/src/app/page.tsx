@@ -42,13 +42,11 @@ export default async function HomePage() {
     <div className="grid">
       <section className="hero">
         <div>
-          <div className="eyebrow">공식 발표 기준 · KST 반영</div>
-          <h1>로또 결과와 번호 관리를 한 곳에서</h1>
-          <p>최신 결과 확인, 번호 추천, 저장까지 필요한 기능만 간단하게 모았습니다.</p>
+          <h1>번호 추천 · 결과 조회 · 저장</h1>
           <div className="hero-actions">
-            <Link href="/latest" className="button">최신 결과 보기</Link>
-            <Link href="/recommend" className="button secondary">추천 번호 만들기</Link>
-            <Link href="/saved" className="button secondary">저장한 번호 보기</Link>
+            <Link href="/latest" className="button">최신 결과</Link>
+            <Link href="/recommend" className="button secondary">번호 추천</Link>
+            <Link href="/saved" className="button secondary">저장 번호</Link>
           </div>
         </div>
 
@@ -74,22 +72,19 @@ export default async function HomePage() {
       <section className="grid grid-3">
         <Link href="/latest" className="stat-card stat-link">
           <p className="eyebrow">결과 조회</p>
-          <h3>최신 결과 보기</h3>
-          <p className="muted">가장 최근 당첨 번호와 당첨금을 바로 확인합니다.</p>
+          <h3>최신 결과</h3>
           <span className="stat-link-cta">바로 보기</span>
         </Link>
 
         <Link href="/recommend" className="stat-card stat-link">
           <p className="eyebrow">번호 추천</p>
-          <h3>추천 조합 만들기</h3>
-          <p className="muted">제외 번호를 반영해 조합을 만들고 저장할 수 있습니다.</p>
+          <h3>추천 조합</h3>
           <span className="stat-link-cta">추천받기</span>
         </Link>
 
         <Link href="/frequency" className="stat-card stat-link">
-          <p className="eyebrow">통계 참고</p>
-          <h3>출현 통계 보기</h3>
-          <p className="muted">자주 나온 번호와 분포를 빠르게 비교합니다.</p>
+          <p className="eyebrow">출현 통계</p>
+          <h3>번호 통계</h3>
           <span className="stat-link-cta">통계 보기</span>
         </Link>
       </section>

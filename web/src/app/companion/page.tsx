@@ -16,8 +16,8 @@ export default async function CompanionPage() {
   return (
     <section className="panel">
       <p className="eyebrow">동반 출현</p>
-      <h1 className="page-title">함께 나온 번호 조합</h1>
-      <p className="page-subtitle">총 {stats.totalRounds}회 기준 상위 {pairs.length}개 조합을 보여줍니다.</p>
+      <h1 className="page-title">동반 출현 번호</h1>
+      <p className="muted" style={{ marginTop: 0 }}>총 {stats.totalRounds}회 기준 상위 {pairs.length}개</p>
       <CompanionFilterClient pairs={pairs} totalRounds={stats.totalRounds} />
     </section>
   );

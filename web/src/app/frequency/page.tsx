@@ -15,8 +15,7 @@ export default async function FrequencyPage() {
   return (
     <section className="panel">
       <p className="eyebrow">출현 통계</p>
-      <h1 className="page-title">번호별 출현 통계</h1>
-      <p className="page-subtitle">자주 나온 번호와 분포를 빠르게 비교할 수 있습니다.</p>
+      <h1 className="page-title">번호 출현 통계</h1>
       <FrequencyFilterClient initial={stats} />
     </section>
   );

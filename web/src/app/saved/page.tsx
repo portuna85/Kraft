@@ -17,8 +17,7 @@ export default function SavedPage() {
   return (
     <section className="panel">
       <p className="eyebrow">저장한 번호</p>
-      <h1 className="page-title">저장한 번호 모음</h1>
-      <p className="page-subtitle">저장한 조합을 다시 보고 정리할 수 있습니다.</p>
+      <h1 className="page-title">저장 번호</h1>
       <SavedNumbersClient />
     </section>
   );

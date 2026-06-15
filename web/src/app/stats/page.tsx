@@ -56,8 +56,8 @@ export default async function StatsPage() {
   return (
     <section className="panel">
       <p className="eyebrow">패턴 통계</p>
-      <h1 className="page-title">당첨 번호 패턴 통계</h1>
-      <p className="page-subtitle">총 {stats.totalRounds}회 기준 분포를 정리했습니다.</p>
+      <h1 className="page-title">패턴 통계</h1>
+      <p className="muted" style={{ marginTop: 0 }}>총 {stats.totalRounds}회 기준</p>
       <PatternSection
         title="홀수 개수 분포"
         buckets={stats.oddCounts}

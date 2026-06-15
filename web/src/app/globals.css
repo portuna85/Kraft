@@ -258,7 +258,7 @@ a {
 
 .eyebrow {
   color: var(--accent-strong);
-  font-size: 0.9rem;
+  font-size: 0.78rem;
   font-weight: 700;
   font-family: var(--font-accent), var(--font-sans), sans-serif;
   letter-spacing: 0.08em;
@@ -267,12 +267,12 @@ a {
 
 .hero h1,
 .page-title {
-  margin: 12px 0 16px;
+  margin: 8px 0 14px;
   font-family: var(--font-display), "Noto Serif KR", serif;
   font-weight: 700;
-  font-size: clamp(2.2rem, 4vw, 4.2rem);
-  line-height: 1.04;
-  letter-spacing: -0.045em;
+  font-size: clamp(1.6rem, 2.8vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 
@@ -298,14 +298,14 @@ a {
 }
 
 .hero > div {
-  gap: 4px;
+  gap: 2px;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 26px;
+  gap: 10px;
+  margin-top: 18px;
 }
 
 .button,
@@ -398,11 +398,11 @@ button:hover {
 }
 
 .hero-side h2 {
-  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
 }
 
 .stat-card h3 {
-  font-size: 1.32rem;
+  font-size: 1.1rem;
   line-height: 1.2;
   text-wrap: balance;
 }
@@ -554,9 +554,9 @@ input:focus-visible {
 }
 
 .ops-title {
-  margin: 8px 0 12px;
+  margin: 6px 0 10px;
   font-family: var(--font-display), "Noto Serif KR", serif;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   letter-spacing: -0.04em;
 }
 
