@@ -1,5 +1,8 @@
 package com.kraft.common.config;
 
+import jakarta.servlet.http.HttpServlet;
+import org.h2.server.web.JakartaWebServlet;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -20,5 +23,12 @@ public class LocalSecurityConfig {
                 .headers(headers -> headers.frameOptions(fo -> fo.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .build();
+    }
+
+    @Bean
+    ServletRegistrationBean<HttpServlet> h2ConsoleServlet() {
+        var reg = new ServletRegistrationBean<HttpServlet>(new JakartaWebServlet(), "/h2-console/*");
+        reg.setLoadOnStartup(1);
+        return reg;
     }
 }
