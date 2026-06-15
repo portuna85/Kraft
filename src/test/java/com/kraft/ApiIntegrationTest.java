@@ -113,8 +113,11 @@ class ApiIntegrationTest {
                 }
                 """;
 
+        // Token must be 32-128 chars (DeviceTokenSupport.requireHashedToken)
+        String deviceToken = "test-device-token-for-integration-test-01";
+
         String response = mockMvc.perform(post("/api/v1/saved")
-                        .header("X-Device-Token", "device-1")
+                        .header("X-Device-Token", deviceToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isCreated())
@@ -127,22 +130,22 @@ class ApiIntegrationTest {
         long savedId = extractId(response);
 
         mockMvc.perform(post("/api/v1/saved")
-                        .header("X-Device-Token", "device-1")
+                        .header("X-Device-Token", deviceToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.created", is(false)))
                 .andExpect(jsonPath("$.savedNumber.id", is((int) savedId)));
 
-        mockMvc.perform(get("/api/v1/saved").header("X-Device-Token", "device-1"))
+        mockMvc.perform(get("/api/v1/saved").header("X-Device-Token", deviceToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].label", is("favorites")));
 
-        mockMvc.perform(delete("/api/v1/saved/{id}", savedId).header("X-Device-Token", "device-1"))
+        mockMvc.perform(delete("/api/v1/saved/{id}", savedId).header("X-Device-Token", deviceToken))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/v1/saved").header("X-Device-Token", "device-1"))
+        mockMvc.perform(get("/api/v1/saved").header("X-Device-Token", deviceToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }

@@ -17,7 +17,14 @@ public class RequestIdFilter extends OncePerRequestFilter {
 
     public static final String HEADER_NAME = "X-Request-Id";
     public static final String MDC_KEY = "requestId";
+    public static final String MDC_CLIENT_IP = "clientIp";
     private static final Logger log = LoggerFactory.getLogger(RequestIdFilter.class);
+
+    private final ClientIpResolver clientIpResolver;
+
+    public RequestIdFilter(ClientIpResolver clientIpResolver) {
+        this.clientIpResolver = clientIpResolver;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -30,6 +37,7 @@ public class RequestIdFilter extends OncePerRequestFilter {
 
         long startedAt = System.nanoTime();
         MDC.put(MDC_KEY, requestId);
+        MDC.put(MDC_CLIENT_IP, clientIpResolver.resolve(request));
         response.setHeader(HEADER_NAME, requestId);
         try {
             filterChain.doFilter(request, response);
@@ -37,6 +45,7 @@ public class RequestIdFilter extends OncePerRequestFilter {
             long elapsedMs = (System.nanoTime() - startedAt) / 1_000_000;
             logRequest(request, response, elapsedMs);
             MDC.remove(MDC_KEY);
+            MDC.remove(MDC_CLIENT_IP);
         }
     }
 

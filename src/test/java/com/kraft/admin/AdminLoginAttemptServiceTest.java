@@ -46,9 +46,9 @@ class AdminLoginAttemptServiceTest {
         for (int i = 0; i < 5; i++) {
             service.recordFailure("admin", "1.2.3.4");
         }
-        // different IP — should not be locked
-        assertThat(service.isLockedOut("admin", "9.9.9.9")).isFalse();
-        // different user — should not be locked
+        // same user, different IP — account-level counter triggers lockout (distributed brute-force protection)
+        assertThat(service.isLockedOut("admin", "9.9.9.9")).isTrue();
+        // different user, same IP — should not be locked (different account)
         assertThat(service.isLockedOut("other", "1.2.3.4")).isFalse();
     }
 

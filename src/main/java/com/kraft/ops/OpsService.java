@@ -12,6 +12,7 @@ import com.kraft.winningnumber.WinningNumberCommandService;
 import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumberResponse;
 import com.kraft.winningnumber.WinningNumberUpsertRequest;
+import com.kraft.common.web.RequestIdFilter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Clock;
@@ -22,6 +23,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -113,22 +115,23 @@ public class OpsService {
     @Transactional
     public WinningNumberResponse upsertWinningNumber(String token, WinningNumberUpsertRequest request) {
         validateToken(token);
-        log.info("운영 수동 회차 저장 시작: round={} drawDate={}", request.round(), request.drawDate());
+        String caller = callerDetail();
+        log.info("운영 수동 회차 저장 시작: round={} drawDate={} caller={}", request.round(), request.drawDate(), caller);
         try {
             WinningNumberResponse response = winningNumberCommandService.upsert(request);
             winningNumberOperationLogService.logSuccess(
                     WinningNumberOperationType.MANUAL_UPSERT,
                     response.round(),
-                    "ops-api",
+                    caller,
                     "운영 수동 회차 저장에 성공했습니다."
             );
-            log.info("운영 수동 회차 저장 완료: round={}", response.round());
+            log.info("운영 수동 회차 저장 완료: round={} caller={}", response.round(), caller);
             return response;
         } catch (RuntimeException exception) {
             winningNumberOperationLogService.logFailure(
                     WinningNumberOperationType.MANUAL_UPSERT,
                     request.round(),
-                    "ops-api",
+                    caller,
                     exception.getMessage()
             );
             throw exception;
@@ -138,7 +141,7 @@ public class OpsService {
     @Transactional
     public WinningNumberResponse collectLatestWinningNumber(String token) {
         validateToken(token);
-        log.info("운영 최신 회차 수집 요청");
+        log.info("운영 최신 회차 수집 요청: caller={}", callerDetail());
         return winningNumberCollectionService.collectLatest();
     }
 
@@ -148,8 +151,14 @@ public class OpsService {
         if (round < 1) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_ROUND", "회차는 1 이상이어야 합니다.");
         }
-        log.info("운영 특정 회차 수집 요청: round={}", round);
+        log.info("운영 특정 회차 수집 요청: round={} caller={}", round, callerDetail());
         return winningNumberCollectionService.collectRound(round);
+    }
+
+    private static String callerDetail() {
+        String ip = MDC.get(RequestIdFilter.MDC_CLIENT_IP);
+        String requestId = MDC.get(RequestIdFilter.MDC_KEY);
+        return "ops-api ip=" + (ip != null ? ip : "unknown") + " requestId=" + (requestId != null ? requestId : "none");
     }
 
     private void validateToken(String token) {

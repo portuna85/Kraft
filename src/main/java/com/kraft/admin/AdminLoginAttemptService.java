@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
  * Tracks failed login attempts per (username+IP) AND per username alone.
  * Locks out if either counter reaches MAX_ATTEMPTS within LOCKOUT_WINDOW,
  * preventing multi-IP distributed brute-force that could bypass per-IP limits.
+ * NOTE: Caffeine 기반 — 단일 인스턴스 전용. 수평 확장 시 Redis 전환 필요.
  */
 @Service
 public class AdminLoginAttemptService {
