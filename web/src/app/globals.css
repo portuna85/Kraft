@@ -159,11 +159,6 @@ a {
   background: var(--nav-active-bg);
 }
 
-.nav a[href="/recommend"] {
-  background: rgba(201, 79, 36, 0.08);
-  color: var(--accent-strong);
-}
-
 .nav a[href="/recommend"]:hover,
 .nav a[href="/recommend"][aria-current="page"] {
   background: rgba(201, 79, 36, 0.14);
