@@ -1,6 +1,7 @@
 package com.kraft.admin;
 
 import com.kraft.common.web.ClientIpResolver;
+import com.kraft.winningnumber.WinningNumberBackfillService;
 import com.kraft.winningnumber.WinningNumberCollectionService;
 import com.kraft.winningnumber.WinningNumberListResponse;
 import com.kraft.winningnumber.WinningNumberQueryService;
@@ -22,15 +23,18 @@ public class AdminController {
 
     private final WinningNumberQueryService queryService;
     private final WinningNumberCollectionService collectionService;
+    private final WinningNumberBackfillService backfillService;
     private final AdminAuditLogService auditLogService;
     private final ClientIpResolver ipResolver;
 
     public AdminController(WinningNumberQueryService queryService,
                            WinningNumberCollectionService collectionService,
+                           WinningNumberBackfillService backfillService,
                            AdminAuditLogService auditLogService,
                            ClientIpResolver ipResolver) {
         this.queryService = queryService;
         this.collectionService = collectionService;
+        this.backfillService = backfillService;
         this.auditLogService = auditLogService;
         this.ipResolver = ipResolver;
     }
@@ -81,6 +85,22 @@ public class AdminController {
         } catch (Exception e) {
             redirect.addFlashAttribute("error", "수집 실패: " + e.getMessage());
         }
+        return "redirect:/admin/rounds";
+    }
+
+    @PostMapping("/rounds/collect-all")
+    public String collectAll(@AuthenticationPrincipal UserDetails user,
+                             HttpServletRequest req,
+                             RedirectAttributes redirect) {
+        if (backfillService.isRunning()) {
+            redirect.addFlashAttribute("error", "전체 회차 수집이 이미 진행 중입니다. 완료 후 다시 시도하세요.");
+            return "redirect:/admin/rounds";
+        }
+        backfillService.backfillAllAsync();
+        auditLogService.record(user.getUsername(), "COLLECT_ALL",
+                "전체 회차 수집 시작", null, ipResolver.resolve(req));
+        redirect.addFlashAttribute("success",
+                "전체 회차 수집을 백그라운드에서 시작했습니다. 수 분이 소요되며, 잠시 후 회차 목록을 새로고침하세요.");
         return "redirect:/admin/rounds";
     }
 

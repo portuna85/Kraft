@@ -32,6 +32,15 @@ public class WinningNumberCollectionService {
         this.eventPublisher = eventPublisher;
     }
 
+    /**
+     * 전체 수집(백필) 완료 후 1회만 호출 — 회차당 이벤트 폭주를 피하기 위함.
+     * {@code @Transactional} 경계 안에서 발행해야 AFTER_COMMIT 리스너(ISR 재검증)도 동작한다.
+     */
+    public void publishBulkCollected(int latestRound) {
+        log.info("전체 수집 완료 이벤트 발행: latestRound={}", latestRound);
+        eventPublisher.publishEvent(new WinningNumbersCollectedEvent(latestRound, true));
+    }
+
     public WinningNumberResponse collectLatest() {
         int nextRound = winningNumberRepository.findTopByOrderByRoundDesc()
                 .map(winningNumber -> winningNumber.getRound() + 1)
