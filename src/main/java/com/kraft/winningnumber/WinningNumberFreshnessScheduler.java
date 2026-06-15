@@ -24,7 +24,7 @@ public class WinningNumberFreshnessScheduler {
         this.clock = clock;
     }
 
-    @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 7 * * SUN", zone = "Asia/Seoul")
     @SchedulerLock(name = "check-freshness", lockAtMostFor = "PT5M")
     public void warnWhenStale() {
         winningNumberRepository.findTopByOrderByRoundDesc().ifPresent(latest -> {
