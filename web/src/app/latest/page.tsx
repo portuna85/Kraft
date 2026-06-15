@@ -23,14 +23,14 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!latest) {
     return {
       title: "최신 로또 결과 | KRAFT Lotto",
-      description: "가장 최근 회차의 당첨 번호를 확인할 수 있습니다.",
+      description: "최신 로또 6/45 당첨 번호와 당첨금을 확인합니다. 동행복권 공식 데이터 기반.",
       alternates: { canonical: "/latest" },
     };
   }
 
   return {
     title: `${latest.round}회 로또 당첨번호 (${latest.drawDate})`,
-    description: `${latest.round}회 당첨 번호와 당첨금을 확인할 수 있습니다.`,
+    description: `${latest.round}회 로또 6/45 당첨 번호 ${[...latest.numbers].join(", ")}(보너스 ${latest.bonusNumber}). 당첨금과 세후 예상 수령액을 확인합니다.`,
     alternates: { canonical: "/latest" },
     openGraph: {
       title: `${latest.round}회 로또 당첨번호 (${latest.drawDate}) | KRAFT Lotto`,

@@ -5,7 +5,7 @@ export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "출현 통계 | KRAFT Lotto",
-  description: "자주 나온 번호와 덜 나온 번호를 확인할 수 있습니다.",
+  description: "로또 6/45 제1회부터 최신 회차까지 번호별 출현 횟수와 비율을 확인할 수 있습니다.",
   alternates: { canonical: "/frequency" },
 };
 

@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const latest = await getLatestWinningNumber();
     return {
       title: `${latest.round}회 로또 당첨번호 (${latest.drawDate}) | KRAFT Lotto`,
-      description: `${latest.round}회 최신 결과와 번호 추천, 저장 기능을 한 곳에서 확인할 수 있습니다.`,
+      description: `${latest.round}회 로또 6/45 당첨 번호 ${[...latest.numbers].join(", ")}(보너스 ${latest.bonusNumber}). 당첨금 조회, 번호 추천·저장 기능 제공.`,
       alternates: { canonical: "/" },
       openGraph: {
         title: `${latest.round}회 로또 당첨번호 | KRAFT Lotto`,
@@ -22,8 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch {
     return {
-      title: "KRAFT Lotto | 로또 결과와 번호 관리",
-      description: "최신 결과 확인, 회차 조회, 번호 추천, 저장 기능을 한 곳에서 제공합니다.",
+      title: "KRAFT Lotto — 로또 6/45 당첨 결과 · 번호 추천",
+      description: "로또 6/45 최신 당첨 번호와 당첨금 조회, 번호 추천·저장 기능을 무료로 제공합니다. 동행복권 공식 데이터 기반.",
       alternates: { canonical: "/" },
     };
   }
@@ -42,7 +42,7 @@ export default async function HomePage() {
     <div className="grid">
       <section className="hero">
         <div>
-          <h1>번호 추천 · 결과 조회 · 저장</h1>
+          <h1>로또 6/45 결과 조회 · 번호 추천 · 저장</h1>
           <div className="hero-actions">
             <Link href="/latest" className="button">최신 결과</Link>
             <Link href="/recommend" className="button secondary">번호 추천</Link>

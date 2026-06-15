@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const balls = [...data.numbers, data.bonusNumber].join(", ");
     return {
       title: `${data.round}회 로또 당첨번호 (${data.drawDate})`,
-      description: `${data.round}회 당첨번호: ${balls}. 1등 당첨금 ${formatCurrency(data.firstPrizeAmount)}`,
+      description: `${data.round}회 로또 6/45 당첨 번호: ${balls}. 1등 당첨금 ${formatCurrency(data.firstPrizeAmount)}.`,
       alternates: { canonical: `/rounds/${data.round}` },
       openGraph: {
         title: `${data.round}회 로또 당첨번호`,

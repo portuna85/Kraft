@@ -5,7 +5,7 @@ export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "동반 출현 | KRAFT Lotto",
-  description: "함께 자주 나온 번호 조합을 확인할 수 있습니다.",
+  description: "로또 6/45에서 두 번호가 같은 회차에 함께 출현한 빈도를 분석한 동반 출현 통계입니다.",
   alternates: { canonical: "/companion" },
 };
 

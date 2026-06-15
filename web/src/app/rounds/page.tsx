@@ -8,7 +8,7 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "전체 회차 목록 | KRAFT Lotto",
-  description: "제1회부터 최신 회차까지 로또 당첨 결과를 회차별로 확인할 수 있습니다.",
+  description: "로또 6/45 제1회부터 최신 회차까지 전체 당첨 번호와 당첨금을 회차별로 조회합니다.",
   alternates: { canonical: "/rounds" },
 };
 
