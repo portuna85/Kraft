@@ -37,6 +37,11 @@ spring:
     baseline-on-migrate: ${KRAFT_FLYWAY_BASELINE_ON_MIGRATE:false}
     baseline-version: ${KRAFT_FLYWAY_BASELINE_VERSION:1}
 
+kraft:
+  revalidate:
+    # 로컬에서는 Docker 호스트명(web) 대신 localhost 사용
+    web-url: ${KRAFT_REVALIDATE_WEB_URL:http://localhost:3000}
+
 logging:
   level:
     root: info
