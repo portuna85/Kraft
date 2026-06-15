@@ -4,8 +4,9 @@ import { LottoBalls } from "@/components/lotto-balls";
 import { getRounds } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import { RoundSearchForm } from "@/components/round-search-form";
+import { REVALIDATE_ROUNDS_LIST } from "@/lib/revalidate";
 
-export const revalidate = 300;
+export const revalidate = REVALIDATE_ROUNDS_LIST;
 
 export const metadata: Metadata = {
   title: "전체 회차 목록 | KRAFT Lotto",

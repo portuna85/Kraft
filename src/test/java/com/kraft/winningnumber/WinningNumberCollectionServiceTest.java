@@ -45,14 +45,15 @@ class WinningNumberCollectionServiceTest {
                 null, null, null, null
         );
         when(fetchClient.fetchRound(1201)).thenReturn(fetched);
-        when(commandService.upsert(fetched)).thenReturn(new WinningNumberResponse(
+        WinningNumberResponse fetchedResponse = new WinningNumberResponse(
                 1201,
                 LocalDate.of(2026, 6, 20),
                 java.util.List.of(5, 12, 18, 27, 36, 44),
                 9,
                 2_100_000_000L,
                 0L, 0, 0L, 0L
-        ));
+        );
+        when(commandService.upsertWithResult(fetched)).thenReturn(new WinningNumberUpsertResult(fetchedResponse, true));
 
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         WinningNumberCollectionService service = new WinningNumberCollectionService(

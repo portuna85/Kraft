@@ -7,6 +7,7 @@ function createRandomToken(): string {
 }
 
 export function getDeviceToken(): string {
+  if (typeof window === "undefined") return "";
   const existing = window.localStorage.getItem(STORAGE_KEY);
   if (existing) return existing;
   const created =

@@ -88,8 +88,15 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
             if (item instanceof Map<?, ?> itemMap) {
                 Map<String, Object> itemData = (Map<String, Object>) itemMap;
                 Object ltEpsd = itemData.get("ltEpsd");
-                if (ltEpsd != null && Integer.parseInt(ltEpsd.toString()) == round) {
-                    return itemData;
+                if (ltEpsd != null) {
+                    int itemRound;
+                    try {
+                        itemRound = Integer.parseInt(ltEpsd.toString().trim());
+                    } catch (NumberFormatException e) {
+                        throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_PARSE_ERROR",
+                                "회차 번호 파싱 실패: " + ltEpsd);
+                    }
+                    if (itemRound == round) return itemData;
                 }
             }
         }

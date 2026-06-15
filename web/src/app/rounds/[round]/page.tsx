@@ -5,8 +5,9 @@ import { LottoBalls } from "@/components/lotto-balls";
 import { getRound, getLatestWinningNumber } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import { calcAfterTax } from "@/lib/tax";
+import { REVALIDATE_ROUND_DETAIL } from "@/lib/revalidate";
 
-export const revalidate = 3600;
+export const revalidate = REVALIDATE_ROUND_DETAIL;
 
 type Props = {
   params: Promise<{
@@ -52,63 +53,61 @@ export default async function RoundDetailPage({ params }: Props) {
     // 최신 회차 정보 없이도 진행
   }
 
-  try {
-    const data = await getRound(roundNumber);
-    const hasPrev = data.round > 1;
-    const hasNext = latestRound > 0 ? data.round < latestRound : false;
+  const data = await getRound(roundNumber).catch(() => null);
+  if (!data) notFound();
 
-    return (
-      <section className="panel">
-        <p className="eyebrow">회차 상세</p>
-        <h1 className="page-title">{data.round}회 당첨 결과</h1>
-        <p className="page-subtitle">{formatDrawDate(data.drawDate)}</p>
+  const hasPrev = data.round > 1;
+  const hasNext = latestRound > 0 ? data.round < latestRound : false;
 
-        <div style={{ marginTop: "24px" }}>
-          <LottoBalls numbers={data.numbers} bonusNumber={data.bonusNumber} />
+  return (
+    <section className="panel">
+      <p className="eyebrow">회차 상세</p>
+      <h1 className="page-title">{data.round}회 당첨 결과</h1>
+      <p className="page-subtitle">{formatDrawDate(data.drawDate)}</p>
+
+      <div style={{ marginTop: "24px" }}>
+        <LottoBalls numbers={data.numbers} bonusNumber={data.bonusNumber} />
+      </div>
+
+      <div className="round-detail-grid">
+        <div className="round-detail-cell">
+          <p className="round-detail-label">1등 당첨금</p>
+          <p className="round-detail-value">{formatCurrency(data.firstPrizeAmount)}</p>
         </div>
-
-        <div className="round-detail-grid">
-          <div className="round-detail-cell">
-            <p className="round-detail-label">1등 당첨금</p>
-            <p className="round-detail-value">{formatCurrency(data.firstPrizeAmount)}</p>
-          </div>
-          <div className="round-detail-cell">
-            <p className="round-detail-label">1등 총 당첨액</p>
-            <p className="round-detail-value">{formatCurrency(data.firstAccumAmount)}</p>
-          </div>
-          <div className="round-detail-cell">
-            <p className="round-detail-label">2등 당첨금</p>
-            <p className="round-detail-value">{formatCurrency(data.secondPrize)}</p>
-            {data.secondWinners > 0 && (
-              <p className="muted" style={{ marginTop: "4px" }}>당첨자 {data.secondWinners.toLocaleString()}명</p>
-            )}
-          </div>
-          <div className="round-detail-cell">
-            <p className="round-detail-label">총 판매금액</p>
-            <p className="round-detail-value">{formatCurrency(data.totalSales)}</p>
-          </div>
-          <div className="round-detail-cell">
-            <p className="round-detail-label">세후 예상 수령액</p>
-            <p className="round-detail-value">{formatCurrency(calcAfterTax(data.firstPrizeAmount))}</p>
-          </div>
+        <div className="round-detail-cell">
+          <p className="round-detail-label">1등 총 당첨액</p>
+          <p className="round-detail-value">{formatCurrency(data.firstAccumAmount)}</p>
         </div>
+        <div className="round-detail-cell">
+          <p className="round-detail-label">2등 당첨금</p>
+          <p className="round-detail-value">{formatCurrency(data.secondPrize)}</p>
+          {data.secondWinners > 0 && (
+            <p className="muted" style={{ marginTop: "4px" }}>당첨자 {data.secondWinners.toLocaleString()}명</p>
+          )}
+        </div>
+        <div className="round-detail-cell">
+          <p className="round-detail-label">총 판매금액</p>
+          <p className="round-detail-value">{formatCurrency(data.totalSales)}</p>
+        </div>
+        <div className="round-detail-cell">
+          <p className="round-detail-label">세후 예상 수령액</p>
+          <p className="round-detail-value">{formatCurrency(calcAfterTax(data.firstPrizeAmount))}</p>
+        </div>
+      </div>
 
-        <nav className="round-nav" aria-label="회차 이동">
-          {hasPrev ? (
-            <Link href={`/rounds/${data.round - 1}`} className="button secondary">← {data.round - 1}회</Link>
-          ) : (
-            <span />
-          )}
-          <Link href="/rounds" className="button secondary">전체 목록</Link>
-          {hasNext ? (
-            <Link href={`/rounds/${data.round + 1}`} className="button secondary">{data.round + 1}회 →</Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      </section>
-    );
-  } catch {
-    notFound();
-  }
+      <nav className="round-nav" aria-label="회차 이동">
+        {hasPrev ? (
+          <Link href={`/rounds/${data.round - 1}`} className="button secondary">← {data.round - 1}회</Link>
+        ) : (
+          <span />
+        )}
+        <Link href="/rounds" className="button secondary">전체 목록</Link>
+        {hasNext ? (
+          <Link href={`/rounds/${data.round + 1}`} className="button secondary">{data.round + 1}회 →</Link>
+        ) : (
+          <span />
+        )}
+      </nav>
+    </section>
+  );
 }

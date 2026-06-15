@@ -100,4 +100,64 @@ class WinningNumberCommandServiceTest {
 
         assertThat(result.changed()).isTrue();
     }
+
+    @Test
+    @DisplayName("2등 금액만 변경 시 changed=true 반환")
+    void upsertWithResult_secondPrizeChanged_changedTrue() {
+        WinningNumber existing = buildEntity();
+        given(repository.findByRound(1)).willReturn(Optional.of(existing));
+        given(repository.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+        WinningNumberUpsertRequest changedRequest = new WinningNumberUpsertRequest(
+                1, DRAW_DATE, NUMBERS, BONUS, 1_000_000_000L, 50_000_000L, null, null, null);
+
+        WinningNumberUpsertResult result = service.upsertWithResult(changedRequest);
+
+        assertThat(result.changed()).isTrue();
+    }
+
+    @Test
+    @DisplayName("2등 당첨자 수만 변경 시 changed=true 반환")
+    void upsertWithResult_secondWinnersChanged_changedTrue() {
+        WinningNumber existing = buildEntity();
+        given(repository.findByRound(1)).willReturn(Optional.of(existing));
+        given(repository.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+        WinningNumberUpsertRequest changedRequest = new WinningNumberUpsertRequest(
+                1, DRAW_DATE, NUMBERS, BONUS, 1_000_000_000L, null, 5, null, null);
+
+        WinningNumberUpsertResult result = service.upsertWithResult(changedRequest);
+
+        assertThat(result.changed()).isTrue();
+    }
+
+    @Test
+    @DisplayName("총 판매금액만 변경 시 changed=true 반환")
+    void upsertWithResult_totalSalesChanged_changedTrue() {
+        WinningNumber existing = buildEntity();
+        given(repository.findByRound(1)).willReturn(Optional.of(existing));
+        given(repository.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+        WinningNumberUpsertRequest changedRequest = new WinningNumberUpsertRequest(
+                1, DRAW_DATE, NUMBERS, BONUS, 1_000_000_000L, null, null, 80_000_000_000L, null);
+
+        WinningNumberUpsertResult result = service.upsertWithResult(changedRequest);
+
+        assertThat(result.changed()).isTrue();
+    }
+
+    @Test
+    @DisplayName("1등 누적금액만 변경 시 changed=true 반환")
+    void upsertWithResult_firstAccumAmountChanged_changedTrue() {
+        WinningNumber existing = buildEntity();
+        given(repository.findByRound(1)).willReturn(Optional.of(existing));
+        given(repository.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+        WinningNumberUpsertRequest changedRequest = new WinningNumberUpsertRequest(
+                1, DRAW_DATE, NUMBERS, BONUS, 1_000_000_000L, null, null, null, 3_000_000_000L);
+
+        WinningNumberUpsertResult result = service.upsertWithResult(changedRequest);
+
+        assertThat(result.changed()).isTrue();
+    }
 }

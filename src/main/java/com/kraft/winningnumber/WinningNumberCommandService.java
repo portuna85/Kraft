@@ -63,7 +63,11 @@ public class WinningNumberCommandService {
                 || !existing.getN5().equals(normalized.get(4))
                 || !existing.getN6().equals(normalized.get(5))
                 || !existing.getBonusNumber().equals(request.bonusNumber())
-                || !existing.getFirstPrizeAmount().equals(request.firstPrizeAmount());
+                || !existing.getFirstPrizeAmount().equals(request.firstPrizeAmount())
+                || existing.getSecondPrize() != orZero(request.secondPrize())
+                || existing.getSecondWinners() != orZeroInt(request.secondWinners())
+                || existing.getTotalSales() != orZero(request.totalSales())
+                || existing.getFirstAccumAmount() != orZero(request.firstAccumAmount());
     }
 
     private void updateExisting(WinningNumber existing,

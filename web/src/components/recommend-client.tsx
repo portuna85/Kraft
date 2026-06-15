@@ -21,7 +21,10 @@ export function RecommendClient() {
     setIsPending(true);
     setSavedIndexes(new Set());
 
-    const excludedNumbers = parseExcludedNumbers(excluded);
+    const { valid: excludedNumbers, ignored } = parseExcludedNumbers(excluded);
+    if (ignored.length > 0) {
+      setMessage(`무시된 입력값 (1-45 범위 외): ${ignored.join(", ")}`);
+    }
 
     try {
       const res = await fetch("/api/v1/numbers/recommend", {
@@ -35,7 +38,7 @@ export function RecommendClient() {
         return;
       }
       setRecommendations((payload as RecommendationResponse).recommendations);
-      setMessage("");
+      if (ignored.length === 0) setMessage("");
     } catch {
       setMessage("추천 결과를 불러오지 못했습니다.");
     } finally {

@@ -35,9 +35,23 @@ export function validateLottoNumbers(raw: (number | string)[]): LottoValidationR
   return { ok: true, numbers };
 }
 
-export function parseExcludedNumbers(input: string): number[] {
-  return input
-    .split(",")
-    .map((v) => Number(v.trim()))
-    .filter((v) => Number.isInteger(v) && v >= 1 && v <= 45);
+export interface ParseExcludedResult {
+  valid: number[];
+  ignored: string[];
+}
+
+export function parseExcludedNumbers(input: string): ParseExcludedResult {
+  const valid: number[] = [];
+  const ignored: string[] = [];
+  for (const token of input.split(",")) {
+    const trimmed = token.trim();
+    if (!trimmed) continue;
+    const n = Number(trimmed);
+    if (Number.isInteger(n) && n >= 1 && n <= 45) {
+      valid.push(n);
+    } else {
+      ignored.push(trimmed);
+    }
+  }
+  return { valid, ignored };
 }

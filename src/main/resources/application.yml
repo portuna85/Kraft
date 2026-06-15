@@ -69,4 +69,4 @@ kraft:
     rate-limit-max-keys: ${KRAFT_SECURITY_RATE_LIMIT_MAX_KEYS:10000}
   revalidate:
     secret: ${KRAFT_REVALIDATE_SECRET:}
-    web-url: ${KRAFT_BACKEND_INTERNAL_URL:http://web:3000}
+    web-url: ${KRAFT_REVALIDATE_WEB_URL:http://web:3000}

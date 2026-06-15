@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "eslint src",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -17,13 +18,18 @@
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "25.9.3",
+    "@types/node": "^24.0.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitest/coverage-v8": "^4.1.8",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.9",
     "jsdom": "^29.1.1",
     "typescript": "6.0.3",
     "vitest": "^4.1.8"

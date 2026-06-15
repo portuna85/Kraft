@@ -7,8 +7,9 @@ import { getLatestWinningNumber, getPublicBaseUrl, type WinningNumber } from "@/
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import { calcAfterTax } from "@/lib/tax";
 import logger from "@/lib/logger";
+import { REVALIDATE_LATEST } from "@/lib/revalidate";
 
-export const revalidate = 60;
+export const revalidate = REVALIDATE_LATEST;
 
 const getCachedLatest = cache(getLatestWinningNumber);
 

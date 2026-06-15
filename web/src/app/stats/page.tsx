@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { getPatternStats, type PatternBucket } from "@/lib/api";
+import { REVALIDATE_STATS } from "@/lib/revalidate";
 
-export const revalidate = 1800;
+export const revalidate = REVALIDATE_STATS;
 
 export const metadata: Metadata = {
   title: "패턴 통계 | KRAFT Lotto",

@@ -57,6 +57,7 @@ services:
       KRAFT_LOG_PATH: ${KRAFT_LOG_PATH:-/app/logs}
       KRAFT_OPS_TOKEN: ${KRAFT_OPS_TOKEN:-}
       KRAFT_REVALIDATE_SECRET: ${KRAFT_REVALIDATE_SECRET:-}
+      KRAFT_REVALIDATE_WEB_URL: ${KRAFT_REVALIDATE_WEB_URL:-http://web:3000}
       KRAFT_SAVED_MAX_PER_CLIENT: ${KRAFT_SAVED_MAX_PER_CLIENT:-100}
       KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE: ${KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE:-}
       KRAFT_EXTERNAL_LOTTO_AUTO_COLLECT_CRON: ${KRAFT_EXTERNAL_LOTTO_AUTO_COLLECT_CRON:-0 35 22 * * SAT}
@@ -148,6 +149,11 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/-/healthy | grep -q 'Prometheus Server is Healthy'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -167,6 +173,11 @@ services:
     volumes:
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana-data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health | grep -q '\"database\": \"ok\"'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     security_opt:
       - no-new-privileges:true
     deploy:
@@ -184,6 +195,11 @@ services:
     volumes:
       - ./infra/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager-data:/alertmanager
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9093/-/healthy | grep -q 'OK'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     security_opt:
       - no-new-privileges:true
     read_only: true

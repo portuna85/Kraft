@@ -5,7 +5,8 @@
 <th:block th:fragment="content">
   <h1>대시보드</h1>
 
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1.5rem">
+  <div th:if="${latest != null}"
+       style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:1.5rem">
     <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:1.25rem">
       <p style="color:#94a3b8;font-size:0.8rem;margin-bottom:0.4rem">최신 회차</p>
       <p style="font-size:1.5rem;font-weight:700;color:#f1f5f9" th:text="${latest.round} + '회'">-</p>
@@ -16,6 +17,10 @@
       <p style="font-size:1rem;color:#f1f5f9"
          th:text="${latest.num1}+', '+${latest.num2}+', '+${latest.num3}+', '+${latest.num4}+', '+${latest.num5}+', '+${latest.num6}+' + '+${latest.bonusNumber}">-</p>
     </div>
+  </div>
+  <div th:if="${latest == null}"
+       style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:1.5rem;margin-bottom:1.5rem;color:#94a3b8">
+    <p>아직 수집된 당첨 번호 데이터가 없습니다. 아래 수동 수집으로 데이터를 가져오세요.</p>
   </div>
 
   <h2 style="font-size:1rem;color:#94a3b8;margin-bottom:0.75rem">수동 수집</h2>

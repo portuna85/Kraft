@@ -89,6 +89,25 @@ jobs:
       attestations: write
       id-token: write
     steps:
+      - name: Verify required secrets
+        env:
+          CHECK_DB_URL: ${{ secrets.KRAFT_DB_URL }}
+          CHECK_DB_USERNAME: ${{ secrets.KRAFT_DB_USERNAME }}
+          CHECK_DB_PASSWORD: ${{ secrets.KRAFT_DB_PASSWORD }}
+          CHECK_REVALIDATE_SECRET: ${{ secrets.KRAFT_REVALIDATE_SECRET }}
+          CHECK_OPS_TOKEN: ${{ secrets.KRAFT_OPS_TOKEN }}
+        run: |
+          missing=()
+          [ -z "$CHECK_DB_URL" ]            && missing+=("KRAFT_DB_URL")
+          [ -z "$CHECK_DB_USERNAME" ]       && missing+=("KRAFT_DB_USERNAME")
+          [ -z "$CHECK_DB_PASSWORD" ]       && missing+=("KRAFT_DB_PASSWORD")
+          [ -z "$CHECK_REVALIDATE_SECRET" ] && missing+=("KRAFT_REVALIDATE_SECRET")
+          [ -z "$CHECK_OPS_TOKEN" ]         && missing+=("KRAFT_OPS_TOKEN")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Required secrets are missing: ${missing[*]}"
+            exit 1
+          fi
+          echo "All required secrets are present."
       - uses: actions/checkout@v6
       - uses: docker/login-action@v4
         with:
@@ -118,18 +137,30 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v6
-      - name: Trivy scan backend
+      - name: Trivy scan backend (block on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
           exit-code: "1"
           severity: HIGH,CRITICAL
-      - name: Trivy scan web
+      - name: Trivy scan backend (report MEDIUM)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+          exit-code: "0"
+          severity: MEDIUM
+      - name: Trivy scan web (block on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ github.repository }}/web:${{ github.sha }}
           exit-code: "1"
           severity: HIGH,CRITICAL
+      - name: Trivy scan web (report MEDIUM)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/web:${{ github.sha }}
+          exit-code: "0"
+          severity: MEDIUM
 
   promote:
     name: Promote to latest

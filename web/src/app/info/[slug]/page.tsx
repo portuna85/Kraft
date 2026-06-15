@@ -197,7 +197,7 @@ const infoPages: Record<string, InfoPage> = {
 
         <h2>제1조 목적</h2>
         <p>
-          본 약관은 KRAFT Lotto(이하 "서비스")가 제공하는 로또 조회, 통계, 번호 추천 기능의
+          본 약관은 KRAFT Lotto(이하 &ldquo;서비스&rdquo;)가 제공하는 로또 조회, 통계, 번호 추천 기능의
           이용 조건과 책임 범위를 정하는 데 목적이 있습니다.
         </p>
 

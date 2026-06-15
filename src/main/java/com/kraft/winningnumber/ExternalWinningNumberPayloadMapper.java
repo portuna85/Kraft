@@ -49,11 +49,13 @@ public class ExternalWinningNumberPayloadMapper {
     private List<Integer> extractNumbers(Map<String, Object> payload) {
         Object directNumbers = payload.get("numbers");
         if (directNumbers instanceof List<?> values) {
-            return values.stream().map(this::asInteger).toList();
+            List<Integer> result = values.stream().map(this::asInteger).toList();
+            validateNumbers(result);
+            return result;
         }
         // New format: tm1WnNo - tm6WnNo
         if (payload.containsKey("tm1WnNo")) {
-            return List.of(
+            return requireNumbers(
                     asInteger(payload.get("tm1WnNo")),
                     asInteger(payload.get("tm2WnNo")),
                     asInteger(payload.get("tm3WnNo")),
@@ -63,7 +65,7 @@ public class ExternalWinningNumberPayloadMapper {
             );
         }
         // Old format: drwtNo1 - drwtNo6
-        return List.of(
+        return requireNumbers(
                 asInteger(payload.get("drwtNo1")),
                 asInteger(payload.get("drwtNo2")),
                 asInteger(payload.get("drwtNo3")),
@@ -71,6 +73,27 @@ public class ExternalWinningNumberPayloadMapper {
                 asInteger(payload.get("drwtNo5")),
                 asInteger(payload.get("drwtNo6"))
         );
+    }
+
+    private List<Integer> requireNumbers(Integer... nums) {
+        List<Integer> result = new java.util.ArrayList<>();
+        for (int i = 0; i < nums.length; i++) {
+            if (nums[i] == null) {
+                throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_INVALID",
+                        "당첨 번호 " + (i + 1) + "번 필드가 누락되었습니다.");
+            }
+            result.add(nums[i]);
+        }
+        return java.util.Collections.unmodifiableList(result);
+    }
+
+    private void validateNumbers(List<Integer> numbers) {
+        for (int i = 0; i < numbers.size(); i++) {
+            if (numbers.get(i) == null) {
+                throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_INVALID",
+                        "당첨 번호 목록에 null 값이 포함되어 있습니다 (index " + i + ").");
+            }
+        }
     }
 
     // Converts YYYYMMDD (new API) to YYYY-MM-DD; passes through YYYY-MM-DD as-is.

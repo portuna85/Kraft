@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { FrequencyStatsResponse } from "@/lib/api";
+import { ballColorClass } from "@/lib/ball-color";
 
 const FILTERS = [
   { label: "전체", value: null },
@@ -9,14 +10,6 @@ const FILTERS = [
   { label: "최근 200회", value: 200 },
   { label: "최근 500회", value: 500 },
 ] as const;
-
-function ballColorClass(n: number): string {
-  if (n <= 10) return "";
-  if (n <= 20) return "ball-blue";
-  if (n <= 30) return "ball-red";
-  if (n <= 40) return "ball-gray";
-  return "ball-green";
-}
 
 type Props = {
   initial: FrequencyStatsResponse;

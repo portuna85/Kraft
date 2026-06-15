@@ -1,6 +1,7 @@
 package com.kraft.winningnumber;
 
 import com.kraft.common.error.ApiException;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,10 @@ public class WinningNumberQueryService {
         return winningNumberRepository.findTopByOrderByRoundDesc()
                 .map(WinningNumberResponse::from)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ROUND_NOT_FOUND", "당첨 번호 데이터가 없습니다."));
+    }
+
+    public Optional<WinningNumberResponse> findLatest() {
+        return winningNumberRepository.findTopByOrderByRoundDesc().map(WinningNumberResponse::from);
     }
 
     public WinningNumberResponse getByRound(int round) {

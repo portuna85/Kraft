@@ -1,16 +1,19 @@
 import type { MetadataRoute } from "next";
 import { getLatestWinningNumber, getPublicBaseUrl } from "@/lib/api";
+import { REVALIDATE_SITEMAP } from "@/lib/revalidate";
 
-export const revalidate = 3600;
+export const revalidate = REVALIDATE_SITEMAP;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getPublicBaseUrl();
+  let latestRound = 0;
   let lastMod: string | undefined;
   try {
     const latest = await getLatestWinningNumber();
+    latestRound = latest.round;
     lastMod = `${latest.drawDate}T00:00:00+09:00`;
   } catch {
-    // backend unavailable (e.g. during build); omit lastModified
+    // backend unavailable (e.g. during build); omit lastModified and round entries
   }
 
   // blueprint §14.1: 실존 URL만, 리다이렉트 없는 최종 형태로 등재
@@ -33,5 +36,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/info/responsible-play`, changeFrequency: "monthly" },
   ];
 
-  return staticRoutes;
+  const roundRoutes: MetadataRoute.Sitemap = latestRound > 0
+    ? Array.from({ length: latestRound }, (_, i) => ({
+        url: `${baseUrl}/rounds/${i + 1}`,
+        changeFrequency: "yearly" as const,
+        ...(i + 1 === latestRound ? { lastModified: lastMod } : {}),
+      }))
+    : [];
+
+  return [...staticRoutes, ...roundRoutes];
 }

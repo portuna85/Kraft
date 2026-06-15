@@ -47,7 +47,7 @@ public class AdminController {
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        model.addAttribute("latest", AdminRoundView.from(queryService.getLatest()));
+        queryService.findLatest().ifPresent(w -> model.addAttribute("latest", AdminRoundView.from(w)));
         return "admin/dashboard";
     }
 

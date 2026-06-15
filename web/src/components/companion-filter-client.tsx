@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import type { CompanionPair } from "@/lib/api";
-
-function ballColorClass(n: number): string {
-  if (n <= 10) return "";
-  if (n <= 20) return "ball-blue";
-  if (n <= 30) return "ball-red";
-  if (n <= 40) return "ball-gray";
-  return "ball-green";
-}
+import { ballColorClass } from "@/lib/ball-color";
 
 type Props = {
   pairs: CompanionPair[];
