@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { FrequencyFilterClient } from "@/components/frequency-filter-client";
 import { getFrequencyStats } from "@/lib/api";
-import { REVALIDATE_STATS } from "@/lib/revalidate";
-
-export const revalidate = REVALIDATE_STATS;
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "출현 통계 | KRAFT Lotto",

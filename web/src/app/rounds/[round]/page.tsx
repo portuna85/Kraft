@@ -5,9 +5,7 @@ import { LottoBalls } from "@/components/lotto-balls";
 import { getRound, getLatestWinningNumber } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import { calcAfterTax } from "@/lib/tax";
-import { REVALIDATE_ROUND_DETAIL } from "@/lib/revalidate";
-
-export const revalidate = REVALIDATE_ROUND_DETAIL;
+export const revalidate = 3600;
 
 type Props = {
   params: Promise<{

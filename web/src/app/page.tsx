@@ -5,9 +5,7 @@ import { RoundSearchForm } from "@/components/round-search-form";
 import { getLatestWinningNumber, type WinningNumber } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
-import { REVALIDATE_LATEST } from "@/lib/revalidate";
-
-export const revalidate = REVALIDATE_LATEST;
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   try {

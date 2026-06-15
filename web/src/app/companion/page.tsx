@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { CompanionFilterClient } from "@/components/companion-filter-client";
 import { getCompanionStats } from "@/lib/api";
-import { REVALIDATE_STATS } from "@/lib/revalidate";
-
-export const revalidate = REVALIDATE_STATS;
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "동반 출현 | KRAFT Lotto",

@@ -1,8 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getLatestWinningNumber, getPublicBaseUrl } from "@/lib/api";
-import { REVALIDATE_SITEMAP } from "@/lib/revalidate";
-
-export const revalidate = REVALIDATE_SITEMAP;
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getPublicBaseUrl();

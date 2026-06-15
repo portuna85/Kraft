@@ -4,20 +4,26 @@ spring:
       on-profile: local
     import: optional:file:.env.local[.properties]
   datasource:
-    # IntelliJ 로컬 실행 시 Docker MariaDB(localhost:3306) 기본 연결.
-    # H2 임베디드를 사용하려면 .env.local 에서 아래 값을 덮어쓰세요:
-    #   KRAFT_DB_URL=jdbc:h2:file:./build/local-db/kraft-lotto;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
-    #   KRAFT_DB_USERNAME=sa
-    #   KRAFT_DB_PASSWORD=
-    url: ${KRAFT_DB_URL:jdbc:mariadb://localhost:3306/kraft_lotto?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul}
-    username: ${KRAFT_DB_USERNAME:kraft_lotto}
+    # 기본값: H2 인메모리 — Docker 없이 IntelliJ에서 바로 실행 가능.
+    # MariaDB(Docker)를 사용하려면 .env.local 에서 아래 값을 덮어쓰세요:
+    #   KRAFT_DB_URL=jdbc:mariadb://localhost:3306/kraft_lotto?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    #   KRAFT_DB_USERNAME=kraft_lotto
+    #   KRAFT_DB_PASSWORD=<.env 의 MARIADB_PASSWORD 값>
+    #   KRAFT_FLYWAY_ENABLED=true
+    #   KRAFT_JPA_DDL_AUTO=validate
+    url: ${KRAFT_DB_URL:jdbc:h2:mem:kraft-lotto;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE}
+    username: ${KRAFT_DB_USERNAME:sa}
     password: ${KRAFT_DB_PASSWORD:}
     hikari:
       connection-timeout: 5000
       initialization-fail-timeout: 5000
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
   jpa:
     hibernate:
-      ddl-auto: ${KRAFT_JPA_DDL_AUTO:validate}
+      ddl-auto: ${KRAFT_JPA_DDL_AUTO:create-drop}
     properties:
       hibernate:
         jdbc:
@@ -27,9 +33,9 @@ spring:
     init:
       mode: never
   flyway:
-    enabled: ${KRAFT_FLYWAY_ENABLED:true}
-    baseline-on-migrate: ${KRAFT_FLYWAY_BASELINE_ON_MIGRATE:true}
-    baseline-version: ${KRAFT_FLYWAY_BASELINE_VERSION:7}
+    enabled: ${KRAFT_FLYWAY_ENABLED:false}
+    baseline-on-migrate: ${KRAFT_FLYWAY_BASELINE_ON_MIGRATE:false}
+    baseline-version: ${KRAFT_FLYWAY_BASELINE_VERSION:1}
 
 logging:
   level:
