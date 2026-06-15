@@ -7,24 +7,28 @@
   <table>
     <thead>
     <tr>
-      <th>시각</th><th>관리자</th><th>액션</th><th>대상</th><th>IP</th>
+      <th>시각</th><th>사용자</th><th>작업</th><th>대상</th><th>IP</th><th>상세</th>
     </tr>
     </thead>
     <tbody>
-    <tr th:each="log : ${logs.content}">
-      <td th:text="${#temporals.format(log.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+    <tr th:each="log : ${logs.content}"
+        th:style="${log.action != null and log.action.contains('FAIL')} ? 'background:#450a0a'">
+      <td th:text="${#temporals.format(log.createdAt, 'MM-dd HH:mm:ss')}"></td>
       <td th:text="${log.adminUser}"></td>
-      <td th:text="${log.action}"></td>
+      <td><code th:text="${log.action}"></code></td>
       <td th:text="${log.target}"></td>
       <td th:text="${log.ipAddress}"></td>
+      <td><small th:text="${log.detail}"></small></td>
+    </tr>
+    <tr th:if="${logs.content.isEmpty()}">
+      <td colspan="6" style="text-align:center;color:#64748b;padding:1.25rem">조회된 감사 로그가 없습니다.</td>
     </tr>
     </tbody>
   </table>
 
   <div class="pagination">
-    <span th:text="'총 ' + ${logs.totalElements} + '건'"></span>
+    <span th:text="'전체 ' + ${logs.totalElements} + '건 (페이지 ' + (${logs.number} + 1) + ' / ' + ${logs.totalPages} + ')'"></span>
     <a th:if="${logs.number > 0}" th:href="@{/admin/audit(page=${logs.number - 1})}">이전</a>
-    <span th:text="${logs.number + 1} + ' / ' + ${logs.totalPages} + ' 페이지'"></span>
     <a th:if="${logs.number + 1 < logs.totalPages}" th:href="@{/admin/audit(page=${logs.number + 1})}">다음</a>
   </div>
 </th:block>

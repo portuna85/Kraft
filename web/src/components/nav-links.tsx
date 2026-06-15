@@ -10,7 +10,7 @@ const primaryLinks = [
   { href: "/recommend", label: "번호 추천" },
   { href: "/saved", label: "저장한 번호" },
   { href: "/rounds", label: "전체 회차" },
-  { href: "/frequency", label: "출현 통계" },
+  { href: "/frequency", label: "빈도 통계" },
 ];
 
 const mobileOnlyLinks = [

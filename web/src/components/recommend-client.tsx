@@ -9,6 +9,7 @@ import { parseExcludedNumbers } from "@/lib/lotto-validation";
 export function RecommendClient() {
   const [count, setCount] = useState("3");
   const [excluded, setExcluded] = useState("");
+  const [maximizePrize, setMaximizePrize] = useState(false);
   const [recommendations, setRecommendations] = useState<number[][]>([]);
   const [message, setMessage] = useState("");
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
@@ -30,7 +31,7 @@ export function RecommendClient() {
       const res = await fetch("/api/v1/numbers/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: Number(count), excludedNumbers }),
+        body: JSON.stringify({ count: Number(count), excludedNumbers, maximizePrize }),
       });
       const payload = await res.json() as RecommendationResponse | { message?: string };
       if (!res.ok) {
@@ -92,6 +93,17 @@ export function RecommendClient() {
             onChange={(e) => setExcluded(e.target.value)}
             placeholder="예: 1, 2, 3"
           />
+        </label>
+        <label className="recommend-toggle">
+          <input
+            type="checkbox"
+            checked={maximizePrize}
+            onChange={(e) => setMaximizePrize(e.target.checked)}
+          />
+          당첨금 최대화
+          <span className="recommend-toggle-hint">
+            역대 당첨 조합 제외 · 비인기 조합 우선 선택
+          </span>
         </label>
         <button type="submit" disabled={isPending}>
           {isPending ? "생성 중…" : "추천받기"}

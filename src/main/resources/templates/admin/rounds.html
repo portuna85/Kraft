@@ -30,13 +30,15 @@
       <td th:text="${r.num1}+', '+${r.num2}+', '+${r.num3}+', '+${r.num4}+', '+${r.num5}+', '+${r.num6}+' + '+${r.bonusNumber}"></td>
       <td th:text="${#numbers.formatDecimal(r.firstPrizeAmount,0,'COMMA',0,'POINT')} + '원'"></td>
     </tr>
+    <tr th:if="${rounds.items.isEmpty()}">
+      <td colspan="4" style="text-align:center;color:#64748b;padding:1.25rem">조회된 회차 데이터가 없습니다.</td>
+    </tr>
     </tbody>
   </table>
 
   <div class="pagination">
-    <span th:text="'총 ' + ${rounds.totalElements} + '건'"></span>
+    <span th:text="'전체 ' + ${rounds.totalElements} + '건 (페이지 ' + (${rounds.page} + 1) + ' / ' + ${rounds.totalPages} + ')'"></span>
     <a th:if="${rounds.page > 0}" th:href="@{/admin/rounds(page=${rounds.page - 1})}">이전</a>
-    <span th:text="${rounds.page + 1} + ' / ' + ${rounds.totalPages} + ' 페이지'"></span>
     <a th:if="${rounds.page + 1 < rounds.totalPages}" th:href="@{/admin/rounds(page=${rounds.page + 1})}">다음</a>
   </div>
 </th:block>

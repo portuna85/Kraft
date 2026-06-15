@@ -34,9 +34,12 @@
 <body>
 <nav>
   <h2>KRAFT 관리자</h2>
-  <a th:href="@{/admin/dashboard}">대시보드</a>
-  <a th:href="@{/admin/rounds}">회차 관리</a>
-  <a th:href="@{/admin/audit}">감사 로그</a>
+  <a th:href="@{/admin/dashboard}"
+     th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/dashboard')} ? ' active'">대시보드</a>
+  <a th:href="@{/admin/rounds}"
+     th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/rounds')} ? ' active'">회차 관리</a>
+  <a th:href="@{/admin/audit}"
+     th:classappend="${#httpServletRequest.requestURI.startsWith('/admin/audit')} ? ' active'">감사 로그</a>
   <form th:action="@{/admin/logout}" method="post" class="logout" style="margin-top:auto">
     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
     <button type="submit" style="background:none;border:none;color:inherit;cursor:pointer;font-size:inherit;padding:0.45rem 0"

@@ -6,6 +6,7 @@ import java.util.List;
 
 public record RecommendNumbersRequest(
         @Min(1) @Max(10) Integer count,
-        List<Integer> excludedNumbers
+        List<Integer> excludedNumbers,
+        Boolean maximizePrize
 ) {
 }

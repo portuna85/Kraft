@@ -22,7 +22,7 @@ export function Footer() {
           ))}
         </nav>
         <p className="footer-copy">당첨 결과는 동행복권 공식 데이터를 기준으로 제공하며, 표기 시각은 KST입니다.</p>
-        <p className="footer-copy muted">KRAFT Lotto는 조회·통계 참고 서비스이며 당첨을 보장하지 않습니다.</p>
+        <p className="footer-copy muted">본 서비스는 당첨을 보장하지 않으며, 모든 번호·통계는 참고용입니다.</p>
       </div>
     </footer>
   );
