@@ -14,26 +14,36 @@ wait_healthy() {
   local elapsed=0
   echo "Waiting for $name to become healthy (timeout ${MAX_WAIT}s)..."
   while true; do
-    health=$(docker inspect --format='{{.State.Health.Status}}' "$name" 2>/dev/null || echo "missing")
-    if [[ "$health" == "healthy" ]]; then
-      echo "$name is healthy (${elapsed}s elapsed)"
-      return 0
-    fi
-    # Container exists but has no healthcheck (e.g. caddy running from a previous deploy
-    # before healthcheck was added): fall back to checking the Running state.
-    if [[ -z "$health" ]]; then
-      running=$(docker inspect --format='{{.State.Running}}' "$name" 2>/dev/null || echo "false")
-      if [[ "$running" == "true" ]]; then
-        echo "$name is running (no healthcheck configured, ${elapsed}s elapsed)"
+    # Use {{if .State.Health}} to avoid nil-pointer template errors on containers
+    # that have no healthcheck defined (e.g. caddy from a pre-healthcheck deploy).
+    health=$(docker inspect \
+      --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \
+      "$name" 2>/dev/null || echo "missing")
+
+    case "$health" in
+      healthy)
+        echo "$name is healthy (${elapsed}s elapsed)"
         return 0
-      fi
-    fi
+        ;;
+      none)
+        # Container is running but has no healthcheck — treat as ready.
+        echo "$name is running (no healthcheck, ${elapsed}s elapsed)"
+        return 0
+        ;;
+      missing)
+        # docker inspect failed: container does not exist yet.
+        ;;
+      *)
+        # starting | unhealthy — keep waiting.
+        ;;
+    esac
+
     if (( elapsed >= MAX_WAIT )); then
-      echo "ERROR: $name did not become healthy within ${MAX_WAIT}s (last status: ${health:-no-healthcheck})" >&2
+      echo "ERROR: $name did not become healthy within ${MAX_WAIT}s (last status: ${health})" >&2
       docker logs "$name" --tail 30 2>&1 || true
       return 1
     fi
-    echo "  $name status=${health:-no-healthcheck} (${elapsed}s elapsed)..."
+    echo "  $name status=${health} (${elapsed}s elapsed)..."
     sleep "$INTERVAL"
     elapsed=$(( elapsed + INTERVAL ))
   done
