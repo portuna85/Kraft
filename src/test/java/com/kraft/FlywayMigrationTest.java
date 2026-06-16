@@ -1,5 +1,6 @@
 package com.kraft;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -16,6 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
 @Testcontainers
+@DisplayName("Flyway 마이그레이션 및 스키마 검증 테스트")
 class FlywayMigrationTest {
 
     @Container
@@ -35,6 +37,7 @@ class FlywayMigrationTest {
     }
 
     @Test
+    @DisplayName("마이그레이션이 성공적으로 적용되고 엔티티와 스키마가 일치한다")
     void migrationsApplySuccessfully_andSchemaMatchesEntities() {
         // 컨텍스트가 로드되면 테스트 통과:
         // 1. 모든 Flyway 마이그레이션이 MariaDB에서 오류 없이 적용됨

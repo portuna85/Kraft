@@ -18,7 +18,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("WinningNumberBackfillService unit tests")
+@DisplayName("당첨 번호 백필 서비스 단위 테스트")
 class WinningNumberBackfillServiceTest {
 
     @Mock
@@ -49,7 +49,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("empty DB backfills from round 1 until source reports no data")
+    @DisplayName("DB가 비어있으면 1회차부터 데이터가 없을 때까지 백필을 진행한다")
     void backfillAll_emptyDb_collectsUntilRoundNotFound() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1)).willReturn(request(1));
@@ -70,7 +70,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("continuous DB starts from next round and does not publish when nothing collected")
+    @DisplayName("연속된 DB 데이터가 있는 경우 다음 회차부터 시작하며 수집된 것이 없으면 이벤트를 발행하지 않는다")
     void backfillAll_continuousDbStopsImmediatelyWithoutPublishing() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(
                 java.util.stream.IntStream.rangeClosed(1, 500).boxed().toList()
@@ -87,7 +87,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("sparse DB starts from the first missing round")
+    @DisplayName("DB에 누락된 회차가 있으면 첫 번째 누락된 회차부터 시작한다")
     void backfillAll_sparseDbStartsFromFirstMissingRound() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of(1, 2, 4, 1228));
         given(fetchClient.fetchRound(3)).willReturn(request(3));
@@ -104,7 +104,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("transient source error is retried before collecting the same round")
+    @DisplayName("일시적인 소스 오류 발생 시 재시도 후 수집을 진행한다")
     void backfillAll_transientErrorRetriesSameRoundAndCollects() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1))
@@ -124,7 +124,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("transient source errors stop after max retries are exceeded")
+    @DisplayName("일시적 소스 오류가 최대 재시도 횟수를 초과하면 중단한다")
     void backfillAll_transientErrorsStopAfterMaxRetriesExceeded() {
         RuntimeException temporary = new ApiException(
                 HttpStatus.SERVICE_UNAVAILABLE,
@@ -146,7 +146,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("disabled source is treated as fatal and stops immediately")
+    @DisplayName("소스가 비활성화된 경우 즉시 중단한다")
     void backfillAll_disabledSourceStopsImmediately() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1)).willThrow(new ApiException(
@@ -166,7 +166,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("invalid source payload is treated as end of data")
+    @DisplayName("잘못된 소스 페이로드가 오면 데이터의 끝으로 간주하고 중단한다")
     void backfillAll_invalidSourcePayloadStopsAsEndOfData() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1)).willThrow(sourceException("LOTTO_SOURCE_INVALID"));

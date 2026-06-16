@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@DisplayName("AdminController 스모크 테스트")
 class AdminControllerSmokeTest {
 
     @Autowired
@@ -50,18 +52,21 @@ class AdminControllerSmokeTest {
     }
 
     @Test
+    @DisplayName("대시보드 조회 시 200 OK를 반환한다")
     void dashboard_returns200() throws Exception {
         mockMvc.perform(get("/admin/dashboard").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @DisplayName("회차 관리 페이지 조회 시 200 OK를 반환한다")
     void rounds_returns200() throws Exception {
         mockMvc.perform(get("/admin/rounds").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @DisplayName("CSRF 토큰 없이 로그인 시도 시 만료 페이지로 리다이렉트된다")
     void loginPost_withoutCsrf_redirectsToExpiredLoginPage() throws Exception {
         mockMvc.perform(post("/admin/login")
                         .param("username", "admin")
