@@ -21,13 +21,15 @@ jobs:
       url: https://kraft.io.kr
 
     steps:
+      - name: Set lowercase repo name
+        run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         env:
           # 배포 대상 SHA (CI가 빌드·푸시한 이미지 태그와 일치)
           DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
-          KRAFT_BACKEND_IMAGE_REF: ghcr.io/${{ github.repository }}/backend
-          KRAFT_WEB_IMAGE_REF:     ghcr.io/${{ github.repository }}/web
+          KRAFT_BACKEND_IMAGE_REF: ghcr.io/${{ env.REPO_LC }}/backend
+          KRAFT_WEB_IMAGE_REF:     ghcr.io/${{ env.REPO_LC }}/web
           KRAFT_BACKEND_IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
           KRAFT_WEB_IMAGE_TAG:     ${{ github.event.workflow_run.head_sha }}
           # DB / 서비스 시크릿
