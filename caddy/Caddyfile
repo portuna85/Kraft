@@ -1,3 +1,7 @@
+www.{$KRAFT_DOMAIN} {
+	redir https://{$KRAFT_DOMAIN}{uri} permanent
+}
+
 {$KRAFT_DOMAIN} {
 	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	header X-Content-Type-Options "nosniff"

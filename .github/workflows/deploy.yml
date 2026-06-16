@@ -1,0 +1,63 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy to home server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/apps/kraft
+            git pull origin main
+
+            # GitHub Secrets에서 .env 생성
+            cat > .env << EOF
+            MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }}
+            MARIADB_DATABASE=kraft_lotto
+            MARIADB_USER=kraft_lotto
+            MARIADB_PASSWORD=${{ secrets.MARIADB_PASSWORD }}
+
+            SPRING_PROFILES_ACTIVE=prod
+            KRAFT_DB_URL=jdbc:mariadb://mariadb:3306/kraft_lotto?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+            KRAFT_DB_USERNAME=kraft_lotto
+            KRAFT_DB_PASSWORD=${{ secrets.KRAFT_DB_PASSWORD }}
+            KRAFT_LOG_PATH=/app/logs
+            KRAFT_OPS_TOKEN=${{ secrets.KRAFT_OPS_TOKEN }}
+            KRAFT_REVALIDATE_SECRET=${{ secrets.KRAFT_REVALIDATE_SECRET }}
+            KRAFT_REVALIDATE_WEB_URL=http://web:3000
+            KRAFT_SAVED_MAX_PER_CLIENT=100
+            KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE=
+            KRAFT_EXTERNAL_LOTTO_AUTO_COLLECT_CRON=0 35 22 * * SAT
+            KRAFT_SECURITY_TRUSTED_PROXY_CIDR=172.28.0.0/16
+            KRAFT_SECURITY_RATE_LIMIT_PER_MINUTE=120
+            KRAFT_SECURITY_RATE_LIMIT_MAX_KEYS=10000
+            KRAFT_PUBLIC_BASE_URL=https://kraft.io.kr
+            KRAFT_ADMIN_BOOTSTRAP_USERNAME=admin
+            KRAFT_ADMIN_BOOTSTRAP_PASSWORD=${{ secrets.KRAFT_ADMIN_BOOTSTRAP_PASSWORD }}
+
+            KRAFT_BACKEND_INTERNAL_URL=http://backend:8080
+            KRAFT_OPS_ALLOWED_HOST=admin.kraft.io.kr
+
+            KRAFT_DOMAIN=kraft.io.kr
+            KRAFT_ADMIN_DOMAIN=admin.kraft.io.kr
+
+            GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+            EOF
+
+            # 빌드 + 재시작
+            docker compose -f docker-compose.yml -f docker-compose.homeserver.yml up -d --build
+
+            # 결과 확인
+            docker compose -f docker-compose.yml -f docker-compose.homeserver.yml ps
