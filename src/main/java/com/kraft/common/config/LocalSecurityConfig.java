@@ -17,9 +17,11 @@ public class LocalSecurityConfig {
     @Bean
     @Order(0)
     SecurityFilterChain h2ConsoleFilterChain(HttpSecurity http) throws Exception {
+        // H2 웹 콘솔은 iframe 기반이므로 CSRF 토큰 전송이 불가능하다.
+        // 이 설정은 @Profile("local") 에서만 활성화되며 /h2-console/** 경로에만 적용된다.
         return http
                 .securityMatcher("/h2-console/**")
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // lgtm[java/spring-disabled-csrf-protection]
                 .headers(headers -> headers.frameOptions(fo -> fo.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .build();
