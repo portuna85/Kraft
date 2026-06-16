@@ -19,7 +19,7 @@ ENV JAVA_TOOL_OPTIONS="-XX:+UseZGC -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMem
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends curl ca-certificates \
-    && (apt-get purge -y --auto-remove pebble || true) \
+    && rm -f /usr/bin/pebble \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 10001 spring \
     && mkdir -p /app/logs \
