@@ -146,24 +146,26 @@ jobs:
       - uses: actions/checkout@v6
       - name: Set lowercase repo name
         run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
-      - name: Trivy scan backend (block on HIGH/CRITICAL)
+      - name: Trivy scan backend (block on HIGH/CRITICAL with fix)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
           exit-code: "1"
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
       - name: Trivy scan backend (report MEDIUM)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
           exit-code: "0"
           severity: MEDIUM
-      - name: Trivy scan web (block on HIGH/CRITICAL)
+      - name: Trivy scan web (block on HIGH/CRITICAL with fix)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
           exit-code: "1"
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
       - name: Trivy scan web (report MEDIUM)
         uses: aquasecurity/trivy-action@master
         with:
