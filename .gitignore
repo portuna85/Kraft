@@ -47,6 +47,7 @@ bin/
 !.env.example
 !.env.local.example
 !.env.prod.example
+!.env.homeserver.example
 node_modules/
 .next/
 *.tsbuildinfo

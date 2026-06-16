@@ -50,6 +50,8 @@ dependencies {
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
     implementation("com.h2database:h2")
 
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test:4.1.0")
     testImplementation("org.springframework.boot:spring-boot-webmvc-test:4.1.0")
     testImplementation("org.springframework.security:spring-security-test")
