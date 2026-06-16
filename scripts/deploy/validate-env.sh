@@ -2,11 +2,10 @@
 # Validates that all required environment variables are set before deploy.
 set -euo pipefail
 
+# KRAFT_DB_URL and KRAFT_DB_USERNAME are hardcoded in .env.prod.example — not shell env secrets
 REQUIRED_VARS=(
   MARIADB_ROOT_PASSWORD
   MARIADB_PASSWORD
-  KRAFT_DB_URL
-  KRAFT_DB_USERNAME
   KRAFT_DB_PASSWORD
   KRAFT_OPS_TOKEN
   KRAFT_REVALIDATE_SECRET

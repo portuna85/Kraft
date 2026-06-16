@@ -19,12 +19,21 @@ wait_healthy() {
       echo "$name is healthy (${elapsed}s elapsed)"
       return 0
     fi
+    # Container exists but has no healthcheck (e.g. caddy running from a previous deploy
+    # before healthcheck was added): fall back to checking the Running state.
+    if [[ -z "$health" ]]; then
+      running=$(docker inspect --format='{{.State.Running}}' "$name" 2>/dev/null || echo "false")
+      if [[ "$running" == "true" ]]; then
+        echo "$name is running (no healthcheck configured, ${elapsed}s elapsed)"
+        return 0
+      fi
+    fi
     if (( elapsed >= MAX_WAIT )); then
-      echo "ERROR: $name did not become healthy within ${MAX_WAIT}s (last status: ${health})" >&2
+      echo "ERROR: $name did not become healthy within ${MAX_WAIT}s (last status: ${health:-no-healthcheck})" >&2
       docker logs "$name" --tail 30 2>&1 || true
       return 1
     fi
-    echo "  $name status=${health} (${elapsed}s elapsed)..."
+    echo "  $name status=${health:-no-healthcheck} (${elapsed}s elapsed)..."
     sleep "$INTERVAL"
     elapsed=$(( elapsed + INTERVAL ))
   done
