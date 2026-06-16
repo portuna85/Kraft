@@ -26,19 +26,19 @@ public class CombinationScorer {
         for (int n : sorted) {
             sum += n;
 
-            if (n > 31) score += 3;   // 생일 편향 역방향: 32~45 선호
-            if (n <= 9)  score -= 4;  // 한 자리 숫자는 특히 인기
-            if (n % 5 == 0) score -= 2; // 라운드 번호(5 배수) 인기
-            if (n % 7 == 0) score -= 1; // 7 및 배수 "행운"으로 인기
+            if (n > 31) { score += 3; }   // 생일 편향 역방향: 32~45 선호
+            if (n <= 9) { score -= 4; }   // 한 자리 숫자는 특히 인기
+            if (n % 5 == 0) { score -= 2; } // 라운드 번호(5 배수) 인기
+            if (n % 7 == 0) { score -= 1; } // 7 및 배수 "행운"으로 인기
         }
 
         // 합계 구간: 낮은 합계는 혼잡, 130+ 구간은 상대적으로 여유
-        if (sum < 100)                score -= 5;
-        else if (sum >= 130 && sum <= 220) score += 4;
+        if (sum < 100) { score -= 5; }
+        else if (sum >= 130 && sum <= 220) { score += 4; }
 
         // 연속 쌍: 패턴 선택으로 가산 페널티
         for (int i = 0; i < sorted.size() - 1; i++) {
-            if (sorted.get(i + 1) - sorted.get(i) == 1) score -= 1;
+            if (sorted.get(i + 1) - sorted.get(i) == 1) { score -= 1; }
         }
 
         return score;

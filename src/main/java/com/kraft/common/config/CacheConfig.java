@@ -41,9 +41,9 @@ public class CacheConfig {
     ApplicationRunner cacheMicroMeterBinder(CacheManager cacheManager, MeterRegistry registry) {
         return args -> cacheManager.getCacheNames().forEach(name -> {
             @SuppressWarnings("unchecked")
-            Cache<Object, Object> native_ = (Cache<Object, Object>)
+            Cache<Object, Object> nativeCache = (Cache<Object, Object>)
                     Objects.requireNonNull(cacheManager.getCache(name)).getNativeCache();
-            CaffeineCacheMetrics.monitor(registry, native_, name);
+            CaffeineCacheMetrics.monitor(registry, nativeCache, name);
         });
     }
 

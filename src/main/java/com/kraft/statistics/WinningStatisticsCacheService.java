@@ -163,21 +163,21 @@ public class WinningStatisticsCacheService {
     }
 
     private static String sumBucket(int sum) {
-        if (sum < 66) return "21-65";
-        if (sum < 111) return "66-110";
-        if (sum < 156) return "111-155";
-        if (sum < 201) return "156-200";
+        if (sum < 66) { return "21-65"; }
+        if (sum < 111) { return "66-110"; }
+        if (sum < 156) { return "111-155"; }
+        if (sum < 201) { return "156-200"; }
         return "201-255";
     }
 
     private static List<AnalysisResponse.RangeDistribution> computeRangeDistribution(List<Integer> numbers) {
         int[] ranges = new int[5];
         for (int n : numbers) {
-            if (n <= 9) ranges[0]++;
-            else if (n <= 19) ranges[1]++;
-            else if (n <= 29) ranges[2]++;
-            else if (n <= 39) ranges[3]++;
-            else ranges[4]++;
+            if (n <= 9) { ranges[0]++; }
+            else if (n <= 19) { ranges[1]++; }
+            else if (n <= 29) { ranges[2]++; }
+            else if (n <= 39) { ranges[3]++; }
+            else { ranges[4]++; }
         }
         return List.of(
                 new AnalysisResponse.RangeDistribution("1-9", ranges[0]),

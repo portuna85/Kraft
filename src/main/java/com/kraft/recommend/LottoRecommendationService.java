@@ -99,7 +99,7 @@ public class LottoRecommendationService {
     private List<Integer> generateOne(Set<Integer> excluded) {
         List<Integer> candidates = new ArrayList<>(45 - excluded.size());
         for (int i = 1; i <= 45; i++) {
-            if (!excluded.contains(i)) candidates.add(i);
+            if (!excluded.contains(i)) { candidates.add(i); }
         }
 
         Set<Set<Integer>> snapshot = historicalCombinations;
