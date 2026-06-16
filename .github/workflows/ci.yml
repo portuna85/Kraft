@@ -48,10 +48,10 @@ jobs:
           KRAFT_BACKEND_INTERNAL_URL: http://localhost:8080
           KRAFT_PUBLIC_BASE_URL: http://localhost
 
+  # runs fully parallel — Gradle dep cache is enough; compiled classes aren't shared between jobs anyway
   static-analysis:
     name: Static Analysis
     runs-on: ubuntu-latest
-    needs: backend-build-test
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -83,10 +83,10 @@ jobs:
       - name: Check no removed features
         run: bash scripts/check-no-removed-features.sh
 
-  docker-publish:
-    name: Docker Publish
+  docker-publish-backend:
+    name: Docker Publish (backend)
     runs-on: ubuntu-latest
-    needs: [backend-build-test, web-build-test, static-analysis, caddy-validate]
+    needs: [backend-build-test, static-analysis, caddy-validate]
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
@@ -96,15 +96,11 @@ jobs:
     steps:
       - name: Verify required secrets
         env:
-          CHECK_DB_URL: ${{ secrets.KRAFT_DB_URL }}
-          CHECK_DB_USERNAME: ${{ secrets.KRAFT_DB_USERNAME }}
-          CHECK_DB_PASSWORD: ${{ secrets.KRAFT_DB_PASSWORD }}
-          CHECK_REVALIDATE_SECRET: ${{ secrets.KRAFT_REVALIDATE_SECRET }}
-          CHECK_OPS_TOKEN: ${{ secrets.KRAFT_OPS_TOKEN }}
+          CHECK_DB_PASSWORD:        ${{ secrets.KRAFT_DB_PASSWORD }}
+          CHECK_REVALIDATE_SECRET:  ${{ secrets.KRAFT_REVALIDATE_SECRET }}
+          CHECK_OPS_TOKEN:          ${{ secrets.KRAFT_OPS_TOKEN }}
         run: |
           missing=()
-          [ -z "$CHECK_DB_URL" ]            && missing+=("KRAFT_DB_URL")
-          [ -z "$CHECK_DB_USERNAME" ]       && missing+=("KRAFT_DB_USERNAME")
           [ -z "$CHECK_DB_PASSWORD" ]       && missing+=("KRAFT_DB_PASSWORD")
           [ -z "$CHECK_REVALIDATE_SECRET" ] && missing+=("KRAFT_REVALIDATE_SECRET")
           [ -z "$CHECK_OPS_TOKEN" ]         && missing+=("KRAFT_OPS_TOKEN")
@@ -129,6 +125,29 @@ jobs:
           file: Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+  docker-publish-web:
+    name: Docker Publish (web)
+    runs-on: ubuntu-latest
+    needs: [web-build-test, caddy-validate]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set lowercase repo name
+        run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
       - name: Build & push web
         uses: docker/build-push-action@v7
         with:
@@ -136,37 +155,49 @@ jobs:
           file: web/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
 
-  security-scan:
-    name: Security Scan
+  security-scan-backend:
+    name: Security Scan (backend)
     runs-on: ubuntu-latest
-    needs: docker-publish
+    needs: docker-publish-backend
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v6
       - name: Set lowercase repo name
         run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
-      - name: Trivy scan backend (block on HIGH/CRITICAL with fix)
+      - name: Trivy scan (block on HIGH/CRITICAL with fix)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
           exit-code: "1"
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-      - name: Trivy scan backend (report MEDIUM)
+      - name: Trivy scan (report MEDIUM)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
           exit-code: "0"
           severity: MEDIUM
-      - name: Trivy scan web (block on HIGH/CRITICAL with fix)
+
+  security-scan-web:
+    name: Security Scan (web)
+    runs-on: ubuntu-latest
+    needs: docker-publish-web
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set lowercase repo name
+        run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - name: Trivy scan (block on HIGH/CRITICAL with fix)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
           exit-code: "1"
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-      - name: Trivy scan web (report MEDIUM)
+      - name: Trivy scan (report MEDIUM)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
@@ -176,7 +207,7 @@ jobs:
   promote:
     name: Promote to latest
     runs-on: ubuntu-latest
-    needs: [security-scan, removed-feature-guard]
+    needs: [security-scan-backend, security-scan-web, removed-feature-guard]
     if: github.ref == 'refs/heads/main'
     permissions:
       packages: write
@@ -188,15 +219,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Promote backend
+      - uses: docker/setup-buildx-action@v3
+      - name: Promote backend to latest
         run: |
-          docker pull ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
-          docker tag ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }} \
-                     ghcr.io/${{ env.REPO_LC }}/backend:latest
-          docker push ghcr.io/${{ env.REPO_LC }}/backend:latest
-      - name: Promote web
+          docker buildx imagetools create \
+            --tag ghcr.io/${{ env.REPO_LC }}/backend:latest \
+            ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
+      - name: Promote web to latest
         run: |
-          docker pull ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
-          docker tag ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }} \
-                     ghcr.io/${{ env.REPO_LC }}/web:latest
-          docker push ghcr.io/${{ env.REPO_LC }}/web:latest
+          docker buildx imagetools create \
+            --tag ghcr.io/${{ env.REPO_LC }}/web:latest \
+            ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
