@@ -33,10 +33,10 @@ jobs:
           KRAFT_BACKEND_IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
           KRAFT_WEB_IMAGE_TAG:     ${{ github.event.workflow_run.head_sha }}
           # DB / 서비스 시크릿
+          # KRAFT_DB_URL, KRAFT_DB_USERNAME 은 .env.prod.example에 하드코딩됨
+          # (Docker Compose는 shell env가 --env-file보다 우선하므로 shell에서 제외)
           MARIADB_ROOT_PASSWORD: ${{ secrets.MARIADB_ROOT_PASSWORD }}
           MARIADB_PASSWORD:      ${{ secrets.MARIADB_PASSWORD }}
-          KRAFT_DB_URL:          ${{ secrets.KRAFT_DB_URL }}
-          KRAFT_DB_USERNAME:     ${{ secrets.KRAFT_DB_USERNAME }}
           KRAFT_DB_PASSWORD:     ${{ secrets.KRAFT_DB_PASSWORD }}
           KRAFT_OPS_TOKEN:       ${{ secrets.KRAFT_OPS_TOKEN }}
           KRAFT_REVALIDATE_SECRET: ${{ secrets.KRAFT_REVALIDATE_SECRET }}
@@ -63,7 +63,7 @@ jobs:
             KRAFT_BACKEND_IMAGE_REF,KRAFT_WEB_IMAGE_REF,
             KRAFT_BACKEND_IMAGE_TAG,KRAFT_WEB_IMAGE_TAG,
             MARIADB_ROOT_PASSWORD,MARIADB_PASSWORD,
-            KRAFT_DB_URL,KRAFT_DB_USERNAME,KRAFT_DB_PASSWORD,
+            KRAFT_DB_PASSWORD,
             KRAFT_OPS_TOKEN,KRAFT_REVALIDATE_SECRET,
             KRAFT_PUBLIC_BASE_URL,KRAFT_DOMAIN,KRAFT_ADMIN_DOMAIN,
             KRAFT_SECURITY_TRUSTED_PROXY_CIDR,
