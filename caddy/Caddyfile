@@ -7,7 +7,7 @@ www.{$KRAFT_DOMAIN} {
 	header X-Content-Type-Options "nosniff"
 	header Referrer-Policy "strict-origin-when-cross-origin"
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
-	encode brotli zstd gzip
+	encode zstd gzip
 
 	@blocked path /actuator* /ops* /admin*
 	respond @blocked 403
@@ -39,7 +39,7 @@ www.{$KRAFT_DOMAIN} {
 	header X-Content-Type-Options "nosniff"
 	header Referrer-Policy "strict-origin-when-cross-origin"
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
-	encode brotli zstd gzip
+	encode zstd gzip
 
 	@blocked path /actuator*
 	respond @blocked 403

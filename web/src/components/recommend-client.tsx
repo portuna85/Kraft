@@ -16,8 +16,8 @@ export function RecommendClient() {
   const [savedIndexes, setSavedIndexes] = useState<Set<number>>(new Set());
   const [isPending, setIsPending] = useState(false);
 
-  async function fetchRecommendations(reqCount: number, reqExcluded: number[], reqMaximizePrize: boolean) {
-    setMessage("");
+  async function fetchRecommendations(reqCount: number, reqExcluded: number[], reqMaximizePrize: boolean, initialMessage = "") {
+    setMessage(initialMessage);
     setIsPending(true);
     setSavedIndexes(new Set());
     try {
@@ -49,10 +49,8 @@ export function RecommendClient() {
   async function handleRecommend(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const { valid: excludedNumbers, ignored } = parseExcludedNumbers(excluded);
-    if (ignored.length > 0) {
-      setMessage(`무시된 입력값 (1-45 범위 외): ${ignored.join(", ")}`);
-    }
-    await fetchRecommendations(Number(count), excludedNumbers, maximizePrize);
+    const ignoredMsg = ignored.length > 0 ? `무시된 입력값 (1-45 범위 외): ${ignored.join(", ")}` : "";
+    await fetchRecommendations(Number(count), excludedNumbers, maximizePrize, ignoredMsg);
   }
 
   async function handleSave(numbers: number[], index: number) {
