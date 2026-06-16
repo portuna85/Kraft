@@ -96,7 +96,9 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
                         throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_PARSE_ERROR",
                                 "회차 번호 파싱 실패: " + ltEpsd);
                     }
-                    if (itemRound == round) { return itemData; }
+                    if (itemRound == round) {
+                        return itemData;
+                    }
                 }
             }
         }

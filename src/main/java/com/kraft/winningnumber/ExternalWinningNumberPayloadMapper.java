@@ -98,7 +98,9 @@ public class ExternalWinningNumberPayloadMapper {
 
     // Converts YYYYMMDD (new API) to YYYY-MM-DD; passes through YYYY-MM-DD as-is.
     private String normalizeDate(String raw) {
-        if (raw == null) { return null; }
+        if (raw == null) {
+            return null;
+        }
         if (raw.length() == 8 && !raw.contains("-")) {
             return raw.substring(0, 4) + "-" + raw.substring(4, 6) + "-" + raw.substring(6, 8);
         }
@@ -115,8 +117,12 @@ public class ExternalWinningNumberPayloadMapper {
     }
 
     private Integer asInteger(Object value) {
-        if (value == null) { return null; }
-        if (value instanceof Number number) { return number.intValue(); }
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
         try {
             return Integer.parseInt(value.toString().trim());
         } catch (NumberFormatException e) {
@@ -126,8 +132,12 @@ public class ExternalWinningNumberPayloadMapper {
     }
 
     private Long asLong(Object value) {
-        if (value == null) { return null; }
-        if (value instanceof Number number) { return number.longValue(); }
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
         try {
             return Long.parseLong(value.toString().trim());
         } catch (NumberFormatException e) {
