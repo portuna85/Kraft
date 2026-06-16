@@ -40,6 +40,8 @@ export function RecommendClient() {
   }
 
   useEffect(() => {
+    // 초기 로딩: 마운트 시 1회 추천 결과 자동 조회
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchRecommendations(5, [], true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -18,7 +18,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     environment:
       name: production
-      url: ${{ secrets.KRAFT_PUBLIC_BASE_URL }}
+      url: https://kraft.io.kr
 
     steps:
       - name: Deploy via SSH
