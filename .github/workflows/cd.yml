@@ -58,6 +58,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key:      ${{ secrets.DEPLOY_SSH_KEY }}
           port:     ${{ secrets.DEPLOY_PORT }}
+          command_timeout: 20m
           envs: >-
             DEPLOY_SHA,
             KRAFT_BACKEND_IMAGE_REF,KRAFT_WEB_IMAGE_REF,
