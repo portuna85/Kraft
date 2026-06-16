@@ -14,7 +14,7 @@ FROM eclipse-temurin:25-jre@sha256:5cf92df78f6dba978777d5cffa3c856e583f86814fde8
 WORKDIR /app
 
 # 컨테이너 친화적 JVM 옵션
-ENV JAVA_TOOL_OPTIONS="-XX:+UseZGC -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
+ENV JAVA_TOOL_OPTIONS="-XX:+UseZGC -XX:MaxRAMPercentage=55.0 -XX:+ExitOnOutOfMemoryError"
 
 RUN apt-get update \
     && apt-get upgrade -y \
