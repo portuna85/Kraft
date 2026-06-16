@@ -3,7 +3,6 @@ package com.kraft.winningnumber;
 import com.kraft.common.error.ApiException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import org.springframework.http.HttpStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -53,7 +51,7 @@ class WinningNumberBackfillServiceTest {
     @Test
     @DisplayName("empty DB backfills from round 1 until source reports no data")
     void backfillAll_emptyDb_collectsUntilRoundNotFound() {
-        given(repository.findTopByOrderByRoundDesc()).willReturn(Optional.empty());
+        given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1)).willReturn(request(1));
         given(fetchClient.fetchRound(2)).willReturn(request(2));
         given(fetchClient.fetchRound(3)).willReturn(request(3));
@@ -72,11 +70,11 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("existing latest round starts from next round and does not publish when nothing collected")
-    void backfillAll_existingLatestStopsImmediatelyWithoutPublishing() {
-        WinningNumber latest = mock(WinningNumber.class);
-        given(latest.getRound()).willReturn(500);
-        given(repository.findTopByOrderByRoundDesc()).willReturn(Optional.of(latest));
+    @DisplayName("continuous DB starts from next round and does not publish when nothing collected")
+    void backfillAll_continuousDbStopsImmediatelyWithoutPublishing() {
+        given(repository.findAllRoundsOrderByRoundAsc()).willReturn(
+                java.util.stream.IntStream.rangeClosed(1, 500).boxed().toList()
+        );
         given(fetchClient.fetchRound(501)).willThrow(sourceException("LOTTO_SOURCE_ROUND_NOT_FOUND"));
 
         BackfillResult result = service.backfillAll();
@@ -89,9 +87,26 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
+    @DisplayName("sparse DB starts from the first missing round")
+    void backfillAll_sparseDbStartsFromFirstMissingRound() {
+        given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of(1, 2, 4, 1228));
+        given(fetchClient.fetchRound(3)).willReturn(request(3));
+        given(fetchClient.fetchRound(4)).willThrow(sourceException("LOTTO_SOURCE_ROUND_NOT_FOUND"));
+        given(commandService.upsertWithResult(request(3))).willReturn(changedResult());
+
+        BackfillResult result = service.backfillAll();
+
+        assertThat(result.startRound()).isEqualTo(3);
+        assertThat(result.lastCollectedRound()).isEqualTo(3);
+        assertThat(result.collectedCount()).isEqualTo(1);
+        verify(fetchClient).fetchRound(3);
+        verify(collectionService).publishBulkCollected(3);
+    }
+
+    @Test
     @DisplayName("transient source error is retried before collecting the same round")
     void backfillAll_transientErrorRetriesSameRoundAndCollects() {
-        given(repository.findTopByOrderByRoundDesc()).willReturn(Optional.empty());
+        given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1))
                 .willThrow(sourceException("LOTTO_SOURCE_CIRCUIT_OPEN"))
                 .willReturn(request(1));
@@ -116,7 +131,7 @@ class WinningNumberBackfillServiceTest {
                 "LOTTO_SOURCE_CIRCUIT_OPEN",
                 "temporary source failure"
         );
-        given(repository.findTopByOrderByRoundDesc()).willReturn(Optional.empty());
+        given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1)).willThrow(temporary);
 
         BackfillResult result = service.backfillAll();
@@ -133,7 +148,7 @@ class WinningNumberBackfillServiceTest {
     @Test
     @DisplayName("disabled source is treated as fatal and stops immediately")
     void backfillAll_disabledSourceStopsImmediately() {
-        given(repository.findTopByOrderByRoundDesc()).willReturn(Optional.empty());
+        given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1)).willThrow(new ApiException(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "LOTTO_SOURCE_DISABLED",
@@ -153,7 +168,7 @@ class WinningNumberBackfillServiceTest {
     @Test
     @DisplayName("invalid source payload is treated as end of data")
     void backfillAll_invalidSourcePayloadStopsAsEndOfData() {
-        given(repository.findTopByOrderByRoundDesc()).willReturn(Optional.empty());
+        given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1)).willThrow(sourceException("LOTTO_SOURCE_INVALID"));
 
         BackfillResult result = service.backfillAll();

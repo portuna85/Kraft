@@ -27,6 +27,7 @@
 
   <div class="alert alert-error" th:if="${param.error}" role="alert">아이디 또는 비밀번호가 올바르지 않습니다.</div>
   <div class="alert alert-warn" th:if="${param.locked}" role="alert">로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도하세요.</div>
+  <div class="alert alert-warn" th:if="${param.expired}" role="alert">로그인 페이지가 만료되었습니다. 다시 로그인하세요.</div>
   <div class="alert alert-error" th:if="${param.logout}" role="alert" style="background:#052e16;border-color:#22c55e;color:#86efac">로그아웃되었습니다.</div>
 
   <form method="post" action="/admin/login" th:action="@{/admin/login}">

@@ -15,6 +15,11 @@
              style="background:#0f172a;border:1px solid #475569;border-radius:5px;color:#f1f5f9;padding:0.4rem 0.6rem;width:120px"/>
       <button type="submit" class="btn btn-primary btn-sm">수집</button>
     </form>
+    <form th:action="@{/admin/rounds/collect-all}" method="post"
+          onsubmit="return confirm('누락된 가장 이른 회차부터 최신 회차까지 전체 수집을 시작합니다. 수 분이 소요될 수 있습니다. 계속하시겠습니까?');">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="btn btn-primary">전체 회차 수집</button>
+    </form>
   </div>
 
   <table>

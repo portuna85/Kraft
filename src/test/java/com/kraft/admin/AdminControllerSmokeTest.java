@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -57,5 +59,14 @@ class AdminControllerSmokeTest {
     void rounds_returns200() throws Exception {
         mockMvc.perform(get("/admin/rounds").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void loginPost_withoutCsrf_redirectsToExpiredLoginPage() throws Exception {
+        mockMvc.perform(post("/admin/login")
+                        .param("username", "admin")
+                        .param("password", "unused"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/login?expired"));
     }
 }

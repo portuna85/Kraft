@@ -1,6 +1,7 @@
 package com.kraft.winningnumber;
 
 import com.kraft.common.error.ApiException;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
@@ -89,9 +90,7 @@ public class WinningNumberBackfillService {
 
     /** 동기 실행 — 1회차(또는 마지막 저장 회차 다음)부터 최신 회차까지 순차 수집. */
     BackfillResult backfillAll() {
-        int startRound = winningNumberRepository.findTopByOrderByRoundDesc()
-                .map(w -> w.getRound() + 1)
-                .orElse(1);
+        int startRound = firstMissingRound();
         log.info("전체 회차 수집 시작: startRound={}", startRound);
 
         int round = startRound;
@@ -176,5 +175,20 @@ public class WinningNumberBackfillService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private int firstMissingRound() {
+        List<Integer> storedRounds = winningNumberRepository.findAllRoundsOrderByRoundAsc();
+        int expected = 1;
+        for (Integer storedRound : storedRounds) {
+            if (storedRound == null || storedRound < expected) {
+                continue;
+            }
+            if (storedRound > expected) {
+                break;
+            }
+            expected++;
+        }
+        return expected;
     }
 }

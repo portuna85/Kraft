@@ -80,7 +80,7 @@ public class AdminController {
                 var resp = collectionService.collectLatest();
                 auditLogService.record(user.getUsername(), "COLLECT_LATEST",
                         "round=" + resp.round(), null, ipResolver.resolve(req));
-                redirect.addFlashAttribute("success", resp.round() + "회차 수집 완료");
+                redirect.addFlashAttribute("success", resp.round() + "회차 기준 최신 상태 확인 완료");
             }
         } catch (Exception e) {
             redirect.addFlashAttribute("error", "수집 실패: " + e.getMessage());
