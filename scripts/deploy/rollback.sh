@@ -14,7 +14,25 @@ IMAGE_REF="${2:?Usage: rollback.sh <service> <image-ref>}"
 cd "$REPO_ROOT"
 
 echo "==> Rolling back $SERVICE to $IMAGE_REF"
-export KRAFT_IMAGE_REF="$IMAGE_REF"
+
+# Split full image ref (repo:tag) into separate env vars that docker-compose.prod.yml expects
+IMAGE_TAG="${IMAGE_REF##*:}"
+IMAGE_REPO="${IMAGE_REF%:*}"
+
+case "$SERVICE" in
+  backend)
+    export KRAFT_BACKEND_IMAGE_REF="$IMAGE_REPO"
+    export KRAFT_BACKEND_IMAGE_TAG="$IMAGE_TAG"
+    ;;
+  web)
+    export KRAFT_WEB_IMAGE_REF="$IMAGE_REPO"
+    export KRAFT_WEB_IMAGE_TAG="$IMAGE_TAG"
+    ;;
+  *)
+    echo "Unknown service: $SERVICE (expected backend or web)" >&2
+    exit 1
+    ;;
+esac
 
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" \
   up -d --no-deps "$SERVICE"
