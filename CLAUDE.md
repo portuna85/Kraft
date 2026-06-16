@@ -44,6 +44,17 @@ Next.js HMR — 파일 저장 즉시 브라우저에 반영된다.
 
 ---
 
+## 배포 (CI/CD)
+
+`main` 브랜치 push 시 자동 실행:
+1. **CI** — 빌드·테스트·Docker 이미지 빌드 → GHCR 업로드
+2. **CD** — CI 완료 후 서버에서 이미지 pull → 무중단 배포 (실패 시 자동 롤백)
+
+서버 초기화: `sudo bash scripts/server/init-ubuntu.sh kraft`  
+Secrets 목록: `scripts/server/github-secrets.md`
+
+---
+
 ## 로컬 개발 환경 (IntelliJ + localhost)
 
 ### 사전 조건
