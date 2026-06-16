@@ -44,8 +44,8 @@ export function JsonLdLottoRound({ baseUrl, round, drawDate, nonce }: JsonLdLott
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "@id": `${baseUrl}/latest`,
-    url: `${baseUrl}/latest`,
+    "@id": `${baseUrl}/rounds`,
+    url: `${baseUrl}/rounds`,
     name: `제${round}회 로또 당첨번호 (${drawDate})`,
     description: `제${round}회 로또 당첨 번호, 보너스 번호, 추첨일과 회차 정보를 확인할 수 있습니다.`,
     inLanguage: "ko-KR",
@@ -54,7 +54,7 @@ export function JsonLdLottoRound({ baseUrl, round, drawDate, nonce }: JsonLdLott
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "홈", item: baseUrl },
-        { "@type": "ListItem", position: 2, name: "최신 결과", item: `${baseUrl}/latest` },
+        { "@type": "ListItem", position: 2, name: "결과 · 회차", item: `${baseUrl}/rounds` },
       ],
     },
   };

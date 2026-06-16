@@ -6,10 +6,9 @@ import { usePathname } from "next/navigation";
 
 const primaryLinks = [
   { href: "/", label: "홈" },
-  { href: "/latest", label: "최신 결과" },
+  { href: "/rounds", label: "결과 · 회차" },
   { href: "/recommend", label: "번호 추천" },
   { href: "/saved", label: "저장한 번호" },
-  { href: "/rounds", label: "전체 회차" },
   { href: "/frequency", label: "빈도 통계" },
 ];
 

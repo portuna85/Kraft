@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { FrequencyStatsResponse } from "@/lib/api";
+import type { FrequencyStatsResponse, BallFrequency } from "@/lib/api";
 import { ballColorClass } from "@/lib/ball-color";
 
 const FILTERS = [
@@ -14,6 +14,27 @@ const FILTERS = [
 type Props = {
   initial: FrequencyStatsResponse;
 };
+
+function BallWithStats({
+  item,
+  sampleSize,
+  size = "sm",
+}: {
+  item: BallFrequency;
+  sampleSize: number;
+  size?: "sm" | "md";
+}) {
+  const pct = sampleSize > 0 ? ((item.frequency / sampleSize) * 100).toFixed(1) : "0.0";
+  return (
+    <div className="freq-ball-item">
+      <span className={`ball ${size === "sm" ? "ball-sm" : ""} ${ballColorClass(item.ballNumber)}`}>
+        {item.ballNumber}
+      </span>
+      <span className="freq-count">{item.frequency}회</span>
+      <span className="freq-pct">{pct}%</span>
+    </div>
+  );
+}
 
 export function FrequencyFilterClient({ initial }: Props) {
   const [stats, setStats] = useState(initial);
@@ -41,8 +62,10 @@ export function FrequencyFilterClient({ initial }: Props) {
 
   const byNumber = [...stats.frequencies].sort((a, b) => a.ballNumber - b.ballNumber);
   const byFrequency = [...stats.frequencies].sort((a, b) => b.frequency - a.frequency);
-  const maxFreq = byFrequency[0]?.frequency ?? 1;
   const sampleSize = activeLimit ?? stats.totalRounds;
+
+  const top5 = byFrequency.slice(0, 5).sort((a, b) => a.ballNumber - b.ballNumber);
+  const bottom5 = [...byFrequency].reverse().slice(0, 5);
 
   return (
     <>
@@ -73,45 +96,26 @@ export function FrequencyFilterClient({ initial }: Props) {
       <div className="freq-summary">
         <div className="freq-rank-group">
           <p className="freq-rank-label">가장 자주 나온 번호 TOP 5</p>
-          <div className="balls">
-            {byFrequency.slice(0, 5).map((item) => (
-              <span key={item.ballNumber} className={`ball ${ballColorClass(item.ballNumber)}`}>
-                {item.ballNumber}
-              </span>
+          <div className="freq-rank-balls">
+            {top5.map((item) => (
+              <BallWithStats key={item.ballNumber} item={item} sampleSize={sampleSize} />
             ))}
           </div>
         </div>
         <div className="freq-rank-group">
           <p className="freq-rank-label">가장 적게 나온 번호 BOTTOM 5</p>
-          <div className="balls">
-            {[...byFrequency].reverse().slice(0, 5).map((item) => (
-              <span key={item.ballNumber} className={`ball ${ballColorClass(item.ballNumber)}`}>
-                {item.ballNumber}
-              </span>
+          <div className="freq-rank-balls">
+            {bottom5.map((item) => (
+              <BallWithStats key={item.ballNumber} item={item} sampleSize={sampleSize} />
             ))}
           </div>
         </div>
       </div>
 
       <div className="frequency-grid">
-        {byNumber.map((item) => {
-          const pct = sampleSize > 0
-            ? ((item.frequency / sampleSize) * 100).toFixed(1)
-            : "0.0";
-          const barWidth = Math.round((item.frequency / maxFreq) * 100);
-          return (
-            <div key={item.ballNumber} className="frequency-item">
-              <span className={`ball ball-sm ${ballColorClass(item.ballNumber)}`}>
-                {item.ballNumber}
-              </span>
-              <div className="bar-track">
-                <div className="bar-fill" style={{ width: `${barWidth}%` }} />
-              </div>
-              <span className="freq-count">{item.frequency}회</span>
-              <span className="freq-pct">{pct}%</span>
-            </div>
-          );
-        })}
+        {byNumber.map((item) => (
+          <BallWithStats key={item.ballNumber} item={item} sampleSize={sampleSize} />
+        ))}
       </div>
     </>
   );

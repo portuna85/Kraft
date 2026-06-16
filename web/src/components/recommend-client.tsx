@@ -9,7 +9,7 @@ import { parseExcludedNumbers } from "@/lib/lotto-validation";
 export function RecommendClient() {
   const [count, setCount] = useState("5");
   const [excluded, setExcluded] = useState("");
-  const [maximizePrize, setMaximizePrize] = useState(false);
+  const [maximizePrize, setMaximizePrize] = useState(true);
   const [recommendations, setRecommendations] = useState<number[][]>([]);
   const [message, setMessage] = useState("");
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
@@ -40,7 +40,7 @@ export function RecommendClient() {
   }
 
   useEffect(() => {
-    void fetchRecommendations(5, [], false);
+    void fetchRecommendations(5, [], true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -122,20 +122,18 @@ export function RecommendClient() {
         <div className="recommend-grid">
           {recommendations.map((numbers, index) => (
             <article key={`${numbers.join("-")}-${index}`} className="recommend-card">
-              <p className="eyebrow">추천 {index + 1}</p>
+              <div className="recommend-card-header">
+                <p className="eyebrow">추천 {index + 1}</p>
+                <button
+                  type="button"
+                  onClick={() => handleSave(numbers, index)}
+                  disabled={savingIndex === index || savedIndexes.has(index)}
+                  className={`recommend-save-btn${savedIndexes.has(index) ? " saved" : ""}`}
+                >
+                  {savedIndexes.has(index) ? "저장됨" : savingIndex === index ? "…" : "저장"}
+                </button>
+              </div>
               <LottoBalls numbers={numbers} />
-              <button
-                type="button"
-                onClick={() => handleSave(numbers, index)}
-                disabled={savingIndex === index || savedIndexes.has(index)}
-                className={savedIndexes.has(index) ? "secondary" : ""}
-              >
-                {savedIndexes.has(index)
-                  ? "저장됨"
-                  : savingIndex === index
-                  ? "저장 중…"
-                  : "저장"}
-              </button>
             </article>
           ))}
         </div>

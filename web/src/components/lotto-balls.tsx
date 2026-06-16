@@ -1,3 +1,5 @@
+import { ballColorClass } from "@/lib/ball-color";
+
 type Props = {
   numbers: number[];
   bonusNumber?: number;
@@ -7,7 +9,7 @@ export function LottoBalls({ numbers, bonusNumber }: Props) {
   return (
     <div className="balls">
       {numbers.map((number) => (
-        <span key={number} className="ball">
+        <span key={number} className={`ball ${ballColorClass(number)}`}>
           {number}
         </span>
       ))}
