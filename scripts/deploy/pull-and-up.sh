@@ -35,6 +35,13 @@ for attempt in 1 2 3 4 5; do
   sleep 2
 done
 
+echo "==> DEBUG: Caddyfile on disk ==="
+cat caddy/Caddyfile
+echo "==> DEBUG: live Caddy admin config (routes for \$KRAFT_DOMAIN) ==="
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
+  wget -qO- http://localhost:2019/config/ || echo "  (admin config fetch failed)"
+echo
+
 echo "==> Waiting for readiness..."
 bash scripts/deploy/wait-readiness.sh
 
