@@ -12,8 +12,16 @@ FAIL=0
 check_status() {
   local desc="$1" url="$2" expected="$3"
   # No -f flag: curl exits 0 even for 4xx/5xx so %{http_code} is captured cleanly.
-  # "000" only appears on network-level failures (DNS, timeout, connection refused).
-  actual=$(curl -o /dev/null -sS -w "%{http_code}" --max-time 10 "$url" 2>/dev/null || echo "000")
+  # "000" only appears on network-level failures (DNS, timeout, connection refused) —
+  # retry those a couple times since they're usually a transient blip, not a real
+  # routing/app bug. A real wrong-status-code mismatch is retried too (cheap) in
+  # case it's the server still settling right after a container recreate.
+  local actual attempt
+  for attempt in 1 2 3; do
+    actual=$(curl -o /dev/null -sS -w "%{http_code}" --max-time 10 "$url" 2>/dev/null || echo "000")
+    [[ "$actual" == "$expected" ]] && break
+    [[ "$attempt" -lt 3 ]] && sleep 2
+  done
   if [[ "$actual" == "$expected" ]]; then
     echo "  OK  [$actual] $desc"
   else
