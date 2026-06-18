@@ -28,6 +28,15 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
 # what's running and silently no-ops if it looks "the same" — observed in production
 # where repeated Caddyfile fixes never took effect despite reload reporting success.
 # Retried because on a fresh container the admin API may not be listening yet.
+echo "==> DEBUG: caddy container's actual bind mounts ==="
+docker inspect kraft-caddy --format '{{json .Mounts}}' || true
+echo "==> DEBUG: host caddy/Caddyfile md5 + 'route {' grep ==="
+md5sum caddy/Caddyfile || true
+grep -c "route {" caddy/Caddyfile || true
+echo "==> DEBUG: container's /etc/caddy/Caddyfile md5 + 'route {' grep ==="
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
+  sh -c "md5sum /etc/caddy/Caddyfile; grep -c 'route {' /etc/caddy/Caddyfile || true" || true
+
 echo "==> Reloading Caddy config..."
 for attempt in 1 2 3 4 5; do
   if docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
