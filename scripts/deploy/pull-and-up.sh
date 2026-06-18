@@ -18,6 +18,23 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" pull --quiet
 echo "==> Starting services (no-deps rolling update)..."
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
 
+# Compose only recreates a container when its own config (image/env/etc.) changes —
+# it cannot detect content changes inside a bind-mounted file like Caddyfile.
+# Force a graceful in-process reload so edits to caddy/Caddyfile always take effect.
+# Retried because on a fresh container the admin API may not be listening yet.
+echo "==> Reloading Caddy config..."
+for attempt in 1 2 3 4 5; do
+  if docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
+      caddy reload --config /etc/caddy/Caddyfile; then
+    break
+  fi
+  if [[ "$attempt" -eq 5 ]]; then
+    echo "ERROR: caddy reload failed after 5 attempts" >&2
+    exit 1
+  fi
+  sleep 2
+done
+
 echo "==> Waiting for readiness..."
 bash scripts/deploy/wait-readiness.sh
 
