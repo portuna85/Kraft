@@ -21,11 +21,14 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
 # Compose only recreates a container when its own config (image/env/etc.) changes —
 # it cannot detect content changes inside a bind-mounted file like Caddyfile.
 # Force a graceful in-process reload so edits to caddy/Caddyfile always take effect.
+# --address pins the admin API to 127.0.0.1 explicitly: "localhost" can resolve to
+# ::1 first inside the alpine container, which the admin listener doesn't bind,
+# silently turning the reload into a no-op (observed in production debug logs).
 # Retried because on a fresh container the admin API may not be listening yet.
 echo "==> Reloading Caddy config..."
 for attempt in 1 2 3 4 5; do
   if docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
-      caddy reload --config /etc/caddy/Caddyfile; then
+      caddy reload --config /etc/caddy/Caddyfile --address 127.0.0.1:2019; then
     break
   fi
   if [[ "$attempt" -eq 5 ]]; then
@@ -35,11 +38,9 @@ for attempt in 1 2 3 4 5; do
   sleep 2
 done
 
-echo "==> DEBUG: Caddyfile on disk ==="
-cat caddy/Caddyfile
 echo "==> DEBUG: live Caddy admin config (routes for \$KRAFT_DOMAIN) ==="
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
-  wget -qO- http://localhost:2019/config/ || echo "  (admin config fetch failed)"
+  wget -qO- http://127.0.0.1:2019/config/ || echo "  (admin config fetch failed)"
 echo
 
 echo "==> Waiting for readiness..."
