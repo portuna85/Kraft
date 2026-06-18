@@ -9,9 +9,17 @@ FAIL=0
 
 check_status() {
   local desc="$1" host="$2" path="$3" expected="$4"
-  local actual
-  actual=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 5 \
-    --resolve "${host}:443:127.0.0.1" "https://${host}${path}" 2>/dev/null || echo "000")
+  # Routes that proxy through to backend/web (anything beyond a Caddy-level
+  # static_response) can briefly connection-refuse/timeout ("000") right after
+  # --force-recreate while the new container's network stack settles — retry
+  # before declaring a real Caddyfile bug.
+  local actual attempt
+  for attempt in 1 2 3; do
+    actual=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 5 \
+      --resolve "${host}:443:127.0.0.1" "https://${host}${path}" 2>/dev/null || echo "000")
+    [[ "$actual" == "$expected" ]] && break
+    [[ "$attempt" -lt 3 ]] && sleep 1
+  done
   if [[ "$actual" == "$expected" ]]; then
     echo "  OK  [$actual] $desc"
   else

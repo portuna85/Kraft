@@ -24,4 +24,23 @@ echo "==> Recreating Caddy with reverted config..."
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --force-recreate --no-deps caddy
 sleep 2
 
-bash scripts/deploy/check-caddy-routes.sh
+# Deliberately NOT running check-caddy-routes.sh here: that script encodes the
+# *current* commit's expected routes, but PREV_SHA's Caddyfile is an older
+# commit and may legitimately lack routes added since (e.g. a deploy whose
+# whole point was adding a new route). Checking the reverted config against
+# today's expectations would always "fail" in that case even though the
+# revert itself worked fine. Just confirm Caddy is alive; the caller decides
+# overall deploy success via the full smoke-test.sh.
+echo "==> Verifying Caddy is responding after revert..."
+code="000"
+for attempt in 1 2 3 4 5; do
+  code=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 5 \
+    --resolve "${KRAFT_DOMAIN}:443:127.0.0.1" "https://${KRAFT_DOMAIN}/" 2>/dev/null || echo "000")
+  [[ "$code" != "000" ]] && break
+  sleep 1
+done
+if [[ "$code" == "000" ]]; then
+  echo "ERROR: Caddy not responding after Caddyfile revert" >&2
+  exit 1
+fi
+echo "  Caddy responding (status $code)"
