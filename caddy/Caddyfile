@@ -10,7 +10,9 @@ www.{$KRAFT_DOMAIN} {
 	encode zstd gzip
 
 	@blocked path /actuator* /ops* /admin*
-	respond @blocked 403
+	handle @blocked {
+		respond 403
+	}
 
 	# 정적 자산 장기 캐시 (Next.js 콘텐츠 해시 포함)
 	@immutable path /_next/static/* /icon/* /apple-icon /opengraph-image
@@ -42,7 +44,9 @@ www.{$KRAFT_DOMAIN} {
 	encode zstd gzip
 
 	@blocked path /actuator*
-	respond @blocked 403
+	handle @blocked {
+		respond 403
+	}
 
 	# 정적 자산 장기 캐시
 	@immutable path /_next/static/* /icon/* /apple-icon /opengraph-image
