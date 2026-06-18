@@ -49,7 +49,7 @@ jobs:
           KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE: ${{ secrets.KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE }}
           # 모니터링
           GRAFANA_ADMIN_PASSWORD:         ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-          ALERTMANAGER_SLACK_WEBHOOK_URL: ${{ secrets.ALERTMANAGER_SLACK_WEBHOOK_URL }}
+          ALERTMANAGER_DISCORD_WEBHOOK_URL: ${{ secrets.ALERTMANAGER_DISCORD_WEBHOOK_URL }}
           # GHCR 인증 (private 이미지 pull)
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           GHCR_USER:  ${{ github.repository_owner }}
@@ -69,7 +69,7 @@ jobs:
             KRAFT_PUBLIC_BASE_URL,KRAFT_DOMAIN,KRAFT_ADMIN_DOMAIN,
             KRAFT_SECURITY_TRUSTED_PROXY_CIDR,
             KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE,
-            GRAFANA_ADMIN_PASSWORD,ALERTMANAGER_SLACK_WEBHOOK_URL,
+            GRAFANA_ADMIN_PASSWORD,ALERTMANAGER_DISCORD_WEBHOOK_URL,
             GHCR_TOKEN,GHCR_USER
           script_stop: true
           script: |

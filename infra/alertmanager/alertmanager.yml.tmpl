@@ -1,25 +1,26 @@
 # Template file — rendered by scripts/deploy/render-alertmanager.sh
-# Variables: ALERTMANAGER_SLACK_WEBHOOK_URL, ALERTMANAGER_SLACK_CHANNEL
+# Variables: ALERTMANAGER_DISCORD_WEBHOOK_URL
 global:
   resolve_timeout: 5m
-  slack_api_url: "${ALERTMANAGER_SLACK_WEBHOOK_URL}"
 
 route:
   group_by: ["alertname", "severity"]
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h
-  receiver: slack-default
+  receiver: discord-default
 
 receivers:
-  - name: slack-default
-    slack_configs:
-      - channel: "${ALERTMANAGER_SLACK_CHANNEL}"
+  - name: discord-default
+    discord_configs:
+      # Discord webhook is bound to a specific channel, so no channel field is
+      # needed (unlike Slack). Native support since Alertmanager v0.25.
+      - webhook_url: "${ALERTMANAGER_DISCORD_WEBHOOK_URL}"
         send_resolved: true
         title: "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}"
-        text: |
+        message: |
           {{ range .Alerts }}
-          *{{ .Annotations.summary }}*
+          **{{ .Annotations.summary }}**
           {{ .Annotations.description }}
           {{ end }}
 
