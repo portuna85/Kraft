@@ -60,3 +60,6 @@ logs/
 
 ### Migration credentials (never commit) ###
 scripts/migrate/env-migration.sh
+
+### Local-only docs (never commit) ###
+docs/*.md
