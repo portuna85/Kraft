@@ -14,7 +14,7 @@ route:
 receivers:
   - name: slack-default
     slack_configs:
-      - channel: "${ALERTMANAGER_SLACK_CHANNEL:-#alerts}"
+      - channel: "${ALERTMANAGER_SLACK_CHANNEL}"
         send_resolved: true
         title: "[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}"
         text: |
