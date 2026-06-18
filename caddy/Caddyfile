@@ -71,6 +71,14 @@ www.{$KRAFT_DOMAIN} {
 			}
 		}
 
+		# 관리자 화면(Thymeleaf SSR) — 최초 인프라 설정 때부터 이 라우트가
+		# 빠져 있어 /admin*이 전부 web(Next.js)의 catch-all로 빠져 404였다.
+		handle /admin* {
+			reverse_proxy backend:8080 {
+				header_up X-Real-IP {remote_host}
+			}
+		}
+
 		handle /grafana/* {
 			reverse_proxy grafana:3000 {
 				header_up X-Real-IP {remote_host}

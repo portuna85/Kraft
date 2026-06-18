@@ -58,6 +58,12 @@ check_status "GET /data-source → 308"          "$BASE/data-source" "308"
 # /admin* is blocked with 403 on the public domain (Caddyfile security rule)
 check_status "GET /admin → 403 (blocked on public domain)"  "$BASE/admin" "403"
 
+# Admin UI must actually be reachable on the admin domain — this routing was
+# missing since the original infra setup and silently 404'd for a long time.
+if [[ -n "${KRAFT_ADMIN_DOMAIN:-}" ]]; then
+  check_status "GET admin domain /admin/login → 200" "https://${KRAFT_ADMIN_DOMAIN}/admin/login" "200"
+fi
+
 if [[ $FAIL -ne 0 ]]; then
   echo "==> Smoke test FAILED" >&2
   exit 1

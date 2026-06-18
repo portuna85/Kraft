@@ -25,6 +25,7 @@ check_status "public domain /admin blocked"        "$KRAFT_DOMAIN"       "/admin
 check_status "public domain /actuator blocked"      "$KRAFT_DOMAIN"       "/actuator/health" "403"
 check_status "public domain /ops blocked"           "$KRAFT_DOMAIN"       "/ops/x"          "403"
 check_status "admin domain /actuator blocked"       "$KRAFT_ADMIN_DOMAIN" "/actuator/health" "403"
+check_status "admin domain /admin/login reachable"  "$KRAFT_ADMIN_DOMAIN" "/admin/login"     "200"
 
 if [[ $FAIL -ne 0 ]]; then
   echo "==> Caddy local routing check FAILED — Caddyfile is misconfigured" >&2
