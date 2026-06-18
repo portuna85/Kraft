@@ -21,7 +21,7 @@ public class LocalSecurityConfig {
         // 이 설정은 @Profile("local") 에서만 활성화되며 /h2-console/** 경로에만 적용된다.
         return http
                 .securityMatcher("/h2-console/**")
-                .csrf(csrf -> csrf.disable()) // lgtm[java/spring-disabled-csrf-protection]
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
                 .headers(headers -> headers.frameOptions(fo -> fo.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .build();
