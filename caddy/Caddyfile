@@ -9,29 +9,32 @@ www.{$KRAFT_DOMAIN} {
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
 	encode zstd gzip
 
-	@blocked path /actuator* /ops* /admin*
-	handle @blocked {
-		respond 403
-	}
+	# route { } 로 감싸서 Caddy의 자동 specificity 정렬을 비활성화하고
+	# 아래 순서(첫 매치 우선)를 그대로 보장한다. 정렬에 맡기면 @blocked가
+	# catch-all reverse_proxy 뒤로 밀려나 /admin* 차단이 무력화된다.
+	route {
+		@blocked path /actuator* /ops* /admin*
+		respond @blocked 403
 
-	# 정적 자산 장기 캐시 (Next.js 콘텐츠 해시 포함)
-	@immutable path /_next/static/* /icon/* /apple-icon /opengraph-image
-	handle @immutable {
-		header Cache-Control "public, max-age=31536000, immutable"
-		reverse_proxy web:3000 {
-			header_up X-Real-IP {remote_host}
+		# 정적 자산 장기 캐시 (Next.js 콘텐츠 해시 포함)
+		@immutable path /_next/static/* /icon/* /apple-icon /opengraph-image
+		handle @immutable {
+			header Cache-Control "public, max-age=31536000, immutable"
+			reverse_proxy web:3000 {
+				header_up X-Real-IP {remote_host}
+			}
 		}
-	}
 
-	handle /api/v1/* {
-		reverse_proxy backend:8080 {
-			header_up X-Real-IP {remote_host}
+		handle /api/v1/* {
+			reverse_proxy backend:8080 {
+				header_up X-Real-IP {remote_host}
+			}
 		}
-	}
 
-	handle {
-		reverse_proxy web:3000 {
-			header_up X-Real-IP {remote_host}
+		handle {
+			reverse_proxy web:3000 {
+				header_up X-Real-IP {remote_host}
+			}
 		}
 	}
 }
@@ -43,41 +46,41 @@ www.{$KRAFT_DOMAIN} {
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
 	encode zstd gzip
 
-	@blocked path /actuator*
-	handle @blocked {
-		respond 403
-	}
+	route {
+		@blocked path /actuator*
+		respond @blocked 403
 
-	# 정적 자산 장기 캐시
-	@immutable path /_next/static/* /icon/* /apple-icon /opengraph-image
-	handle @immutable {
-		header Cache-Control "public, max-age=31536000, immutable"
-		reverse_proxy web:3000 {
-			header_up X-Real-IP {remote_host}
+		# 정적 자산 장기 캐시
+		@immutable path /_next/static/* /icon/* /apple-icon /opengraph-image
+		handle @immutable {
+			header Cache-Control "public, max-age=31536000, immutable"
+			reverse_proxy web:3000 {
+				header_up X-Real-IP {remote_host}
+			}
 		}
-	}
 
-	handle /api/v1/* {
-		reverse_proxy backend:8080 {
-			header_up X-Real-IP {remote_host}
+		handle /api/v1/* {
+			reverse_proxy backend:8080 {
+				header_up X-Real-IP {remote_host}
+			}
 		}
-	}
 
-	handle_path /ops-api/* {
-		reverse_proxy backend:8080 {
-			header_up X-Real-IP {remote_host}
+		handle_path /ops-api/* {
+			reverse_proxy backend:8080 {
+				header_up X-Real-IP {remote_host}
+			}
 		}
-	}
 
-	handle /grafana/* {
-		reverse_proxy grafana:3000 {
-			header_up X-Real-IP {remote_host}
+		handle /grafana/* {
+			reverse_proxy grafana:3000 {
+				header_up X-Real-IP {remote_host}
+			}
 		}
-	}
 
-	handle {
-		reverse_proxy web:3000 {
-			header_up X-Real-IP {remote_host}
+		handle {
+			reverse_proxy web:3000 {
+				header_up X-Real-IP {remote_host}
+			}
 		}
 	}
 }
