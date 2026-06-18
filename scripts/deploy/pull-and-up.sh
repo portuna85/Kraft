@@ -25,6 +25,12 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
 # ::1 first inside the alpine container, which the admin listener doesn't bind,
 # silently turning the reload into a no-op (observed in production debug logs).
 # Retried because on a fresh container the admin API may not be listening yet.
+echo "==> DEBUG: host caddy/Caddyfile ==="
+cat caddy/Caddyfile
+echo "==> DEBUG: container's /etc/caddy/Caddyfile ==="
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
+  cat /etc/caddy/Caddyfile
+
 echo "==> Reloading Caddy config..."
 for attempt in 1 2 3 4 5; do
   if docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
@@ -37,6 +43,9 @@ for attempt in 1 2 3 4 5; do
   fi
   sleep 2
 done
+
+echo "==> DEBUG: caddy server process logs since reload ==="
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail=30 caddy
 
 echo "==> DEBUG: live Caddy admin config (routes for \$KRAFT_DOMAIN) ==="
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
