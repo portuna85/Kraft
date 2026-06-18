@@ -19,41 +19,19 @@ echo "==> Starting services (no-deps rolling update)..."
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
 
 # Compose only recreates a container when its own config (image/env/etc.) changes —
-# it cannot detect content changes inside a bind-mounted file like Caddyfile.
-# Force a graceful in-process reload so edits to caddy/Caddyfile always take effect.
-# --address pins the admin API to 127.0.0.1 explicitly: "localhost" can resolve to
-# ::1 first inside the alpine container, which the admin listener doesn't bind,
-# silently turning the reload into a no-op.
-# --force is required: by default `caddy reload` diffs the adapted config against
-# what's running and silently no-ops if it looks "the same" — observed in production
-# where repeated Caddyfile fixes never took effect despite reload reporting success.
-# Retried because on a fresh container the admin API may not be listening yet.
-echo "==> DEBUG: caddy container's actual bind mounts ==="
-docker inspect kraft-caddy --format '{{json .Mounts}}' || true
-echo "==> DEBUG: host caddy/Caddyfile md5 + 'route {' grep ==="
-md5sum caddy/Caddyfile || true
-grep -c "route {" caddy/Caddyfile || true
-echo "==> DEBUG: container's /etc/caddy/Caddyfile md5 + 'route {' grep ==="
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
-  sh -c "md5sum /etc/caddy/Caddyfile; grep -c 'route {' /etc/caddy/Caddyfile || true" || true
+# it cannot detect content changes inside a bind-mounted file like Caddyfile, so a
+# Caddyfile-only edit leaves the old container running untouched. `caddy reload`
+# (even with --address/--force) repeatedly failed to pick up new config in
+# production for reasons that don't reproduce locally, so instead we force a full
+# container recreate every deploy: a fresh `caddy run` always reads the file fresh
+# from disk, no reload mechanism involved. Costs a ~1s connection blip, trades
+# reliability for that.
+echo "==> Recreating Caddy to guarantee fresh config..."
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --force-recreate --no-deps caddy
+sleep 2
 
-echo "==> Reloading Caddy config..."
-for attempt in 1 2 3 4 5; do
-  if docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
-      caddy reload --config /etc/caddy/Caddyfile --address 127.0.0.1:2019 --force; then
-    break
-  fi
-  if [[ "$attempt" -eq 5 ]]; then
-    echo "ERROR: caddy reload failed after 5 attempts" >&2
-    exit 1
-  fi
-  sleep 2
-done
-
-echo "==> DEBUG: live Caddy admin config (routes for \$KRAFT_DOMAIN) ==="
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T caddy \
-  wget -qO- http://127.0.0.1:2019/config/ || echo "  (admin config fetch failed)"
-echo
+echo "==> Fast local Caddy routing check (catches Caddyfile bugs before the slow external smoke test)..."
+bash scripts/deploy/check-caddy-routes.sh
 
 echo "==> Waiting for readiness..."
 bash scripts/deploy/wait-readiness.sh
