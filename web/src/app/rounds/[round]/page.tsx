@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LottoBalls } from "@/components/lotto-balls";
+import { PrizeTable } from "@/components/prize-table";
 import { getRound, getLatestWinningNumber } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
-import { calcAfterTax } from "@/lib/tax";
 export const revalidate = 3600;
 
 type Props = {
@@ -67,29 +67,12 @@ export default async function RoundDetailPage({ params }: Props) {
         <LottoBalls numbers={data.numbers} bonusNumber={data.bonusNumber} />
       </div>
 
+      <PrizeTable firstPrizeAmount={data.firstPrizeAmount} secondPrize={data.secondPrize} />
+
       <div className="round-detail-grid">
-        <div className="round-detail-cell">
-          <p className="round-detail-label">1등 당첨금</p>
-          <p className="round-detail-value">{formatCurrency(data.firstPrizeAmount)}</p>
-        </div>
-        <div className="round-detail-cell">
-          <p className="round-detail-label">1등 총 당첨액</p>
-          <p className="round-detail-value">{formatCurrency(data.firstAccumAmount)}</p>
-        </div>
-        <div className="round-detail-cell">
-          <p className="round-detail-label">2등 당첨금</p>
-          <p className="round-detail-value">{formatCurrency(data.secondPrize)}</p>
-          {data.secondWinners > 0 && (
-            <p className="muted" style={{ marginTop: "4px" }}>당첨자 {data.secondWinners.toLocaleString()}명</p>
-          )}
-        </div>
         <div className="round-detail-cell">
           <p className="round-detail-label">총 판매금액</p>
           <p className="round-detail-value">{formatCurrency(data.totalSales)}</p>
-        </div>
-        <div className="round-detail-cell">
-          <p className="round-detail-label">세후 예상 수령액</p>
-          <p className="round-detail-value">{formatCurrency(calcAfterTax(data.firstPrizeAmount))}</p>
         </div>
       </div>
 

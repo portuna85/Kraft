@@ -28,6 +28,7 @@ export function JsonLdWebSite({ baseUrl, nonce }: JsonLdWebSiteProps) {
     <script
       type="application/ld+json"
       nonce={nonce}
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );
@@ -63,6 +64,7 @@ export function JsonLdLottoRound({ baseUrl, round, drawDate, nonce }: JsonLdLott
     <script
       type="application/ld+json"
       nonce={nonce}
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );

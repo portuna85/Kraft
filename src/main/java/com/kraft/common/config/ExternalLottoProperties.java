@@ -4,7 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "kraft.external-lotto")
 public record ExternalLottoProperties(
-        String urlTemplate
+        String urlTemplate,
+        String autoCollectCron
 ) {
 
     public boolean enabled() {

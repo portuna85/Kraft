@@ -56,6 +56,11 @@ public class LottoRecommendationService {
         historicalCombinations = Set.copyOf(combos);
     }
 
+    public boolean isHistoricalFirstPrizeCombination(List<Integer> numbers) {
+        List<Integer> normalized = lottoNumberCodec.normalize(numbers);
+        return historicalCombinations.contains(new HashSet<>(normalized));
+    }
+
     public RecommendNumbersResponse recommend(RecommendNumbersRequest request) {
         int count = request == null || request.count() == null ? 1 : request.count();
         boolean maximizePrize = request != null && Boolean.TRUE.equals(request.maximizePrize());

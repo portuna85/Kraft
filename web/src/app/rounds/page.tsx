@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LottoBalls } from "@/components/lotto-balls";
+import { PrizeTable } from "@/components/prize-table";
 import { JsonLdLottoRound } from "@/components/json-ld";
 import { getLatestWinningNumber, getRounds, getPublicBaseUrl, type WinningNumber } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
-import { calcAfterTax } from "@/lib/tax";
 import { RoundSearchForm } from "@/components/round-search-form";
 import { headers } from "next/headers";
 import logger from "@/lib/logger";
@@ -74,18 +74,18 @@ export default async function RoundsPage({ searchParams }: Props) {
       )}
 
       {latest ? (
-        <section className="panel" style={{ marginBottom: "24px" }}>
+        <section className="panel result-panel" style={{ marginBottom: "24px" }}>
           <p className="eyebrow">최신 결과</p>
-          <h1 className="page-title">{latest.round}회 당첨 결과</h1>
-          <p className="page-subtitle">{formatDrawDate(latest.drawDate)}</p>
+          <h1 className="result-title">
+            {latest.round}회 당첨 결과 <span className="result-date">({formatDrawDate(latest.drawDate)})</span>
+          </h1>
           <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
-          <p className="muted">1등 당첨금 {formatCurrency(latest.firstPrizeAmount)}</p>
-          <p className="muted">세후 예상 수령액 {formatCurrency(calcAfterTax(latest.firstPrizeAmount))}</p>
+          <PrizeTable firstPrizeAmount={latest.firstPrizeAmount} secondPrize={latest.secondPrize} />
         </section>
       ) : (
-        <section className="panel" style={{ marginBottom: "24px" }}>
+        <section className="panel result-panel" style={{ marginBottom: "24px" }}>
           <p className="eyebrow">최신 결과</p>
-          <h1 className="page-title">최신 결과를 준비 중입니다</h1>
+          <h1 className="result-title">최신 결과를 준비 중입니다</h1>
           <p className="page-subtitle">잠시 후 다시 확인해 주세요.</p>
         </section>
       )}
@@ -113,7 +113,7 @@ export default async function RoundsPage({ searchParams }: Props) {
                 </Link>
               </div>
               <LottoBalls numbers={item.numbers} bonusNumber={item.bonusNumber} />
-              <p className="muted">1등 당첨금 {formatCurrency(item.firstPrizeAmount)}</p>
+              <p className="muted prize-line">1등 당첨금 {formatCurrency(item.firstPrizeAmount)}</p>
             </article>
           ))}
         </div>

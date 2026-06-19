@@ -1,28 +1,16 @@
 export default function Loading() {
   return (
     <div className="grid">
-      <section className="hero">
-        <div>
-          <div className="skeleton-line skeleton-eyebrow" />
-          <div className="skeleton-line skeleton-h1" style={{ marginTop: "12px" }} />
-          <div className="skeleton-line skeleton-h1" style={{ width: "70%", marginTop: "8px" }} />
-          <div className="skeleton-line skeleton-body" style={{ marginTop: "16px" }} />
-          <div className="skeleton-actions" style={{ marginTop: "26px" }}>
-            <div className="skeleton-line skeleton-btn" />
-            <div className="skeleton-line skeleton-btn" />
-            <div className="skeleton-line skeleton-btn" />
-          </div>
+      <section className="panel result-panel" style={{ marginBottom: "24px" }}>
+        <div className="skeleton-line skeleton-eyebrow" />
+        <div className="skeleton-line skeleton-h2" style={{ marginTop: "10px" }} />
+        <div className="skeleton-line skeleton-body" style={{ marginTop: "6px", width: "60%" }} />
+        <div className="skeleton-balls" style={{ marginTop: "14px" }}>
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="skeleton-ball" />
+          ))}
         </div>
-        <aside className="hero-side">
-          <div className="skeleton-line skeleton-eyebrow" />
-          <div className="skeleton-line skeleton-h2" style={{ marginTop: "10px" }} />
-          <div className="skeleton-line skeleton-body" style={{ marginTop: "6px", width: "60%" }} />
-          <div className="skeleton-balls" style={{ marginTop: "14px" }}>
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="skeleton-ball" />
-            ))}
-          </div>
-        </aside>
+        <div className="skeleton-line skeleton-body" style={{ marginTop: "16px", height: "84px" }} />
       </section>
       <section className="grid grid-3">
         {Array.from({ length: 3 }).map((_, i) => (

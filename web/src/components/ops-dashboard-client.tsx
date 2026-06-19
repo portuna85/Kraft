@@ -102,7 +102,7 @@ function CollectedPanel({ result }: { result: WinningNumber }) {
       <h2 className="ops-title">{result.round}회차</h2>
       <p className="page-subtitle">{formatDrawDate(result.drawDate)} 기준 반영 데이터</p>
       <LottoBalls numbers={result.numbers} bonusNumber={result.bonusNumber} />
-      <p className="muted">1등 당첨금 {formatCurrency(result.firstPrizeAmount)}</p>
+      <p className="muted prize-line">1등 당첨금 {formatCurrency(result.firstPrizeAmount)}</p>
     </article>
   );
 }

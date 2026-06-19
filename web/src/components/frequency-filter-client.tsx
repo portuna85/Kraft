@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState } from "react";
+import { useTransition } from "react";
+import { LottoBalls } from "@/components/lotto-balls";
 import type { FrequencyStatsResponse, BallFrequency } from "@/lib/api";
 import { ballColorClass } from "@/lib/ball-color";
 
@@ -15,23 +17,54 @@ type Props = {
   initial: FrequencyStatsResponse;
 };
 
-function BallWithStats({
-  item,
-  sampleSize,
-  size = "sm",
-}: {
-  item: BallFrequency;
-  sampleSize: number;
-  size?: "sm" | "md";
-}) {
+function BallWithStats({ item, sampleSize }: { item: BallFrequency; sampleSize: number }) {
   const pct = sampleSize > 0 ? ((item.frequency / sampleSize) * 100).toFixed(1) : "0.0";
   return (
     <div className="freq-ball-item">
-      <span className={`ball ${size === "sm" ? "ball-sm" : ""} ${ballColorClass(item.ballNumber)}`}>
-        {item.ballNumber}
-      </span>
+      <span className={`ball ball-sm ${ballColorClass(item.ballNumber)}`}>{item.ballNumber}</span>
       <span className="freq-count">{item.frequency}회</span>
       <span className="freq-pct">{pct}%</span>
+    </div>
+  );
+}
+
+async function checkCombination(numbers: number[]): Promise<boolean | null> {
+  try {
+    const query = numbers.map((n) => `numbers=${n}`).join("&");
+    const res = await fetch(`/api/v1/numbers/check?${query}`);
+    if (!res.ok) return null;
+    const payload = await res.json() as { wonFirstPrize?: boolean };
+    return payload.wonFirstPrize ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function CombinationGroup({ label, items }: { label: string; items: BallFrequency[] }) {
+  const numbers = items.map((item) => item.ballNumber);
+  const key = numbers.join(",");
+  const [won, setWon] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setWon(null);
+    void checkCombination(numbers).then((result) => {
+      if (!cancelled) setWon(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  return (
+    <div className="freq-rank-group">
+      <p className="freq-rank-label">{label}</p>
+      <LottoBalls numbers={numbers} />
+      <p className="freq-win-record">
+        {won === null ? "확인 중…" : won ? "1등 당첨 내역 있음" : "1등 당첨 내역 없음"}
+      </p>
     </div>
   );
 }
@@ -64,8 +97,8 @@ export function FrequencyFilterClient({ initial }: Props) {
   const byFrequency = [...stats.frequencies].sort((a, b) => b.frequency - a.frequency);
   const sampleSize = activeLimit ?? stats.totalRounds;
 
-  const top5 = byFrequency.slice(0, 5).sort((a, b) => a.ballNumber - b.ballNumber);
-  const bottom5 = [...byFrequency].reverse().slice(0, 5);
+  const top6 = byFrequency.slice(0, 6).sort((a, b) => a.ballNumber - b.ballNumber);
+  const bottom6 = [...byFrequency].reverse().slice(0, 6).sort((a, b) => a.ballNumber - b.ballNumber);
 
   return (
     <>
@@ -94,22 +127,8 @@ export function FrequencyFilterClient({ initial }: Props) {
       </p>
 
       <div className="freq-summary">
-        <div className="freq-rank-group">
-          <p className="freq-rank-label">가장 자주 나온 번호 TOP 5</p>
-          <div className="freq-rank-balls">
-            {top5.map((item) => (
-              <BallWithStats key={item.ballNumber} item={item} sampleSize={sampleSize} />
-            ))}
-          </div>
-        </div>
-        <div className="freq-rank-group">
-          <p className="freq-rank-label">가장 적게 나온 번호 BOTTOM 5</p>
-          <div className="freq-rank-balls">
-            {bottom5.map((item) => (
-              <BallWithStats key={item.ballNumber} item={item} sampleSize={sampleSize} />
-            ))}
-          </div>
-        </div>
+        <CombinationGroup label="가장 자주 나온 번호 TOP 6" items={top6} />
+        <CombinationGroup label="가장 적게 나온 번호 BOTTOM 6" items={bottom6} />
       </div>
 
       <div className="frequency-grid">

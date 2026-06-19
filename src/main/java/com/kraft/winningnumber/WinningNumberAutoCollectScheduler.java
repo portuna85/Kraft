@@ -22,7 +22,7 @@ public class WinningNumberAutoCollectScheduler {
         this.winningNumberCollectionService = winningNumberCollectionService;
     }
 
-    @Scheduled(cron = "0 0 22 * * SAT", zone = "Asia/Seoul")
+    @Scheduled(cron = "${kraft.external-lotto.auto-collect-cron:0 0 22 * * SAT}", zone = "Asia/Seoul")
     @Scheduled(cron = "0 0 7 * * SUN", zone = "Asia/Seoul")
     @SchedulerLock(name = "collect-auto-latest", lockAtMostFor = "PT30M", lockAtLeastFor = "PT5M")
     public void collectLatestAutomatically() {
