@@ -6,10 +6,10 @@ import { usePathname } from "next/navigation";
 
 const primaryLinks = [
   { href: "/", label: "홈" },
-  { href: "/rounds", label: "결과 · 회차" },
+  { href: "/rounds", label: "회차 결과" },
   { href: "/recommend", label: "번호 추천" },
-  { href: "/saved", label: "저장한 번호" },
-  { href: "/frequency", label: "빈도 통계" },
+  { href: "/saved", label: "저장 번호" },
+  { href: "/frequency", label: "출현 통계" },
 ];
 
 const mobileOnlyLinks = [
@@ -20,7 +20,7 @@ const mobileOnlyLinks = [
 
 function isCurrent(href: string, pathname: string): boolean {
   if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(href + "/");
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function NavLinks() {
@@ -28,19 +28,28 @@ export function NavLinks() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     if (!open) return;
 
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
     };
 
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
 
   const desktopItems = primaryLinks.map((link) => (
@@ -57,6 +66,7 @@ export function NavLinks() {
     <Link
       key={link.href}
       href={link.href}
+      onClick={() => setOpen(false)}
       aria-current={isCurrent(link.href, pathname) ? "page" : undefined}
     >
       {link.label}
@@ -70,8 +80,9 @@ export function NavLinks() {
       </nav>
 
       <button
+        type="button"
         className="nav-toggle"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen((value) => !value)}
         aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
         aria-expanded={open}
         aria-controls="nav-mobile"
@@ -82,9 +93,11 @@ export function NavLinks() {
       {open && (
         <>
           <div className="nav-backdrop" aria-hidden="true" onClick={() => setOpen(false)} />
-          <nav id="nav-mobile" className="nav-mobile" aria-label="주요 메뉴">
-            {mobileItems}
-          </nav>
+          <div className="nav-mobile-wrap">
+            <nav id="nav-mobile" className="nav-mobile" aria-label="주요 메뉴">
+              {mobileItems}
+            </nav>
+          </div>
         </>
       )}
     </>

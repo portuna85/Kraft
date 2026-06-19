@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
-import type { FrequencyStatsResponse, BallFrequency } from "@/lib/api";
+import type { BallFrequency, FrequencyStatsResponse } from "@/lib/api";
 import { ballColorClass } from "@/lib/ball-color";
 
 const FILTERS = [
@@ -19,8 +18,9 @@ type Props = {
 
 function BallWithStats({ item, sampleSize }: { item: BallFrequency; sampleSize: number }) {
   const pct = sampleSize > 0 ? ((item.frequency / sampleSize) * 100).toFixed(1) : "0.0";
+
   return (
-    <div className="freq-ball-item">
+    <div className="freq-ball-item frequency-item">
       <span className={`ball ball-sm ${ballColorClass(item.ballNumber)}`}>{item.ballNumber}</span>
       <span className="freq-count">{item.frequency}회</span>
       <span className="freq-pct">{pct}%</span>
@@ -30,10 +30,11 @@ function BallWithStats({ item, sampleSize }: { item: BallFrequency; sampleSize: 
 
 async function checkCombination(numbers: number[]): Promise<boolean | null> {
   try {
-    const query = numbers.map((n) => `numbers=${n}`).join("&");
-    const res = await fetch(`/api/v1/numbers/check?${query}`);
-    if (!res.ok) return null;
-    const payload = await res.json() as { wonFirstPrize?: boolean };
+    const query = numbers.map((number) => `numbers=${number}`).join("&");
+    const response = await fetch(`/api/v1/numbers/check?${query}`);
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as { wonFirstPrize?: boolean };
     return payload.wonFirstPrize ?? null;
   } catch {
     return null;
@@ -43,19 +44,23 @@ async function checkCombination(numbers: number[]): Promise<boolean | null> {
 function CombinationGroup({ label, items }: { label: string; items: BallFrequency[] }) {
   const numbers = items.map((item) => item.ballNumber);
   const key = numbers.join(",");
-  const [won, setWon] = useState<boolean | null>(null);
+  const [wonState, setWonState] = useState<{ key: string; value: boolean | null }>({
+    key,
+    value: null,
+  });
+  const won = wonState.key === key ? wonState.value : null;
 
   useEffect(() => {
     let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setWon(null);
-    void checkCombination(numbers).then((result) => {
-      if (!cancelled) setWon(result);
+    const values = key.split(",").map((value) => Number.parseInt(value, 10));
+
+    void checkCombination(values).then((result) => {
+      if (!cancelled) setWonState({ key, value: result });
     });
+
     return () => {
       cancelled = true;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   return (
@@ -63,7 +68,7 @@ function CombinationGroup({ label, items }: { label: string; items: BallFrequenc
       <p className="freq-rank-label">{label}</p>
       <LottoBalls numbers={numbers} />
       <p className="freq-win-record">
-        {won === null ? "확인 중…" : won ? "1등 당첨 내역 있음" : "1등 당첨 내역 없음"}
+        {won === null ? "확인 중..." : won ? "1등 당첨 이력 있음" : "1등 당첨 이력 없음"}
       </p>
     </div>
   );
@@ -76,19 +81,22 @@ export function FrequencyFilterClient({ initial }: Props) {
 
   function applyFilter(limit: number | null) {
     if (limit === activeLimit) return;
+
     startTransition(async () => {
       if (limit === null) {
         setStats(initial);
         setActiveLimit(null);
         return;
       }
+
       try {
-        const res = await fetch(`/api/v1/stats/frequency?limit=${limit}`);
-        if (!res.ok) return;
-        setStats(await res.json() as FrequencyStatsResponse);
+        const response = await fetch(`/api/v1/stats/frequency?limit=${limit}`);
+        if (!response.ok) return;
+
+        setStats((await response.json()) as FrequencyStatsResponse);
         setActiveLimit(limit);
       } catch {
-        // 네트워크 오류 시 현재 상태 유지
+        // Keep the previous state if a transient fetch error occurs.
       }
     });
   }
@@ -96,7 +104,6 @@ export function FrequencyFilterClient({ initial }: Props) {
   const byNumber = [...stats.frequencies].sort((a, b) => a.ballNumber - b.ballNumber);
   const byFrequency = [...stats.frequencies].sort((a, b) => b.frequency - a.frequency);
   const sampleSize = activeLimit ?? stats.totalRounds;
-
   const top6 = byFrequency.slice(0, 6).sort((a, b) => a.ballNumber - b.ballNumber);
   const bottom6 = [...byFrequency].reverse().slice(0, 6).sort((a, b) => a.ballNumber - b.ballNumber);
 
@@ -119,11 +126,9 @@ export function FrequencyFilterClient({ initial }: Props) {
       </div>
 
       <p className="freq-filter-desc">
-        {activeLimit === null
-          ? `총 ${stats.totalRounds}회 전체 기준`
-          : `최근 ${activeLimit}회 기준`}
-        으로 각 번호가 당첨 번호에 포함된 누적 횟수입니다.
-        {isPending && <span className="muted"> 불러오는 중…</span>}
+        {activeLimit === null ? `총 ${stats.totalRounds}회 전체 기준` : `최근 ${activeLimit}회 기준`}으로 각 번호가
+        당첨 번호에 포함된 누적 횟수를 보여줍니다.
+        {isPending && <span className="muted"> 불러오는 중...</span>}
       </p>
 
       <div className="freq-summary">

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
-import type { RecommendationResponse } from "@/lib/api";
 import { getDeviceToken } from "@/lib/device-token";
 import { parseExcludedNumbers } from "@/lib/lotto-validation";
+import type { RecommendationResponse } from "@/lib/api";
 
 export function RecommendClient() {
   const [count, setCount] = useState("5");
@@ -16,21 +16,33 @@ export function RecommendClient() {
   const [savedIndexes, setSavedIndexes] = useState<Set<number>>(new Set());
   const [isPending, setIsPending] = useState(false);
 
-  async function fetchRecommendations(reqCount: number, reqExcluded: number[], reqMaximizePrize: boolean, initialMessage = "") {
+  async function fetchRecommendations(
+    reqCount: number,
+    reqExcluded: number[],
+    reqMaximizePrize: boolean,
+    initialMessage = "",
+  ) {
     setMessage(initialMessage);
     setIsPending(true);
     setSavedIndexes(new Set());
+
     try {
-      const res = await fetch("/api/v1/numbers/recommend", {
+      const response = await fetch("/api/v1/numbers/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: reqCount, excludedNumbers: reqExcluded, maximizePrize: reqMaximizePrize }),
+        body: JSON.stringify({
+          count: reqCount,
+          excludedNumbers: reqExcluded,
+          maximizePrize: reqMaximizePrize,
+        }),
       });
-      const payload = await res.json() as RecommendationResponse | { message?: string };
-      if (!res.ok) {
+      const payload = (await response.json()) as RecommendationResponse | { message?: string };
+
+      if (!response.ok) {
         setMessage((payload as { message?: string }).message ?? "추천 생성에 실패했습니다.");
         return;
       }
+
       setRecommendations((payload as RecommendationResponse).recommendations);
     } catch {
       setMessage("추천 결과를 불러오지 못했습니다.");
@@ -40,37 +52,45 @@ export function RecommendClient() {
   }
 
   useEffect(() => {
-    // 초기 로딩: 마운트 시 1회 추천 결과 자동 조회
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchRecommendations(5, [], true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    const timer = window.setTimeout(() => {
+      void fetchRecommendations(5, [], true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   async function handleRecommend(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const { valid: excludedNumbers, ignored } = parseExcludedNumbers(excluded);
-    const ignoredMsg = ignored.length > 0 ? `무시된 입력값 (1-45 범위 외): ${ignored.join(", ")}` : "";
-    await fetchRecommendations(Number(count), excludedNumbers, maximizePrize, ignoredMsg);
+    const ignoredMessage = ignored.length > 0 ? `무시된 입력값: ${ignored.join(", ")}` : "";
+    await fetchRecommendations(Number(count), excludedNumbers, maximizePrize, ignoredMessage);
   }
 
   async function handleSave(numbers: number[], index: number) {
     setSavingIndex(index);
     setMessage("");
+
     try {
-      const res = await fetch("/api/v1/saved", {
+      const response = await fetch("/api/v1/saved", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Device-Token": getDeviceToken(),
         },
-        body: JSON.stringify({ numbers, label: `추천 조합 ${index + 1}`, source: "RECOMMEND" }),
+        body: JSON.stringify({
+          numbers,
+          label: `추천 조합 ${index + 1}`,
+          source: "RECOMMEND",
+        }),
       });
-      const payload = await res.json() as { created?: boolean; message?: string };
-      if (!res.ok) {
+      const payload = (await response.json()) as { created?: boolean; message?: string };
+
+      if (!response.ok) {
         setMessage(payload.message ?? "저장에 실패했습니다.");
         return;
       }
-      setSavedIndexes((prev) => new Set(prev).add(index));
+
+      setSavedIndexes((previous) => new Set(previous).add(index));
       setMessage(payload.created ? "저장했습니다." : "이미 저장된 조합입니다.");
     } catch {
       setMessage("저장하지 못했습니다.");
@@ -80,7 +100,7 @@ export function RecommendClient() {
   }
 
   return (
-    <div style={{ marginTop: "24px", display: "grid", gap: "20px" }}>
+    <div className="recommend-layout">
       <form className="recommend-form" onSubmit={handleRecommend}>
         <label>
           조합 수
@@ -89,14 +109,14 @@ export function RecommendClient() {
             min="1"
             max="10"
             value={count}
-            onChange={(e) => setCount(e.target.value)}
+            onChange={(event) => setCount(event.target.value)}
           />
         </label>
         <label>
           제외 번호
           <input
             value={excluded}
-            onChange={(e) => setExcluded(e.target.value)}
+            onChange={(event) => setExcluded(event.target.value)}
             placeholder="예: 1, 2, 3"
           />
         </label>
@@ -104,19 +124,23 @@ export function RecommendClient() {
           <input
             type="checkbox"
             checked={maximizePrize}
-            onChange={(e) => setMaximizePrize(e.target.checked)}
+            onChange={(event) => setMaximizePrize(event.target.checked)}
           />
-          당첨금 최대화
+          당첨금 우선 추천
           <span className="recommend-toggle-hint">
-            역대 당첨 조합 제외 · 비인기 조합 우선 선택
+            과거 1등 조합을 제외하고 상대적으로 덜 겹치는 조합을 우선 선택합니다.
           </span>
         </label>
         <button type="submit" disabled={isPending}>
-          {isPending ? "생성 중…" : "추천받기"}
+          {isPending ? "생성 중..." : "추천받기"}
         </button>
       </form>
 
-      {message ? <p className="status-text" role="status" aria-live="polite">{message}</p> : null}
+      {message ? (
+        <p className="status-text" role="status" aria-live="polite">
+          {message}
+        </p>
+      ) : null}
 
       {recommendations.length > 0 && (
         <div className="recommend-grid">
@@ -130,7 +154,7 @@ export function RecommendClient() {
                   disabled={savingIndex === index || savedIndexes.has(index)}
                   className={`recommend-save-btn${savedIndexes.has(index) ? " saved" : ""}`}
                 >
-                  {savedIndexes.has(index) ? "저장됨" : savingIndex === index ? "…" : "저장"}
+                  {savedIndexes.has(index) ? "저장됨" : savingIndex === index ? "저장 중..." : "저장"}
                 </button>
               </div>
               <LottoBalls numbers={numbers} />

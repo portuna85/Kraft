@@ -1,17 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function RoundSearchForm() {
   const router = useRouter();
   const [value, setValue] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const n = parseInt(value.trim(), 10);
-    if (Number.isNaN(n) || n < 1) return;
-    router.push(`/rounds/${n}`);
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    const round = Number.parseInt(value.trim(), 10);
+
+    if (Number.isNaN(round) || round < 1) return;
+
+    router.push(`/rounds/${round}`);
   }
 
   return (
@@ -25,11 +27,13 @@ export function RoundSearchForm() {
           type="number"
           min="1"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(event) => setValue(event.target.value)}
           placeholder="예: 1130"
           className="round-search-input"
         />
-        <button type="submit" className="button secondary">이동</button>
+        <button type="submit" className="button secondary">
+          이동
+        </button>
       </div>
     </form>
   );

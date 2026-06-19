@@ -1591,7 +1591,9 @@ input:focus-visible {
   }
 
   .button,
-  button {
+  form button,
+  .saved-item > button,
+  .ops-actions > button {
     width: 100%;
   }
 
@@ -1642,5 +1644,494 @@ input:focus-visible {
 
   .round-detail-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Responsive re-architecture overrides */
+:root {
+  --shell-max: 1180px;
+  --shell-gutter: 24px;
+  --page-pad-top: 56px;
+  --page-pad-bottom: 84px;
+  --panel-pad: 28px;
+  --panel-gap: 24px;
+  --card-radius: 24px;
+}
+
+body {
+  min-width: 320px;
+}
+
+.shell {
+  width: min(var(--shell-max), calc(100vw - (var(--shell-gutter) * 2)));
+}
+
+.page {
+  padding: var(--page-pad-top) 0 var(--page-pad-bottom);
+}
+
+.header-inner {
+  min-height: 82px;
+}
+
+.header-actions {
+  gap: 16px;
+  min-width: 0;
+}
+
+.nav {
+  gap: 10px;
+}
+
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.panel,
+.round-card,
+.stat-card,
+.saved-section {
+  padding: var(--panel-pad);
+  border-radius: var(--card-radius);
+}
+
+.section-stack {
+  display: grid;
+  gap: var(--panel-gap);
+}
+
+.hero-panel {
+  padding-block: 30px;
+}
+
+.home-shortcuts {
+  align-items: stretch;
+}
+
+.panel-lead,
+.section-meta,
+.compact-subtitle,
+.stats-summary {
+  margin-top: 0;
+}
+
+.panel-lead {
+  margin-bottom: 0;
+}
+
+.rounds-title {
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+}
+
+.rounds-summary,
+.round-list-wrap,
+.round-detail-balls {
+  margin-top: 24px;
+}
+
+.round-card {
+  gap: 18px;
+}
+
+.round-card-link {
+  min-width: 120px;
+}
+
+.saved-layout,
+.recommend-layout,
+.analysis-layout {
+  margin-top: 24px;
+  display: grid;
+  gap: 20px;
+}
+
+.saved-item-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.saved-item-body .muted {
+  margin: 0;
+}
+
+.recommend-card {
+  gap: 16px;
+}
+
+.recommend-card-header {
+  gap: 12px;
+}
+
+.recommend-toggle {
+  min-height: 48px;
+  justify-content: end;
+}
+
+.companion-clear {
+  margin-top: 12px;
+}
+
+.companion-empty {
+  justify-content: center;
+}
+
+.analysis-section-title {
+  margin-bottom: 10px;
+}
+
+.bar-track {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(29, 26, 23, 0.08);
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .bar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pattern-item,
+.range-dist-item {
+  min-width: 0;
+}
+
+.range-dist-item {
+  grid-template-columns: 72px minmax(0, 1fr) 28px;
+}
+
+.freq-summary,
+.ops-summary-grid {
+  align-items: stretch;
+}
+
+.frequency-item,
+.companion-item,
+.result-cell,
+.ops-summary-card {
+  min-width: 0;
+}
+
+.companion-filter-balls {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+}
+
+.companion-filter-balls .ball {
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+}
+
+.nav-mobile-wrap {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .home-shortcuts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .recommend-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .round-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  :root {
+    --shell-gutter: 20px;
+    --page-pad-top: 48px;
+    --page-pad-bottom: 76px;
+    --panel-pad: 24px;
+  }
+
+  .header-inner {
+    min-height: 76px;
+  }
+
+  .grid-3,
+  .recommend-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .saved-form,
+  .analysis-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .recommend-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ops-manual-form,
+  .ops-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .frequency-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .companion-filter-balls {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  .pattern-item {
+    grid-template-columns: 88px minmax(0, 1fr) 52px 52px;
+  }
+}
+
+@media (max-width: 639px) {
+  :root {
+    --shell-gutter: 16px;
+    --page-pad-top: 32px;
+    --page-pad-bottom: 64px;
+    --panel-pad: 20px;
+    --panel-gap: 18px;
+    --card-radius: 20px;
+  }
+
+  .page-title {
+    font-size: clamp(1.45rem, 7vw, 2rem);
+  }
+
+  .result-title {
+    font-size: clamp(1.35rem, 6.2vw, 1.9rem);
+  }
+
+  .header-inner {
+    min-height: 68px;
+    gap: 12px;
+  }
+
+  .brand {
+    font-size: 1.05rem;
+  }
+
+  .header-actions {
+    gap: 10px;
+  }
+
+  .theme-toggle {
+    width: 38px;
+    height: 38px;
+  }
+
+  .hero-panel {
+    padding-block: 24px;
+  }
+
+  .grid-3,
+  .saved-form,
+  .recommend-form,
+  .ops-manual-form,
+  .ops-summary-grid,
+  .ops-inline,
+  .recommend-grid,
+  .analysis-form,
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .button,
+  form button,
+  .saved-item > button,
+  .ops-actions > button,
+  .round-card-link,
+  .recommend-save-btn {
+    width: 100%;
+  }
+
+  .nav-toggle,
+  .theme-toggle,
+  .freq-filter-tab {
+    width: auto;
+  }
+
+  .header-actions .nav-toggle,
+  .header-actions .theme-toggle {
+    flex: 0 0 auto;
+  }
+
+  .freq-filter-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 10, 8, 0.42);
+    z-index: 18;
+  }
+
+  .nav-mobile-wrap {
+    display: block;
+    position: fixed;
+    top: 68px;
+    left: 0;
+    right: 0;
+    z-index: 19;
+    padding: 0 16px;
+  }
+
+  .nav-mobile {
+    display: grid;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--nav-mobile-bg);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  }
+
+  .nav-mobile a {
+    min-height: 46px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border-bottom: 0;
+    background: transparent;
+  }
+
+  .nav-mobile a[aria-current="page"] {
+    background: var(--nav-active-bg);
+  }
+
+  .saved-item,
+  .round-meta,
+  .recommend-card-header,
+  .companion-item,
+  .round-nav {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .round-nav {
+    gap: 10px;
+  }
+
+  .round-nav > * {
+    width: 100%;
+  }
+
+  .round-nav > span {
+    display: none;
+  }
+
+  .balls {
+    gap: 8px;
+  }
+
+  .ball {
+    width: 42px;
+    height: 42px;
+    font-size: 0.86rem;
+  }
+
+  .recommend-card .ball,
+  .freq-rank-group .ball {
+    width: 34px;
+    height: 34px;
+    font-size: 0.78rem;
+  }
+
+  .prize-table td {
+    padding: 12px 10px;
+  }
+
+  .round-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .prize-table-rank {
+    font-size: 0.84rem;
+  }
+
+  .prize-table-amount {
+    font-size: 1.05rem;
+  }
+
+  .frequency-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .freq-summary {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .freq-rank-group {
+    padding: 16px;
+  }
+
+  .pattern-item {
+    grid-template-columns: minmax(0, 1fr) 48px;
+    gap: 8px 12px;
+    padding: 12px;
+  }
+
+  .pattern-key,
+  .bar-track {
+    grid-column: 1 / -1;
+  }
+
+  .pattern-count,
+  .pattern-pct {
+    text-align: left;
+  }
+
+  .companion-filter-balls {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .companion-item {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .pair-info {
+    align-items: flex-start;
+  }
+
+  .rank {
+    text-align: left;
+  }
+
+  .round-detail-balls {
+    margin-top: 18px;
+  }
+
+  .round-detail-cell {
+    padding: 16px;
+  }
+
+  .pagination {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
   }
 }

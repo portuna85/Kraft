@@ -29,7 +29,7 @@ export function SavedNumbersClient() {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = (await response.json()) as { message?: string };
       throw new Error(error.message ?? "저장한 번호를 불러오지 못했습니다.");
     }
 
@@ -46,9 +46,11 @@ export function SavedNumbersClient() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
+
     const validation = validateLottoNumbers(
-      numbers.split(",").map((v) => Number(v.trim())),
+      numbers.split(",").map((value) => Number(value.trim())),
     );
+
     if (!validation.ok) {
       setMessage(validation.message);
       return;
@@ -63,11 +65,13 @@ export function SavedNumbersClient() {
         },
         body: JSON.stringify({ numbers: validation.numbers, label: label || null, source: "MANUAL" }),
       });
-      const payload = await response.json() as { created?: boolean; message?: string };
+      const payload = (await response.json()) as { created?: boolean; message?: string };
+
       if (!response.ok) {
         setMessage(payload.message ?? "저장에 실패했습니다.");
         return;
       }
+
       setMessage(payload.created ? "저장했습니다." : "이미 저장된 번호입니다.");
       setNumbers("");
       setLabel("");
@@ -83,10 +87,12 @@ export function SavedNumbersClient() {
         method: "DELETE",
         headers: { "X-Device-Token": getDeviceToken() },
       });
+
       if (!response.ok) {
         setMessage("삭제에 실패했습니다.");
         return;
       }
+
       setMessage("삭제했습니다.");
       await loadSavedNumbers();
     } catch {
@@ -118,12 +124,16 @@ export function SavedNumbersClient() {
         </button>
       </form>
 
-      {message ? <p className="status-text" role="status" aria-live="polite">{message}</p> : null}
+      {message ? (
+        <p className="status-text" role="status" aria-live="polite">
+          {message}
+        </p>
+      ) : null}
 
       <ul className="saved-list">
         {items.map((item) => (
           <li key={item.id} className="saved-item">
-            <div>
+            <div className="saved-item-body">
               <LottoBalls numbers={item.numbers} />
               <p className="muted">{item.label ?? "메모 없음"}</p>
             </div>

@@ -3,7 +3,7 @@ import { AnalysisClient } from "@/components/analysis-client";
 
 export const metadata: Metadata = {
   title: "번호 조합 분석",
-  description: "번호 6개를 입력하면 홀짝 비율, 합계, 고저 분포 등 기본 통계를 즉시 분석합니다.",
+  description: "번호 6개를 입력하면 홀짝, 합계, 구간 분포 등 기본 통계를 분석합니다.",
   alternates: { canonical: "/analysis" },
 };
 

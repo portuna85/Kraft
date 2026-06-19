@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_KR, Noto_Serif_KR, Space_Grotesk } from "next/font/google";
 import { headers } from "next/headers";
+import { Noto_Sans_KR, Noto_Serif_KR, Space_Grotesk } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { JsonLdWebSite } from "@/components/json-ld";
@@ -39,16 +39,16 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "KRAFT Lotto — 로또 6/45 당첨 결과 · 번호 추천",
+    default: "KRAFT Lotto | 로또 6/45 결과와 번호 추천",
     template: "%s | KRAFT Lotto",
   },
-  description: "로또 6/45 최신 당첨 번호와 당첨금 조회, 회차별 통계, 무작위 번호 추천·저장을 무료로 제공합니다. 동행복권 공식 데이터 기반.",
+  description: "로또 6/45 최신 당첨 번호 조회, 회차 검색, 통계, 번호 추천 기능을 제공합니다.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "KRAFT Lotto — 로또 6/45 당첨 결과 · 번호 추천",
-    description: "최신 로또 당첨 번호·당첨금 조회, 출현 통계, 무작위 번호 추천·저장. 동행복권 공식 데이터 기반.",
+    title: "KRAFT Lotto | 로또 6/45 결과와 번호 추천",
+    description: "최신 로또 당첨 번호 조회, 출현 통계, 패턴 분석, 번호 추천 기능을 제공합니다.",
     url: baseUrl,
     siteName: "KRAFT Lotto",
     locale: "ko_KR",
@@ -56,8 +56,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "KRAFT Lotto — 로또 6/45 당첨 결과 · 번호 추천",
-    description: "최신 로또 당첨 번호·당첨금 조회, 출현 통계, 무작위 번호 추천·저장. 동행복권 공식 데이터 기반.",
+    title: "KRAFT Lotto | 로또 6/45 결과와 번호 추천",
+    description: "최신 로또 당첨 번호 조회, 출현 통계, 패턴 분석, 번호 추천 기능을 제공합니다.",
   },
 };
 

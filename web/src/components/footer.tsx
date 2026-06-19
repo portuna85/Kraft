@@ -21,8 +21,12 @@ export function Footer() {
             </Link>
           ))}
         </nav>
-        <p className="footer-copy">당첨 결과는 동행복권 공식 데이터를 기준으로 제공하며, 표기 시각은 KST입니다.</p>
-        <p className="footer-copy muted">본 서비스는 당첨을 보장하지 않으며, 모든 번호·통계는 참고용입니다.</p>
+        <p className="footer-copy">
+          당첨 결과는 동행복권 공식 데이터를 기준으로 제공하며, 표기 시간대는 KST입니다.
+        </p>
+        <p className="footer-copy muted">
+          본 서비스는 당첨을 보장하지 않으며 모든 번호와 통계는 참고용입니다.
+        </p>
       </div>
     </footer>
   );

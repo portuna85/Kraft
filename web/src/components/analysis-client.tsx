@@ -9,33 +9,34 @@ export function AnalysisClient() {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setError("");
     setResult(null);
 
-    const parts = input.split(",").map((v) => parseInt(v.trim(), 10));
-    if (parts.length !== 6 || parts.some(isNaN)) {
+    const parts = input.split(",").map((value) => Number.parseInt(value.trim(), 10));
+
+    if (parts.length !== 6 || parts.some(Number.isNaN)) {
       setError("번호 6개를 입력해 주세요. 예: 3, 11, 19, 28, 34, 42");
       return;
     }
 
     startTransition(async () => {
       try {
-        const res = await fetch("/api/v1/stats/analysis", {
+        const response = await fetch("/api/v1/stats/analysis", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ numbers: parts }),
           cache: "no-store",
         });
 
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          setError((body as { message?: string }).message ?? "분석에 실패했습니다.");
+        if (!response.ok) {
+          const body = (await response.json().catch(() => ({}))) as { message?: string };
+          setError(body.message ?? "분석에 실패했습니다.");
           return;
         }
 
-        setResult(await res.json());
+        setResult((await response.json()) as AnalysisResponse);
       } catch {
         setError("분석 결과를 불러오지 못했습니다.");
       }
@@ -43,23 +44,27 @@ export function AnalysisClient() {
   }
 
   return (
-    <div className="analysis-wrap">
+    <div className="analysis-layout">
       <form onSubmit={handleSubmit} className="analysis-form">
         <label>
           번호 6개
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(event) => setInput(event.target.value)}
             placeholder="예: 3, 11, 19, 28, 34, 42"
             autoComplete="off"
           />
         </label>
         <button type="submit" disabled={isPending}>
-          {isPending ? "분석 중…" : "분석하기"}
+          {isPending ? "분석 중..." : "분석하기"}
         </button>
       </form>
 
-      {error ? <p className="status-text error" role="alert" aria-live="assertive">{error}</p> : null}
+      {error ? (
+        <p className="status-text error" role="alert" aria-live="assertive">
+          {error}
+        </p>
+      ) : null}
 
       {result ? (
         <div className="analysis-result">
@@ -86,18 +91,18 @@ export function AnalysisClient() {
           </div>
 
           <div>
-            <p className="section-title" style={{ marginBottom: "10px" }}>구간 분포</p>
+            <p className="section-title analysis-section-title">구간 분포</p>
             <ul className="range-dist-list">
-              {result.rangeDistribution.map((r) => (
-                <li key={r.range} className="range-dist-item">
-                  <span className="range-label">{r.range}</span>
+              {result.rangeDistribution.map((range) => (
+                <li key={range.range} className="range-dist-item">
+                  <span className="range-label">{range.range}</span>
                   <div className="bar-track">
                     <div
                       className="bar-fill"
-                      style={{ width: `${Math.round((r.count / 6) * 100)}%` }}
+                      style={{ width: `${Math.round((range.count / 6) * 100)}%` }}
                     />
                   </div>
-                  <span className="range-count">{r.count}</span>
+                  <span className="range-count">{range.count}</span>
                 </li>
               ))}
             </ul>
