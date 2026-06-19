@@ -23,30 +23,28 @@
   --ring: rgba(201, 79, 36, 0.18);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #1c1813;
-    --bg-strong: #231f19;
-    --surface: rgba(38, 32, 25, 0.9);
-    --surface-strong: #2c2620;
-    --text: #f0ebe3;
-    --muted: #9e9086;
-    --line: rgba(240, 235, 227, 0.1);
-    --accent: #e05a28;
-    --accent-strong: #f07845;
-    --ball: #e8a820;
-    --bonus: #4a9654;
-    --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
-    --surface-card:    rgba(255, 255, 255, 0.045);
-    --surface-card-md: rgba(255, 255, 255, 0.035);
-    --surface-card-sm: rgba(255, 255, 255, 0.028);
-    --header-bg:       rgba(28, 24, 19, 0.88);
-    --nav-mobile-bg:   rgba(28, 24, 19, 0.97);
-    --nav-active-bg:   rgba(255, 255, 255, 0.06);
-    --shimmer-highlight: rgba(255, 255, 255, 0.04);
-    --ring: rgba(224, 90, 40, 0.2);
-  }
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1c1813;
+  --bg-strong: #231f19;
+  --surface: rgba(38, 32, 25, 0.9);
+  --surface-strong: #2c2620;
+  --text: #f0ebe3;
+  --muted: #9e9086;
+  --line: rgba(240, 235, 227, 0.1);
+  --accent: #e05a28;
+  --accent-strong: #f07845;
+  --ball: #e8a820;
+  --bonus: #4a9654;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  --surface-card:    rgba(255, 255, 255, 0.045);
+  --surface-card-md: rgba(255, 255, 255, 0.035);
+  --surface-card-sm: rgba(255, 255, 255, 0.028);
+  --header-bg:       rgba(28, 24, 19, 0.88);
+  --nav-mobile-bg:   rgba(28, 24, 19, 0.97);
+  --nav-active-bg:   rgba(255, 255, 255, 0.06);
+  --shimmer-highlight: rgba(255, 255, 255, 0.04);
+  --ring: rgba(224, 90, 40, 0.2);
 }
 
 * {
@@ -111,6 +109,34 @@ a {
   font-weight: 700;
   letter-spacing: -0.06em;
   text-transform: uppercase;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  min-height: unset;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-card);
+  transform: none;
+  box-shadow: none;
 }
 
 /* ── Skip navigation ─────────────────────────────────────────────── */

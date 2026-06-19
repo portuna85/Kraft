@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NavLinks } from "@/components/nav-links";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Header() {
   return (
@@ -8,7 +9,10 @@ export function Header() {
         <Link href="/" className="brand" aria-label="KRAFT Lotto 홈">
           KRAFT Lotto
         </Link>
-        <NavLinks />
+        <div className="header-actions">
+          <NavLinks />
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

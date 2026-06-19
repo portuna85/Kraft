@@ -67,6 +67,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="ko" className={`${notoSansKR.variable} ${notoSerifKR.variable} ${spaceGrotesk.variable}`}>
       <body>
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('kraft-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}",
+          }}
+        />
         <JsonLdWebSite baseUrl={baseUrl} nonce={nonce} />
         <a href="#main-content" className="skip-nav">본문으로 건너뛰기</a>
         <Header />
