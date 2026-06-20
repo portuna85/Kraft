@@ -69,8 +69,7 @@ public class WinningStatisticsCacheService {
     @Cacheable(value = CacheConfig.STATS_FREQUENCY, key = "#limit")
     public FrequencyStatsResponse getFrequencyStatsByLimit(int limit) {
         List<WinningNumber> rounds = winningNumberRepository
-                .findAllByOrderByRoundDesc(PageRequest.of(0, limit))
-                .getContent();
+                .findByOrderByRoundDesc(PageRequest.of(0, limit));
         return computeFrequencyResponse(rounds);
     }
 

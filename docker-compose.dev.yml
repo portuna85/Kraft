@@ -13,7 +13,7 @@ services:
     volumes:
       - mariadb-dev-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u$$MARIADB_USER -p$$MARIADB_PASSWORD --silent"]
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MARIADB_PASSWORD mariadb-admin ping -h 127.0.0.1 -u$$MARIADB_USER --silent"]
       interval: 5s
       timeout: 3s
       retries: 10

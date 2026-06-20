@@ -28,7 +28,9 @@ public class WinningNumberFreshnessScheduler {
         this.drawScheduleCalculator = drawScheduleCalculator;
     }
 
-    @Scheduled(cron = "0 0 7 * * SUN", zone = "Asia/Seoul")
+    // WinningNumberAutoCollectScheduler의 일요일 07:00 재시도 직후가 아니라
+    // 그 결과를 반영할 시간을 두기 위해 07:30으로 스태거링한다(동일 시각 동시 실행 방지).
+    @Scheduled(cron = "0 30 7 * * SUN", zone = "Asia/Seoul")
     @SchedulerLock(name = "check-freshness", lockAtMostFor = "PT5M")
     public void warnWhenStale() {
         winningNumberRepository.findTopByOrderByRoundDesc().ifPresent(latest -> {

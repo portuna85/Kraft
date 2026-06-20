@@ -5,6 +5,11 @@ import { NextRequest } from "next/server";
 // backend RevalidateWebhookListener의 REVALIDATE_PATHS와 일치시킨다.
 // 화이트리스트 밖 경로는 무시해 임의 경로 재검증을 막는다(시크릿이 노출되더라도 방어심화).
 const ALLOWED_PATHS = new Set(["/", "/latest", "/rounds", "/frequency", "/stats", "/companion"]);
+const ALLOWED_PATH_PATTERNS = [/^\/rounds\/\d+$/];
+
+function isAllowedPath(path: string): boolean {
+  return ALLOWED_PATHS.has(path) || ALLOWED_PATH_PATTERNS.some((pattern) => pattern.test(path));
+}
 
 export async function POST(req: NextRequest) {
   const secret = req.headers.get("X-Revalidate-Secret");
@@ -27,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   const requested = Array.isArray(body.paths) ? body.paths : [];
   const paths = requested.filter(
-    (path): path is string => typeof path === "string" && ALLOWED_PATHS.has(path)
+    (path): path is string => typeof path === "string" && isAllowedPath(path)
   );
 
   for (const path of paths) {

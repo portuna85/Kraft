@@ -51,15 +51,18 @@ public class RevalidateWebhookListener {
         if (!event.dataChanged() || !revalidateProperties.enabled()) {
             return;
         }
+        // 목록/요약 페이지뿐 아니라 수집된 회차의 상세 페이지도 함께 재검증한다.
+        List<String> paths = new java.util.ArrayList<>(REVALIDATE_PATHS);
+        paths.add("/rounds/" + event.round());
         try {
             String url = revalidateProperties.webUrl() + "/api/revalidate";
             restClient.post()
                     .uri(url)
                     .header("X-Revalidate-Secret", revalidateProperties.secret())
-                    .body(Map.of("paths", REVALIDATE_PATHS))
+                    .body(Map.of("paths", paths))
                     .retrieve()
                     .toBodilessEntity();
-            log.info("ISR revalidation 요청 완료: paths={}", REVALIDATE_PATHS);
+            log.info("ISR revalidation 요청 완료: paths={}", paths);
         } catch (Exception e) {
             revalidateFailureCounter.increment();
             log.warn("ISR revalidation 요청 실패 (무시): {}", e.getMessage());

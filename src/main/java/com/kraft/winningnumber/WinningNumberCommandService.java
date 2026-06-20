@@ -64,10 +64,10 @@ public class WinningNumberCommandService {
                 || !existing.getN6().equals(normalized.get(5))
                 || !existing.getBonusNumber().equals(request.bonusNumber())
                 || !existing.getFirstPrizeAmount().equals(request.firstPrizeAmount())
-                || existing.getSecondPrize() != orZero(request.secondPrize())
-                || existing.getSecondWinners() != orZeroInt(request.secondWinners())
-                || existing.getTotalSales() != orZero(request.totalSales())
-                || existing.getFirstAccumAmount() != orZero(request.firstAccumAmount());
+                || orZero(existing.getSecondPrize()) != orZero(request.secondPrize())
+                || orZeroInt(existing.getSecondWinners()) != orZeroInt(request.secondWinners())
+                || orZero(existing.getTotalSales()) != orZero(request.totalSales())
+                || orZero(existing.getFirstAccumAmount()) != orZero(request.firstAccumAmount());
     }
 
     private void updateExisting(WinningNumber existing,

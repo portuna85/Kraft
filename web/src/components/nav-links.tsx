@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -25,12 +25,36 @@ function isCurrent(href: string, pathname: string): boolean {
 export function NavLinks() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
+
+  const closeAndReturnFocus = () => {
+    setOpen(false);
+    toggleRef.current?.focus();
+  };
 
   useEffect(() => {
     if (!open) return;
 
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        closeAndReturnFocus();
+        return;
+      }
+      if (event.key !== "Tab" || !mobileNavRef.current) return;
+
+      const focusable = mobileNavRef.current.querySelectorAll<HTMLElement>("a[href]");
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     document.addEventListener("keydown", onKey);
@@ -45,6 +69,7 @@ export function NavLinks() {
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    mobileNavRef.current?.querySelector<HTMLElement>("a[href]")?.focus();
 
     return () => {
       document.body.style.overflow = previousOverflow;
@@ -79,6 +104,7 @@ export function NavLinks() {
       </nav>
 
       <button
+        ref={toggleRef}
         type="button"
         className="nav-toggle"
         onClick={() => setOpen((value) => !value)}
@@ -91,9 +117,9 @@ export function NavLinks() {
 
       {open && (
         <>
-          <div className="nav-backdrop" aria-hidden="true" onClick={() => setOpen(false)} />
+          <div className="nav-backdrop" aria-hidden="true" onClick={closeAndReturnFocus} />
           <div className="nav-mobile-wrap">
-            <nav id="nav-mobile" className="nav-mobile" aria-label="주요 메뉴">
+            <nav id="nav-mobile" ref={mobileNavRef} className="nav-mobile" aria-label="주요 메뉴">
               {mobileItems}
             </nav>
           </div>

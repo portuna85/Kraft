@@ -73,7 +73,7 @@ jobs:
             -v "$PWD/caddy:/etc/caddy" \
             -e KRAFT_DOMAIN=kraft.io.kr \
             -e KRAFT_ADMIN_DOMAIN=admin.kraft.io.kr \
-            caddy:latest caddy validate --config /etc/caddy/Caddyfile
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
 
   removed-feature-guard:
     name: Removed Feature Guard
@@ -168,14 +168,14 @@ jobs:
       - name: Set lowercase repo name
         run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
       - name: Trivy scan (block on HIGH/CRITICAL with fix)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
           exit-code: "1"
           severity: HIGH,CRITICAL
           ignore-unfixed: true
       - name: Trivy scan (report MEDIUM)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
           exit-code: "0"
@@ -191,14 +191,14 @@ jobs:
       - name: Set lowercase repo name
         run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
       - name: Trivy scan (block on HIGH/CRITICAL with fix)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
           exit-code: "1"
           severity: HIGH,CRITICAL
           ignore-unfixed: true
       - name: Trivy scan (report MEDIUM)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
           exit-code: "0"
