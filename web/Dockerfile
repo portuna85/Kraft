@@ -14,7 +14,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-RUN useradd --create-home --uid 10001 nextjs \
+# 런타임은 `node server.js`만 실행하므로 npm/npx는 불필요하다. 베이스 이미지에
+# 전역 설치된 npm이 자체 번들 undici(예: CVE-2026-12151)를 끌고 다녀 이미지
+# 취약점 스캔을 오염시키므로, 사용하지 않는 npm CLI 자체를 제거해 둔다.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+    && useradd --create-home --uid 10001 nextjs \
     && mkdir -p /app/logs/web /app/.next/cache \
     && chown -R nextjs:nextjs /app/logs /app/.next/cache
 COPY --from=builder /app/.next/standalone ./
