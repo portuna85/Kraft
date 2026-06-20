@@ -21,7 +21,6 @@ public class ClientIpResolver {
         }
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {
-            // XFF: 우→좌 순회로 신뢰 프록시를 건너뛰고 실제 클라이언트 IP 추출
             String[] parts = xff.split(",");
             for (int i = parts.length - 1; i >= 0; i--) {
                 String candidate = parts[i].trim();
@@ -35,9 +34,13 @@ public class ClientIpResolver {
 
     public boolean isTrustedProxy(String ip) {
         try {
-            // B-2: ofLiteral() 사용 — 호스트명 입력 시 즉시 거부 (DNS 조회 없음)
             InetAddress addr = InetAddress.ofLiteral(ip);
-            return isInCidr(addr, securityProperties.trustedProxyCidr());
+            for (String cidr : securityProperties.trustedProxyCidr().split(",")) {
+                if (isInCidr(addr, cidr.trim())) {
+                    return true;
+                }
+            }
+            return false;
         } catch (IllegalArgumentException e) {
             return false;
         }
@@ -45,7 +48,13 @@ public class ClientIpResolver {
 
     private boolean isInCidr(InetAddress addr, String cidr) {
         try {
+            if (cidr.isBlank()) {
+                return false;
+            }
             String[] parts = cidr.split("/");
+            if (parts.length != 2) {
+                return false;
+            }
             InetAddress network = InetAddress.ofLiteral(parts[0]);
             int prefixLength = Integer.parseInt(parts[1]);
             byte[] addrBytes = addr.getAddress();
