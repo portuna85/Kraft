@@ -1,6 +1,7 @@
 package com.kraft.winningnumber;
 
 import com.kraft.common.config.RevalidateProperties;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +17,7 @@ class RevalidateWebhookListenerTest {
     @DisplayName("dataChanged=false 이벤트는 웹훅 호출 없이 무시")
     void onCollected_dataNotChanged_skipsWebhook() {
         RevalidateProperties props = new RevalidateProperties("secret-123", "http://web:3000");
-        RevalidateWebhookListener listener = new RevalidateWebhookListener(props);
+        RevalidateWebhookListener listener = new RevalidateWebhookListener(props, new SimpleMeterRegistry());
 
         // Should not throw even without a real HTTP client
         listener.onCollected(new WinningNumbersCollectedEvent(1200, false));
@@ -27,7 +28,7 @@ class RevalidateWebhookListenerTest {
     @DisplayName("secret/webUrl이 비어있으면 enabled()=false → 웹훅 호출 안 함")
     void onCollected_disabled_skipsWebhook() {
         RevalidateProperties props = new RevalidateProperties("", "");
-        RevalidateWebhookListener listener = new RevalidateWebhookListener(props);
+        RevalidateWebhookListener listener = new RevalidateWebhookListener(props, new SimpleMeterRegistry());
 
         assertThat(props.enabled()).isFalse();
 
@@ -62,7 +63,7 @@ class RevalidateWebhookListenerTest {
     void onCollected_webhookFails_doesNotPropagateException() {
         // Properties with short invalid URL — triggers exception inside listener
         RevalidateProperties props = new RevalidateProperties("secret", "http://nonexistent-host-xyz:9999");
-        RevalidateWebhookListener listener = new RevalidateWebhookListener(props);
+        RevalidateWebhookListener listener = new RevalidateWebhookListener(props, new SimpleMeterRegistry());
 
         // Should swallow the connection error silently
         listener.onCollected(new WinningNumbersCollectedEvent(1200, true));

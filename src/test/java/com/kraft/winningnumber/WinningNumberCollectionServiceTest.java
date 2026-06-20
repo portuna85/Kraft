@@ -65,7 +65,8 @@ class WinningNumberCollectionServiceTest {
                 fetchClient,
                 commandService,
                 operationLogService,
-                eventPublisher
+                eventPublisher,
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
         );
         WinningNumberResponse response = service.collectLatest();
 
@@ -106,7 +107,8 @@ class WinningNumberCollectionServiceTest {
                 fetchClient,
                 commandService,
                 operationLogService,
-                eventPublisher
+                eventPublisher,
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
         );
 
         WinningNumberResponse response = service.collectLatest();

@@ -4,15 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// 과거 패턴/동반/분석은 mobileOnlyLinks로 분리되어 데스크톱에서 보이지 않았다.
+// 통계 페이지 발견성을 위해 데스크톱/모바일 모두 동일한 링크 목록을 노출한다.
 const primaryLinks = [
   { href: "/", label: "홈" },
   { href: "/rounds", label: "회차 결과" },
   { href: "/recommend", label: "번호 추천" },
   { href: "/saved", label: "저장 번호" },
   { href: "/frequency", label: "출현 통계" },
-];
-
-const mobileOnlyLinks = [
   { href: "/stats", label: "패턴 통계" },
   { href: "/companion", label: "동반 출현" },
   { href: "/analysis", label: "번호 분석" },
@@ -62,7 +61,7 @@ export function NavLinks() {
     </Link>
   ));
 
-  const mobileItems = [...primaryLinks, ...mobileOnlyLinks].map((link) => (
+  const mobileItems = primaryLinks.map((link) => (
     <Link
       key={link.href}
       href={link.href}

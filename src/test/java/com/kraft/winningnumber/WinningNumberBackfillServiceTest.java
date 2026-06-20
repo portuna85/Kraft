@@ -166,17 +166,18 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("잘못된 소스 페이로드가 오면 데이터의 끝으로 간주하고 중단한다")
-    void backfillAll_invalidSourcePayloadStopsAsEndOfData() {
+    @DisplayName("필드 파싱 실패는 데이터의 끝이 아닌 일시 오류로 간주해 재시도 후 중단한다")
+    void backfillAll_parseErrorIsTransientNotEndOfData() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
-        given(fetchClient.fetchRound(1)).willThrow(sourceException("LOTTO_SOURCE_INVALID"));
+        given(fetchClient.fetchRound(1)).willThrow(sourceException("LOTTO_SOURCE_PARSE_ERROR"));
 
         BackfillResult result = service.backfillAll();
 
         assertThat(result.startRound()).isEqualTo(1);
         assertThat(result.lastCollectedRound()).isNull();
         assertThat(result.collectedCount()).isZero();
-        verify(fetchClient).fetchRound(1);
+        assertThat(result.stopReason()).contains("연속 실패");
+        verify(fetchClient, times(3)).fetchRound(1);
         verify(commandService, never()).upsertWithResult(org.mockito.ArgumentMatchers.any());
         verify(collectionService, never()).publishBulkCollected(org.mockito.ArgumentMatchers.anyInt());
     }

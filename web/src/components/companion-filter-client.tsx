@@ -12,8 +12,10 @@ type Props = {
 export function CompanionFilterClient({ pairs, totalRounds }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
 
+  // 선택 없음: 상위 50개만 표시(과한 목록 방지). 번호 선택: 전체 쌍에서 검색해
+  // 상위 50개 밖의 번호도 정확히 매칭한다.
   const filtered = selected === null
-    ? pairs
+    ? pairs.slice(0, 50)
     : pairs.filter((pair) => pair.ballA === selected || pair.ballB === selected);
 
   return (

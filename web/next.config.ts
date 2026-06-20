@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
         destination: "/info/data-source",
         permanent: true,
       },
+      {
+        source: "/latest",
+        destination: "/rounds",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {

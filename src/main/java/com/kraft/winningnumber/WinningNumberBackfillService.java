@@ -33,7 +33,7 @@ public class WinningNumberBackfillService {
 
     /** 정상 응답이나 해당 회차 데이터가 없음 → 최신 회차 도달로 보고 정상 종료. */
     private static final Set<String> END_OF_DATA_CODES =
-            Set.of("LOTTO_SOURCE_ROUND_NOT_FOUND", "LOTTO_SOURCE_INVALID");
+            Set.of("LOTTO_SOURCE_ROUND_NOT_FOUND");
     /** 재시도가 무의미한 치명적 오류 → 즉시 중단. */
     private static final Set<String> FATAL_CODES =
             Set.of("LOTTO_SOURCE_DISABLED");

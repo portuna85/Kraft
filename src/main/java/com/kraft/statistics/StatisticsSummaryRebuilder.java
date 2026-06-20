@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
@@ -28,6 +29,12 @@ public class StatisticsSummaryRebuilder {
     private final PatternStatsSummaryRepository patternStatsSummaryRepository;
     private final CompanionPairSummaryRepository companionPairSummaryRepository;
     private final Clock clock;
+    /**
+     * 단일 backend 인스턴스 기준으로 AFTER_COMMIT 리스너와 캐시 미스 폴백이 동시에
+     * rebuildAllSummaries()를 트리거할 수 있다(delete-all+insert 경합 → unique 충돌).
+     * 인스턴스 레벨 락으로 직렬화한다.
+     */
+    private final ReentrantLock rebuildLock = new ReentrantLock();
 
     public StatisticsSummaryRebuilder(WinningNumberRepository winningNumberRepository,
                                       FrequencySummaryRepository frequencySummaryRepository,
@@ -45,20 +52,25 @@ public class StatisticsSummaryRebuilder {
     @CacheEvict(value = {CacheConfig.STATS_FREQUENCY, CacheConfig.STATS_PATTERN, CacheConfig.STATS_COMPANION},
                 allEntries = true)
     public void rebuildAllSummaries() {
-        List<WinningNumber> all = winningNumberRepository.findAll();
-        if (all.isEmpty()) {
-            log.info("회차 데이터 없음 — summary 재계산 건너뜀");
-            return;
+        rebuildLock.lock();
+        try {
+            List<WinningNumber> all = winningNumberRepository.findAll();
+            if (all.isEmpty()) {
+                log.info("회차 데이터 없음 — summary 재계산 건너뜀");
+                return;
+            }
+
+            log.info("statistics summary 재계산 시작: totalRounds={}", all.size());
+            OffsetDateTime now = OffsetDateTime.now(clock);
+            int latestRound = all.stream().mapToInt(WinningNumber::getRound).max().orElse(0);
+
+            rebuildFrequency(all, latestRound, now);
+            rebuildPatterns(all, now);
+            rebuildCompanions(all, now);
+            log.info("statistics summary 재계산 완료");
+        } finally {
+            rebuildLock.unlock();
         }
-
-        log.info("statistics summary 재계산 시작: totalRounds={}", all.size());
-        OffsetDateTime now = OffsetDateTime.now(clock);
-        int latestRound = all.stream().mapToInt(WinningNumber::getRound).max().orElse(0);
-
-        rebuildFrequency(all, latestRound, now);
-        rebuildPatterns(all, now);
-        rebuildCompanions(all, now);
-        log.info("statistics summary 재계산 완료");
     }
 
     private void rebuildFrequency(List<WinningNumber> rounds, int latestRound, OffsetDateTime now) {

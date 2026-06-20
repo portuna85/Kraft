@@ -17,7 +17,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // blueprint §14.1: 실존 URL만, 리다이렉트 없는 최종 형태로 등재
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/`, lastModified: lastMod },
-    { url: `${baseUrl}/latest`, lastModified: lastMod },
     { url: `${baseUrl}/rounds`, lastModified: lastMod },
     { url: `${baseUrl}/frequency`, lastModified: lastMod },
     { url: `${baseUrl}/stats`, lastModified: lastMod },

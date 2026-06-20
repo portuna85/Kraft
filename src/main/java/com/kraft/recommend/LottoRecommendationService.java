@@ -6,14 +6,16 @@ import com.kraft.winningnumber.WinningNumber;
 import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumbersCollectedEvent;
 import jakarta.annotation.PostConstruct;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.springframework.context.event.EventListener;
+import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Service
 public class LottoRecommendationService {
@@ -24,7 +26,6 @@ public class LottoRecommendationService {
     private final LottoNumberCodec lottoNumberCodec;
     private final WinningNumberRepository winningNumberRepository;
     private final CombinationScorer combinationScorer;
-    private final SecureRandom random = new SecureRandom();
 
     private volatile Set<Set<Integer>> historicalCombinations = Set.of();
 
@@ -41,7 +42,12 @@ public class LottoRecommendationService {
         refreshHistoricalCombinations();
     }
 
-    @EventListener
+    /**
+     * 커밋 전 동기 리스너(@EventListener)는 트랜잭션이 롤백돼도 이미 메모리 캐시를
+     * 갱신해버려 유령 데이터를 남긴다. AFTER_COMMIT으로 전환해 실제 반영된 데이터만 반영한다.
+     */
+    @Async("eventTaskExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     void onCollected(WinningNumbersCollectedEvent event) {
         if (event.dataChanged()) {
             refreshHistoricalCombinations();
@@ -74,10 +80,14 @@ public class LottoRecommendationService {
         }
 
         List<List<Integer>> recommendations = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            recommendations.add(maximizePrize
-                    ? generateBest(excluded)
-                    : generateOne(excluded));
+        Set<String> seen = new HashSet<>();
+        int attempts = 0;
+        int maxAttempts = count * MAX_ATTEMPTS;
+        while (recommendations.size() < count && attempts++ < maxAttempts) {
+            List<Integer> candidate = maximizePrize ? generateBest(excluded) : generateOne(excluded);
+            if (seen.add(lottoNumberCodec.toStorageValue(candidate))) {
+                recommendations.add(candidate);
+            }
         }
         return new RecommendNumbersResponse(recommendations);
     }
@@ -113,7 +123,7 @@ public class LottoRecommendationService {
 
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             for (int i = candidates.size() - 1; i > 0; i--) {
-                int j = random.nextInt(i + 1);
+                int j = ThreadLocalRandom.current().nextInt(i + 1);
                 int tmp = candidates.get(i);
                 candidates.set(i, candidates.get(j));
                 candidates.set(j, tmp);

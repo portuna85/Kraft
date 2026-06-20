@@ -22,7 +22,9 @@ public class WinningNumberAutoCollectScheduler {
         this.winningNumberCollectionService = winningNumberCollectionService;
     }
 
-    @Scheduled(cron = "${kraft.external-lotto.auto-collect-cron:0 0 22 * * SAT}", zone = "Asia/Seoul")
+    private static final int MAX_CATCH_UP_ROUNDS = 4;
+
+    @Scheduled(cron = "${kraft.external-lotto.auto-collect-cron:0 30 21 * * SAT}", zone = "Asia/Seoul")
     @Scheduled(cron = "0 0 7 * * SUN", zone = "Asia/Seoul")
     @SchedulerLock(name = "collect-auto-latest", lockAtMostFor = "PT30M", lockAtLeastFor = "PT5M")
     public void collectLatestAutomatically() {
@@ -32,8 +34,9 @@ public class WinningNumberAutoCollectScheduler {
         }
 
         try {
-            WinningNumberResponse response = winningNumberCollectionService.collectLatest();
-            log.info("최신 회차 자동 수집 완료: round={}", response.round());
+            var responses = winningNumberCollectionService.collectUpToLatest(MAX_CATCH_UP_ROUNDS);
+            log.info("최신 회차 자동 수집 완료: collectedRounds={}",
+                    responses.stream().map(WinningNumberResponse::round).toList());
         } catch (ApiException exception) {
             log.warn("최신 회차 자동 수집 실패: code={} message={}", exception.getCode(), exception.getMessage());
         } catch (Exception exception) {

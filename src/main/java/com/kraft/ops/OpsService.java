@@ -7,6 +7,7 @@ import com.kraft.operationlog.WinningNumberOperationLogPageResponse;
 import com.kraft.operationlog.WinningNumberOperationLogService;
 import com.kraft.operationlog.WinningNumberOperationStatus;
 import com.kraft.operationlog.WinningNumberOperationType;
+import com.kraft.winningnumber.LottoDrawScheduleCalculator;
 import com.kraft.winningnumber.WinningNumberCollectionService;
 import com.kraft.winningnumber.WinningNumberCommandService;
 import com.kraft.winningnumber.WinningNumberRepository;
@@ -16,7 +17,6 @@ import com.kraft.common.web.RequestIdFilter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -41,19 +41,22 @@ public class OpsService {
     private final WinningNumberOperationLogService winningNumberOperationLogService;
     private final OpsProperties opsProperties;
     private final Clock clock;
+    private final LottoDrawScheduleCalculator drawScheduleCalculator;
 
     public OpsService(WinningNumberRepository winningNumberRepository,
                       WinningNumberCommandService winningNumberCommandService,
                       WinningNumberCollectionService winningNumberCollectionService,
                       WinningNumberOperationLogService winningNumberOperationLogService,
                       OpsProperties opsProperties,
-                      Clock clock) {
+                      Clock clock,
+                      LottoDrawScheduleCalculator drawScheduleCalculator) {
         this.winningNumberRepository = winningNumberRepository;
         this.winningNumberCommandService = winningNumberCommandService;
         this.winningNumberCollectionService = winningNumberCollectionService;
         this.winningNumberOperationLogService = winningNumberOperationLogService;
         this.opsProperties = opsProperties;
         this.clock = clock;
+        this.drawScheduleCalculator = drawScheduleCalculator;
     }
 
     public OpsSummaryResponse getSummary(String token) {
@@ -68,7 +71,7 @@ public class OpsService {
                         latest.getRound(),
                         latest.getDrawDate().toString(),
                         now,
-                        isFresh(latest.getDrawDate(), now.toLocalDate())
+                        isFresh(latest.getDrawDate(), now)
                 ))
                 .orElseGet(() -> new OpsSummaryResponse(
                         "kraft-lotto",
@@ -173,11 +176,8 @@ public class OpsService {
         }
     }
 
-    private boolean isFresh(LocalDate latestDrawDate, LocalDate today) {
-        LocalDate expected = today.with(DayOfWeek.SATURDAY);
-        if (today.getDayOfWeek().getValue() < DayOfWeek.SATURDAY.getValue()) {
-            expected = expected.minusWeeks(1);
-        }
+    private boolean isFresh(LocalDate latestDrawDate, ZonedDateTime now) {
+        LocalDate expected = drawScheduleCalculator.expectedLatestDrawDate(now);
         return !latestDrawDate.isBefore(expected);
     }
 

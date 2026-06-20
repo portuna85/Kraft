@@ -1,6 +1,8 @@
 package com.kraft.winningnumber;
 
 import com.kraft.common.config.RevalidateProperties;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +29,9 @@ public class RevalidateWebhookListener {
 
     private final RevalidateProperties revalidateProperties;
     private final RestClient restClient;
+    private final Counter revalidateFailureCounter;
 
-    public RevalidateWebhookListener(RevalidateProperties revalidateProperties) {
+    public RevalidateWebhookListener(RevalidateProperties revalidateProperties, MeterRegistry meterRegistry) {
         this.revalidateProperties = revalidateProperties;
         var factory = new JdkClientHttpRequestFactory(
                 java.net.http.HttpClient.newBuilder()
@@ -37,6 +40,9 @@ public class RevalidateWebhookListener {
         );
         factory.setReadTimeout(Duration.ofSeconds(5));
         this.restClient = RestClient.builder().requestFactory(factory).build();
+        this.revalidateFailureCounter = Counter.builder("kraft_lotto_revalidate_failures_total")
+                .description("ISR on-demand revalidation 요청 실패 횟수")
+                .register(meterRegistry);
     }
 
     @Async("eventTaskExecutor")
@@ -55,6 +61,7 @@ public class RevalidateWebhookListener {
                     .toBodilessEntity();
             log.info("ISR revalidation 요청 완료: paths={}", REVALIDATE_PATHS);
         } catch (Exception e) {
+            revalidateFailureCounter.increment();
             log.warn("ISR revalidation 요청 실패 (무시): {}", e.getMessage());
         }
     }

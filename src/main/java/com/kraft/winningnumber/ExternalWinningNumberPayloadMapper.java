@@ -14,7 +14,7 @@ public class ExternalWinningNumberPayloadMapper {
     public WinningNumberUpsertRequest toRequest(Map<String, Object> payload) {
         String returnValue = asString(payload.get("returnValue"));
         if (returnValue != null && !returnValue.isBlank() && !"success".equalsIgnoreCase(returnValue)) {
-            throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_INVALID", "외부 응답이 성공 상태가 아닙니다.");
+            throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_ROUND_NOT_FOUND", "외부 응답이 성공 상태가 아닙니다(회차 미공개로 간주).");
         }
 
         Integer round = asInteger(firstOf(payload, "ltEpsd", "round", "drwNo"));
@@ -25,7 +25,7 @@ public class ExternalWinningNumberPayloadMapper {
         List<Integer> numbers = extractNumbers(payload);
 
         if (round == null || drawDate == null || bonusNumber == null || firstPrizeAmount == null) {
-            throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_INVALID", "외부 응답 필드가 누락되었습니다.");
+            throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_PARSE_ERROR", "외부 응답 필드가 누락되었습니다.");
         }
 
         Long secondPrize = asLong(firstOf(payload, "rnk2WnAmt", "secondPrize", "secondWinamnt"));
@@ -79,7 +79,7 @@ public class ExternalWinningNumberPayloadMapper {
         List<Integer> result = new java.util.ArrayList<>();
         for (int i = 0; i < nums.length; i++) {
             if (nums[i] == null) {
-                throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_INVALID",
+                throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_PARSE_ERROR",
                         "당첨 번호 " + (i + 1) + "번 필드가 누락되었습니다.");
             }
             result.add(nums[i]);
@@ -90,7 +90,7 @@ public class ExternalWinningNumberPayloadMapper {
     private void validateNumbers(List<Integer> numbers) {
         for (int i = 0; i < numbers.size(); i++) {
             if (numbers.get(i) == null) {
-                throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_INVALID",
+                throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_PARSE_ERROR",
                         "당첨 번호 목록에 null 값이 포함되어 있습니다 (index " + i + ").");
             }
         }

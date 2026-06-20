@@ -43,3 +43,21 @@ groups:
         annotations:
           summary: "JVM heap usage > 85%"
           description: "JVM heap memory utilisation has been above 85% for 5 minutes."
+
+      - alert: KraftLottoDataStale
+        expr: kraft_lotto_data_stale_days{job="kraft-backend"} >= 1
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: "KRAFT Lotto 데이터가 최신 회차보다 지연됨"
+          description: "kraft_lotto_data_stale_days가 1일 이상 지속됨. 최신 회차={{ $labels.instance }}, 자동 수집 또는 외부 소스 점검 필요."
+
+      - alert: KraftLottoExternalCollectFailing
+        expr: increase(kraft_lotto_external_collect_failures_total{job="kraft-backend"}[1h]) >= 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "외부 회차 수집이 반복 실패 중"
+          description: "최근 1시간 동안 외부 회차 수집 실패가 3회 이상 발생함."

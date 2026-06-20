@@ -79,6 +79,9 @@ public class AdminSecurityConfig {
                         .deleteCookies("JSESSIONID"))
                 .exceptionHandling(exception -> exception
                         .accessDeniedHandler(adminAccessDeniedHandler()))
+                .headers(headers -> headers.contentSecurityPolicy(csp -> csp.policyDirectives(
+                        "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+                                + "form-action 'self'; frame-ancestors 'none'; object-src 'none'")))
                 .sessionManagement(sm -> sm.maximumSessions(1))
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfTokenRepository)

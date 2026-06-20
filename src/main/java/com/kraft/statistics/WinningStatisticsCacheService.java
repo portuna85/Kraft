@@ -19,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class WinningStatisticsCacheService {
 
     private static final Logger log = LoggerFactory.getLogger(WinningStatisticsCacheService.class);
-    private static final int COMPANION_TOP_LIMIT = 100;
+    // 45개 번호 전체 쌍 조합 수(45C2=990). 클라이언트 번호별 필터가 전체 쌍을 대상으로
+    // 동작하려면 전체를 전달해야 한다 — 상위 N개만 보내면 N 밖의 번호는 "기록 없음"으로 오표시된다.
+    private static final int COMPANION_TOP_LIMIT = 990;
 
     // pattern stat_type 상수 (StatisticsSummaryRebuilder에서도 참조)
     static final String TYPE_ODD_COUNT = "ODD_COUNT";
@@ -54,7 +56,7 @@ public class WinningStatisticsCacheService {
 
         if (summaries.isEmpty()) {
             log.info("빈도 summary 없음 — 재계산 시작");
-            summaryRebuilder.rebuildAllSummaries();
+            rebuildSummariesIgnoringConcurrencyFailure();
             summaries = frequencySummaryRepository.findAllByOrderByBallNumberAsc();
         }
 
@@ -99,7 +101,7 @@ public class WinningStatisticsCacheService {
         List<PatternStatsSummary> oddRows = patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_ODD_COUNT);
         if (oddRows.isEmpty()) {
             log.info("패턴 summary 없음 — 재계산 시작");
-            summaryRebuilder.rebuildAllSummaries();
+            rebuildSummariesIgnoringConcurrencyFailure();
             oddRows = patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_ODD_COUNT);
         }
 
@@ -119,7 +121,7 @@ public class WinningStatisticsCacheService {
 
         if (pairs.isEmpty()) {
             log.info("동반 summary 없음 — 재계산 시작");
-            summaryRebuilder.rebuildAllSummaries();
+            rebuildSummariesIgnoringConcurrencyFailure();
             pairs = companionPairSummaryRepository
                     .findAllByOrderByCoCountDescBallAAscBallBAsc(PageRequest.of(0, COMPANION_TOP_LIMIT));
         }
@@ -151,6 +153,18 @@ public class WinningStatisticsCacheService {
 
         return new AnalysisResponse(numbers, oddCount, evenCount, lowCount, highCount,
                 sum, sumBucket, consecutivePairCount, ranges);
+    }
+
+    /**
+     * 캐시 미스 폴백에서 재계산이 실패해도(동시 실행 경합으로 다른 스레드가 먼저 끝낸 경우 등)
+     * 호출자에게 500을 전파하지 않는다 — 직후 재조회에서 다른 스레드가 저장한 데이터를 읽을 수 있다.
+     */
+    private void rebuildSummariesIgnoringConcurrencyFailure() {
+        try {
+            summaryRebuilder.rebuildAllSummaries();
+        } catch (RuntimeException ex) {
+            log.warn("summary 재계산 중 예외 발생(동시 실행 경합 가능) — 기존 데이터로 폴백: {}", ex.getMessage());
+        }
     }
 
     // ──────────────────────────────────────────────

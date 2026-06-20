@@ -3,6 +3,9 @@ package com.kraft.winningnumber;
 import com.kraft.common.error.ApiException;
 import com.kraft.operationlog.WinningNumberOperationLogService;
 import com.kraft.operationlog.WinningNumberOperationType;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,17 +24,22 @@ public class WinningNumberCollectionService {
     private final WinningNumberCommandService winningNumberCommandService;
     private final WinningNumberOperationLogService winningNumberOperationLogService;
     private final ApplicationEventPublisher eventPublisher;
+    private final Counter collectFailureCounter;
 
     public WinningNumberCollectionService(WinningNumberRepository winningNumberRepository,
                                           ExternalWinningNumberFetchClient externalWinningNumberFetchClient,
                                           WinningNumberCommandService winningNumberCommandService,
                                           WinningNumberOperationLogService winningNumberOperationLogService,
-                                          ApplicationEventPublisher eventPublisher) {
+                                          ApplicationEventPublisher eventPublisher,
+                                          MeterRegistry meterRegistry) {
         this.winningNumberRepository = winningNumberRepository;
         this.externalWinningNumberFetchClient = externalWinningNumberFetchClient;
         this.winningNumberCommandService = winningNumberCommandService;
         this.winningNumberOperationLogService = winningNumberOperationLogService;
         this.eventPublisher = eventPublisher;
+        this.collectFailureCounter = Counter.builder("kraft_lotto_external_collect_failures_total")
+                .description("외부 회차 수집 실패 횟수(end-of-data 제외)")
+                .register(meterRegistry);
     }
 
     /**
@@ -62,6 +70,7 @@ public class WinningNumberCollectionService {
                         latestRound.getRound(), nextRound, exception.getMessage());
                 return WinningNumberResponse.from(latestRound);
             }
+            collectFailureCounter.increment();
             winningNumberOperationLogService.logFailure(
                     WinningNumberOperationType.EXTERNAL_COLLECT,
                     nextRound,
@@ -72,11 +81,40 @@ public class WinningNumberCollectionService {
         }
     }
 
+    /**
+     * 1회 스케줄에서 최대 maxRounds 회차까지 순차 수집한다. 자동 수집이 회차당 1건만
+     * 회복하던 기존 동작은 일시적 장애로 1주 이상 누락이 쌓이면 회복이 지연됐다(P0).
+     */
+    public List<WinningNumberResponse> collectUpToLatest(int maxRounds) {
+        List<WinningNumberResponse> collected = new java.util.ArrayList<>();
+        for (int i = 0; i < maxRounds; i++) {
+            Optional<WinningNumber> latest = winningNumberRepository.findTopByOrderByRoundDesc();
+            int nextRound = latest.map(winningNumber -> winningNumber.getRound() + 1).orElse(1);
+            try {
+                collected.add(collectFetchedRound(nextRound));
+            } catch (RuntimeException exception) {
+                if (isEndOfData(exception) && latest.isPresent()) {
+                    log.info("자동 수집 catch-up 종료: latestRound={} 추가 회차 없음", latest.get().getRound());
+                    break;
+                }
+                winningNumberOperationLogService.logFailure(
+                        WinningNumberOperationType.EXTERNAL_COLLECT,
+                        nextRound,
+                        "external-source",
+                        exception.getMessage()
+                );
+                throw exception;
+            }
+        }
+        return collected;
+    }
+
     public WinningNumberResponse collectRound(int round) {
         log.info("회차 수집 시작: round={}", round);
         try {
             return collectFetchedRound(round);
         } catch (RuntimeException exception) {
+            collectFailureCounter.increment();
             winningNumberOperationLogService.logFailure(
                     WinningNumberOperationType.EXTERNAL_COLLECT,
                     round,
@@ -104,7 +142,6 @@ public class WinningNumberCollectionService {
 
     private boolean isEndOfData(RuntimeException exception) {
         return exception instanceof ApiException apiException
-                && ("LOTTO_SOURCE_ROUND_NOT_FOUND".equals(apiException.getCode())
-                || "LOTTO_SOURCE_INVALID".equals(apiException.getCode()));
+                && "LOTTO_SOURCE_ROUND_NOT_FOUND".equals(apiException.getCode());
     }
 }

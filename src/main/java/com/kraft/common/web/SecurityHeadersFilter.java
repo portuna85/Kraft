@@ -17,7 +17,10 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
-        if (request.getRequestURI().startsWith("/h2-console")) {
+        String uri = request.getRequestURI();
+        if (uri.startsWith("/h2-console") || uri.startsWith("/admin")) {
+            // /admin은 AdminSecurityConfig가 자체 CSP(인라인 스타일 허용)를 적용한다.
+            // 여기서 default-src 'none'을 강제하면 admin Thymeleaf 템플릿의 인라인 스타일이 차단된다.
             chain.doFilter(request, response);
             return;
         }
