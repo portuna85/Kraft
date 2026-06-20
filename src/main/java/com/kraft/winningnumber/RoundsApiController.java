@@ -1,7 +1,10 @@
 package com.kraft.winningnumber;
 
+import java.util.concurrent.TimeUnit;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,8 +24,10 @@ public class RoundsApiController {
     }
 
     @GetMapping("/latest")
-    public WinningNumberResponse latest() {
-        return winningNumberQueryService.getLatest();
+    public ResponseEntity<WinningNumberResponse> latest() {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS).cachePublic())
+                .body(winningNumberQueryService.getLatest());
     }
 
     @GetMapping
