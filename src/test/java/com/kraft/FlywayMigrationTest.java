@@ -1,5 +1,6 @@
 package com.kraft;
 
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,12 +29,18 @@ class FlywayMigrationTest {
 
     @DynamicPropertySource
     static void configureDataSource(DynamicPropertyRegistry registry) {
+        Flyway.configure()
+                .dataSource(mariadb.getJdbcUrl(), mariadb.getUsername(), mariadb.getPassword())
+                .load()
+                .migrate();
         registry.add("spring.datasource.url", mariadb::getJdbcUrl);
         registry.add("spring.datasource.username", mariadb::getUsername);
         registry.add("spring.datasource.password", mariadb::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.mariadb.jdbc.Driver");
-        registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.enabled", () -> "false");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        registry.add("spring.jpa.defer-datasource-initialization", () -> "false");
+        registry.add("spring.sql.init.mode", () -> "never");
     }
 
     @Test
