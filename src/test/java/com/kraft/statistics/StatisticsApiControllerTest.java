@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -70,6 +71,8 @@ class StatisticsApiControllerTest {
     void getFrequency_returns200_andTriggersRebuildWhenEmpty() throws Exception {
         mockMvc.perform(get("/api/v1/stats/frequency"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "public, max-age=60, must-revalidate"))
+                .andExpect(header().exists("ETag"))
                 .andExpect(jsonPath("$.totalRounds").value(2))
                 .andExpect(jsonPath("$.frequencies", hasSize(45)));
     }
@@ -90,6 +93,15 @@ class StatisticsApiControllerTest {
         mockMvc.perform(get("/api/v1/stats/companion"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalRounds").value(2));
+    }
+
+    @Test
+    @DisplayName("회차 조회 API가 공개 캐시 헤더를 반환하는지 확인")
+    void roundsLatest_returnsCacheHeaders() throws Exception {
+        mockMvc.perform(get("/api/v1/rounds/latest"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "public, max-age=60, must-revalidate"))
+                .andExpect(header().exists("ETag"));
     }
 
     @Test

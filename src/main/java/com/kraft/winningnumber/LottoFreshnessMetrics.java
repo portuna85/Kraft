@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 /**
@@ -42,33 +43,39 @@ public class LottoFreshnessMetrics {
     }
 
     private double latestRound() {
-        return winningNumberRepository.findTopByOrderByRoundDesc()
-                .map(w -> (double) w.getRound())
-                .orElse(0d);
+        return snapshot().latestRound();
     }
 
     private double expectedLatestRound() {
-        return winningNumberRepository.findTopByOrderByRoundDesc()
-                .map(latest -> {
-                    LocalDate expected = expectedDrawDate();
-                    long weeksBehind = Math.max(0, ChronoUnit.WEEKS.between(latest.getDrawDate(), expected));
-                    return (double) (latest.getRound() + weeksBehind);
-                })
-                .orElse(0d);
+        return snapshot().expectedLatestRound();
     }
 
     private double staleDays() {
-        return winningNumberRepository.findTopByOrderByRoundDesc()
-                .map(latest -> {
-                    LocalDate expected = expectedDrawDate();
-                    long staleDays = ChronoUnit.DAYS.between(latest.getDrawDate(), expected);
-                    return (double) Math.max(0, staleDays);
-                })
-                .orElse(0d);
+        return snapshot().staleDays();
+    }
+
+    FreshnessSnapshot snapshot() {
+        LocalDate expected = expectedDrawDate();
+        Optional<WinningNumber> latest = winningNumberRepository.findTopByOrderByRoundDesc();
+        if (latest.isEmpty()) {
+            return new FreshnessSnapshot(0d, 0d, 0d);
+        }
+
+        WinningNumber winningNumber = latest.orElseThrow();
+        long weeksBehind = Math.max(0, ChronoUnit.WEEKS.between(winningNumber.getDrawDate(), expected));
+        long staleDays = Math.max(0, ChronoUnit.DAYS.between(winningNumber.getDrawDate(), expected));
+        return new FreshnessSnapshot(
+                winningNumber.getRound(),
+                winningNumber.getRound() + weeksBehind,
+                staleDays
+        );
     }
 
     private LocalDate expectedDrawDate() {
         ZonedDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(KST);
         return drawScheduleCalculator.expectedLatestDrawDate(now);
+    }
+
+    record FreshnessSnapshot(double latestRound, double expectedLatestRound, double staleDays) {
     }
 }

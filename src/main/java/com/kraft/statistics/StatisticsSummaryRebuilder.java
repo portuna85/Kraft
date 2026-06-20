@@ -3,74 +3,126 @@ package com.kraft.statistics;
 import com.kraft.common.config.CacheConfig;
 import com.kraft.winningnumber.WinningNumber;
 import com.kraft.winningnumber.WinningNumberRepository;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
+import net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor;
+import net.javacrumbs.shedlock.core.LockConfiguration;
+import net.javacrumbs.shedlock.core.LockProvider;
+import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
-@Transactional
 public class StatisticsSummaryRebuilder {
 
     private static final Logger log = LoggerFactory.getLogger(StatisticsSummaryRebuilder.class);
+    private static final String REBUILD_LOCK_NAME = "statistics-summary-rebuild";
+    private static final Duration REBUILD_LOCK_AT_MOST_FOR = Duration.ofMinutes(10);
+    private static final Duration REBUILD_LOCK_AT_LEAST_FOR = Duration.ZERO;
 
     private final WinningNumberRepository winningNumberRepository;
     private final FrequencySummaryRepository frequencySummaryRepository;
     private final PatternStatsSummaryRepository patternStatsSummaryRepository;
     private final CompanionPairSummaryRepository companionPairSummaryRepository;
     private final Clock clock;
-    /**
-     * 단일 backend 인스턴스 기준으로 AFTER_COMMIT 리스너와 캐시 미스 폴백이 동시에
-     * rebuildAllSummaries()를 트리거할 수 있다(delete-all+insert 경합 → unique 충돌).
-     * 인스턴스 레벨 락으로 직렬화한다.
-     */
-    private final ReentrantLock rebuildLock = new ReentrantLock();
+    private final LockingTaskExecutor lockingTaskExecutor;
+    private final MeterRegistry meterRegistry;
+    private final TransactionTemplate transactionTemplate;
 
     public StatisticsSummaryRebuilder(WinningNumberRepository winningNumberRepository,
                                       FrequencySummaryRepository frequencySummaryRepository,
                                       PatternStatsSummaryRepository patternStatsSummaryRepository,
                                       CompanionPairSummaryRepository companionPairSummaryRepository,
-                                      Clock clock) {
+                                      Clock clock,
+                                      LockProvider lockProvider,
+                                      MeterRegistry meterRegistry,
+                                      PlatformTransactionManager transactionManager) {
         this.winningNumberRepository = winningNumberRepository;
         this.frequencySummaryRepository = frequencySummaryRepository;
         this.patternStatsSummaryRepository = patternStatsSummaryRepository;
         this.companionPairSummaryRepository = companionPairSummaryRepository;
         this.clock = clock;
+        this.lockingTaskExecutor = new DefaultLockingTaskExecutor(lockProvider);
+        this.meterRegistry = meterRegistry;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @CacheEvict(value = {CacheConfig.STATS_FREQUENCY, CacheConfig.STATS_PATTERN, CacheConfig.STATS_COMPANION},
                 allEntries = true)
     public void rebuildAllSummaries() {
-        rebuildLock.lock();
+        LockingTaskExecutor.TaskResult<Boolean> result;
+        try {
+            result = lockingTaskExecutor.executeWithLock(
+                    () -> transactionTemplate.execute(status -> rebuildAllSummariesInternal()),
+                    new LockConfiguration(
+                            clock.instant(),
+                            REBUILD_LOCK_NAME,
+                            REBUILD_LOCK_AT_MOST_FOR,
+                            REBUILD_LOCK_AT_LEAST_FOR
+                    )
+            );
+        } catch (Throwable throwable) {
+            recordRebuildOutcome("failure");
+            throw new IllegalStateException("Failed to rebuild statistics summaries", throwable);
+        }
+
+        if (!result.wasExecuted()) {
+            log.info("statistics summary rebuild skipped because another instance holds the lock");
+            recordRebuildOutcome("skipped");
+        }
+    }
+
+    private boolean rebuildAllSummariesInternal() {
+        Timer.Sample sample = Timer.start(meterRegistry);
         try {
             List<WinningNumber> all = winningNumberRepository.findAll();
             if (all.isEmpty()) {
-                log.info("회차 데이터 없음 — summary 재계산 건너뜀");
-                return;
+                log.info("No winning numbers found; skipping statistics summary rebuild");
+                recordRebuildOutcome("empty");
+                return false;
             }
 
-            log.info("statistics summary 재계산 시작: totalRounds={}", all.size());
+            log.info("Starting statistics summary rebuild: totalRounds={}", all.size());
             OffsetDateTime now = OffsetDateTime.now(clock);
             int latestRound = all.stream().mapToInt(WinningNumber::getRound).max().orElse(0);
 
             rebuildFrequency(all, latestRound, now);
             rebuildPatterns(all, now);
             rebuildCompanions(all, now);
-            log.info("statistics summary 재계산 완료");
+            recordRebuildOutcome("success");
+            log.info("Completed statistics summary rebuild");
+            return true;
+        } catch (RuntimeException exception) {
+            recordRebuildOutcome("failure");
+            throw exception;
         } finally {
-            rebuildLock.unlock();
+            sample.stop(Timer.builder("statistics.summary.rebuild.duration")
+                    .description("Time spent rebuilding cached statistics summaries")
+                    .register(meterRegistry));
         }
+    }
+
+    private void recordRebuildOutcome(String outcome) {
+        Counter.builder("statistics.summary.rebuild")
+                .description("Statistics summary rebuild outcomes")
+                .tag("outcome", outcome)
+                .register(meterRegistry)
+                .increment();
     }
 
     private void rebuildFrequency(List<WinningNumber> rounds, int latestRound, OffsetDateTime now) {

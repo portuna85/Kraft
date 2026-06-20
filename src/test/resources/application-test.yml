@@ -9,10 +9,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+    defer-datasource-initialization: true
     properties:
       hibernate:
         jdbc:
           time_zone: Asia/Seoul
+  sql:
+    init:
+      mode: always
 
 logging:
   file:

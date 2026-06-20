@@ -24,7 +24,7 @@ public class RevalidateWebhookListener {
 
     private static final Logger log = LoggerFactory.getLogger(RevalidateWebhookListener.class);
     private static final List<String> REVALIDATE_PATHS = List.of(
-            "/", "/latest", "/rounds", "/frequency", "/stats", "/companion"
+            "/", "/rounds", "/frequency", "/stats", "/companion"
     );
 
     private final RevalidateProperties revalidateProperties;
@@ -51,9 +51,7 @@ public class RevalidateWebhookListener {
         if (!event.dataChanged() || !revalidateProperties.enabled()) {
             return;
         }
-        // 목록/요약 페이지뿐 아니라 수집된 회차의 상세 페이지도 함께 재검증한다.
-        List<String> paths = new java.util.ArrayList<>(REVALIDATE_PATHS);
-        paths.add("/rounds/" + event.round());
+        List<String> paths = revalidatePathsFor(event.round());
         try {
             String url = revalidateProperties.webUrl() + "/api/revalidate";
             restClient.post()
@@ -67,5 +65,11 @@ public class RevalidateWebhookListener {
             revalidateFailureCounter.increment();
             log.warn("ISR revalidation 요청 실패 (무시): {}", e.getMessage());
         }
+    }
+
+    static List<String> revalidatePathsFor(int round) {
+        List<String> paths = new java.util.ArrayList<>(REVALIDATE_PATHS);
+        paths.add("/rounds/" + round);
+        return List.copyOf(paths);
     }
 }

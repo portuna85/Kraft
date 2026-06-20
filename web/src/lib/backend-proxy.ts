@@ -1,14 +1,26 @@
 const backendBaseUrl =
   process.env.KRAFT_BACKEND_INTERNAL_URL ?? "http://backend:8080";
 
-async function safeJson(res: Response): Promise<unknown> {
-  const text = await res.text();
-  if (!text) return null;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return { message: text };
+const passthroughHeaders = [
+  "cache-control",
+  "content-type",
+  "etag",
+  "last-modified",
+  "retry-after",
+  "x-ratelimit-limit",
+  "x-ratelimit-remaining",
+  "x-request-id",
+] as const;
+
+function copyHeaders(source: Headers): Headers {
+  const headers = new Headers();
+  for (const headerName of passthroughHeaders) {
+    const headerValue = source.get(headerName);
+    if (headerValue) {
+      headers.set(headerName, headerValue);
+    }
   }
+  return headers;
 }
 
 export async function proxyBackend(
@@ -23,13 +35,14 @@ export async function proxyBackend(
       signal: controller.signal,
       cache: "no-store",
     });
-    if (res.status === 204) {
-      return new Response(null, { status: 204 });
-    }
-    return Response.json(await safeJson(res), { status: res.status });
+    const body = res.status === 204 ? null : await res.arrayBuffer();
+    return new Response(body, {
+      status: res.status,
+      headers: copyHeaders(res.headers),
+    });
   } catch {
     return Response.json(
-      { code: "BACKEND_UNAVAILABLE", message: "백엔드 요청에 실패했습니다." },
+      { code: "BACKEND_UNAVAILABLE", message: "백엔드 요청을 처리하지 못했습니다." },
       { status: 502 }
     );
   } finally {

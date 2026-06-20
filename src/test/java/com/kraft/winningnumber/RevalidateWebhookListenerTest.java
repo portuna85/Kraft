@@ -69,4 +69,12 @@ class RevalidateWebhookListenerTest {
         listener.onCollected(new WinningNumbersCollectedEvent(1200, true));
         // No exception propagated = pass
     }
+
+    @Test
+    @DisplayName("revalidation 경로 목록은 더 이상 /latest를 포함하지 않는다")
+    void revalidatePathsFor_doesNotIncludeLatest() {
+        assertThat(RevalidateWebhookListener.revalidatePathsFor(1200))
+                .containsExactly("/", "/rounds", "/frequency", "/stats", "/companion", "/rounds/1200")
+                .doesNotContain("/latest");
+    }
 }

@@ -30,6 +30,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class PublicRateLimitFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(PublicRateLimitFilter.class);
+    private static final int WINDOW_SECONDS = 60;
     private static final String RATE_LIMIT_EXCEEDED_BODY =
             """
             {"status":429,"error":"Too Many Requests","code":"RATE_LIMIT_EXCEEDED",\
@@ -84,6 +85,7 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
                     .increment();
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setIntHeader("Retry-After", WINDOW_SECONDS);
             response.getWriter().write(RATE_LIMIT_EXCEEDED_BODY);
             return;
         }

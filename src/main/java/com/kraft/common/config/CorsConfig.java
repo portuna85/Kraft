@@ -1,13 +1,9 @@
 package com.kraft.common.config;
 
-import jakarta.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -17,49 +13,6 @@ public class CorsConfig {
 
     @Value("${kraft.public-base-url:}")
     private String publicBaseUrl;
-
-    private final Environment env;
-    private final ExternalLottoProperties externalLottoProperties;
-    private final RevalidateProperties revalidateProperties;
-    private final OpsProperties opsProperties;
-
-    public CorsConfig(Environment env,
-                       ExternalLottoProperties externalLottoProperties,
-                       RevalidateProperties revalidateProperties,
-                       OpsProperties opsProperties) {
-        this.env = env;
-        this.externalLottoProperties = externalLottoProperties;
-        this.revalidateProperties = revalidateProperties;
-        this.opsProperties = opsProperties;
-    }
-
-    /**
-     * prod 프로파일에서 이 값들이 비어 있으면 자동수집/ISR 재검증/ops API가 "조용히" 비활성화되어
-     * 운영 데이터 신선도 정체로 이어질 수 있다(P0). 그래서 기동 시점에 fail-fast 한다.
-     */
-    @PostConstruct
-    void validate() {
-        if (!Arrays.asList(env.getActiveProfiles()).contains("prod")) {
-            return;
-        }
-        List<String> missing = new ArrayList<>();
-        if (publicBaseUrl == null || publicBaseUrl.isBlank()) {
-            missing.add("KRAFT_PUBLIC_BASE_URL");
-        }
-        if (externalLottoProperties.urlTemplate() == null || externalLottoProperties.urlTemplate().isBlank()) {
-            missing.add("KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE");
-        }
-        if (revalidateProperties.secret() == null || revalidateProperties.secret().isBlank()) {
-            missing.add("KRAFT_REVALIDATE_SECRET");
-        }
-        if (opsProperties.token() == null || opsProperties.token().isBlank()) {
-            missing.add("KRAFT_OPS_TOKEN");
-        }
-        if (!missing.isEmpty()) {
-            throw new IllegalStateException(
-                    "prod profile requires the following environment variables to be set: " + missing);
-        }
-    }
 
     @Bean
     CorsFilter corsFilter() {
