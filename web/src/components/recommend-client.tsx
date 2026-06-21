@@ -146,8 +146,11 @@ export function RecommendClient() {
         <div className="recommend-grid">
           {recommendations.map((numbers, index) => (
             <article key={`${numbers.join("-")}-${index}`} className="recommend-card">
-              <div className="recommend-card-header">
-                <p className="eyebrow">추천 {index + 1}</p>
+              <div className="recommend-card-row">
+                <div className="recommend-card-info">
+                  <p className="eyebrow">추천 {index + 1}</p>
+                  <LottoBalls numbers={numbers} />
+                </div>
                 <button
                   type="button"
                   onClick={() => handleSave(numbers, index)}
@@ -157,7 +160,6 @@ export function RecommendClient() {
                   {savedIndexes.has(index) ? "저장됨" : savingIndex === index ? "저장 중..." : "저장"}
                 </button>
               </div>
-              <LottoBalls numbers={numbers} />
             </article>
           ))}
         </div>

@@ -692,10 +692,30 @@ input:focus-visible {
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.recommend-card-header {
+.recommend-card-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 8px 10px;
+}
+
+.recommend-card-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.recommend-card-info .eyebrow {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.recommend-card-info .balls {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .recommend-card .ball {
@@ -705,6 +725,7 @@ input:focus-visible {
 }
 
 .recommend-save-btn {
+  flex-shrink: 0;
   min-height: unset;
   padding: 5px 14px;
   font-size: 0.78rem;
@@ -1761,10 +1782,6 @@ body {
   gap: 16px;
 }
 
-.recommend-card-header {
-  gap: 12px;
-}
-
 .recommend-toggle {
   min-height: 48px;
   justify-content: end;
@@ -1952,13 +1969,10 @@ body {
   form button,
   .saved-item > button,
   .ops-actions > button,
-  .round-card-link,
-  .recommend-save-btn {
+  .round-card-link {
     width: 100%;
   }
 
-  .nav-toggle,
-  .theme-toggle,
   .freq-filter-tab {
     width: auto;
   }
@@ -2016,7 +2030,6 @@ body {
 
   .saved-item,
   .round-meta,
-  .recommend-card-header,
   .companion-item,
   .round-nav {
     align-items: stretch;
@@ -2036,20 +2049,36 @@ body {
   }
 
   .balls {
-    gap: 8px;
+    --ball-size: clamp(24px, calc((100vw - 80px) / 9.2), 42px);
+    gap: calc(var(--ball-size) * 0.18);
+    flex-wrap: nowrap;
+    overflow: visible;
   }
 
   .ball {
-    width: 42px;
-    height: 42px;
-    font-size: 0.86rem;
+    width: var(--ball-size);
+    height: var(--ball-size);
+    font-size: calc(var(--ball-size) * 0.34);
   }
 
-  .recommend-card .ball,
+  .ball-separator {
+    font-size: calc(var(--ball-size) * 0.34);
+  }
+
   .freq-rank-group .ball {
     width: 34px;
     height: 34px;
     font-size: 0.78rem;
+  }
+
+  .recommend-card-info .balls {
+    --ball-size: clamp(20px, calc((100vw - 174px) / 6.9), 34px);
+  }
+
+  .recommend-card-info .ball {
+    width: var(--ball-size);
+    height: var(--ball-size);
+    font-size: calc(var(--ball-size) * 0.34);
   }
 
   .prize-table td {
