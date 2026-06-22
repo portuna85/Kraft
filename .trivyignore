@@ -1,0 +1,7 @@
+# Build-time-only transitive dependencies of the Gradle `checkstyle` configuration
+# (Checkstyle itself, not anything bundled into the backend/web runtime images).
+# Checkstyle only reads local project source files during the build; it never
+# extracts untrusted archives or evaluates bean properties from external input,
+# so these libraries' vulnerable code paths are not reachable here.
+CVE-2025-48734
+CVE-2025-67030
