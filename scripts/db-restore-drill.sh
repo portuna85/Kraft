@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
-# Restoration drill: restores the latest backup into a temporary database,
-# verifies required tables have rows, then drops the temp database.
-# Validates the backup without touching production.
+# Restoration drill: restores the latest backup into a temporary database
+# inside the mariadb container, verifies required tables have rows, then
+# drops the temporary database. Validates the backup without touching the
+# production database.
+#
+# The mariadb container only listens on the internal `app` Docker network,
+# so every step runs via `docker compose exec` using the container's own
+# MARIADB_ROOT_PASSWORD rather than a host TCP connection.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="${COMPOSE_PROJECT_DIR:-$(dirname "$SCRIPT_DIR")}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
+COMPOSE_ENV_FILE="${COMPOSE_ENV_FILE:-.env.prod}"
+COMPOSE=(docker compose --env-file "$PROJECT_DIR/$COMPOSE_ENV_FILE" -f "$PROJECT_DIR/$COMPOSE_FILE")
+EXEC=("${COMPOSE[@]}" exec -T mariadb)
+
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/kraft}"
-DB_HOST="${MARIADB_HOST:-127.0.0.1}"
-DB_PORT="${MARIADB_PORT:-3306}"
-DB_ROOT_USER="${MARIADB_ROOT_USER:-root}"
-DB_ROOT_PASS="${MARIADB_ROOT_PASSWORD:?MARIADB_ROOT_PASSWORD must be set}"
 DB_NAME="${MARIADB_DATABASE:-kraft_lotto}"
 DRILL_DB="kraft_drill_$$"
 
@@ -22,24 +30,21 @@ if [[ -z "$LATEST" ]]; then
 fi
 echo "==> Drill restore from: $LATEST"
 
-MYSQL="MYSQL_PWD=$DB_ROOT_PASS mysql --host=$DB_HOST --port=$DB_PORT --user=$DB_ROOT_USER"
-
 cleanup() {
   echo "==> Dropping drill database $DRILL_DB"
-  eval "$MYSQL" -e "DROP DATABASE IF EXISTS \`$DRILL_DB\`;" 2>/dev/null || true
+  "${EXEC[@]}" sh -c "MYSQL_PWD=\"\$MARIADB_ROOT_PASSWORD\" mariadb -uroot -e \"DROP DATABASE IF EXISTS $DRILL_DB;\"" 2>/dev/null || true
 }
 trap cleanup EXIT
 
 echo "==> Creating drill database $DRILL_DB"
-eval "$MYSQL" -e "CREATE DATABASE \`$DRILL_DB\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+"${EXEC[@]}" sh -c "MYSQL_PWD=\"\$MARIADB_ROOT_PASSWORD\" mariadb -uroot -e \"CREATE DATABASE $DRILL_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\""
 
 echo "==> Restoring dump..."
-gunzip -c "$LATEST" | eval "$MYSQL" "$DRILL_DB"
+gunzip -c "$LATEST" | "${EXEC[@]}" sh -c "MYSQL_PWD=\"\$MARIADB_ROOT_PASSWORD\" mariadb -uroot $DRILL_DB"
 
 FAIL=0
 for table in "${REQUIRED_TABLES[@]}"; do
-  count=$(eval "$MYSQL" --batch --skip-column-names -e \
-    "SELECT COUNT(*) FROM \`$DRILL_DB\`.\`$table\`;" 2>/dev/null || echo "-1")
+  count=$("${EXEC[@]}" sh -c "MYSQL_PWD=\"\$MARIADB_ROOT_PASSWORD\" mariadb -uroot --batch --skip-column-names -e \"SELECT COUNT(*) FROM $DRILL_DB.$table;\"" 2>/dev/null || echo "-1")
   if [[ "$count" -gt 0 ]]; then
     echo "  OK  $table: $count rows"
   else

@@ -27,7 +27,7 @@ die()  { echo -e "${RED}[FAIL]${NC} $*" >&2; exit 1; }
 [[ "$(lsb_release -rs 2>/dev/null || true)" == "24.04" ]] || warn "Ubuntu 24.04 권장 (현재: $(lsb_release -rs 2>/dev/null || echo unknown))"
 
 # ── 1. 시스템 업데이트 ──────────────────────────────────────────────────────────
-log "1/8 시스템 업데이트"
+log "1/9 시스템 업데이트"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get upgrade -y -qq
@@ -36,7 +36,7 @@ apt-get install -y -qq \
     ufw fail2ban htop unzip
 
 # ── 2. Docker Engine 설치 ───────────────────────────────────────────────────────
-log "2/8 Docker Engine 설치"
+log "2/9 Docker Engine 설치"
 if ! command -v docker &>/dev/null; then
     install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
@@ -56,7 +56,7 @@ else
 fi
 
 # ── 3. deploy 유저 생성 ─────────────────────────────────────────────────────────
-log "3/8 deploy 유저 설정 (${DEPLOY_USER})"
+log "3/9 deploy 유저 설정 (${DEPLOY_USER})"
 if ! id "$DEPLOY_USER" &>/dev/null; then
     useradd --create-home --shell /bin/bash "$DEPLOY_USER"
     log "  유저 생성: $DEPLOY_USER"
@@ -75,7 +75,7 @@ chmod 600 "${SSH_DIR}/authorized_keys"
 chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$SSH_DIR"
 
 # ── 4. 리포지토리 클론 ─────────────────────────────────────────────────────────
-log "4/8 리포지토리 클론 → ${REPO_DIR}"
+log "4/9 리포지토리 클론 → ${REPO_DIR}"
 mkdir -p "$REPO_DIR"
 if [[ ! -d "${REPO_DIR}/.git" ]]; then
     git clone "$REPO_URL" "$REPO_DIR"
@@ -88,7 +88,7 @@ fi
 chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$REPO_DIR"
 
 # ── 5. UFW 방화벽 ─────────────────────────────────────────────────────────────
-log "5/8 UFW 방화벽 설정"
+log "5/9 UFW 방화벽 설정"
 ufw --force reset
 ufw default deny incoming
 ufw default allow outgoing
@@ -99,7 +99,7 @@ ufw --force enable
 log "  포트 22/80/443 허용"
 
 # ── 6. fail2ban ───────────────────────────────────────────────────────────────
-log "6/8 fail2ban 활성화"
+log "6/9 fail2ban 활성화"
 systemctl enable --now fail2ban
 cat > /etc/fail2ban/jail.local <<'EOF'
 [DEFAULT]
@@ -115,7 +115,7 @@ systemctl restart fail2ban
 log "  fail2ban 시작 (SSH brute-force 차단)"
 
 # ── 7. 스왑 설정 (RAM 2GB 이하 서버용) ─────────────────────────────────────────
-log "7/8 스왑 확인"
+log "7/9 스왑 확인"
 if [[ $(swapon --show | wc -l) -eq 0 ]]; then
     TOTAL_MEM_GB=$(awk '/MemTotal/{printf "%d", $2/1024/1024}' /proc/meminfo)
     if [[ $TOTAL_MEM_GB -le 2 ]]; then
@@ -135,9 +135,24 @@ else
 fi
 
 # ── 8. 로그 디렉토리 ──────────────────────────────────────────────────────────
-log "8/8 로그 디렉토리 준비"
+log "8/9 로그 디렉토리 준비"
 mkdir -p "${REPO_DIR}/logs"
 chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "${REPO_DIR}/logs"
+
+# ── 9. DB 백업/복구 드릴 cron 등록 ───────────────────────────────────────────────
+log "9/9 DB 백업 cron 등록"
+CRON_MARKER="# KRAFT DB backup (managed by scripts/server/init-ubuntu.sh)"
+if ! crontab -u "$DEPLOY_USER" -l 2>/dev/null | grep -qF "$CRON_MARKER"; then
+    (crontab -u "$DEPLOY_USER" -l 2>/dev/null || true; cat <<EOF
+$CRON_MARKER
+0 3 * * * cd ${REPO_DIR} && bash scripts/db-backup.sh >> ${REPO_DIR}/logs/backup.log 2>&1
+30 3 * * 0 cd ${REPO_DIR} && bash scripts/db-restore-drill.sh >> ${REPO_DIR}/logs/restore-drill.log 2>&1
+EOF
+    ) | crontab -u "$DEPLOY_USER" -
+    log "  cron 등록 완료: 매일 03:00 백업, 매주 일요일 03:30 복구 드릴"
+else
+    log "  cron 이미 등록됨, 건너뜀"
+fi
 
 # ── 완료 안내 ─────────────────────────────────────────────────────────────────
 SERVER_IP=$(hostname -I | awk '{print $1}')

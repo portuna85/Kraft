@@ -37,3 +37,17 @@ jobs:
         env:
           KRAFT_BACKEND_INTERNAL_URL: http://localhost:8080
           KRAFT_PUBLIC_BASE_URL: http://localhost
+
+  dependency-scan:
+    name: Dependency Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Trivy scan (block on HIGH/CRITICAL with fix)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true

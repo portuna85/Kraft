@@ -17,4 +17,12 @@
     <Class name="~com\.kraft\.admin\..*Controller"/>
     <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
   </Match>
+
+  <!-- requestId is validated against SAFE_REQUEST_ID (alnum/hyphen only) before being
+       reflected into the response header or logs; SpotBugs' taint check is name-based
+       and does not see the regex guard, so it still flags the reassigned local. -->
+  <Match>
+    <Class name="com.kraft.common.web.RequestIdFilter"/>
+    <Bug pattern="HRS_REQUEST_PARAMETER_TO_HTTP_HEADER"/>
+  </Match>
 </FindBugsFilter>

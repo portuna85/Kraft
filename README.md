@@ -272,6 +272,8 @@ Flyway SQL 파일:
 - `scripts/db-backup.sh`
 - `scripts/db-restore.sh`
 - `scripts/db-restore-drill.sh`
+  - 세 스크립트 모두 `docker compose exec`로 `mariadb` 컨테이너 내부에서 실행된다(DB는 internal `app` 네트워크 전용이라 호스트 TCP로 접속 불가). 리포지토리 루트가 스크립트 위치 기준으로 자동 추론되며, 필요 시 `COMPOSE_PROJECT_DIR`/`COMPOSE_FILE`/`COMPOSE_ENV_FILE` 환경변수로 재정의 가능.
+  - 스케줄링은 `scripts/server/init-ubuntu.sh`가 deploy 유저 crontab에 자동 등록한다: 매일 03:00 `db-backup.sh`, 매주 일요일 03:30 `db-restore-drill.sh`. 수동으로 등록하려면 동일한 라인을 `crontab -u deploy -e`에 추가.
 - `scripts/migrate/run-migration.sh`
 - `scripts/migrate/01-dump-source.sh`
 - `scripts/migrate/02-import-winning-numbers.sh`

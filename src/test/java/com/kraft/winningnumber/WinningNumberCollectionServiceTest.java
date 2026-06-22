@@ -128,4 +128,81 @@ class WinningNumberCollectionServiceTest {
         );
         verify(commandService, never()).upsertWithResult(org.mockito.ArgumentMatchers.any());
     }
+
+    @Test
+    @DisplayName("다중 회차 catch-up 시 회차별이 아닌 전체 완료 후 이벤트를 1회만 발행한다")
+    void collectUpToLatest_publishesEventOnlyOnceAfterAllRounds() {
+        WinningNumberRepository repository = mock(WinningNumberRepository.class);
+        ExternalWinningNumberFetchClient fetchClient = mock(ExternalWinningNumberFetchClient.class);
+        WinningNumberCommandService commandService = mock(WinningNumberCommandService.class);
+        WinningNumberOperationLogService operationLogService = mock(WinningNumberOperationLogService.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+
+        WinningNumber round1200 = new WinningNumber(
+                1200,
+                LocalDate.of(2026, 6, 13),
+                3, 11, 19, 28, 34, 42,
+                7,
+                2_000_000_000L,
+                0L, 0, 0L, 0L,
+                OffsetDateTime.now(ZoneId.of("Asia/Seoul"))
+        );
+        WinningNumber round1201 = new WinningNumber(
+                1201,
+                LocalDate.of(2026, 6, 20),
+                5, 12, 18, 27, 36, 44,
+                9,
+                2_100_000_000L,
+                0L, 0, 0L, 0L,
+                OffsetDateTime.now(ZoneId.of("Asia/Seoul"))
+        );
+        when(repository.findTopByOrderByRoundDesc())
+                .thenReturn(Optional.of(round1200))
+                .thenReturn(Optional.of(round1201));
+
+        WinningNumberUpsertRequest fetched1201 = new WinningNumberUpsertRequest(
+                1201, LocalDate.of(2026, 6, 20),
+                java.util.List.of(5, 12, 18, 27, 36, 44), 9, 2_100_000_000L,
+                null, null, null, null
+        );
+        WinningNumberUpsertRequest fetched1202 = new WinningNumberUpsertRequest(
+                1202, LocalDate.of(2026, 6, 27),
+                java.util.List.of(1, 8, 15, 22, 29, 36), 4, 2_200_000_000L,
+                null, null, null, null
+        );
+        when(fetchClient.fetchRound(1201)).thenReturn(fetched1201);
+        when(fetchClient.fetchRound(1202)).thenReturn(fetched1202);
+
+        WinningNumberResponse response1201 = new WinningNumberResponse(
+                1201, LocalDate.of(2026, 6, 20),
+                java.util.List.of(5, 12, 18, 27, 36, 44), 9, 2_100_000_000L,
+                0L, 0, 0L, 0L
+        );
+        WinningNumberResponse response1202 = new WinningNumberResponse(
+                1202, LocalDate.of(2026, 6, 27),
+                java.util.List.of(1, 8, 15, 22, 29, 36), 4, 2_200_000_000L,
+                0L, 0, 0L, 0L
+        );
+        when(commandService.upsertWithResult(fetched1201)).thenReturn(new WinningNumberUpsertResult(response1201, true));
+        when(commandService.upsertWithResult(fetched1202)).thenReturn(new WinningNumberUpsertResult(response1202, true));
+
+        WinningNumberCollectionService service = new WinningNumberCollectionService(
+                repository,
+                fetchClient,
+                commandService,
+                operationLogService,
+                eventPublisher,
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
+        );
+
+        java.util.List<WinningNumberResponse> collected = service.collectUpToLatest(2);
+
+        assertThat(collected).extracting(WinningNumberResponse::round).containsExactly(1201, 1202);
+
+        ArgumentCaptor<WinningNumbersCollectedEvent> eventCaptor =
+                ArgumentCaptor.forClass(WinningNumbersCollectedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().round()).isEqualTo(1202);
+        assertThat(eventCaptor.getValue().dataChanged()).isTrue();
+    }
 }

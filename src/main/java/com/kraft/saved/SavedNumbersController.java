@@ -3,6 +3,7 @@ package com.kraft.saved;
 import com.kraft.common.web.DeviceTokenSupport;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,8 +28,10 @@ public class SavedNumbersController {
     }
 
     @GetMapping
-    public List<SavedNumberResponse> list(@RequestHeader(name = "X-Device-Token", required = true) String deviceToken) {
-        return savedNumbersService.list(deviceTokenSupport.requireHashedToken(deviceToken));
+    public ResponseEntity<List<SavedNumberResponse>> list(
+            @RequestHeader(name = "X-Device-Token", required = true) String deviceToken) {
+        List<SavedNumberResponse> result = savedNumbersService.list(deviceTokenSupport.requireHashedToken(deviceToken));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(result);
     }
 
     @PostMapping
