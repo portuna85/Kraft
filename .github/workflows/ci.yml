@@ -159,6 +159,8 @@ jobs:
           tags: ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
           build-args: |
             KRAFT_PUBLIC_BASE_URL=${{ secrets.KRAFT_PUBLIC_BASE_URL }}
+            NEXT_PUBLIC_NAVER_SITE_VERIFICATION=${{ secrets.NEXT_PUBLIC_NAVER_SITE_VERIFICATION }}
+            NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${{ secrets.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }}
           provenance: true
           sbom: true
           cache-from: type=gha,scope=web
