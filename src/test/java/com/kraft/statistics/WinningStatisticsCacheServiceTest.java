@@ -110,6 +110,24 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("재생성을 반복해도 패턴/동반 출현 행이 delete-and-reinsert 되지 않고 같은 id로 갱신된다")
+    void rebuildAllSummaries_repeatedRuns_upsertSameRowsInsteadOfChurning() {
+        summaryRebuilder.rebuildAllSummaries();
+        Long oddRowId = patternStatsSummaryRepository
+                .findByStatTypeAndBucketKey(WinningStatisticsCacheService.TYPE_ODD_COUNT, "3")
+                .orElseThrow().getId();
+        Long pairId = companionPairSummaryRepository.findByBallAAndBallB(1, 2).orElseThrow().getId();
+
+        summaryRebuilder.rebuildAllSummaries();
+
+        assertThat(patternStatsSummaryRepository
+                .findByStatTypeAndBucketKey(WinningStatisticsCacheService.TYPE_ODD_COUNT, "3")
+                .orElseThrow().getId()).isEqualTo(oddRowId);
+        assertThat(companionPairSummaryRepository.findByBallAAndBallB(1, 2).orElseThrow().getId())
+                .isEqualTo(pairId);
+    }
+
+    @Test
     @DisplayName("빈도 통계 조회 시 데이터가 없으면 재생성을 시도하는지 확인")
     void getFrequencyStats_fallsBackToRebuildWhenEmpty() {
         FrequencyStatsResponse response = service.getFrequencyStats();

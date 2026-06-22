@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
 import { parseExcludedNumbers } from "@/lib/lotto-validation";
@@ -134,6 +135,11 @@ export function RecommendClient() {
         <button type="submit" disabled={isPending}>
           {isPending ? "생성 중..." : "추천받기"}
         </button>
+        <p className="muted recommend-disclaimer">
+          모든 6개 번호 조합의 1등 당첨 확률은 동일합니다. &ldquo;당첨금 우선 추천&rdquo;은 공동 당첨
+          가능성을 낮추는 선택일 뿐 확률을 높이지 않습니다.{" "}
+          <Link href="/info/faq">자세히 보기</Link>
+        </p>
       </form>
 
       {message ? (
