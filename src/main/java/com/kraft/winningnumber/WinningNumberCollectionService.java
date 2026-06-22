@@ -91,7 +91,7 @@ public class WinningNumberCollectionService {
             Optional<WinningNumber> latest = winningNumberRepository.findTopByOrderByRoundDesc();
             int nextRound = latest.map(winningNumber -> winningNumber.getRound() + 1).orElse(1);
             try {
-                collected.add(collectFetchedRound(nextRound));
+                collected.add(collectFetchedRoundResult(nextRound).response());
             } catch (RuntimeException exception) {
                 if (isEndOfData(exception) && latest.isPresent()) {
                     log.info("자동 수집 catch-up 종료: latestRound={} 추가 회차 없음", latest.get().getRound());
@@ -105,6 +105,10 @@ public class WinningNumberCollectionService {
                 );
                 throw exception;
             }
+        }
+        if (!collected.isEmpty()) {
+            // 회차당이 아닌 catch-up 종료 후 1회만 발행 — 통계 재집계·추천 캐시 재적재·ISR 웹훅 중복 방지.
+            publishBulkCollected(collected.get(collected.size() - 1).round());
         }
         return collected;
     }
@@ -126,6 +130,12 @@ public class WinningNumberCollectionService {
     }
 
     private WinningNumberResponse collectFetchedRound(int round) {
+        WinningNumberUpsertResult result = collectFetchedRoundResult(round);
+        eventPublisher.publishEvent(new WinningNumbersCollectedEvent(result.response().round(), result.changed()));
+        return result.response();
+    }
+
+    private WinningNumberUpsertResult collectFetchedRoundResult(int round) {
         WinningNumberUpsertRequest request = externalWinningNumberFetchClient.fetchRound(round);
         WinningNumberUpsertResult result = winningNumberCommandService.upsertWithResult(request);
         WinningNumberResponse response = result.response();
@@ -136,8 +146,7 @@ public class WinningNumberCollectionService {
                 "외부 회차 수집 및 저장에 성공했습니다."
         );
         log.info("회차 수집 완료: round={} drawDate={} changed={}", response.round(), response.drawDate(), result.changed());
-        eventPublisher.publishEvent(new WinningNumbersCollectedEvent(response.round(), result.changed()));
-        return response;
+        return result;
     }
 
     private boolean isEndOfData(RuntimeException exception) {

@@ -3,7 +3,7 @@ plugins {
     id("org.springframework.boot") version "4.1.0"
     jacoco
     checkstyle
-    id("com.github.spotbugs") version "6.1.7"
+    id("com.github.spotbugs") version "6.5.6"
 }
 
 group = "com.kraft"
@@ -169,10 +169,9 @@ tasks.withType<Checkstyle> {
 // ── SpotBugs ────────────────────────────────────────────────────────────────
 
 spotbugs {
-    toolVersion = "4.9.3"
-    // SpotBugs 4.9.3 does not support Java 25 class file format (major version 69).
-    // Always ignore failures until SpotBugs adds Java 25 support.
-    ignoreFailures = true
+    toolVersion = "4.10.2"
+    // SpotBugs 4.10.x added Java 25 class file support (https://github.com/spotbugs/spotbugs/issues/3564).
+    ignoreFailures = false
     excludeFilter = file("config/spotbugs/exclude.xml")
 }
 

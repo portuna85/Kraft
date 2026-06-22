@@ -125,6 +125,8 @@ jobs:
           file: Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/backend:${{ github.sha }}
+          provenance: true
+          sbom: true
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
@@ -155,6 +157,8 @@ jobs:
           file: web/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
+          provenance: true
+          sbom: true
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 

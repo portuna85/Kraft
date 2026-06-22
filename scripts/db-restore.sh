@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
-# Restores a gzip-compressed mysqldump into the kraft_lotto database.
+# Restores a gzip-compressed mariadb-dump into the kraft_lotto database.
 # Usage: db-restore.sh <backup-file.sql.gz>
+#
+# The mariadb container only listens on the internal `app` Docker network,
+# so the restore runs via `docker compose exec` using the container's own
+# MARIADB_* credentials rather than a host TCP connection.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="${COMPOSE_PROJECT_DIR:-$(dirname "$SCRIPT_DIR")}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
+COMPOSE_ENV_FILE="${COMPOSE_ENV_FILE:-.env.prod}"
+COMPOSE=(docker compose --env-file "$PROJECT_DIR/$COMPOSE_ENV_FILE" -f "$PROJECT_DIR/$COMPOSE_FILE")
+
 BACKUP_FILE="${1:?Usage: db-restore.sh <backup-file.sql.gz>}"
-DB_HOST="${MARIADB_HOST:-127.0.0.1}"
-DB_PORT="${MARIADB_PORT:-3306}"
-DB_USER="${MARIADB_USER:-kraft_lotto}"
-DB_PASS="${MARIADB_PASSWORD:?MARIADB_PASSWORD must be set}"
 DB_NAME="${MARIADB_DATABASE:-kraft_lotto}"
 
 if [[ ! -f "$BACKUP_FILE" ]]; then
@@ -15,15 +21,12 @@ if [[ ! -f "$BACKUP_FILE" ]]; then
   exit 1
 fi
 
-echo "WARNING: This will OVERWRITE the $DB_NAME database on $DB_HOST."
+echo "WARNING: This will OVERWRITE the $DB_NAME database in the mariadb container."
 read -r -p "Type 'yes' to continue: " confirm
 [[ "$confirm" == "yes" ]] || { echo "Aborted."; exit 0; }
 
 echo "==> Restoring $BACKUP_FILE into $DB_NAME ..."
-gunzip -c "$BACKUP_FILE" | MYSQL_PWD="$DB_PASS" mysql \
-  --host="$DB_HOST" \
-  --port="$DB_PORT" \
-  --user="$DB_USER" \
-  "$DB_NAME"
+gunzip -c "$BACKUP_FILE" | "${COMPOSE[@]}" exec -T mariadb sh -c \
+  'MYSQL_PWD="$MARIADB_PASSWORD" mariadb -u"$MARIADB_USER" "$MARIADB_DATABASE"'
 
 echo "==> Restore complete."
