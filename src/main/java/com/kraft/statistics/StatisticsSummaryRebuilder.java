@@ -12,8 +12,11 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor;
 import net.javacrumbs.shedlock.core.LockConfiguration;
 import net.javacrumbs.shedlock.core.LockProvider;
@@ -137,7 +140,7 @@ public class StatisticsSummaryRebuilder {
         }
 
         Map<Integer, FrequencySummary> existing = frequencySummaryRepository.findAll().stream()
-                .collect(java.util.stream.Collectors.toMap(FrequencySummary::getBallNumber, s -> s));
+                .collect(Collectors.toMap(FrequencySummary::getBallNumber, s -> s));
 
         List<FrequencySummary> toSave = new ArrayList<>();
         for (int ball = 1; ball <= 45; ball++) {
@@ -172,20 +175,42 @@ public class StatisticsSummaryRebuilder {
             sumBucketMap.merge(bucket, 1, Integer::sum);
         }
 
-        patternStatsSummaryRepository.deleteAllInBatch();
+        Map<String, PatternStatsSummary> existing = patternStatsSummaryRepository.findAll().stream()
+                .collect(Collectors.toMap(s -> patternKey(s.getStatType(), s.getBucketKey()), s -> s));
 
         List<PatternStatsSummary> toSave = new ArrayList<>();
-        buildPatternRows(WinningStatisticsCacheService.TYPE_ODD_COUNT, oddCountMap, now, toSave);
-        buildPatternRows(WinningStatisticsCacheService.TYPE_HIGH_COUNT, highCountMap, now, toSave);
-        buildPatternRows(WinningStatisticsCacheService.TYPE_SUM_BUCKET, sumBucketMap, now, toSave);
+        Set<String> activeKeys = new HashSet<>();
+        upsertPatternRows(WinningStatisticsCacheService.TYPE_ODD_COUNT, oddCountMap, now, existing, toSave, activeKeys);
+        upsertPatternRows(WinningStatisticsCacheService.TYPE_HIGH_COUNT, highCountMap, now, existing, toSave, activeKeys);
+        upsertPatternRows(WinningStatisticsCacheService.TYPE_SUM_BUCKET, sumBucketMap, now, existing, toSave, activeKeys);
         patternStatsSummaryRepository.saveAll(toSave);
+
+        List<PatternStatsSummary> stale = existing.entrySet().stream()
+                .filter(entry -> !activeKeys.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .toList();
+        if (!stale.isEmpty()) {
+            patternStatsSummaryRepository.deleteAllInBatch(stale);
+        }
     }
 
-    private void buildPatternRows(String statType, Map<String, Integer> data,
-                                  OffsetDateTime now, List<PatternStatsSummary> out) {
+    private void upsertPatternRows(String statType, Map<String, Integer> data, OffsetDateTime now,
+                                   Map<String, PatternStatsSummary> existing, List<PatternStatsSummary> toSave,
+                                   Set<String> activeKeys) {
         for (Map.Entry<String, Integer> entry : data.entrySet()) {
-            out.add(new PatternStatsSummary(statType, entry.getKey(), entry.getValue(), now));
+            String key = patternKey(statType, entry.getKey());
+            activeKeys.add(key);
+            PatternStatsSummary row = existing.get(key);
+            if (row != null) {
+                row.update(entry.getValue(), now);
+            } else {
+                toSave.add(new PatternStatsSummary(statType, entry.getKey(), entry.getValue(), now));
+            }
         }
+    }
+
+    private static String patternKey(String statType, String bucketKey) {
+        return statType + "::" + bucketKey;
     }
 
     private void rebuildCompanions(List<WinningNumber> rounds, OffsetDateTime now) {
@@ -205,13 +230,28 @@ public class StatisticsSummaryRebuilder {
             }
         }
 
-        companionPairSummaryRepository.deleteAllInBatch();
+        Map<String, CompanionPairSummary> existing = companionPairSummaryRepository.findAll().stream()
+                .collect(Collectors.toMap(s -> s.getBallA() + "_" + s.getBallB(), s -> s));
 
         List<CompanionPairSummary> toSave = new ArrayList<>();
-        for (int[] pair : pairMap.values()) {
-            toSave.add(new CompanionPairSummary(pair[0], pair[1], pair[2], now));
+        for (Map.Entry<String, int[]> entry : pairMap.entrySet()) {
+            int[] pair = entry.getValue();
+            CompanionPairSummary row = existing.get(entry.getKey());
+            if (row != null) {
+                row.update(pair[2], now);
+            } else {
+                toSave.add(new CompanionPairSummary(pair[0], pair[1], pair[2], now));
+            }
         }
         companionPairSummaryRepository.saveAll(toSave);
+
+        List<CompanionPairSummary> stale = existing.entrySet().stream()
+                .filter(entry -> !pairMap.containsKey(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .toList();
+        if (!stale.isEmpty()) {
+            companionPairSummaryRepository.deleteAllInBatch(stale);
+        }
     }
 
     private static String sumBucket(int sum) {

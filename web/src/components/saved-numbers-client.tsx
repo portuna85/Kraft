@@ -14,12 +14,19 @@ type SavedNumber = {
   createdAt: string;
 };
 
+const UNDO_WINDOW_MS = 5000;
+
+function sortByCreatedAtDesc(items: SavedNumber[]): SavedNumber[] {
+  return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 export function SavedNumbersClient() {
   const [items, setItems] = useState<SavedNumber[]>([]);
   const [label, setLabel] = useState("");
   const [numbers, setNumbers] = useState("");
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [pendingDelete, setPendingDelete] = useState<{ item: SavedNumber; timer: number } | null>(null);
 
   async function loadSavedNumbers() {
     const response = await fetch("/api/v1/saved", {
@@ -81,27 +88,54 @@ export function SavedNumbersClient() {
     }
   }
 
-  async function handleDelete(id: number) {
+  async function finalizeDelete(item: SavedNumber) {
     try {
-      const response = await fetch(`/api/v1/saved/${id}`, {
+      const response = await fetch(`/api/v1/saved/${item.id}`, {
         method: "DELETE",
         headers: { "X-Device-Token": getDeviceToken() },
       });
 
       if (!response.ok) {
+        setItems((previous) => sortByCreatedAtDesc([...previous, item]));
         setMessage("삭제에 실패했습니다.");
-        return;
       }
-
-      setMessage("삭제했습니다.");
-      await loadSavedNumbers();
     } catch {
+      setItems((previous) => sortByCreatedAtDesc([...previous, item]));
       setMessage("삭제하지 못했습니다.");
     }
   }
 
+  function handleDelete(item: SavedNumber) {
+    if (pendingDelete) {
+      window.clearTimeout(pendingDelete.timer);
+      void finalizeDelete(pendingDelete.item);
+    }
+
+    setItems((previous) => previous.filter((existing) => existing.id !== item.id));
+    const timer = window.setTimeout(() => {
+      setPendingDelete(null);
+      void finalizeDelete(item);
+    }, UNDO_WINDOW_MS);
+    setPendingDelete({ item, timer });
+    setMessage("삭제했습니다.");
+  }
+
+  function handleUndoDelete() {
+    if (!pendingDelete) {
+      return;
+    }
+    window.clearTimeout(pendingDelete.timer);
+    setItems((previous) => sortByCreatedAtDesc([...previous, pendingDelete.item]));
+    setPendingDelete(null);
+    setMessage("삭제를 취소했습니다.");
+  }
+
   return (
     <section className="saved-section">
+      <p className="muted">
+        저장 번호는 이 기기/브라우저에 연결됩니다. 브라우저 데이터를 삭제하거나 다른 기기로 바꾸면
+        이어서 볼 수 없으니 참고하세요.
+      </p>
       <form className="saved-form" onSubmit={handleSubmit}>
         <label>
           번호 6개
@@ -127,6 +161,11 @@ export function SavedNumbersClient() {
       {message ? (
         <p className="status-text" role="status" aria-live="polite">
           {message}
+          {pendingDelete ? (
+            <button type="button" className="link-button" onClick={handleUndoDelete}>
+              실행 취소
+            </button>
+          ) : null}
         </p>
       ) : null}
 
@@ -137,7 +176,7 @@ export function SavedNumbersClient() {
               <LottoBalls numbers={item.numbers} />
               <p className="muted">{item.label ?? "메모 없음"}</p>
             </div>
-            <button type="button" className="secondary" onClick={() => handleDelete(item.id)}>
+            <button type="button" className="secondary" onClick={() => handleDelete(item)}>
               삭제
             </button>
           </li>
