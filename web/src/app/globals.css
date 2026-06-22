@@ -69,7 +69,9 @@ body {
     linear-gradient(180deg, var(--bg), var(--bg-strong));
   color: var(--text);
   font-family: var(--font-sans), "Pretendard", system-ui, sans-serif;
-  font-weight: 500;
+  /* Noto Sans KR은 400/700/800만 임베드한다 — 500은 CSS 폰트 매칭 규칙상
+     항상 400으로 대체 렌더링되므로 실제 렌더링 값과 선언을 일치시킨다. */
+  font-weight: 400;
   letter-spacing: -0.01em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -337,7 +339,8 @@ a {
   display: inline-block;
   margin-left: 6px;
   font-family: var(--font-accent), var(--font-sans), sans-serif;
-  font-weight: 600;
+  /* Space Grotesk는 500/700만 임베드한다 — 600은 700으로 대체 렌더링되므로 일치시킨다. */
+  font-weight: 700;
   font-size: 0.5em;
   color: var(--muted);
   vertical-align: middle;
@@ -1209,12 +1212,14 @@ input:focus-visible {
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-weight: 600;
+  /* Noto Sans KR은 400/700/800만 임베드한다 — 600은 700으로 대체 렌더링되므로 일치시킨다. */
+  font-weight: 700;
 }
 .result-value {
   font-family: var(--font-accent), var(--font-sans), sans-serif;
   font-size: 1.15rem;
-  font-weight: 800;
+  /* Space Grotesk는 500/700만 임베드한다 — 800은 700으로 대체 렌더링되므로 일치시킨다. */
+  font-weight: 700;
   letter-spacing: -0.03em;
 }
 .result-sub {
@@ -1235,7 +1240,8 @@ input:focus-visible {
   gap: 10px;
   font-size: 0.88rem;
 }
-.range-label { font-weight: 600; color: var(--muted); }
+/* Noto Sans KR은 400/700/800만 임베드한다 — 600은 700으로 대체 렌더링되므로 일치시킨다. */
+.range-label { font-weight: 700; color: var(--muted); }
 .range-count { font-weight: 800; text-align: right; }
 .error { color: var(--accent); font-weight: 700; }
 
