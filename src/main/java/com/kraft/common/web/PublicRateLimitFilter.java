@@ -21,7 +21,9 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Sliding-window rate limiter for public API endpoints.
+ * Fixed-window(tumbling) rate limiter for public API endpoints — Caffeine의
+ * {@code expireAfterWrite(1, MINUTES)}로 60초 텀블링 윈도우를 구현한다(슬라이딩이 아님).
+ * 윈도우 경계에서 한도의 최대 ~2배 버스트가 가능하다.
  * trusted-proxy CIDR(172.28.0.0/16) 내부 IP는 우회 처리.
  * NOTE: Caffeine 기반 — 단일 인스턴스 전용. 수평 확장 시 Redis 전환 필요.
  */

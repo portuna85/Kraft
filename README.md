@@ -124,6 +124,11 @@ Kraft/
 - `POST /api/v1/saved`
 - `DELETE /api/v1/saved/{id}`
 
+**공식 진입점은 Caddy → `backend:8080` 직결**입니다(`caddy/Caddyfile`의 `handle /api/v1/* { reverse_proxy backend:8080 }`).
+`web/src/app/api/v1/**`에도 동일 경로의 Next.js route handler가 존재하지만, 운영에서는 Caddy가 먼저 가로채므로
+**`npm run dev`로 Next.js만 단독 실행할 때만** 쓰이는 폴백입니다(`backend-proxy.ts`가 `KRAFT_BACKEND_INTERNAL_URL`로 직접 프록시).
+두 경로 모두 같은 백엔드를 호출하므로 계약 드리프트 위험은 낮지만, API 동작을 바꿀 때는 백엔드 컨트롤러만 수정하면 됩니다.
+
 ### 운영 API
 
 - `GET /ops/summary`

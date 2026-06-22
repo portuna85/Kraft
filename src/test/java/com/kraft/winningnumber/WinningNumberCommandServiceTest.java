@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -159,5 +160,22 @@ class WinningNumberCommandServiceTest {
         WinningNumberUpsertResult result = service.upsertWithResult(changedRequest);
 
         assertThat(result.changed()).isTrue();
+    }
+
+    @Test
+    @DisplayName("동시 insert 경쟁으로 unique 제약 위반 시 update로 재해석하여 멱등 처리")
+    void upsertWithResult_concurrentInsertRace_fallsBackToUpdate() {
+        WinningNumber concurrentlyInserted = buildEntity();
+        given(repository.findByRound(1))
+                .willReturn(Optional.empty())
+                .willReturn(Optional.of(concurrentlyInserted));
+        given(repository.save(any()))
+                .willThrow(new DataIntegrityViolationException("uk_winning_numbers_round"))
+                .willAnswer(inv -> inv.getArgument(0));
+
+        WinningNumberUpsertResult result = service.upsertWithResult(request(NUMBERS, BONUS));
+
+        assertThat(result.changed()).isFalse();
+        assertThat(result.response().round()).isEqualTo(1);
     }
 }
