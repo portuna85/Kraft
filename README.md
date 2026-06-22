@@ -1,28 +1,73 @@
-# Kraft Lotto
+# KRAFT Lotto
 
-로또 6/45 당첨 결과 조회, 번호 추천, 통계 분석, 번호 저장, 운영 관리 기능을 제공하는 풀스택 서비스입니다. 저장소는 Spring Boot 백엔드, Next.js 프론트엔드, Docker Compose 기반 운영 스택, GitHub Actions CI/CD, Caddy 리버스 프록시, Prometheus/Grafana/Alertmanager 모니터링까지 함께 포함합니다.
+로또 6/45 당첨 결과 조회, 번호 추천, 통계 분석, 번호 저장 기능을 제공하는 풀스택 서비스입니다. 1인 개발로 기획부터 백엔드/프론트엔드 구현, 인프라 구성, CI/CD, 운영 자동화, 모니터링까지 전 영역을 직접 설계하고 운영하고 있습니다.
+
+**Live:** [kraft.io.kr](https://kraft.io.kr/)
+
+---
+
+## 이 프로젝트가 보여주는 것
+
+단순 CRUD 토이 프로젝트가 아니라, 실제 트래픽을 받는 서비스를 1인이 끝까지 책임지는 과정에서 나온 엔지니어링 판단들을 모아둔 저장소입니다.
+
+- **테스트로 회귀를 막는다** — JUnit 179개 + Vitest 45개. JaCoCo 커버리지 게이트(라인 82% / 분기 65% / 메서드 88% / 클래스 97%)를 CI에 강제해, 통과 못 하면 머지할 수 없습니다.
+- **정적 분석이 실제로 버그를 잡는다** — Checkstyle + SpotBugs를 strict 모드로 PR에 건다. SpotBugs를 Java 25 호환 버전으로 올리는 과정에서 클라이언트 입력이 검증 없이 응답 헤더에 반영되는 CRLF 인젝션 가능성을 실제로 발견해 고쳤습니다.
+- **인프라를 깊이까지 하드닝한다** — 모든 컨테이너 이미지 digest 고정, `cap_drop: ALL` + `no-new-privileges`, Docker 네트워크를 `edge`/`app`/`monitoring`으로 분리(`app`·`monitoring`은 internal 전용이라 DB는 호스트에서 직접 닿지 않음), Caddy `route {}`로 라우팅 우선순위 명시.
+- **공급망까지 신경 쓴다** — GHCR 이미지에 SBOM·provenance attestation 부착, Trivy로 HIGH/CRITICAL 취약점 차단, CodeQL을 PR 단계부터 실행, Dependabot으로 의존성 추적.
+- **동시성 문제를 가정하고 설계한다** — 외부 회차 수집과 수동 운영 API가 같은 회차를 동시에 처리해도 500이 아니라 멱등하게 update로 수렴하도록 처리, 통계 재집계는 ShedLock으로 다중 인스턴스 환경에서도 중복 실행을 막음.
+- **운영 자동화까지 끝낸다** — DB 백업/복구 드릴이 cron으로 매일/매주 자동 실행되고, 배포 실패 시 Caddy 설정과 이미지를 자동으로 롤백.
+
+각 판단의 배경은 [`docs/improvement.md`](docs/improvement.md)(로컬 전용, 비공개)에 더 자세히 기록돼 있습니다.
+
+---
 
 ## 핵심 기능
 
-- 최신 회차, 특정 회차, 전체 회차 목록 조회
-- 번호 추천과 과거 1등 조합 중복 여부 확인
+- 최신 회차 / 특정 회차 / 전체 회차 목록 조회
+- 번호 추천(과거 1등 조합과의 중복 확인 포함)
 - 번호 출현 빈도, 패턴 통계, 동반 출현 통계, 조합 분석
-- 브라우저 단위 저장 번호 관리 (`X-Device-Token` 기반)
-- 운영 대시보드에서 수동 적재, 최신 회차 수집, 작업 로그 조회
-- 관리자 SSR 페이지(`Thymeleaf`)에서 회차 수집과 감사 로그 확인
-- 자동 수집, Revalidate 연동, 보안 헤더, 공개 API rate limit, 운영 모니터링
+- 기기 단위 저장 번호 관리(`X-Device-Token` 기반, 서버에 개인정보 없이 식별)
+- 운영 대시보드에서 수동 적재 · 최신 회차 수집 · 작업 로그 조회
+- 관리자 SSR 페이지에서 회차 수집과 감사 로그 확인
+- 자동 수집, ISR on-demand revalidation, 보안 헤더, 공개 API rate limit
 
 ## 기술 스택
 
-| 영역 | 사용 기술 |
-| --- | --- |
-| Backend | Java 25, Spring Boot 4.1, Spring Web, Validation, JPA, Security, Thymeleaf |
-| Data | MariaDB 11.7, H2, Flyway, Caffeine |
-| Infra/Resilience | Docker Compose, Caddy, Resilience4j, ShedLock |
-| Frontend | Next.js 16 App Router, React 19, TypeScript |
-| Test | JUnit 5, Spring Test, Testcontainers, Vitest, Testing Library |
-| Observability | Spring Actuator, Prometheus, Grafana, Alertmanager, node-exporter |
-| CI/CD | GitHub Actions, GHCR, SSH deploy |
+| 영역 | 사용 기술 | 비고 |
+| --- | --- | --- |
+| Backend | Java 25, Spring Boot 4.1, Spring Web/Validation/JPA/Security, Thymeleaf | 가상 스레드 대응 런타임, 기능 단위 패키징 |
+| Data | MariaDB 11.7, Flyway, Caffeine, H2(로컬) | summary 테이블 + ShedLock 분산 락 |
+| Resilience | Resilience4j, ShedLock | 외부 API 서킷 브레이커, 스케줄러 중복 실행 방지 |
+| Frontend | Next.js 16(App Router), React 19, TypeScript | SSR/ISR 혼합, 요청별 CSP nonce |
+| Infra | Docker Compose, Caddy | 네트워크 분리, 이미지 digest 고정 |
+| Observability | Spring Actuator, Prometheus, Grafana, Alertmanager, node-exporter | |
+| Test | JUnit 5, Spring Test, Testcontainers(MariaDB), Vitest, Testing Library | |
+| CI/CD | GitHub Actions, GHCR, Trivy, CodeQL, SBOM/provenance, SSH 배포 | |
+
+## 아키텍처
+
+```text
+                        ┌─────────────┐
+  사용자 ──────────────▶│    Caddy    │  edge / app 네트워크
+                        │ (리버스 프록시) │  도메인별 라우팅, TLS, 보안 헤더
+                        └──────┬──────┘
+                  ┌────────────┼────────────┐
+                  ▼                         ▼
+          ┌───────────────┐         ┌──────────────┐
+          │  Next.js (web) │         │ Spring Boot   │
+          │  SSR / ISR     │◀───────▶│  (backend)    │  app / monitoring 네트워크
+          └───────────────┘  내부호출  └──────┬───────┘
+                                              │
+                          ┌───────────────────┼───────────────────┐
+                          ▼                   ▼                   ▼
+                   ┌────────────┐    ┌────────────────┐   ┌──────────────┐
+                   │  MariaDB    │    │ Prometheus/     │   │ 외부 당첨번호  │
+                   │ (app 전용,  │    │ Grafana/        │   │ 수집 API      │
+                   │  internal)  │    │ Alertmanager    │   │ (서킷 브레이커) │
+                   └────────────┘    └────────────────┘   └──────────────┘
+```
+
+`mariadb`/Prometheus 등은 `internal: true` 네트워크에 있어 호스트에서 직접 접근할 수 없고, Caddy를 통해서만 외부 트래픽이 들어옵니다.
 
 ## 저장소 구조
 
@@ -52,129 +97,13 @@ Kraft/
 └── .github/workflows/   # CI, CD, PR Check, CodeQL
 ```
 
-## 애플리케이션 구성
-
-### Backend
-
-- 기본 포트: `8080`
-- 프로필:
-  - 기본 `local`
-  - 운영 `prod`
-- 로컬 기본 DB:
-  - H2 인메모리
-  - `KRAFT_FLYWAY_ENABLED=false` 기본값
-- Docker/운영 DB:
-  - MariaDB
-  - Flyway 활성화
-- 주요 보안/운영 특성:
-  - `/api/**`, `/actuator/**`, `/ops/**` 는 stateless filter chain
-  - `/actuator/health/**` 공개
-  - `/actuator/prometheus` 는 trusted CIDR만 허용
-  - 공개 API rate limit 설정 가능
-  - 외부 당첨번호 수집에 circuit breaker 적용
-  - 스케줄러 중복 실행 방지용 ShedLock 사용
-
-### Frontend
-
-- 기본 포트: `3000`
-- Next.js App Router 기반 SSR/ISR 혼합
-- 백엔드 내부 호출:
-  - `KRAFT_BACKEND_INTERNAL_URL`
-- 공개 기준 URL:
-  - `KRAFT_PUBLIC_BASE_URL`
-- 주요 페이지:
-  - `/`
-  - `/latest`
-  - `/rounds`
-  - `/rounds/[round]`
-  - `/recommend`
-  - `/saved`
-  - `/frequency`
-  - `/stats`
-  - `/companion`
-  - `/analysis`
-  - `/ops`
-
-### 운영 스택
-
-- `docker-compose.dev.yml`
-  - 로컬 개발용 MariaDB
-- `docker-compose.yml`
-  - 전체 스택 로컬/단일 서버 실행
-- `docker-compose.prod.yml`
-  - 운영 이미지 기반 실행
-- Caddy
-  - 공개 도메인에서 `/admin*`, `/ops*`, `/actuator*` 차단
-  - 관리자 도메인에서 `/admin*`, `/ops-api/*`, `/grafana/*` 허용
-
-## 공개 API 개요
-
-### Spring Boot API
-
-- `GET /api/v1/rounds/latest`
-- `GET /api/v1/rounds?page=0&size=20`
-- `GET /api/v1/rounds/{round}`
-- `POST /api/v1/numbers/recommend`
-- `GET /api/v1/numbers/check?numbers=1&numbers=2...`
-- `GET /api/v1/stats/frequency`
-- `GET /api/v1/stats/patterns`
-- `GET /api/v1/stats/companion`
-- `POST /api/v1/stats/analysis`
-- `GET /api/v1/saved`
-- `POST /api/v1/saved`
-- `DELETE /api/v1/saved/{id}`
-
-**공식 진입점은 Caddy → `backend:8080` 직결**입니다(`caddy/Caddyfile`의 `handle /api/v1/* { reverse_proxy backend:8080 }`).
-`web/src/app/api/v1/**`에도 동일 경로의 Next.js route handler가 존재하지만, 운영에서는 Caddy가 먼저 가로채므로
-**`npm run dev`로 Next.js만 단독 실행할 때만** 쓰이는 폴백입니다(`backend-proxy.ts`가 `KRAFT_BACKEND_INTERNAL_URL`로 직접 프록시).
-두 경로 모두 같은 백엔드를 호출하므로 계약 드리프트 위험은 낮지만, API 동작을 바꿀 때는 백엔드 컨트롤러만 수정하면 됩니다.
-
-### 운영 API
-
-- `GET /ops/summary`
-- `GET /ops/logs`
-- `POST /ops/rounds`
-- `POST /ops/collect/latest`
-- `POST /ops/collect/{round}`
-
-운영 API는 `X-Ops-Token` 기반이며, 프론트엔드에서는 `/ops-api/*` 프록시 경로를 통해 호출합니다.
-
-## 환경 파일
-
-| 파일 | 용도 |
-| --- | --- |
-| `.env.local.example` | 로컬에서 Spring Boot를 직접 실행할 때 참고용 |
-| `.env.example` | Docker Compose 개발/단일 서버 실행용 |
-| `.env.prod.example` | 운영 배포용 |
-| `src/main/resources/application.yml` | 공통 기본 설정 |
-| `src/main/resources/application-local.yml` | 로컬 프로필 설정 |
-| `src/main/resources/application-prod.yml` | 운영 프로필 설정 |
-
-중요 환경 변수 예시:
-
-- `KRAFT_DB_URL`
-- `KRAFT_DB_USERNAME`
-- `KRAFT_DB_PASSWORD`
-- `KRAFT_PUBLIC_BASE_URL`
-- `KRAFT_BACKEND_INTERNAL_URL`
-- `KRAFT_REVALIDATE_SECRET`
-- `KRAFT_OPS_TOKEN`
-- `KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE`
-- `KRAFT_ADMIN_BOOTSTRAP_USERNAME`
-- `KRAFT_ADMIN_BOOTSTRAP_PASSWORD`
-- `KRAFT_SECURITY_TRUSTED_PROXY_CIDR`
-- `GRAFANA_ADMIN_PASSWORD`
-
-## 로컬 개발
+## 빠른 시작 (로컬 개발)
 
 ### 사전 요구사항
 
-- JDK 25
-- Node.js 24 이상
-- npm
-- Docker Desktop 또는 Docker Engine
+- JDK 25, Node.js 24+, npm, Docker
 
-### 1. 개발용 DB만 Docker로 실행
+### 1. 개발용 DB 실행
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d
@@ -186,20 +115,16 @@ docker compose -f docker-compose.dev.yml up -d
 copy .env.local.example .env.local
 ```
 
-`.env.local` 에서 MariaDB 연결 정보를 채우면 Spring Boot가 로컬 MariaDB를 사용합니다. 값을 채우지 않으면 H2 인메모리로 실행됩니다.
+값을 채우지 않으면 H2 인메모리로 동작합니다.
 
-### 3. 백엔드 실행
+### 3. 백엔드 / 프론트엔드 실행
 
 ```bash
 .\gradlew.bat bootRun --args="--spring.profiles.active=local"
 ```
 
-### 4. 프론트엔드 실행
-
 ```bash
-cd web
-npm ci
-npm run dev
+cd web && npm ci && npm run dev
 ```
 
 ### 접속 주소
@@ -213,168 +138,90 @@ npm run dev
 | Admin Login | http://localhost:8080/admin/login |
 | Ops Page | http://localhost:3000/ops |
 
-## Docker 기반 실행
-
-전체 스택을 로컬에서 Compose로 올리려면:
+### Docker로 전체 스택 실행
 
 ```bash
 copy .env.example .env
 docker compose up -d --build
 ```
 
-운영형 실행은 `.env.prod` 를 준비한 뒤:
+운영형 실행(`.env.prod` 준비 후):
 
 ```bash
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ```
 
-## 테스트와 검증
-
-### Backend
+## 테스트와 정적 분석
 
 ```bash
+# Backend
 .\gradlew.bat test bootJar
-```
+.\gradlew.bat check -PstrictCoverage=true -PstrictStatic=true   # 커버리지 게이트 + Checkstyle + SpotBugs
 
-엄격 모드:
-
-```bash
-.\gradlew.bat check -PstrictCoverage=true -PstrictStatic=true
-```
-
-포함 항목:
-
-- JUnit 5
-- Spring MVC/Test
-- Security Test
-- Testcontainers MariaDB
-- JaCoCo
-- Checkstyle
-- SpotBugs
-
-### Frontend
-
-```bash
+# Frontend
 cd web
-npm ci
-npm run lint
-npm run typecheck
-npm test
-npm run build
+npm ci && npm run lint && npm run typecheck && npm test && npm run build
 ```
 
-## 마이그레이션과 데이터 작업
+| 항목 | 도구 | 게이트 |
+| --- | --- | --- |
+| 백엔드 단위/통합 테스트 | JUnit 5, Spring Test, Testcontainers(MariaDB) | 179개, CI 필수 |
+| 커버리지 | JaCoCo | 라인 82% / 분기 65% / 메서드 88% / 클래스 97% |
+| 정적 분석 | Checkstyle, SpotBugs | strict 모드 PR 게이트 |
+| 프론트엔드 테스트 | Vitest, Testing Library | 45개 |
+| 보안 스캔 | Trivy(이미지+의존성), CodeQL | PR 단계부터 실행 |
 
-### DB 마이그레이션
+## API 개요
 
-Flyway SQL 파일:
+### 공개 API (`/api/v1/*`)
 
-- `src/main/resources/db/migration/V1__baseline.sql`
-- `...V9__drop_raw_json.sql`
+- `GET /api/v1/rounds/latest`, `GET /api/v1/rounds`, `GET /api/v1/rounds/{round}`
+- `POST /api/v1/numbers/recommend`, `GET /api/v1/numbers/check`
+- `GET /api/v1/stats/frequency`, `/patterns`, `/companion`, `POST /api/v1/stats/analysis`
+- `GET /api/v1/saved`, `POST /api/v1/saved`, `DELETE /api/v1/saved/{id}`
 
-### 운영 보조 스크립트
+공식 진입점은 **Caddy → `backend:8080` 직결**입니다. `web/src/app/api/v1/**`에도 동일 경로의 Next.js route handler가 있지만, 운영에서는 Caddy가 먼저 가로채므로 `npm run dev` 단독 실행 시에만 쓰이는 로컬 개발용 폴백입니다.
 
-- `scripts/db-backup.sh`
-- `scripts/db-restore.sh`
-- `scripts/db-restore-drill.sh`
-  - 세 스크립트 모두 `docker compose exec`로 `mariadb` 컨테이너 내부에서 실행된다(DB는 internal `app` 네트워크 전용이라 호스트 TCP로 접속 불가). 리포지토리 루트가 스크립트 위치 기준으로 자동 추론되며, 필요 시 `COMPOSE_PROJECT_DIR`/`COMPOSE_FILE`/`COMPOSE_ENV_FILE` 환경변수로 재정의 가능.
-  - 스케줄링은 `scripts/server/init-ubuntu.sh`가 deploy 유저 crontab에 자동 등록한다: 매일 03:00 `db-backup.sh`, 매주 일요일 03:30 `db-restore-drill.sh`. 수동으로 등록하려면 동일한 라인을 `crontab -u deploy -e`에 추가.
-- `scripts/migrate/run-migration.sh`
-- `scripts/migrate/01-dump-source.sh`
-- `scripts/migrate/02-import-winning-numbers.sh`
-- `scripts/migrate/03-transform-saved-numbers.sh`
-- `scripts/migrate/04-rebuild-stats.sh`
-- `scripts/migrate/05-validate.sh`
-- `scripts/migrate/06-cutover.sh`
+### 운영 API (`/ops/*`, `X-Ops-Token` 필요)
 
-## 배포
+`GET /ops/summary`, `GET /ops/logs`, `POST /ops/rounds`, `POST /ops/collect/latest`, `POST /ops/collect/{round}`
 
-### GitHub Actions 워크플로우
+## 배포 파이프라인
 
-- `ci.yml`
-  - 백엔드 테스트/빌드
-  - 프론트엔드 lint/typecheck/test/build
-  - Checkstyle/SpotBugs
-  - Caddyfile 검증
-  - 제거된 기능 회귀 방지 검사
-  - GHCR 이미지 푸시
-  - Trivy 이미지 스캔
-  - `latest` 태그 승격
-- `cd.yml`
-  - CI 성공 후 SSH로 서버 배포
-  - 환경 렌더링
-  - 이미지 pull 및 재기동
-  - Caddy 강제 재생성
-  - readiness 확인
-  - smoke test
-  - 실패 시 Caddy 우선 롤백 후 이미지 롤백
-- `pr.yml`
-  - PR용 백엔드/프론트엔드 빌드 체크
-- `codeql.yml`
-  - Java/TypeScript CodeQL 분석
-
-### 서버 초기화
-
-Ubuntu 24.04 서버 초기화 스크립트:
-
-```bash
-sudo bash scripts/server/init-ubuntu.sh
+```text
+PR 생성 ──▶ Backend/Web 빌드·테스트, Checkstyle/SpotBugs, CodeQL, Trivy(fs) ──▶ 머지
+main push ──▶ 전체 검증 + GHCR 이미지 빌드(SBOM/provenance) ──▶ Trivy 이미지 스캔
+         ──▶ latest 태그 승격 ──▶ (cd.yml) SSH 배포 ──▶ readiness 확인 ──▶ smoke test
+                                                       └─ 실패 시 Caddy → 이미지 순으로 자동 롤백
 ```
 
-이 스크립트는 Docker, deploy 사용자, UFW, fail2ban, 리포지토리 클론, 로그 디렉터리까지 준비합니다.
+- `ci.yml` — 테스트/빌드/정적 분석/이미지 빌드/보안 스캔/태그 승격
+- `cd.yml` — SSH 배포, Caddy 강제 재생성, readiness/smoke test, 실패 시 자동 롤백
+- `pr.yml` — PR 전용 빌드 체크 + 의존성 취약점 스캔
+- `codeql.yml` — Java/TypeScript 정적 보안 분석(push + PR + 주간 스케줄)
 
-## 모니터링
+서버 초기화는 `sudo bash scripts/server/init-ubuntu.sh` 한 번으로 Docker, deploy 사용자, UFW, fail2ban, 리포지토리 클론, DB 백업 cron까지 끝납니다.
 
-Compose 스택에 아래 서비스가 포함됩니다.
+## 운영 자동화
 
-- Prometheus
-- Grafana
-- Alertmanager
-- node-exporter
+- **DB 백업/복구**: `scripts/db-backup.sh`(`docker compose exec`로 internal 네트워크의 mariadb 컨테이너 내부에서 실행 — 호스트 TCP 접근 자체가 불가능한 구조). cron으로 매일 03:00 백업, 매주 일요일 03:30 복구 드릴이 자동 실행되고 결과가 검증됩니다.
+- **마이그레이션**: Flyway SQL(`src/main/resources/db/migration/`)로 스키마 버전 관리.
+- **모니터링**: Prometheus가 지표 수집, Grafana 대시보드, Alertmanager 알림, node-exporter 시스템 지표. 설정은 `infra/`에 있습니다.
 
-관련 설정 위치:
+## 보안 메모
 
-- `infra/prometheus/prometheus.yml`
-- `infra/prometheus/rules/kraft_alerts.yml`
-- `infra/grafana/provisioning/`
-- `infra/alertmanager/alertmanager.yml.tmpl`
-
-## 관리자와 운영
-
-### 관리자 페이지
-
-- 경로: `/admin`
-- 구현: Spring MVC + Thymeleaf
-- 기능:
-  - 로그인
-  - 최신 회차 확인
-  - 회차 수집
-  - 전체 백필 실행
-  - 감사 로그 조회
-
-세부 접속 절차는 [docs/admin-access.md](D:\workspace\spring\Kraft\docs\admin-access.md) 를 참고하세요. 이 문서는 로컬 참고용 성격입니다.
-
-### 운영 대시보드
-
-- 경로: `/ops`
-- 구현: Next.js UI + `/ops-api/*` 프록시
-- 기능:
-  - 요약 상태 확인
-  - 최신 회차 수집
-  - 특정 회차 수집
-  - 수동 적재
-  - 작업 로그 필터링
-
-## 보안 및 라우팅 메모
-
-- 공개 도메인은 `/admin*`, `/ops*`, `/actuator*` 를 Caddy에서 차단합니다.
-- 관리자 도메인에서만 `/admin*`, `/ops-api/*`, `/grafana/*` 를 프록시합니다.
-- 저장 번호 API는 `X-Device-Token` 헤더를 요구합니다.
-- 운영 API는 `X-Ops-Token` 을 요구합니다.
+- 공개 도메인은 Caddy에서 `/admin*`, `/ops*`, `/actuator*`를 차단하고, 관리자 도메인에서만 허용합니다.
+- 저장 번호 API는 `X-Device-Token`, 운영 API는 `X-Ops-Token`을 요구합니다.
 - Prometheus 엔드포인트는 trusted CIDR만 허용합니다.
-- `scripts/deploy/smoke-test.sh` 는 배포 후 핵심 라우팅과 차단 규칙까지 검사합니다.
+- 요청별 CSP nonce(`proxy.ts`)로 인라인 스크립트 없이 엄격한 CSP를 적용합니다.
+- `scripts/deploy/smoke-test.sh`가 배포 직후 라우팅·차단 규칙까지 검사합니다.
 
-## 참고 메모
+## 환경 파일
 
-- 루트 `README.md` 는 실제 코드 기준 문서입니다. 환경 변수와 실행 절차는 예시 파일을 우선 기준으로 삼으세요.
-- `.claude/`, `docs/` 일부 파일처럼 로컬 운영 문맥을 담는 보조 자료가 있을 수 있으나, 서비스 동작 기준은 코드와 Compose 설정이 우선입니다.
+| 파일 | 용도 |
+| --- | --- |
+| `.env.local.example` | 로컬에서 Spring Boot 직접 실행 |
+| `.env.example` | Docker Compose 개발/단일 서버 실행 |
+| `.env.prod.example` | 운영 배포 |
+
+주요 환경 변수: `KRAFT_DB_URL`, `KRAFT_DB_USERNAME`, `KRAFT_DB_PASSWORD`, `KRAFT_PUBLIC_BASE_URL`, `KRAFT_BACKEND_INTERNAL_URL`, `KRAFT_REVALIDATE_SECRET`, `KRAFT_OPS_TOKEN`, `KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE`, `KRAFT_ADMIN_BOOTSTRAP_USERNAME/PASSWORD`, `KRAFT_SECURITY_TRUSTED_PROXY_CIDR`, `GRAFANA_ADMIN_PASSWORD`.
