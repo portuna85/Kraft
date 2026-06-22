@@ -4,6 +4,7 @@ import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,22 +36,31 @@ public class WinningNumberCommandService {
                     "보너스 번호는 당첨 번호 6개와 중복될 수 없습니다.");
         }
 
-        boolean[] changed = {false};
-        WinningNumber winningNumber = winningNumberRepository.findByRound(request.round())
-                .map(existing -> {
-                    changed[0] = hasChanges(existing, request, normalized);
-                    if (changed[0]) {
-                        updateExisting(existing, request, normalized);
-                    }
-                    return existing;
-                })
-                .orElseGet(() -> {
-                    changed[0] = true;
-                    return createNew(request, normalized);
-                });
+        var existing = winningNumberRepository.findByRound(request.round());
+        if (existing.isPresent()) {
+            return applyUpdate(existing.get(), request, normalized);
+        }
 
-        WinningNumberResponse response = WinningNumberResponse.from(winningNumberRepository.save(winningNumber));
-        return new WinningNumberUpsertResult(response, changed[0]);
+        try {
+            WinningNumberResponse response =
+                    WinningNumberResponse.from(winningNumberRepository.save(createNew(request, normalized)));
+            return new WinningNumberUpsertResult(response, true);
+        } catch (DataIntegrityViolationException ex) {
+            // 자동 수집 스케줄러와 수동 upsert가 같은 신규 회차를 거의 동시에 처리하면 uk_winning_numbers_round
+            // 유니크 제약 위반으로 여기에 도달한다. 동시 승자가 이미 insert한 행을 update로 재해석한다.
+            WinningNumber concurrent = winningNumberRepository.findByRound(request.round()).orElseThrow(() -> ex);
+            return applyUpdate(concurrent, request, normalized);
+        }
+    }
+
+    private WinningNumberUpsertResult applyUpdate(WinningNumber existing, WinningNumberUpsertRequest request,
+                                                   java.util.List<Integer> normalized) {
+        boolean changed = hasChanges(existing, request, normalized);
+        if (changed) {
+            updateExisting(existing, request, normalized);
+        }
+        WinningNumberResponse response = WinningNumberResponse.from(winningNumberRepository.save(existing));
+        return new WinningNumberUpsertResult(response, changed);
     }
 
     private boolean hasChanges(WinningNumber existing, WinningNumberUpsertRequest request,
