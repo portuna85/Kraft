@@ -157,6 +157,8 @@ jobs:
           file: web/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_LC }}/web:${{ github.sha }}
+          build-args: |
+            KRAFT_PUBLIC_BASE_URL=${{ secrets.KRAFT_PUBLIC_BASE_URL }}
           provenance: true
           sbom: true
           cache-from: type=gha,scope=web

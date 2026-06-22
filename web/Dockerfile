@@ -7,6 +7,10 @@ FROM node:24-bookworm-slim@sha256:2c87ef9bd3c6a3bd4b472b4bec2ce9d16354b0c574f736
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# robots.txt/sitemap.xml/metadataBase는 정적 생성이라 빌드 시점 값이 산출물에 박힌다.
+# 런타임 환경변수(docker-compose)만으로는 반영되지 않으므로 빌드 인자로 받는다.
+ARG KRAFT_PUBLIC_BASE_URL
+ENV KRAFT_PUBLIC_BASE_URL=$KRAFT_PUBLIC_BASE_URL
 RUN npm run build
 
 FROM node:24-bookworm-slim@sha256:2c87ef9bd3c6a3bd4b472b4bec2ce9d16354b0c574f736c476489d09f560a203 AS runner
