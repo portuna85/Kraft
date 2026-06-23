@@ -74,7 +74,13 @@ export default async function RoundsPage({ searchParams }: Props) {
   return (
     <div className="section-stack">
       {latest && (
-        <JsonLdLottoRound baseUrl={baseUrl} round={latest.round} drawDate={latest.drawDate} nonce={nonce} />
+        <JsonLdLottoRound
+          baseUrl={baseUrl}
+          round={latest.round}
+          drawDate={latest.drawDate}
+          nonce={nonce}
+          pageUrl={`${baseUrl}/rounds`}
+        />
       )}
 
       {latest ? (

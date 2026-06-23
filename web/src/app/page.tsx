@@ -59,7 +59,7 @@ export default async function HomePage() {
       )}
 
       <section className="grid grid-3 home-shortcuts">
-        <Link href="/latest" className="stat-card stat-link">
+        <Link href="/rounds" className="stat-card stat-link">
           <p className="eyebrow">결과 조회</p>
           <h3>최신 결과</h3>
           <span className="stat-link-cta">바로 보기</span>

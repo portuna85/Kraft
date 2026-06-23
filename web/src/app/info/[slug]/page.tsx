@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { FAQ_ITEMS, buildFaqPageJsonLd } from "@/lib/csp-inline-scripts";
 
 export const dynamic = "force-static";
 
@@ -84,7 +85,7 @@ const infoPages: Record<string, InfoPage> = {
           역대 1등 당첨 조합은 결과에서 제외하며, 제외 번호를 입력하면 해당 숫자는 후보에서 제거합니다.
         </p>
         <p>
-          <strong>당첨금 최대화 모드</strong>를 활성화하면 비인기 조합을 우선 선택합니다.
+          <strong>공동 당첨 분산형 추천</strong>을 활성화하면 비인기 조합을 우선 선택합니다.
           같은 회차에 동일 조합을 구매한 공동 당첨자가 적을수록 개인 수령액이 높아지는 원리를 활용합니다.
           생일 번호(1~31) 편향, 라운드 번호(5·7 배수) 편향, 낮은 합계 편향을 역이용해
           후보 50개 중 비인기도 점수가 가장 높은 조합을 반환합니다.
@@ -104,51 +105,17 @@ const infoPages: Record<string, InfoPage> = {
     description: "추천 번호, 저장함, 데이터 반영 시점 등 자주 묻는 질문을 모았습니다.",
     content: (
       <article className="info-article">
-        <div className="faq-item">
-          <h3>추천 번호로 사면 당첨 확률이 높아지나요?</h3>
-          <p>
-            아닙니다. KRAFT Lotto의 추천 번호는 완전 무작위 방식으로 생성되며,
-            특정 조합이 다른 조합보다 더 유리해지도록 설계되어 있지 않습니다.
-            로또 6/45의 1등 확률은 모든 조합이 동일합니다.
-          </p>
-        </div>
-
-        <div className="faq-item">
-          <h3>저장함은 어디에 저장되나요?</h3>
-          <p>
-            저장 번호는 브라우저에 자동 생성되는 익명 기기 토큰과 연결되어 서버에 저장됩니다.
-            브라우저 데이터를 삭제하거나 다른 기기에서 접속하면 같은 목록을 바로 이어서 볼 수 없습니다.
-          </p>
-        </div>
-
-        <div className="faq-item">
-          <h3>당첨 번호가 얼마나 빨리 업데이트되나요?</h3>
-          <p>
-            추첨 결과 공개 후 자동 수집을 통해 최신 회차를 반영합니다.
-            일반적으로 수 분 내 반영되지만, 외부 데이터 상황에 따라 다소 지연될 수 있습니다.
-          </p>
-        </div>
-
-        <div className="faq-item">
-          <h3>몇 회차부터 데이터가 있나요?</h3>
-          <p>
-            2002년 12월 7일 추첨한 제1회부터 최신 회차까지의 전체 이력을 제공합니다.
-          </p>
-        </div>
-
-        <div className="faq-item">
-          <h3>앱이 있나요?</h3>
-          <p>
-            현재는 웹 서비스 중심으로 제공하고 있으며, 모바일 브라우저에서도 동일하게 사용할 수 있습니다.
-          </p>
-        </div>
-
-        <div className="faq-item">
-          <h3>오류나 개선 요청은 어떻게 하나요?</h3>
-          <p>
-            문의하기 페이지를 통해 오류 제보와 개선 요청을 보내 주세요.
-          </p>
-        </div>
+        <script
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqPageJsonLd()) }}
+        />
+        {FAQ_ITEMS.map((item) => (
+          <div className="faq-item" key={item.question}>
+            <h3>{item.question}</h3>
+            <p>{item.answer}</p>
+          </div>
+        ))}
       </article>
     ),
   },

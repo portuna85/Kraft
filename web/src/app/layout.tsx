@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
 import { Noto_Sans_KR, Noto_Serif_KR, Space_Grotesk } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { JsonLdWebSite } from "@/components/json-ld";
 import { getPublicBaseUrl } from "@/lib/api";
+import { THEME_INIT_SCRIPT } from "@/lib/csp-inline-scripts";
 import "./globals.css";
 
 const notoSansKR = Noto_Sans_KR({
@@ -67,21 +67,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
-
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko" className={`${notoSansKR.variable} ${notoSerifKR.variable} ${spaceGrotesk.variable}`}>
       <body>
         <script
-          nonce={nonce}
           suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html:
-              "try{if(localStorage.getItem('kraft-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}",
-          }}
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
         />
-        <JsonLdWebSite baseUrl={baseUrl} nonce={nonce} />
+        <JsonLdWebSite baseUrl={baseUrl} />
         <a href="#main-content" className="skip-nav">본문으로 건너뛰기</a>
         <Header />
         <main id="main-content" className="page">

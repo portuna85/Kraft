@@ -10,7 +10,7 @@ import type { RecommendationResponse } from "@/lib/api";
 export function RecommendClient() {
   const [count, setCount] = useState("5");
   const [excluded, setExcluded] = useState("");
-  const [maximizePrize, setMaximizePrize] = useState(true);
+  const [maximizePrize, setMaximizePrize] = useState(false);
   const [recommendations, setRecommendations] = useState<number[][]>([]);
   const [message, setMessage] = useState("");
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
@@ -54,7 +54,7 @@ export function RecommendClient() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void fetchRecommendations(5, [], true);
+      void fetchRecommendations(5, [], false);
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -127,7 +127,7 @@ export function RecommendClient() {
             checked={maximizePrize}
             onChange={(event) => setMaximizePrize(event.target.checked)}
           />
-          당첨금 우선 추천
+          공동 당첨 분산형 추천
           <span className="recommend-toggle-hint">
             과거 1등 조합을 제외하고 상대적으로 덜 겹치는 조합을 우선 선택합니다.
           </span>
@@ -136,8 +136,8 @@ export function RecommendClient() {
           {isPending ? "생성 중..." : "추천받기"}
         </button>
         <p className="muted recommend-disclaimer">
-          모든 6개 번호 조합의 1등 당첨 확률은 동일합니다. &ldquo;당첨금 우선 추천&rdquo;은 공동 당첨
-          가능성을 낮추는 선택일 뿐 확률을 높이지 않습니다.{" "}
+          모든 6개 번호 조합의 1등 당첨 확률은 동일합니다. &ldquo;공동 당첨 분산형 추천&rdquo;은 공동
+          당첨 가능성을 낮추는 선택일 뿐 확률을 높이지 않습니다.{" "}
           <Link href="/info/faq">자세히 보기</Link>
         </p>
       </form>

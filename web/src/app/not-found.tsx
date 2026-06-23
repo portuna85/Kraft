@@ -16,8 +16,7 @@ export default function NotFound() {
       </p>
       <div className="not-found-actions">
         <Link href="/" className="button">홈으로 이동</Link>
-        <Link href="/latest" className="button secondary">최신 결과 보기</Link>
-        <Link href="/rounds" className="button secondary">전체 회차 보기</Link>
+        <Link href="/rounds" className="button secondary">최신 결과 · 전체 회차 보기</Link>
       </div>
     </section>
   );

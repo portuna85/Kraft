@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { LottoBalls } from "@/components/lotto-balls";
 import { PrizeTable } from "@/components/prize-table";
-import { getLatestWinningNumber, getRound } from "@/lib/api";
+import { JsonLdLottoRound } from "@/components/json-ld";
+import { getLatestWinningNumber, getPublicBaseUrl, getRound } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 
 export const revalidate = 3600;
@@ -59,9 +61,12 @@ export default async function RoundDetailPage({ params }: Props) {
 
   const hasPrev = data.round > 1;
   const hasNext = latestRound > 0 ? data.round < latestRound : false;
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const baseUrl = getPublicBaseUrl();
 
   return (
     <section className="panel">
+      <JsonLdLottoRound baseUrl={baseUrl} round={data.round} drawDate={data.drawDate} nonce={nonce} />
       <p className="eyebrow">회차 상세</p>
       <h1 className="page-title">{data.round}회 당첨 결과</h1>
       <p className="page-subtitle">{formatDrawDate(data.drawDate)}</p>
