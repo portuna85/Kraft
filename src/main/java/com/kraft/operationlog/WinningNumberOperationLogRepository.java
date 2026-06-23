@@ -27,4 +27,6 @@ public interface WinningNumberOperationLogRepository extends JpaRepository<Winni
             + "WHERE l.round = :round AND l.createdAt > :after "
             + "AND l.executionStatus = com.kraft.operationlog.WinningNumberOperationStatus.SUCCESS")
     boolean existsSuccessForRoundAfter(@Param("round") Integer round, @Param("after") OffsetDateTime after);
+
+    void deleteByCreatedAtBefore(OffsetDateTime cutoff);
 }

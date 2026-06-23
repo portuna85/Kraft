@@ -71,3 +71,6 @@ kraft:
   revalidate:
     secret: ${KRAFT_REVALIDATE_SECRET:}
     web-url: ${KRAFT_REVALIDATE_WEB_URL:http://web:3000}
+  retention:
+    operation-log-days: ${KRAFT_RETENTION_OPERATION_LOG_DAYS:30}
+    admin-audit-log-days: ${KRAFT_RETENTION_ADMIN_AUDIT_LOG_DAYS:90}
