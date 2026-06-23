@@ -30,6 +30,11 @@ if [[ -z "$LATEST" ]]; then
 fi
 echo "==> Drill restore from: $LATEST"
 
+# RPO 추정치: 이 백업 파일이 얼마나 오래됐는지(=장애 시 최악의 경우 잃을 수 있는 데이터 기간).
+BACKUP_AGE_SECONDS=$(( $(date +%s) - $(stat -c %Y "$LATEST" 2>/dev/null || stat -f %m "$LATEST") ))
+echo "==> RPO(백업 경과 시간): $((BACKUP_AGE_SECONDS / 3600))시간 $(((BACKUP_AGE_SECONDS % 3600) / 60))분"
+DRILL_START=$(date +%s)
+
 cleanup() {
   echo "==> Dropping drill database $DRILL_DB"
   "${EXEC[@]}" sh -c "MYSQL_PWD=\"\$MARIADB_ROOT_PASSWORD\" mariadb -uroot -e \"DROP DATABASE IF EXISTS $DRILL_DB;\"" 2>/dev/null || true
@@ -52,5 +57,8 @@ for table in "${REQUIRED_TABLES[@]}"; do
     FAIL=1
   fi
 done
+
+DRILL_SECONDS=$(( $(date +%s) - DRILL_START ))
+echo "==> RTO(복구 소요 시간): ${DRILL_SECONDS}초"
 
 [[ $FAIL -eq 0 ]] && echo "==> Drill PASSED" || { echo "==> Drill FAILED" >&2; exit 1; }

@@ -140,6 +140,9 @@ mkdir -p "${REPO_DIR}/logs"
 chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "${REPO_DIR}/logs"
 
 # ── 9. DB 백업/복구 드릴 cron 등록 ───────────────────────────────────────────────
+# 원격(오프서버) 백업 사본을 쓰려면 이 서버에 rclone을 설치하고 /etc/kraft/backup.env에
+# BACKUP_REMOTE_DEST(예: BACKUP_REMOTE_DEST=s3:my-bucket/kraft-backups/)를 설정할 것.
+# 미설정 시 기존처럼 로컬 ${BACKUP_DIR}에만 보관한다.
 log "9/9 DB 백업 cron 등록"
 CRON_MARKER="# KRAFT DB backup (managed by scripts/server/init-ubuntu.sh)"
 if ! crontab -u "$DEPLOY_USER" -l 2>/dev/null | grep -qF "$CRON_MARKER"; then

@@ -8,6 +8,13 @@
 # credentials rather than a host TCP connection.
 set -euo pipefail
 
+# 원격 백업 사본 설정(BACKUP_REMOTE_DEST, rclone 자격증명 등)은 레포에 커밋하지 않고
+# 배포 서버의 /etc/kraft/backup.env에 둔다. 파일이 있으면 자동으로 불러온다.
+if [[ -f /etc/kraft/backup.env ]]; then
+  # shellcheck source=/dev/null
+  source /etc/kraft/backup.env
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="${COMPOSE_PROJECT_DIR:-$(dirname "$SCRIPT_DIR")}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
@@ -30,6 +37,20 @@ echo "==> Backing up $DB_NAME to $FILENAME"
   | gzip -9 > "$FILENAME"
 
 echo "==> Backup complete: $FILENAME ($(du -sh "$FILENAME" | cut -f1))"
+
+# 단일 서버/볼륨 장애에 대비한 오프서버 사본. BACKUP_REMOTE_DEST(예: s3:my-bucket/kraft-backups/)가
+# 설정되어 있고 rclone이 설치돼 있을 때만 동작 — 기본값(미설정)이면 기존과 동일하게 로컬에만 보관한다.
+if [[ -n "${BACKUP_REMOTE_DEST:-}" ]]; then
+  if command -v rclone >/dev/null 2>&1; then
+    if rclone copy "$FILENAME" "$BACKUP_REMOTE_DEST" --quiet; then
+      echo "==> 원격 사본 업로드 완료: $BACKUP_REMOTE_DEST"
+    else
+      echo "==> [FAIL] 원격 사본 업로드 실패: $BACKUP_REMOTE_DEST" >&2
+    fi
+  else
+    echo "==> [WARN] BACKUP_REMOTE_DEST가 설정됐지만 rclone이 설치되어 있지 않아 원격 사본을 건너뜁니다." >&2
+  fi
+fi
 
 # Prune old backups
 find "$BACKUP_DIR" -name "kraft_${DB_NAME}_*.sql.gz" -mtime +"$RETENTION_DAYS" -delete
