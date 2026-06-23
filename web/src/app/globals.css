@@ -1910,6 +1910,44 @@ body {
   margin: 8px 0 0;
 }
 
+.email-alert-box {
+  margin: 20px 0 0;
+  padding: 16px 20px;
+  background: var(--bg-strong);
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.email-alert-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.email-alert-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.email-alert-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.email-alert-form button {
+  white-space: nowrap;
+  padding: 8px 18px;
+  font-size: 14px;
+}
+
 .saved-match {
   margin: 0;
   font-size: 0.875rem;

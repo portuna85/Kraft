@@ -38,6 +38,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-mysql")
@@ -94,6 +95,7 @@ val jacocoExcludes = listOf(
     "**/statistics/PatternStatsSummary.class",
     "**/statistics/CompanionPairSummary.class",
     "**/operationlog/WinningNumberOperationLog.class",
+    "**/notification/EmailSubscription.class",
     // Enums
     "**/WinningNumberOperationType.class",
     "**/WinningNumberOperationStatus.class",
