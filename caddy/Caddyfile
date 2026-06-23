@@ -51,6 +51,12 @@ www.{$KRAFT_DOMAIN} {
 	encode zstd gzip
 
 	route {
+		# 관리자 도메인 IP 제한. 기본값은 docker-compose.prod.yml의 KRAFT_ADMIN_ALLOWED_CIDR
+		# 환경변수 단계에서 보장한다(여기 :default는 compose 없이 caddy를 직접 띄울 때를
+		# 위한 2차 방어선일 뿐, 정상 운영에서는 항상 compose가 채운 값이 들어온다).
+		@not_allowed not remote_ip {$KRAFT_ADMIN_ALLOWED_CIDR:0.0.0.0/0 ::/0}
+		respond @not_allowed 403
+
 		@blocked path /actuator*
 		respond @blocked 403
 

@@ -151,7 +151,13 @@ services:
     environment:
       KRAFT_DOMAIN: ${KRAFT_DOMAIN}
       KRAFT_ADMIN_DOMAIN: ${KRAFT_ADMIN_DOMAIN}
-      KRAFT_ADMIN_ALLOWED_CIDR: ${KRAFT_ADMIN_ALLOWED_CIDR:-}
+      # 기본값을 여기(컴포즈 단계)에서 보장해야 한다. Caddyfile의 {$VAR:default} 문법은
+      # 변수가 "미설정"일 때만 기본값을 쓰고 "빈 문자열로 설정"된 경우엔 쓰지 않는데,
+      # 이 줄을 ${KRAFT_ADMIN_ALLOWED_CIDR:-}(빈 기본값)로 두면 시크릿 미등록 시 컨테이너에
+      # 빈 문자열이 그대로 전달되어 remote_ip 매처가 빈 범위가 되고 관리자 도메인 전체가
+      # 403으로 막힌다(2026-06-23 실제 장애로 확인). 컴포즈의 :- 는 빈 문자열도 기본값으로
+      # 대체하므로 여기서 실제 기본값을 채워 Caddy에는 항상 비어있지 않은 값만 전달한다.
+      KRAFT_ADMIN_ALLOWED_CIDR: ${KRAFT_ADMIN_ALLOWED_CIDR:-0.0.0.0/0 ::/0}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
