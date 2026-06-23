@@ -7,10 +7,6 @@ import { getDeviceToken } from "@/lib/device-token";
 import { validateLottoNumbers } from "@/lib/lotto-validation";
 import type { WinningNumber } from "@/lib/api";
 
-type EmailSubStatus = { email: string; verified: boolean } | null;
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 type SavedNumber = {
   id: number;
   numbers: number[];
@@ -49,12 +45,6 @@ export function SavedNumbersClient() {
   const [isPending, startTransition] = useTransition();
   const [pendingDelete, setPendingDelete] = useState<{ item: SavedNumber; timer: number } | null>(null);
 
-  // 이메일 알림 구독 상태
-  const [emailStatus, setEmailStatus] = useState<EmailSubStatus>(undefined as unknown as EmailSubStatus);
-  const [emailInput, setEmailInput] = useState("");
-  const [emailMessage, setEmailMessage] = useState("");
-  const [emailPending, startEmailTransition] = useTransition();
-
   async function loadSavedNumbers() {
     const response = await fetch("/api/v1/saved", {
       headers: {
@@ -81,31 +71,10 @@ export function SavedNumbersClient() {
     }
   }
 
-  async function loadEmailStatus() {
-    try {
-      const response = await fetch("/api/v1/notifications/email", {
-        headers: { "X-Device-Token": getDeviceToken() },
-      });
-      if (response.status === 404) { setEmailStatus(null); return; }
-      if (response.ok) setEmailStatus((await response.json()) as EmailSubStatus);
-    } catch {
-      setEmailStatus(null);
-    }
-  }
-
   useEffect(() => {
-    // URL 파라미터로 인증 완료 또는 수신 거부 결과 표시
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("emailVerified") === "true") {
-      setEmailMessage("이메일 인증이 완료되었습니다. 매주 토요일 추첨 후 알림을 보내드립니다.");
-    } else if (params.get("emailUnsubscribed") === "true") {
-      setEmailMessage("수신 거부가 완료되었습니다.");
-    }
-
     startTransition(() => {
       loadSavedNumbers().catch((error: Error) => setMessage(error.message));
       loadLatest();
-      void loadEmailStatus();
     });
   }, []);
 
@@ -189,101 +158,12 @@ export function SavedNumbersClient() {
     setMessage("삭제를 취소했습니다.");
   }
 
-  async function handleEmailSubscribe(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setEmailMessage("");
-    if (!EMAIL_RE.test(emailInput)) {
-      setEmailMessage("올바른 이메일 주소를 입력해 주세요.");
-      return;
-    }
-    startEmailTransition(async () => {
-      try {
-        const response = await fetch("/api/v1/notifications/email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Device-Token": getDeviceToken(),
-          },
-          body: JSON.stringify({ email: emailInput }),
-        });
-        if (response.ok || response.status === 202) {
-          setEmailMessage("인증 이메일을 발송했습니다. 메일함을 확인해 주세요.");
-          setEmailInput("");
-          await loadEmailStatus();
-        } else {
-          const payload = (await response.json()) as { message?: string };
-          setEmailMessage(payload.message ?? "오류가 발생했습니다. 다시 시도해 주세요.");
-        }
-      } catch {
-        setEmailMessage("오류가 발생했습니다. 다시 시도해 주세요.");
-      }
-    });
-  }
-
-  async function handleEmailUnsubscribe() {
-    setEmailMessage("");
-    try {
-      await fetch("/api/v1/notifications/email", {
-        method: "DELETE",
-        headers: { "X-Device-Token": getDeviceToken() },
-      });
-      setEmailStatus(null);
-      setEmailMessage("알림 구독이 해지되었습니다.");
-    } catch {
-      setEmailMessage("오류가 발생했습니다. 다시 시도해 주세요.");
-    }
-  }
-
   return (
     <section className="saved-section">
       <p className="muted">
         저장 번호는 이 기기/브라우저에 연결됩니다. 브라우저 데이터를 삭제하거나 다른 기기로 바꾸면
         이어서 볼 수 없으니 참고하세요.
       </p>
-
-      {/* 이메일 알림 구독 섹션 */}
-      <div className="email-alert-box">
-        <p className="email-alert-title">🔔 당첨 알림 받기</p>
-        {emailStatus === undefined ? null : emailStatus?.verified ? (
-          <div>
-            <p className="muted" style={{ margin: "0 0 8px" }}>
-              <strong>{emailStatus.email}</strong>으로 매주 토요일 추첨 결과를 보내드립니다.
-            </p>
-            <button type="button" className="secondary" style={{ fontSize: "13px", padding: "6px 14px" }}
-              onClick={() => { void handleEmailUnsubscribe(); }}>
-              알림 해지
-            </button>
-          </div>
-        ) : emailStatus && !emailStatus.verified ? (
-          <div>
-            <p className="muted" style={{ margin: "0 0 8px" }}>
-              <strong>{emailStatus.email}</strong>으로 인증 메일을 보냈습니다. 메일함을 확인해 주세요.
-            </p>
-            <button type="button" className="secondary" style={{ fontSize: "13px", padding: "6px 14px" }}
-              onClick={() => { void handleEmailUnsubscribe(); }}>
-              취소
-            </button>
-          </div>
-        ) : (
-          <form className="email-alert-form" onSubmit={(e) => { void handleEmailSubscribe(e); }}>
-            <input
-              type="email"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="이메일 주소 입력"
-              style={{ flex: 1 }}
-            />
-            <button type="submit" disabled={emailPending}>
-              구독
-            </button>
-          </form>
-        )}
-        {emailMessage ? (
-          <p className="status-text" role="status" aria-live="polite" style={{ margin: "8px 0 0" }}>
-            {emailMessage}
-          </p>
-        ) : null}
-      </div>
       <form className="saved-form" onSubmit={handleSubmit}>
         <label>
           번호 6개

@@ -54,20 +54,7 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 2
         register-health-indicator: true
 
-spring:
-  mail:
-    host: ${KRAFT_MAIL_HOST:}
-    port: ${KRAFT_MAIL_PORT:587}
-    username: ${KRAFT_MAIL_USERNAME:}
-    password: ${KRAFT_MAIL_PASSWORD:}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-      mail.smtp.starttls.required: true
-
 kraft:
-  mail:
-    from: ${KRAFT_MAIL_FROM:noreply@kraft.io.kr}
   public-base-url: ${KRAFT_PUBLIC_BASE_URL:}
   external-lotto:
     url-template: ${KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE:}
