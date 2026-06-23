@@ -50,6 +50,13 @@ www.{$KRAFT_DOMAIN} {
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
 	encode zstd gzip
 
+	# 진단용 액세스 로그. remote_ip allowlist가 실제로 어떤 IP를 보는지 확인하기 위함
+	# (2026-06-23 인시던트: 자가 헬스체크/스모크 테스트가 막혀 원인 파악이 필요했음).
+	log {
+		output stdout
+		format console
+	}
+
 	route {
 		# 관리자 도메인 IP 제한. 기본값은 docker-compose.prod.yml의 KRAFT_ADMIN_ALLOWED_CIDR
 		# 환경변수 단계에서 보장한다(여기 :default는 compose 없이 caddy를 직접 띄울 때를
