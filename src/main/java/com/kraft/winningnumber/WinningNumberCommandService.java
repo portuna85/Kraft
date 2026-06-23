@@ -16,13 +16,16 @@ public class WinningNumberCommandService {
     private final WinningNumberRepository winningNumberRepository;
     private final LottoNumberCodec lottoNumberCodec;
     private final Clock clock;
+    private final WinningNumberInsertExecutor insertExecutor;
 
     public WinningNumberCommandService(WinningNumberRepository winningNumberRepository,
                                        LottoNumberCodec lottoNumberCodec,
-                                       Clock clock) {
+                                       Clock clock,
+                                       WinningNumberInsertExecutor insertExecutor) {
         this.winningNumberRepository = winningNumberRepository;
         this.lottoNumberCodec = lottoNumberCodec;
         this.clock = clock;
+        this.insertExecutor = insertExecutor;
     }
 
     public WinningNumberResponse upsert(WinningNumberUpsertRequest request) {
@@ -42,12 +45,13 @@ public class WinningNumberCommandService {
         }
 
         try {
-            WinningNumberResponse response =
-                    WinningNumberResponse.from(winningNumberRepository.save(createNew(request, normalized)));
+            WinningNumberResponse response = insertExecutor.insertNew(createNew(request, normalized));
             return new WinningNumberUpsertResult(response, true);
         } catch (DataIntegrityViolationException ex) {
             // 자동 수집 스케줄러와 수동 upsert가 같은 신규 회차를 거의 동시에 처리하면 uk_winning_numbers_round
-            // 유니크 제약 위반으로 여기에 도달한다. 동시 승자가 이미 insert한 행을 update로 재해석한다.
+            // 유니크 제약 위반으로 여기에 도달한다. insertExecutor가 REQUIRES_NEW로 분리돼 있어 그
+            // 트랜잭션만 롤백되고(JPA 스펙상 제약 위반 후 영속성 컨텍스트는 더 이상 사용할 수 없다),
+            // 현재(이 메서드의) 트랜잭션은 깨끗한 상태로 동시 승자가 이미 insert한 행을 update로 재해석한다.
             WinningNumber concurrent = winningNumberRepository.findByRound(request.round()).orElseThrow(() -> ex);
             return applyUpdate(concurrent, request, normalized);
         }

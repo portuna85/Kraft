@@ -11,7 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
-import org.springframework.context.ApplicationEventPublisher;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -59,13 +58,13 @@ class WinningNumberCollectionServiceTest {
         );
         when(commandService.upsertWithResult(fetched)).thenReturn(new WinningNumberUpsertResult(fetchedResponse, true));
 
-        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        WinningNumberCollectionEventPublisher collectionEventPublisher = mock(WinningNumberCollectionEventPublisher.class);
         WinningNumberCollectionService service = new WinningNumberCollectionService(
                 repository,
                 fetchClient,
                 commandService,
                 operationLogService,
-                eventPublisher,
+                collectionEventPublisher,
                 new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
         );
         WinningNumberResponse response = service.collectLatest();
@@ -84,7 +83,7 @@ class WinningNumberCollectionServiceTest {
         ExternalWinningNumberFetchClient fetchClient = mock(ExternalWinningNumberFetchClient.class);
         WinningNumberCommandService commandService = mock(WinningNumberCommandService.class);
         WinningNumberOperationLogService operationLogService = mock(WinningNumberOperationLogService.class);
-        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        WinningNumberCollectionEventPublisher collectionEventPublisher = mock(WinningNumberCollectionEventPublisher.class);
 
         WinningNumber latest = new WinningNumber(
                 1200,
@@ -107,7 +106,7 @@ class WinningNumberCollectionServiceTest {
                 fetchClient,
                 commandService,
                 operationLogService,
-                eventPublisher,
+                collectionEventPublisher,
                 new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
         );
 
@@ -136,7 +135,7 @@ class WinningNumberCollectionServiceTest {
         ExternalWinningNumberFetchClient fetchClient = mock(ExternalWinningNumberFetchClient.class);
         WinningNumberCommandService commandService = mock(WinningNumberCommandService.class);
         WinningNumberOperationLogService operationLogService = mock(WinningNumberOperationLogService.class);
-        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        WinningNumberCollectionEventPublisher collectionEventPublisher = mock(WinningNumberCollectionEventPublisher.class);
 
         WinningNumber round1200 = new WinningNumber(
                 1200,
@@ -191,7 +190,7 @@ class WinningNumberCollectionServiceTest {
                 fetchClient,
                 commandService,
                 operationLogService,
-                eventPublisher,
+                collectionEventPublisher,
                 new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
         );
 
@@ -201,7 +200,7 @@ class WinningNumberCollectionServiceTest {
 
         ArgumentCaptor<WinningNumbersCollectedEvent> eventCaptor =
                 ArgumentCaptor.forClass(WinningNumbersCollectedEvent.class);
-        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        verify(collectionEventPublisher).publish(eventCaptor.capture());
         assertThat(eventCaptor.getValue().round()).isEqualTo(1202);
         assertThat(eventCaptor.getValue().dataChanged()).isTrue();
     }

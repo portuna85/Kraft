@@ -38,7 +38,8 @@ class WinningNumberCommandServiceTest {
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-14T00:00:00Z"), ZoneId.of("Asia/Seoul"));
-        service = new WinningNumberCommandService(repository, new LottoNumberCodec(), clock);
+        service = new WinningNumberCommandService(repository, new LottoNumberCodec(), clock,
+                new WinningNumberInsertExecutor(repository));
     }
 
     private WinningNumberUpsertRequest request(List<Integer> numbers, int bonus) {

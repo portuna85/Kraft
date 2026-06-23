@@ -141,14 +141,15 @@ public class OpsService {
         }
     }
 
-    @Transactional
+    // @Transactional을 두지 않는다 — collectLatest() 내부의 외부 HTTP fetch(fetchRound)가
+    // 트랜잭션 밖에서 실행돼야 커넥션을 길게 점유하지 않는다(P1-3). 실제 저장은
+    // WinningNumberCommandService가 호출당 짧은 트랜잭션으로 처리한다.
     public WinningNumberResponse collectLatestWinningNumber(String token) {
         validateToken(token);
         log.info("운영 최신 회차 수집 요청: caller={}", callerDetail());
         return winningNumberCollectionService.collectLatest();
     }
 
-    @Transactional
     public WinningNumberResponse collectWinningNumber(String token, int round) {
         validateToken(token);
         if (round < 1) {
