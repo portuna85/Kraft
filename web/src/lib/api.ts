@@ -32,6 +32,13 @@ export type RoundFreshness = {
   checkedAt: string;
 };
 
+export type PublicIncident = {
+  round: number | null;
+  type: string;
+  resolved: boolean;
+  occurredAt: string;
+};
+
 type RequestInitWithNext = RequestInit & {
   next?: {
     revalidate?: number;
@@ -95,6 +102,12 @@ export async function getLatestWinningNumber(): Promise<WinningNumber> {
 
 export async function getRoundFreshness(): Promise<RoundFreshness> {
   return fetchJson<RoundFreshness>("/api/v1/rounds/freshness", {
+    next: { revalidate: 60 }
+  });
+}
+
+export async function getPublicIncidents(): Promise<PublicIncident[]> {
+  return fetchJson<PublicIncident[]>("/api/v1/status/incidents", {
     next: { revalidate: 60 }
   });
 }

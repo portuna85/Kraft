@@ -4,6 +4,7 @@ const infoLinks = [
   { href: "/info/data-source", label: "데이터 출처" },
   { href: "/info/methodology", label: "분석 기준" },
   { href: "/info/faq", label: "FAQ" },
+  { href: "/status", label: "서비스 상태" },
   { href: "/info/privacy", label: "개인정보처리방침" },
   { href: "/info/terms", label: "이용약관" },
   { href: "/info/responsible-play", label: "건전한 이용" },

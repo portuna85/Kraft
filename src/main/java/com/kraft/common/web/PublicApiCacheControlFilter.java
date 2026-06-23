@@ -66,6 +66,7 @@ public class PublicApiCacheControlFilter extends OncePerRequestFilter {
                 || path.equals("/api/v1/rounds")
                 || path.equals("/api/v1/rounds/latest")
                 || path.equals("/api/v1/rounds/freshness")
+                || path.equals("/api/v1/status/incidents")
                 || isHistoricalRoundPath(path);
     }
 

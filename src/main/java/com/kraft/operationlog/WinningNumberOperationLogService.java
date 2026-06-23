@@ -5,6 +5,7 @@ import jakarta.persistence.criteria.Predicate;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.MDC;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -15,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class WinningNumberOperationLogService {
+
+    private static final int PUBLIC_INCIDENT_WINDOW_DAYS = 30;
+    private static final int PUBLIC_INCIDENT_MAX = 20;
 
     private final WinningNumberOperationLogRepository repository;
     private final Clock clock;
@@ -88,6 +92,38 @@ public class WinningNumberOperationLogService {
                 result.getTotalElements(),
                 result.getTotalPages()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PublicIncidentResponse> getPublicIncidents() {
+        OffsetDateTime since = OffsetDateTime.now(clock).minusDays(PUBLIC_INCIDENT_WINDOW_DAYS);
+        return repository.findNotableSince(since).stream()
+                .limit(PUBLIC_INCIDENT_MAX)
+                .map(log -> new PublicIncidentResponse(
+                        log.getRound(),
+                        describe(log),
+                        isResolved(log),
+                        log.getCreatedAt()
+                ))
+                .toList();
+    }
+
+    private String describe(WinningNumberOperationLog log) {
+        boolean failed = log.getExecutionStatus() == WinningNumberOperationStatus.FAILURE;
+        return switch (log.getOperationType()) {
+            case EXTERNAL_COLLECT -> failed ? "자동 수집 지연" : "자동 수집";
+            case MANUAL_UPSERT -> failed ? "수동 보정 실패" : "데이터 수동 보정";
+        };
+    }
+
+    private boolean isResolved(WinningNumberOperationLog log) {
+        if (log.getExecutionStatus() == WinningNumberOperationStatus.SUCCESS) {
+            return true;
+        }
+        if (log.getRound() == null) {
+            return false;
+        }
+        return repository.existsSuccessForRoundAfter(log.getRound(), log.getCreatedAt());
     }
 
     private String truncate(String value, int maxLength) {
