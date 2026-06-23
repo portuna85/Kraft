@@ -51,11 +51,6 @@ www.{$KRAFT_DOMAIN} {
 	encode zstd gzip
 
 	route {
-		# 관리자 도메인 IP 제한. KRAFT_ADMIN_ALLOWED_CIDR을 비워두면 기존처럼 전체 허용(0.0.0.0/0 ::/0).
-		# VPN/고정 IP가 준비되면 해당 CIDR로 채워 심층 방어를 적용한다.
-		@not_allowed not remote_ip {$KRAFT_ADMIN_ALLOWED_CIDR:0.0.0.0/0 ::/0}
-		respond @not_allowed 403
-
 		@blocked path /actuator*
 		respond @blocked 403
 
