@@ -9,11 +9,13 @@ import logger from "@/lib/logger";
 
 export const revalidate = 60;
 
+// 루트 레이아웃의 title.template("%s | KRAFT Lotto")은 "/" 페이지에는 적용되지 않으므로
+// (검증됨: 다른 페이지는 템플릿이 적용되지만 홈은 적용 안 됨) 접미사를 직접 포함해야 한다.
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const latest = await getLatestWinningNumber();
     return {
-      title: `${latest.round}회 로또 당첨번호 (${latest.drawDate})`,
+      title: `${latest.round}회 로또 당첨번호 (${latest.drawDate}) | KRAFT Lotto`,
       description: `${latest.round}회 로또 6/45 당첨 번호 ${[...latest.numbers].join(", ")} 보너스 ${latest.bonusNumber}. 당첨 결과 조회와 번호 추천을 제공합니다.`,
       alternates: { canonical: "/" },
       openGraph: {
@@ -24,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch {
     return {
-      title: "로또 6/45 결과와 번호 추천",
+      title: "KRAFT Lotto | 로또 6/45 결과와 번호 추천",
       description: "로또 6/45 최신 당첨 번호 조회, 회차 검색, 번호 추천, 통계 분석 기능을 제공합니다.",
       alternates: { canonical: "/" },
     };
