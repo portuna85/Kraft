@@ -109,13 +109,14 @@ export function FrequencyFilterClient({ initial }: Props) {
 
   return (
     <>
-      <div className="freq-filter-tabs" role="tablist" aria-label="조회 기간">
+      {/* 탭 전환 시 별도 tabpanel이 아니라 같은 영역의 내용만 갱신되므로
+          tablist/tab 대신 단순 토글 버튼 그룹(aria-pressed)으로 표현한다. */}
+      <div className="freq-filter-tabs" role="group" aria-label="조회 기간">
         {FILTERS.map(({ label, value }) => (
           <button
             key={label}
-            role="tab"
             type="button"
-            aria-selected={activeLimit === value}
+            aria-pressed={activeLimit === value}
             disabled={isPending}
             onClick={() => applyFilter(value)}
             className={`freq-filter-tab${activeLimit === value ? " active" : ""}`}
