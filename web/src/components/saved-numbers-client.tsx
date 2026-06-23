@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
 import { validateLottoNumbers } from "@/lib/lotto-validation";
+import type { WinningNumber } from "@/lib/api";
 
 type SavedNumber = {
   id: number;
@@ -15,13 +16,29 @@ type SavedNumber = {
 };
 
 const UNDO_WINDOW_MS = 5000;
+const PRIZE_RANK_BY_MATCH: Record<number, string> = {
+  6: "1등",
+  5: "3등",
+  4: "4등",
+  3: "5등",
+};
 
 function sortByCreatedAtDesc(items: SavedNumber[]): SavedNumber[] {
   return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+function matchResult(numbers: number[], latest: WinningNumber): { matchCount: number; rank: string | null } {
+  const matchCount = numbers.filter((value) => latest.numbers.includes(value)).length;
+  const bonusMatch = numbers.includes(latest.bonusNumber);
+  if (matchCount === 5 && bonusMatch) {
+    return { matchCount, rank: "2등" };
+  }
+  return { matchCount, rank: PRIZE_RANK_BY_MATCH[matchCount] ?? null };
+}
+
 export function SavedNumbersClient() {
   const [items, setItems] = useState<SavedNumber[]>([]);
+  const [latest, setLatest] = useState<WinningNumber | null>(null);
   const [label, setLabel] = useState("");
   const [numbers, setNumbers] = useState("");
   const [message, setMessage] = useState("");
@@ -44,9 +61,20 @@ export function SavedNumbersClient() {
     setItems(payload);
   }
 
+  async function loadLatest() {
+    try {
+      const response = await fetch("/api/v1/rounds/latest");
+      if (!response.ok) return;
+      setLatest((await response.json()) as WinningNumber);
+    } catch {
+      // 최신 회차 대조는 부가 정보이므로 실패해도 저장 목록 표시에는 영향 없음.
+    }
+  }
+
   useEffect(() => {
     startTransition(() => {
       loadSavedNumbers().catch((error: Error) => setMessage(error.message));
+      loadLatest();
     });
   }, []);
 
@@ -169,18 +197,34 @@ export function SavedNumbersClient() {
         </p>
       ) : null}
 
+      {latest ? (
+        <p className="muted saved-latest-note">
+          {latest.round}회 당첨 결과와 자동으로 대조합니다.
+        </p>
+      ) : null}
+
       <ul className="saved-list">
-        {items.map((item) => (
-          <li key={item.id} className="saved-item">
-            <div className="saved-item-body">
-              <LottoBalls numbers={item.numbers} />
-              <p className="muted">{item.label ?? "메모 없음"}</p>
-            </div>
-            <button type="button" className="secondary" onClick={() => handleDelete(item)}>
-              삭제
-            </button>
-          </li>
-        ))}
+        {items.map((item) => {
+          const currentLatest = latest;
+          const result = currentLatest ? matchResult(item.numbers, currentLatest) : null;
+          return (
+            <li key={item.id} className="saved-item">
+              <div className="saved-item-body">
+                <LottoBalls numbers={item.numbers} />
+                <p className="muted">{item.label ?? "메모 없음"}</p>
+                {result && currentLatest ? (
+                  <p className={`saved-match${result.rank ? " saved-match-win" : ""}`} role="status">
+                    {currentLatest.round}회 기준 {result.matchCount}개 일치
+                    {result.rank ? ` · ${result.rank}` : ""}
+                  </p>
+                ) : null}
+              </div>
+              <button type="button" className="secondary" onClick={() => handleDelete(item)}>
+                삭제
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

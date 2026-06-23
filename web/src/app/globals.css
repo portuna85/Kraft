@@ -1803,6 +1803,21 @@ body {
   margin: 0;
 }
 
+.saved-latest-note {
+  margin: 8px 0 0;
+}
+
+.saved-match {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.saved-match-win {
+  font-weight: 700;
+  color: var(--accent, #c94f24);
+}
+
 .recommend-card {
   gap: 16px;
 }
