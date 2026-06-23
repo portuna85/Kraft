@@ -151,6 +151,7 @@ services:
     environment:
       KRAFT_DOMAIN: ${KRAFT_DOMAIN}
       KRAFT_ADMIN_DOMAIN: ${KRAFT_ADMIN_DOMAIN}
+      KRAFT_ADMIN_ALLOWED_CIDR: ${KRAFT_ADMIN_ALLOWED_CIDR:-}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
