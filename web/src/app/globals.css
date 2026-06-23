@@ -1689,6 +1689,12 @@ input:focus-visible {
   .nav-desktop { display: none; }
   .nav-toggle  { display: flex; }
 
+  /* 실제 메뉴 리스트를 감싸는 wrapper. 900px 이하에서 토글 버튼이 나타나므로
+     같은 구간에서 wrapper도 노출해야 함(아래 639px 구간은 별도 좁은 화면용 스타일을 덮어씀). */
+  .nav-mobile-wrap {
+    display: block;
+  }
+
   /* full-width drawer below sticky header */
   .nav-backdrop {
     display: block;
