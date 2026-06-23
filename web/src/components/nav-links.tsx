@@ -4,18 +4,24 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// 과거 패턴/동반/분석은 mobileOnlyLinks로 분리되어 데스크톱에서 보이지 않았다.
-// 통계 페이지 발견성을 위해 데스크톱/모바일 모두 동일한 링크 목록을 노출한다.
 const primaryLinks = [
   { href: "/", label: "홈" },
   { href: "/rounds", label: "회차 결과" },
   { href: "/recommend", label: "번호 추천" },
   { href: "/saved", label: "저장 번호" },
+];
+
+// 통계 3종 + 번호 분석은 데스크톱에서 "통계" 드롭다운으로 묶는다. 발견성을 위해
+// 모바일 전체 메뉴에는 그대로 펼쳐서 노출하고, 링크는 항상 실제 <a href>로
+// 렌더링해 드롭다운이 닫혀 있어도 크롤 가능성을 유지한다.
+const statsLinks = [
   { href: "/frequency", label: "출현 통계" },
   { href: "/stats", label: "패턴 통계" },
   { href: "/companion", label: "동반 출현" },
   { href: "/analysis", label: "번호 분석" },
 ];
+
+const allLinks = [...primaryLinks, ...statsLinks];
 
 function isCurrent(href: string, pathname: string): boolean {
   if (href === "/") return pathname === "/";
@@ -25,13 +31,40 @@ function isCurrent(href: string, pathname: string): boolean {
 export function NavLinks() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const mobileNavRef = useRef<HTMLElement>(null);
+  const statsGroupRef = useRef<HTMLDivElement>(null);
+  const statsToggleRef = useRef<HTMLButtonElement>(null);
+  const statsActive = statsLinks.some((link) => isCurrent(link.href, pathname));
 
   const closeAndReturnFocus = () => {
     setOpen(false);
     toggleRef.current?.focus();
   };
+
+  useEffect(() => {
+    if (!statsOpen) return;
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setStatsOpen(false);
+        statsToggleRef.current?.focus();
+      }
+    };
+    const onClickOutside = (event: MouseEvent) => {
+      if (!statsGroupRef.current?.contains(event.target as Node)) {
+        setStatsOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClickOutside);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onClickOutside);
+    };
+  }, [statsOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -86,7 +119,7 @@ export function NavLinks() {
     </Link>
   ));
 
-  const mobileItems = primaryLinks.map((link) => (
+  const mobileItems = allLinks.map((link) => (
     <Link
       key={link.href}
       href={link.href}
@@ -101,6 +134,32 @@ export function NavLinks() {
     <>
       <nav className="nav nav-desktop" aria-label="주요 메뉴">
         {desktopItems}
+
+        <div className="nav-stats-group" ref={statsGroupRef}>
+          <button
+            ref={statsToggleRef}
+            type="button"
+            className={`nav-stats-toggle${statsActive ? " active" : ""}`}
+            aria-expanded={statsOpen}
+            aria-controls="nav-stats-menu"
+            aria-current={statsActive ? "page" : undefined}
+            onClick={() => setStatsOpen((value) => !value)}
+          >
+            통계
+          </button>
+          <div id="nav-stats-menu" className={`nav-stats-menu${statsOpen ? " open" : ""}`}>
+            {statsLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setStatsOpen(false)}
+                aria-current={isCurrent(link.href, pathname) ? "page" : undefined}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
       </nav>
 
       <button

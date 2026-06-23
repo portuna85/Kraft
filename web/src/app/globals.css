@@ -205,6 +205,57 @@ a {
   color: var(--accent-strong);
 }
 
+.nav-stats-group {
+  position: relative;
+}
+
+.nav-stats-toggle {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  padding: 9px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.nav-stats-toggle:hover,
+.nav-stats-toggle[aria-expanded="true"] {
+  color: var(--text);
+  background: var(--surface-card);
+}
+
+.nav-stats-toggle.active {
+  color: var(--text);
+  font-weight: 700;
+  background: var(--nav-active-bg);
+}
+
+.nav-stats-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+}
+
+.nav-stats-menu.open {
+  display: flex;
+}
+
+.nav-stats-menu a {
+  padding: 9px 12px;
+  border-radius: 8px;
+}
+
 /* hamburger button — hidden on desktop */
 .nav-toggle {
   display: none;
