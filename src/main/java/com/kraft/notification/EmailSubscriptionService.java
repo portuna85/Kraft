@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
@@ -37,11 +38,11 @@ public class EmailSubscriptionService {
     private String mailFrom;
 
     public EmailSubscriptionService(EmailSubscriptionRepository repository,
-                                    JavaMailSender mailSender,
+                                    ObjectProvider<JavaMailSender> mailSenderProvider,
                                     TemplateEngine templateEngine,
                                     Clock clock) {
         this.repository = repository;
-        this.mailSender = mailSender;
+        this.mailSender = mailSenderProvider.getIfAvailable();
         this.templateEngine = templateEngine;
         this.clock = clock;
     }
@@ -105,6 +106,11 @@ public class EmailSubscriptionService {
     }
 
     private void sendVerificationEmail(String to, String verificationToken) {
+        if (mailSender == null) {
+            log.warn("메일 서버 미설정 — 인증 이메일 발송 건너뜀: to={}", to);
+            return;
+        }
+
         String verifyUrl = publicBaseUrl + "/api/v1/notifications/email/verify?token=" + verificationToken;
 
         Context ctx = new Context();
@@ -129,6 +135,10 @@ public class EmailSubscriptionService {
     }
 
     public void sendDrawNotificationEmail(EmailSubscription sub, DrawNotificationContext ctx) {
+        if (mailSender == null) {
+            log.warn("메일 서버 미설정 — 추첨 결과 이메일 발송 건너뜀: to={}", sub.getEmail());
+            return;
+        }
         Context thymeleafCtx = new Context();
         thymeleafCtx.setVariable("round", ctx.round());
         thymeleafCtx.setVariable("drawDate", ctx.drawDate());
