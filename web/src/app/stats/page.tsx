@@ -5,7 +5,7 @@ import logger from "@/lib/logger";
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "패턴 통계 | KRAFT Lotto",
+  title: "패턴 통계",
   description: "로또 6/45 당첨 번호의 홀짝 비율, 고저 분포, 합계 구간별 빈도를 확인할 수 있습니다.",
   alternates: { canonical: "/stats" },
 };

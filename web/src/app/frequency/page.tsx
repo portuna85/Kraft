@@ -6,7 +6,7 @@ import logger from "@/lib/logger";
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "출현 통계 | KRAFT Lotto",
+  title: "출현 통계",
   description: "로또 6/45 모든 회차를 기준으로 번호별 출현 횟수와 비율을 확인할 수 있습니다.",
   alternates: { canonical: "/frequency" },
 };

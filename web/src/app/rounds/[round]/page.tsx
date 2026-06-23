@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { LottoBalls } from "@/components/lotto-balls";
 import { PrizeTable } from "@/components/prize-table";
 import { JsonLdLottoRound } from "@/components/json-ld";
-import { getLatestWinningNumber, getPublicBaseUrl, getRound } from "@/lib/api";
+import { analyzeNumbers, getLatestWinningNumber, getPublicBaseUrl, getRound, type AnalysisResponse } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 
 export const revalidate = 3600;
@@ -59,6 +59,8 @@ export default async function RoundDetailPage({ params }: Props) {
   const data = await getRound(roundNumber).catch(() => null);
   if (!data) notFound();
 
+  const analysis = await analyzeNumbers(data.numbers).catch(() => null);
+
   const hasPrev = data.round > 1;
   const hasNext = latestRound > 0 ? data.round < latestRound : false;
   const nonce = (await headers()).get("x-nonce") ?? undefined;
@@ -66,7 +68,13 @@ export default async function RoundDetailPage({ params }: Props) {
 
   return (
     <section className="panel">
-      <JsonLdLottoRound baseUrl={baseUrl} round={data.round} drawDate={data.drawDate} nonce={nonce} />
+      <JsonLdLottoRound
+        baseUrl={baseUrl}
+        round={data.round}
+        drawDate={data.drawDate}
+        nonce={nonce}
+        analysis={analysis}
+      />
       <p className="eyebrow">회차 상세</p>
       <h1 className="page-title">{data.round}회 당첨 결과</h1>
       <p className="page-subtitle">{formatDrawDate(data.drawDate)}</p>
@@ -83,6 +91,8 @@ export default async function RoundDetailPage({ params }: Props) {
           <p className="round-detail-value">{formatCurrency(data.totalSales)}</p>
         </div>
       </div>
+
+      {analysis ? <RoundAnalysisSection analysis={analysis} /> : null}
 
       <nav className="round-nav" aria-label="회차 이동">
         {hasPrev ? (
@@ -106,5 +116,51 @@ export default async function RoundDetailPage({ params }: Props) {
         )}
       </nav>
     </section>
+  );
+}
+
+function RoundAnalysisSection({ analysis }: { analysis: AnalysisResponse }) {
+  return (
+    <div className="analysis-result">
+      <h2 className="section-title">당첨 번호 분석</h2>
+
+      <div className="result-grid">
+        <div className="result-cell">
+          <span className="result-label">홀수 / 짝수</span>
+          <span className="result-value">{analysis.oddCount} / {analysis.evenCount}</span>
+        </div>
+        <div className="result-cell">
+          <span className="result-label">저번호 / 고번호</span>
+          <span className="result-value">{analysis.lowCount} / {analysis.highCount}</span>
+        </div>
+        <div className="result-cell">
+          <span className="result-label">합계</span>
+          <span className="result-value">{analysis.sumOfNumbers}</span>
+          <span className="result-sub">{analysis.sumBucket} 구간</span>
+        </div>
+        <div className="result-cell">
+          <span className="result-label">연속 번호</span>
+          <span className="result-value">{analysis.consecutivePairCount}쌍</span>
+        </div>
+      </div>
+
+      <div>
+        <p className="section-title analysis-section-title">구간 분포</p>
+        <ul className="range-dist-list">
+          {analysis.rangeDistribution.map((range) => (
+            <li key={range.range} className="range-dist-item">
+              <span className="range-label">{range.range}</span>
+              <div className="bar-track">
+                <div
+                  className="bar-fill"
+                  style={{ width: `${Math.round((range.count / 6) * 100)}%` }}
+                />
+              </div>
+              <span className="range-count">{range.count}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }

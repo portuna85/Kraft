@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     const latest = await getLatestWinningNumber();
     return {
-      title: `${latest.round}회 로또 당첨번호 (${latest.drawDate}) | KRAFT Lotto`,
+      title: `${latest.round}회 로또 당첨번호 (${latest.drawDate})`,
       description: `${latest.round}회 로또 6/45 당첨 번호 ${[...latest.numbers].join(", ")} 보너스 ${latest.bonusNumber}. 당첨 결과 조회와 번호 추천을 제공합니다.`,
       alternates: { canonical: "/" },
       openGraph: {
@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   } catch {
     return {
-      title: "KRAFT Lotto | 로또 6/45 결과와 번호 추천",
+      title: "로또 6/45 결과와 번호 추천",
       description: "로또 6/45 최신 당첨 번호 조회, 회차 검색, 번호 추천, 통계 분석 기능을 제공합니다.",
       alternates: { canonical: "/" },
     };

@@ -6,7 +6,7 @@ import logger from "@/lib/logger";
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "동반 출현 | KRAFT Lotto",
+  title: "동반 출현",
   description: "로또 6/45에서 함께 자주 나온 번호 조합을 분석해 동반 출현 통계를 제공합니다.",
   alternates: { canonical: "/companion" },
 };

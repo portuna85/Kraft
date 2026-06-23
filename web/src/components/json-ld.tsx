@@ -1,4 +1,5 @@
 import { buildWebsiteJsonLd } from "@/lib/csp-inline-scripts";
+import type { AnalysisResponse } from "@/lib/api";
 
 type JsonLdWebSiteProps = {
   baseUrl: string;
@@ -23,9 +24,10 @@ type JsonLdLottoRoundProps = {
   nonce?: string;
   /** 이 스키마가 설명하는 실제 페이지 URL. 기본값은 회차 상세 페이지(/rounds/{round}). */
   pageUrl?: string;
+  analysis?: AnalysisResponse | null;
 };
 
-export function JsonLdLottoRound({ baseUrl, round, drawDate, nonce, pageUrl }: JsonLdLottoRoundProps) {
+export function JsonLdLottoRound({ baseUrl, round, drawDate, nonce, pageUrl, analysis }: JsonLdLottoRoundProps) {
   const url = pageUrl ?? `${baseUrl}/rounds/${round}`;
   const breadcrumbItems = [
     { "@type": "ListItem", position: 1, name: "홈", item: baseUrl },
@@ -34,13 +36,17 @@ export function JsonLdLottoRound({ baseUrl, round, drawDate, nonce, pageUrl }: J
   if (url !== `${baseUrl}/rounds`) {
     breadcrumbItems.push({ "@type": "ListItem", position: 3, name: `제${round}회`, item: url });
   }
+  const baseDescription = `제${round}회 로또 당첨 번호, 보너스 번호, 추첨일과 회차 정보를 확인할 수 있습니다.`;
+  const description = analysis
+    ? `${baseDescription} 홀수 ${analysis.oddCount}개·짝수 ${analysis.evenCount}개, 번호 합계 ${analysis.sumOfNumbers}(${analysis.sumBucket} 구간).`
+    : baseDescription;
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "@id": url,
     url,
     name: `제${round}회 로또 당첨번호 (${drawDate})`,
-    description: `제${round}회 로또 당첨 번호, 보너스 번호, 추첨일과 회차 정보를 확인할 수 있습니다.`,
+    description,
     inLanguage: "ko-KR",
     isPartOf: { "@id": `${baseUrl}/#website` },
     breadcrumb: {
