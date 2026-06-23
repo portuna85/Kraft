@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getPatternStats, type PatternBucket } from "@/lib/api";
+import logger from "@/lib/logger";
 
 export const revalidate = 1800;
 
@@ -52,7 +53,20 @@ function PatternSection({
 }
 
 export default async function StatsPage() {
-  const stats = await getPatternStats();
+  const stats = await getPatternStats().catch((error) => {
+    logger.warn({ err: error }, "패턴 통계 조회 실패");
+    return null;
+  });
+
+  if (!stats) {
+    return (
+      <section className="panel">
+        <p className="eyebrow">패턴 통계</p>
+        <h1 className="page-title">통계를 준비 중입니다</h1>
+        <p className="page-subtitle">잠시 후 다시 확인해 주세요.</p>
+      </section>
+    );
+  }
 
   return (
     <section className="panel">

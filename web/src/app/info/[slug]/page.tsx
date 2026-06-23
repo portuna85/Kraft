@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { FAQ_ITEMS, buildFaqPageJsonLd } from "@/lib/csp-inline-scripts";
-
-export const dynamic = "force-static";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -105,11 +104,6 @@ const infoPages: Record<string, InfoPage> = {
     description: "추천 번호, 저장함, 데이터 반영 시점 등 자주 묻는 질문을 모았습니다.",
     content: (
       <article className="info-article">
-        <script
-          type="application/ld+json"
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqPageJsonLd()) }}
-        />
         {FAQ_ITEMS.map((item) => (
           <div className="faq-item" key={item.question}>
             <h3>{item.question}</h3>
@@ -307,12 +301,21 @@ export default async function InfoPage({ params }: Props) {
   const { slug } = await params;
   const info = infoPages[slug];
   if (!info) notFound();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <section className="panel">
       <p className="eyebrow">서비스 안내</p>
       <h1 className="page-title">{info.title}</h1>
       <p className="page-subtitle">{info.description}</p>
+      {slug === "faq" ? (
+        <script
+          type="application/ld+json"
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqPageJsonLd()) }}
+        />
+      ) : null}
       {info.content}
     </section>
   );

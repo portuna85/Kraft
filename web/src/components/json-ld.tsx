@@ -2,12 +2,14 @@ import { buildWebsiteJsonLd } from "@/lib/csp-inline-scripts";
 
 type JsonLdWebSiteProps = {
   baseUrl: string;
+  nonce?: string;
 };
 
-export function JsonLdWebSite({ baseUrl }: JsonLdWebSiteProps) {
+export function JsonLdWebSite({ baseUrl, nonce }: JsonLdWebSiteProps) {
   return (
     <script
       type="application/ld+json"
+      nonce={nonce}
       suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: JSON.stringify(buildWebsiteJsonLd(baseUrl)) }}
     />

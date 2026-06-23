@@ -52,6 +52,12 @@ node_modules/
 .next/
 *.tsbuildinfo
 
+### Playwright ###
+web/test-results/
+web/playwright-report/
+web/blob-report/
+web/playwright/.cache/
+
 ### Generated infra configs (rendered from .tmpl at deploy time) ###
 infra/alertmanager/alertmanager.yml
 

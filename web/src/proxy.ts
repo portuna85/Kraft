@@ -1,48 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { THEME_INIT_SCRIPT, buildWebsiteJsonLd, buildFaqPageJsonLd } from "@/lib/csp-inline-scripts";
 
 const opsAllowedHost = process.env.KRAFT_OPS_ALLOWED_HOST;
-const publicBaseUrl = process.env.KRAFT_PUBLIC_BASE_URL ?? "http://localhost";
 
-// 루트 레이아웃의 두 인라인 스크립트(테마 초기화, WebSite JSON-LD)는 배포 수명 동안
-// 내용이 고정이므로 nonce 대신 sha256 해시로 허용한다. 매 요청 nonce 발급을 없애야
-// ISR/force-static 페이지가 동적 렌더링으로 강제되지 않는다.
-let staticScriptHashesPromise: Promise<string[]> | null = null;
-
-async function sha256Base64(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return Buffer.from(digest).toString("base64");
-}
-
-function getStaticScriptHashes(): Promise<string[]> {
-  if (!staticScriptHashesPromise) {
-    staticScriptHashesPromise = Promise.all([
-      sha256Base64(THEME_INIT_SCRIPT),
-      sha256Base64(JSON.stringify(buildWebsiteJsonLd(publicBaseUrl))),
-      sha256Base64(JSON.stringify(buildFaqPageJsonLd())),
-    ]);
-  }
-  return staticScriptHashesPromise;
-}
-
+// Next.js App Router는 CSP에 nonce가 있을 때만 자신이 스트리밍하는 RSC
+// 하이드레이션용 inline script에도 그 nonce를 자동으로 붙여준다(공식 문서 패턴).
+// sha256 해시만으로는 우리가 작성한 inline script(테마 초기화, JSON-LD)는 허용되지만
+// Next가 내부적으로 주입하는, 페이지마다 내용이 달라지는 RSC 스크립트는 허용할 수 없어
+// 모든 페이지에서 하이드레이션이 CSP에 막힌다(실측: /recommend, /saved 등에서 확인).
+// 그래서 nonce는 전 경로에 매 요청 발급한다 — ISR/force-static 회복은 보류.
 function generateNonce(): string {
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);
   return Buffer.from(array).toString("base64");
 }
 
-function buildCsp(staticHashes: string[], nonce?: string): string {
+function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV !== "production";
-  const scriptSources = staticHashes.map((hash) => `'sha256-${hash}'`);
-  if (nonce) {
-    scriptSources.push(`'nonce-${nonce}'`);
-  }
-  if (isDev) {
-    scriptSources.push("'unsafe-eval'");
-  }
   return [
     `default-src 'self'`,
-    `script-src 'self' ${scriptSources.join(" ")}`,
+    `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data:`,
     `font-src 'self'`,
@@ -54,7 +30,7 @@ function buildCsp(staticHashes: string[], nonce?: string): string {
   ].join("; ");
 }
 
-export async function proxy(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (pathname.startsWith("/ops")) {
@@ -67,25 +43,15 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  const staticHashes = await getStaticScriptHashes();
-
-  // /rounds, /rounds/[round]만 회차별로 내용이 달라지는 JSON-LD를 인라인 렌더링하므로
-  // 이 경로에서만 per-request nonce를 발급한다. 다른 경로는 정적 해시만으로 충분해
-  // 페이지 트리에서 headers()를 호출하지 않아도 되고, 그 결과 ISR/정적 캐시가 살아난다.
-  const needsNonce = pathname === "/rounds" || pathname.startsWith("/rounds/");
-  const nonce = needsNonce ? generateNonce() : undefined;
-  const csp = buildCsp(staticHashes, nonce);
+  const nonce = generateNonce();
+  const csp = buildCsp(nonce);
 
   const requestHeaders = new Headers(req.headers);
-  if (nonce) {
-    requestHeaders.set("x-nonce", nonce);
-  }
+  requestHeaders.set("x-nonce", nonce);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", csp);
-  if (nonce) {
-    response.headers.set("x-nonce", nonce);
-  }
+  response.headers.set("x-nonce", nonce);
 
   return response;
 }
