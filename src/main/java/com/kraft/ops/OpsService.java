@@ -71,7 +71,7 @@ public class OpsService {
                         latest.getRound(),
                         latest.getDrawDate().toString(),
                         now,
-                        isFresh(latest.getDrawDate(), now)
+                        drawScheduleCalculator.isFresh(latest.getDrawDate(), now)
                 ))
                 .orElseGet(() -> new OpsSummaryResponse(
                         "kraft-lotto",
@@ -175,11 +175,6 @@ public class OpsService {
                 token.getBytes(StandardCharsets.UTF_8))) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "OPS_UNAUTHORIZED", "운영 API 인증에 실패했습니다.");
         }
-    }
-
-    private boolean isFresh(LocalDate latestDrawDate, ZonedDateTime now) {
-        LocalDate expected = drawScheduleCalculator.expectedLatestDrawDate(now);
-        return !latestDrawDate.isBefore(expected);
     }
 
     private WinningNumberOperationType parseOperationType(String value) {

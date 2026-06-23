@@ -25,6 +25,13 @@ export type RecommendationResponse = {
   recommendations: number[][];
 };
 
+export type RoundFreshness = {
+  latestRound: number;
+  latestDrawDate: string;
+  fresh: boolean;
+  checkedAt: string;
+};
+
 type RequestInitWithNext = RequestInit & {
   next?: {
     revalidate?: number;
@@ -82,6 +89,12 @@ export function getPublicBaseUrl(): string {
 
 export async function getLatestWinningNumber(): Promise<WinningNumber> {
   return fetchJson<WinningNumber>("/api/v1/rounds/latest", {
+    next: { revalidate: 60 }
+  });
+}
+
+export async function getRoundFreshness(): Promise<RoundFreshness> {
+  return fetchJson<RoundFreshness>("/api/v1/rounds/freshness", {
     next: { revalidate: 60 }
   });
 }

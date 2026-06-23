@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LottoBalls } from "@/components/lotto-balls";
 import { PrizeTable } from "@/components/prize-table";
+import { DataFreshnessNote } from "@/components/data-freshness-note";
 import { getLatestWinningNumber, type WinningNumber } from "@/lib/api";
 import { formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
@@ -49,6 +50,7 @@ export default async function HomePage() {
           </h1>
           <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
           <PrizeTable firstPrizeAmount={latest.firstPrizeAmount} secondPrize={latest.secondPrize} />
+          <DataFreshnessNote />
         </section>
       ) : (
         <section className="panel result-panel hero-panel">

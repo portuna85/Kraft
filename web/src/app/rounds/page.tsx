@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { LottoBalls } from "@/components/lotto-balls";
 import { PrizeTable } from "@/components/prize-table";
 import { RoundSearchForm } from "@/components/round-search-form";
+import { DataFreshnessNote } from "@/components/data-freshness-note";
 import { JsonLdLottoRound } from "@/components/json-ld";
 import { getLatestWinningNumber, getPublicBaseUrl, getRounds, type WinningNumber } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
@@ -91,6 +92,7 @@ export default async function RoundsPage({ searchParams }: Props) {
           </h1>
           <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
           <PrizeTable firstPrizeAmount={latest.firstPrizeAmount} secondPrize={latest.secondPrize} />
+          <DataFreshnessNote />
         </section>
       ) : (
         <section className="panel result-panel hero-panel">

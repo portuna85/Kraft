@@ -1,6 +1,9 @@
 package com.kraft.winningnumber;
 
 import com.kraft.common.error.ApiException;
+import java.time.Clock;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,10 +15,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class WinningNumberQueryService {
 
-    private final WinningNumberRepository winningNumberRepository;
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
-    public WinningNumberQueryService(WinningNumberRepository winningNumberRepository) {
+    private final WinningNumberRepository winningNumberRepository;
+    private final LottoDrawScheduleCalculator drawScheduleCalculator;
+    private final Clock clock;
+
+    public WinningNumberQueryService(WinningNumberRepository winningNumberRepository,
+                                     LottoDrawScheduleCalculator drawScheduleCalculator,
+                                     Clock clock) {
         this.winningNumberRepository = winningNumberRepository;
+        this.drawScheduleCalculator = drawScheduleCalculator;
+        this.clock = clock;
     }
 
     public WinningNumberResponse getLatest() {
@@ -32,6 +43,18 @@ public class WinningNumberQueryService {
         return winningNumberRepository.findByRound(round)
                 .map(WinningNumberResponse::from)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ROUND_NOT_FOUND", round + "회차 정보를 찾을 수 없습니다."));
+    }
+
+    public RoundFreshnessResponse getFreshness() {
+        ZonedDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(KST);
+        return winningNumberRepository.findTopByOrderByRoundDesc()
+                .map(latest -> new RoundFreshnessResponse(
+                        latest.getRound(),
+                        latest.getDrawDate(),
+                        drawScheduleCalculator.isFresh(latest.getDrawDate(), now),
+                        now
+                ))
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ROUND_NOT_FOUND", "당첨 번호 데이터가 없습니다."));
     }
 
     public WinningNumberListResponse list(int page, int size) {

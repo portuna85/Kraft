@@ -30,6 +30,13 @@ public class RoundsApiController {
                 .body(winningNumberQueryService.getLatest());
     }
 
+    @GetMapping("/freshness")
+    public ResponseEntity<RoundFreshnessResponse> freshness() {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS).cachePublic())
+                .body(winningNumberQueryService.getFreshness());
+    }
+
     @GetMapping
     public WinningNumberListResponse list(@RequestParam(defaultValue = "0") @Min(0) int page,
                                           @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {

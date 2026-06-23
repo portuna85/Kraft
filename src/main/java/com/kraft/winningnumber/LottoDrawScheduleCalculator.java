@@ -26,4 +26,8 @@ public class LottoDrawScheduleCalculator {
                 || (today.isEqual(saturday) && nowKst.toLocalTime().isBefore(DRAW_CUTOFF));
         return beforeThisWeeksDraw ? saturday.minusWeeks(1) : saturday;
     }
+
+    public boolean isFresh(LocalDate latestDrawDate, ZonedDateTime nowKst) {
+        return !latestDrawDate.isBefore(expectedLatestDrawDate(nowKst));
+    }
 }
