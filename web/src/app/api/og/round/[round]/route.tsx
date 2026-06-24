@@ -40,12 +40,12 @@ export async function GET(
   { params }: { params: Promise<{ round: string }> },
 ) {
   const { round } = await params;
-  const url = new URL(req.url);
+  const { searchParams } = req.nextUrl;
 
-  const ballsParam = url.searchParams.get("b");
-  const bonusParam = url.searchParams.get("bo");
-  const dateParam = url.searchParams.get("d");
-  const prizeParam = url.searchParams.get("p");
+  const ballsParam = searchParams.get("b");
+  const bonusParam = searchParams.get("bo");
+  const dateParam = searchParams.get("d");
+  const prizeParam = searchParams.get("p");
 
   const numbers = ballsParam ? ballsParam.split(",").map(Number).filter(n => n > 0 && n <= 45) : null;
   const bonusNumber = bonusParam ? Number(bonusParam) : 0;
