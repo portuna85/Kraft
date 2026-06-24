@@ -1,11 +1,12 @@
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 
+// RSC(generateMetadata)가 쿼리 파라미터로 ball 데이터를 넘기므로
+// API route에서 별도 백엔드 fetch 없이 렌더링 가능.
 export const runtime = "edge";
 
 const SIZE = { width: 1200, height: 630 };
 const BALL = 94;
-const BACKEND = process.env.KRAFT_BACKEND_INTERNAL_URL ?? "http://backend:8080";
 
 function ballColor(n: number): { bg: string; fg: string } {
   if (n <= 10) return { bg: "#f5c842", fg: "#1d1a17" };
@@ -15,7 +16,6 @@ function ballColor(n: number): { bg: string; fg: string } {
   return { bg: "#3a7d44", fg: "#ffffff" };
 }
 
-// Edge runtime은 Intl.DateTimeFormat({ timeZone }) 미지원 → Date.UTC 기반 구현
 function formatDate(value: string): string {
   const [year, month, day] = value.split("-").map(Number);
   const names = ["일", "월", "화", "수", "목", "금", "토"];
@@ -35,34 +35,27 @@ const PLACEHOLDER_BALLS = [
   { bg: "#c94f24", fg: "#ffffff" },
 ];
 
-type RoundData = {
-  round: number;
-  drawDate: string;
-  numbers: number[];
-  bonusNumber: number;
-  firstPrizeAmount: number;
-};
-
-async function fetchRound(round: number): Promise<RoundData | null> {
-  try {
-    const res = await fetch(`${BACKEND}/api/v1/rounds/${round}`, {
-      signal: AbortSignal.timeout(4000),
-    });
-    if (!res.ok) return null;
-    return res.json() as Promise<RoundData>;
-  } catch {
-    return null;
-  }
-}
-
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ round: string }> },
 ) {
   const { round } = await params;
-  const data = await fetchRound(Number(round));
+  const url = new URL(req.url);
 
-  const body = data ? (
+  const ballsParam = url.searchParams.get("b");
+  const bonusParam = url.searchParams.get("bo");
+  const dateParam = url.searchParams.get("d");
+  const prizeParam = url.searchParams.get("p");
+
+  const numbers = ballsParam ? ballsParam.split(",").map(Number).filter(n => n > 0 && n <= 45) : null;
+  const bonusNumber = bonusParam ? Number(bonusParam) : 0;
+  const drawDate = dateParam ?? "";
+  const firstPrizeAmount = prizeParam ? Number(prizeParam) : 0;
+  const roundNum = Number(round);
+
+  const hasData = numbers && numbers.length === 6 && bonusNumber > 0;
+
+  const body = hasData ? (
     <div
       style={{
         width: 1200,
@@ -85,14 +78,14 @@ export async function GET(
       </div>
 
       <div style={{ fontSize: 48, fontWeight: 800, color: "#1d1a17", letterSpacing: -1, marginBottom: 6 }}>
-        제{data.round}회 당첨 결과
+        제{roundNum}회 당첨 결과
       </div>
       <div style={{ fontSize: 22, color: "#5e564c", marginBottom: 34 }}>
-        {formatDate(data.drawDate)} 추첨
+        {drawDate ? `${formatDate(drawDate)} 추첨` : ""}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 34 }}>
-        {data.numbers.map((n) => {
+        {numbers.map((n) => {
           const { bg, fg } = ballColor(n);
           return (
             <div key={n} style={{ width: BALL, height: BALL, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", color: fg, fontSize: 32, fontWeight: 800, boxShadow: "0 6px 20px rgba(0,0,0,0.15)" }}>
@@ -101,14 +94,16 @@ export async function GET(
           );
         })}
         <div style={{ fontSize: 28, color: "#9e9086", display: "flex", alignItems: "center", justifyContent: "center", width: 32 }}>+</div>
-        <div style={{ width: BALL, height: BALL, borderRadius: "50%", background: ballColor(data.bonusNumber).bg, display: "flex", alignItems: "center", justifyContent: "center", color: ballColor(data.bonusNumber).fg, fontSize: 32, fontWeight: 800, boxShadow: "0 6px 20px rgba(0,0,0,0.15)", border: "3px dashed rgba(0,0,0,0.18)" }}>
-          {data.bonusNumber}
+        <div style={{ width: BALL, height: BALL, borderRadius: "50%", background: ballColor(bonusNumber).bg, display: "flex", alignItems: "center", justifyContent: "center", color: ballColor(bonusNumber).fg, fontSize: 32, fontWeight: 800, boxShadow: "0 6px 20px rgba(0,0,0,0.15)", border: "3px dashed rgba(0,0,0,0.18)" }}>
+          {bonusNumber}
         </div>
       </div>
 
-      <div style={{ fontSize: 24, color: "#c94f24", fontWeight: 700 }}>
-        1등 당첨금 {formatMoney(data.firstPrizeAmount)}
-      </div>
+      {firstPrizeAmount > 0 && (
+        <div style={{ fontSize: 24, color: "#c94f24", fontWeight: 700 }}>
+          1등 당첨금 {formatMoney(firstPrizeAmount)}
+        </div>
+      )}
     </div>
   ) : (
     <div

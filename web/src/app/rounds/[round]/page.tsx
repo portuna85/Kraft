@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: `${data.round}회 로또 당첨번호`,
         description: `당첨번호 ${data.numbers.join(" ")} + ${data.bonusNumber} | ${formatDrawDate(data.drawDate)}`,
         url: `/rounds/${data.round}`,
-        images: [{ url: `${baseUrl}/api/og/round/${data.round}`, width: 1200, height: 630 }],
+        images: [{ url: `${baseUrl}/api/og/round/${data.round}?b=${data.numbers.join(",")}&bo=${data.bonusNumber}&d=${data.drawDate}&p=${data.firstPrizeAmount}`, width: 1200, height: 630 }],
       },
     };
   } catch {
