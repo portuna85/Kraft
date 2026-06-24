@@ -77,10 +77,10 @@ export async function GET(
         <span style={{ fontSize: 26, fontWeight: 800, color: "#1d1a17", letterSpacing: -0.5 }}>KRAFT Lotto</span>
       </div>
 
-      <div style={{ fontSize: 48, fontWeight: 800, color: "#1d1a17", letterSpacing: -1, marginBottom: 6 }}>
+      <div style={{ display: "flex", fontSize: 48, fontWeight: 800, color: "#1d1a17", letterSpacing: -1, marginBottom: 6 }}>
         제{roundNum}회 당첨 결과
       </div>
-      <div style={{ fontSize: 22, color: "#5e564c", marginBottom: 34 }}>
+      <div style={{ display: "flex", fontSize: 22, color: "#5e564c", marginBottom: 34 }}>
         {drawDate ? `${formatDate(drawDate)} 추첨` : ""}
       </div>
 
@@ -100,7 +100,7 @@ export async function GET(
       </div>
 
       {firstPrizeAmount > 0 && (
-        <div style={{ fontSize: 24, color: "#c94f24", fontWeight: 700 }}>
+        <div style={{ display: "flex", fontSize: 24, color: "#c94f24", fontWeight: 700 }}>
           1등 당첨금 {formatMoney(firstPrizeAmount)}
         </div>
       )}
@@ -124,7 +124,7 @@ export async function GET(
         <div style={{ width: 38, height: 38, borderRadius: 10, background: "#c94f24", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 19, fontWeight: 800 }}>K</div>
         <span style={{ fontSize: 26, fontWeight: 800, color: "#1d1a17", letterSpacing: -0.5 }}>KRAFT Lotto</span>
       </div>
-      <div style={{ fontSize: 52, fontWeight: 800, color: "#1d1a17", letterSpacing: -1, marginBottom: 36 }}>
+      <div style={{ display: "flex", fontSize: 52, fontWeight: 800, color: "#1d1a17", letterSpacing: -1, marginBottom: 36 }}>
         제{round}회 당첨 결과
       </div>
       <div style={{ display: "flex", gap: 16 }}>
