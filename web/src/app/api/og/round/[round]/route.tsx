@@ -1,10 +1,11 @@
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
-import { getOgFontConfig } from "@/lib/og-font";
+import { getOgFontConfig } from "@/lib/og-font-node";
 
 // RSC(generateMetadata)가 쿼리 파라미터로 ball 데이터를 넘기므로
 // API route에서 별도 백엔드 fetch 없이 렌더링 가능.
-export const runtime = "edge";
+// Node.js 런타임 사용: 폰트를 public/fonts/에서 디스크 읽기, ImageResponse WASM 정상 동작.
+export const runtime = "nodejs";
 
 const SIZE = { width: 1200, height: 630 };
 const BALL = 94;
