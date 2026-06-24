@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FrequencyFilterClient } from "@/components/frequency-filter-client";
+import { PageAd } from "@/components/ad-unit";
 import { getFrequencyStats } from "@/lib/api";
 import logger from "@/lib/logger";
 
@@ -32,6 +33,7 @@ export default async function FrequencyPage() {
       <p className="eyebrow">출현 통계</p>
       <h1 className="page-title">번호 출현 통계</h1>
       <FrequencyFilterClient initial={stats} />
+      <PageAd slot="frequency" />
     </section>
   );
 }

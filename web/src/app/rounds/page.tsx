@@ -7,6 +7,7 @@ import { RoundSearchForm } from "@/components/round-search-form";
 import { DataFreshnessNote } from "@/components/data-freshness-note";
 import { JsonLdLottoRound } from "@/components/json-ld";
 import { getLatestWinningNumber, getPublicBaseUrl, getRounds, type WinningNumber } from "@/lib/api";
+import { PageAd } from "@/components/ad-unit";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
 
@@ -165,6 +166,8 @@ export default async function RoundsPage({ searchParams }: Props) {
           </nav>
         )}
       </section>
+
+      <PageAd slot="rounds-list" />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { LottoBalls } from "@/components/lotto-balls";
 import { PrizeTable } from "@/components/prize-table";
 import { JsonLdLottoRound } from "@/components/json-ld";
 import { analyzeNumbers, getLatestWinningNumber, getPublicBaseUrl, getRound, type AnalysisResponse } from "@/lib/api";
+import { PageAd } from "@/components/ad-unit";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 
 export const revalidate = 3600;
@@ -93,6 +94,8 @@ export default async function RoundDetailPage({ params }: Props) {
       </div>
 
       {analysis ? <RoundAnalysisSection analysis={analysis} /> : null}
+
+      <PageAd slot="rounds-detail" />
 
       <nav className="round-nav" aria-label="회차 이동">
         {hasPrev ? (

@@ -137,6 +137,17 @@ const infoPages: Record<string, InfoPage> = {
         <h2>제3자 제공</h2>
         <p>수집된 정보는 법령상 요구가 있는 경우를 제외하고 제3자에게 제공하거나 판매하지 않습니다.</p>
 
+        <h2>제3자 광고 서비스</h2>
+        <p>
+          KRAFT Lotto는 카카오 애드핏(Kakao Adfit) 광고 서비스를 사용합니다.
+          광고 제공을 위해 카카오의 스크립트가 로드되며, 카카오는 쿠키 또는 유사 기술을 사용해
+          관심 기반 광고를 제공할 수 있습니다. 수집·이용되는 정보와 거부 방법은
+          <a href="https://www.kakao.com/policy/privacy" target="_blank" rel="noopener noreferrer">
+            카카오 개인정보처리방침
+          </a>
+          을 참고하세요.
+        </p>
+
         <h2>보관 기간</h2>
         <p>
           저장 번호는 사용자가 삭제할 때까지 유지되며, 서비스 종료 시 안전하게 파기합니다.

@@ -2318,6 +2318,18 @@ body {
   }
 }
 
+/* ── Ad unit ───────────────────────────────────────────────────────────────── */
+
+.ad-unit {
+  display: flex;
+  justify-content: center;
+  min-height: 100px;
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
