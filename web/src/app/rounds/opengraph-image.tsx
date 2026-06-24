@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getLatestWinningNumber } from "@/lib/api";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
-import { getOgFontConfig } from "@/lib/og-font";
+import { getOgFontConfig } from "@/lib/og-font-node";
 
 export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
