@@ -57,6 +57,14 @@ export function buildWebsiteJsonLd(baseUrl: string) {
         name: "KRAFT Lotto",
         description: "로또 당첨 결과 조회, 추천 조합 생성, 저장 번호 관리를 제공하는 서비스입니다.",
         inLanguage: "ko-KR",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${baseUrl}/rounds/{search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
       },
       {
         "@type": "Organization",
