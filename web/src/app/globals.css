@@ -603,12 +603,6 @@ button:hover {
   letter-spacing: -0.03em;
 }
 
-.saved-form {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr auto;
-  gap: 14px;
-  align-items: end;
-}
 
 .recommend-form {
   display: grid;
@@ -654,13 +648,6 @@ button:hover {
   line-height: 1.4;
 }
 
-.saved-form label {
-  display: grid;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
 input {
   width: 100%;
   min-height: 48px;
@@ -679,8 +666,26 @@ input:focus-visible {
   box-shadow: 0 0 0 4px var(--ring);
 }
 
+.saved-delete-btn {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.saved-delete-btn:hover {
+  background: var(--surface-strong);
+  color: var(--text);
+  border-color: var(--muted);
+}
+
 .saved-list {
-  margin: 24px 0 0;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
   display: grid;
@@ -1670,7 +1675,6 @@ input:focus-visible {
 
 @media (max-width: 900px) {
   .grid-3,
-  .saved-form,
   .recommend-form,
   .ops-manual-form,
   .ops-summary-grid,
@@ -1679,8 +1683,7 @@ input:focus-visible {
     grid-template-columns: 1fr;
   }
 
-  .round-meta,
-  .saved-item {
+  .round-meta {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -1741,7 +1744,6 @@ input:focus-visible {
 
   .button,
   form button,
-  .saved-item > button,
   .ops-actions > button {
     width: 100%;
   }
@@ -1896,30 +1898,6 @@ body {
   gap: 20px;
 }
 
-.saved-item-body {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
-}
-
-.saved-item-body .muted {
-  margin: 0;
-}
-
-.saved-latest-note {
-  margin: 8px 0 0;
-}
-
-.saved-match {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--muted);
-}
-
-.saved-match-win {
-  font-weight: 700;
-  color: var(--accent, #c94f24);
-}
 
 .recommend-card {
   gap: 16px;
@@ -2038,7 +2016,6 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .saved-form,
   .analysis-form {
     grid-template-columns: minmax(0, 1fr) auto;
   }
@@ -2106,7 +2083,6 @@ body {
   }
 
   .grid-3,
-  .saved-form,
   .recommend-form,
   .ops-manual-form,
   .ops-summary-grid,
@@ -2119,7 +2095,6 @@ body {
 
   .button,
   form button,
-  .saved-item > button,
   .ops-actions > button,
   .round-card-link {
     width: 100%;

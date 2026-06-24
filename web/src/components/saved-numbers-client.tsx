@@ -1,11 +1,8 @@
 "use client";
 
-import type { FormEvent } from "react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
-import { validateLottoNumbers } from "@/lib/lotto-validation";
-import type { WinningNumber } from "@/lib/api";
 
 type SavedNumber = {
   id: number;
@@ -16,119 +13,41 @@ type SavedNumber = {
 };
 
 const UNDO_WINDOW_MS = 5000;
-const PRIZE_RANK_BY_MATCH: Record<number, string> = {
-  6: "1등",
-  5: "3등",
-  4: "4등",
-  3: "5등",
-};
 
 function sortByCreatedAtDesc(items: SavedNumber[]): SavedNumber[] {
   return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-function matchResult(numbers: number[], latest: WinningNumber): { matchCount: number; rank: string | null } {
-  const matchCount = numbers.filter((value) => latest.numbers.includes(value)).length;
-  const bonusMatch = numbers.includes(latest.bonusNumber);
-  if (matchCount === 5 && bonusMatch) {
-    return { matchCount, rank: "2등" };
-  }
-  return { matchCount, rank: PRIZE_RANK_BY_MATCH[matchCount] ?? null };
-}
-
 export function SavedNumbersClient() {
   const [items, setItems] = useState<SavedNumber[]>([]);
-  const [latest, setLatest] = useState<WinningNumber | null>(null);
-  const [label, setLabel] = useState("");
-  const [numbers, setNumbers] = useState("");
   const [message, setMessage] = useState("");
-  const [isPending, startTransition] = useTransition();
   const [pendingDelete, setPendingDelete] = useState<{ item: SavedNumber; timer: number } | null>(null);
 
-  async function loadSavedNumbers() {
-    const response = await fetch("/api/v1/saved", {
-      headers: {
-        "X-Device-Token": getDeviceToken(),
-      },
-    });
-
-    if (!response.ok) {
-      const error = (await response.json()) as { message?: string };
-      throw new Error(error.message ?? "저장한 번호를 불러오지 못했습니다.");
-    }
-
-    const payload = (await response.json()) as SavedNumber[];
-    setItems(payload);
-  }
-
-  async function loadLatest() {
-    try {
-      const response = await fetch("/api/v1/rounds/latest");
-      if (!response.ok) return;
-      setLatest((await response.json()) as WinningNumber);
-    } catch {
-      // 최신 회차 대조는 부가 정보이므로 실패해도 저장 목록 표시에는 영향 없음.
-    }
-  }
-
   useEffect(() => {
-    startTransition(() => {
-      loadSavedNumbers().catch((error: Error) => setMessage(error.message));
-      loadLatest();
-    });
+    fetch("/api/v1/saved", { headers: { "X-Device-Token": getDeviceToken() } })
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = (await res.json()) as { message?: string };
+          throw new Error(err.message ?? "저장한 번호를 불러오지 못했습니다.");
+        }
+        return res.json() as Promise<SavedNumber[]>;
+      })
+      .then(setItems)
+      .catch((err: Error) => setMessage(err.message));
   }, []);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage("");
-
-    const validation = validateLottoNumbers(
-      numbers.split(",").map((value) => Number(value.trim())),
-    );
-
-    if (!validation.ok) {
-      setMessage(validation.message);
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/v1/saved", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Device-Token": getDeviceToken(),
-        },
-        body: JSON.stringify({ numbers: validation.numbers, label: label || null, source: "MANUAL" }),
-      });
-      const payload = (await response.json()) as { created?: boolean; message?: string };
-
-      if (!response.ok) {
-        setMessage(payload.message ?? "저장에 실패했습니다.");
-        return;
-      }
-
-      setMessage(payload.created ? "저장했습니다." : "이미 저장된 번호입니다.");
-      setNumbers("");
-      setLabel("");
-      await loadSavedNumbers();
-    } catch {
-      setMessage("저장하지 못했습니다.");
-    }
-  }
 
   async function finalizeDelete(item: SavedNumber) {
     try {
-      const response = await fetch(`/api/v1/saved/${item.id}`, {
+      const res = await fetch(`/api/v1/saved/${item.id}`, {
         method: "DELETE",
         headers: { "X-Device-Token": getDeviceToken() },
       });
-
-      if (!response.ok) {
-        setItems((previous) => sortByCreatedAtDesc([...previous, item]));
+      if (!res.ok) {
+        setItems((prev) => sortByCreatedAtDesc([...prev, item]));
         setMessage("삭제에 실패했습니다.");
       }
     } catch {
-      setItems((previous) => sortByCreatedAtDesc([...previous, item]));
+      setItems((prev) => sortByCreatedAtDesc([...prev, item]));
       setMessage("삭제하지 못했습니다.");
     }
   }
@@ -138,8 +57,7 @@ export function SavedNumbersClient() {
       window.clearTimeout(pendingDelete.timer);
       void finalizeDelete(pendingDelete.item);
     }
-
-    setItems((previous) => previous.filter((existing) => existing.id !== item.id));
+    setItems((prev) => prev.filter((x) => x.id !== item.id));
     const timer = window.setTimeout(() => {
       setPendingDelete(null);
       void finalizeDelete(item);
@@ -149,43 +67,15 @@ export function SavedNumbersClient() {
   }
 
   function handleUndoDelete() {
-    if (!pendingDelete) {
-      return;
-    }
+    if (!pendingDelete) return;
     window.clearTimeout(pendingDelete.timer);
-    setItems((previous) => sortByCreatedAtDesc([...previous, pendingDelete.item]));
+    setItems((prev) => sortByCreatedAtDesc([...prev, pendingDelete.item]));
     setPendingDelete(null);
     setMessage("삭제를 취소했습니다.");
   }
 
   return (
     <section className="saved-section">
-      <p className="muted">
-        저장 번호는 이 기기/브라우저에 연결됩니다. 브라우저 데이터를 삭제하거나 다른 기기로 바꾸면
-        이어서 볼 수 없으니 참고하세요.
-      </p>
-      <form className="saved-form" onSubmit={handleSubmit}>
-        <label>
-          번호 6개
-          <input
-            value={numbers}
-            onChange={(event) => setNumbers(event.target.value)}
-            placeholder="예: 3, 11, 19, 28, 34, 42"
-          />
-        </label>
-        <label>
-          메모
-          <input
-            value={label}
-            onChange={(event) => setLabel(event.target.value)}
-            placeholder="예: 자동 추천 1번"
-          />
-        </label>
-        <button type="submit" disabled={isPending}>
-          저장
-        </button>
-      </form>
-
       {message ? (
         <p className="status-text" role="status" aria-live="polite">
           {message}
@@ -197,34 +87,20 @@ export function SavedNumbersClient() {
         </p>
       ) : null}
 
-      {latest ? (
-        <p className="muted saved-latest-note">
-          {latest.round}회 당첨 결과와 자동으로 대조합니다.
-        </p>
-      ) : null}
-
       <ul className="saved-list">
-        {items.map((item) => {
-          const currentLatest = latest;
-          const result = currentLatest ? matchResult(item.numbers, currentLatest) : null;
-          return (
-            <li key={item.id} className="saved-item">
-              <div className="saved-item-body">
-                <LottoBalls numbers={item.numbers} />
-                <p className="muted">{item.label ?? "메모 없음"}</p>
-                {result && currentLatest ? (
-                  <p className={`saved-match${result.rank ? " saved-match-win" : ""}`} role="status">
-                    {currentLatest.round}회 기준 {result.matchCount}개 일치
-                    {result.rank ? ` · ${result.rank}` : ""}
-                  </p>
-                ) : null}
-              </div>
-              <button type="button" className="secondary" onClick={() => handleDelete(item)}>
-                삭제
-              </button>
-            </li>
-          );
-        })}
+        {items.map((item) => (
+          <li key={item.id} className="saved-item">
+            <LottoBalls numbers={item.numbers} />
+            <button
+              type="button"
+              className="saved-delete-btn"
+              onClick={() => handleDelete(item)}
+              aria-label="삭제"
+            >
+              삭제
+            </button>
+          </li>
+        ))}
       </ul>
     </section>
   );
