@@ -1,11 +1,12 @@
 import { ImageResponse } from "next/og";
-import { getRound } from "@/lib/api";
-import { formatCurrency, formatDrawDate } from "@/lib/format";
 import type { NextRequest } from "next/server";
 
-export const runtime = "nodejs";
+// Edge runtime: WASM 기반 ImageResponse 사용 → standalone 컨테이너에서 native 바이너리 불필요
+export const runtime = "edge";
 
 const SIZE = { width: 1200, height: 630 };
+const BALL = 94;
+const BACKEND = process.env.KRAFT_BACKEND_INTERNAL_URL ?? "http://backend:8080";
 
 function ballColor(n: number): { bg: string; fg: string } {
   if (n <= 10) return { bg: "#f5c842", fg: "#1d1a17" };
@@ -15,7 +16,16 @@ function ballColor(n: number): { bg: string; fg: string } {
   return { bg: "#3a7d44", fg: "#ffffff" };
 }
 
-const BALL = 94;
+// Edge runtime은 Intl.DateTimeFormat({ timeZone }) 미지원 → Date.UTC 기반 구현
+function formatDate(value: string): string {
+  const [year, month, day] = value.split("-").map(Number);
+  const names = ["일", "월", "화", "수", "목", "금", "토"];
+  return `${year}년 ${month}월 ${day}일 (${names[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]})`;
+}
+
+function formatMoney(value: number): string {
+  return `${new Intl.NumberFormat("ko-KR").format(value)}원`;
+}
 
 const PLACEHOLDER_BALLS = [
   { bg: "#f5c842", fg: "#1d1a17" },
@@ -26,12 +36,33 @@ const PLACEHOLDER_BALLS = [
   { bg: "#c94f24", fg: "#ffffff" },
 ];
 
+type RoundData = {
+  round: number;
+  drawDate: string;
+  numbers: number[];
+  bonusNumber: number;
+  firstPrizeAmount: number;
+};
+
+async function fetchRound(round: number): Promise<RoundData | null> {
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(`${BACKEND}/api/v1/rounds/${round}`, { signal: controller.signal });
+    clearTimeout(id);
+    if (!res.ok) return null;
+    return res.json() as Promise<RoundData>;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ round: string }> },
 ) {
   const { round } = await params;
-  const data = await getRound(Number(round)).catch(() => null);
+  const data = await fetchRound(Number(round));
 
   const body = data ? (
     <div
@@ -59,7 +90,7 @@ export async function GET(
         제{data.round}회 당첨 결과
       </div>
       <div style={{ fontSize: 22, color: "#5e564c", marginBottom: 34 }}>
-        {formatDrawDate(data.drawDate)} 추첨
+        {formatDate(data.drawDate)} 추첨
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 34 }}>
@@ -78,7 +109,7 @@ export async function GET(
       </div>
 
       <div style={{ fontSize: 24, color: "#c94f24", fontWeight: 700 }}>
-        1등 당첨금 {formatCurrency(data.firstPrizeAmount)}
+        1등 당첨금 {formatMoney(data.firstPrizeAmount)}
       </div>
     </div>
   ) : (
