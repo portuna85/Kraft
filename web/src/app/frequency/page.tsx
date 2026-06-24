@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { FrequencyFilterClient } from "@/components/frequency-filter-client";
 import { PageAd } from "@/components/ad-unit";
-import { getFrequencyStats } from "@/lib/api";
+import { JsonLdBreadcrumb } from "@/components/json-ld";
+import { getFrequencyStats, getPublicBaseUrl } from "@/lib/api";
 import logger from "@/lib/logger";
 
 export const revalidate = 1800;
@@ -13,6 +15,8 @@ export const metadata: Metadata = {
 };
 
 export default async function FrequencyPage() {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const baseUrl = getPublicBaseUrl();
   const stats = await getFrequencyStats().catch((error) => {
     logger.warn({ err: error }, "출현 통계 조회 실패");
     return null;
@@ -30,6 +34,7 @@ export default async function FrequencyPage() {
 
   return (
     <section className="panel">
+      <JsonLdBreadcrumb baseUrl={baseUrl} nonce={nonce} items={[{ name: "출현 통계", item: `${baseUrl}/frequency` }]} />
       <p className="eyebrow">출현 통계</p>
       <h1 className="page-title">번호 출현 통계</h1>
       <FrequencyFilterClient initial={stats} />

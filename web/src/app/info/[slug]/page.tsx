@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { FAQ_ITEMS, buildFaqPageJsonLd } from "@/lib/csp-inline-scripts";
+import { JsonLdBreadcrumb } from "@/components/json-ld";
+import { getPublicBaseUrl } from "@/lib/api";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -313,9 +315,11 @@ export default async function InfoPage({ params }: Props) {
   const info = infoPages[slug];
   if (!info) notFound();
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  const baseUrl = getPublicBaseUrl();
 
   return (
     <section className="panel">
+      <JsonLdBreadcrumb baseUrl={baseUrl} nonce={nonce} items={[{ name: info.title, item: `${baseUrl}/info/${slug}` }]} />
       <p className="eyebrow">서비스 안내</p>
       <h1 className="page-title">{info.title}</h1>
       <p className="page-subtitle">{info.description}</p>
