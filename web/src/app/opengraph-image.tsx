@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { getOgFontConfig } from "@/lib/og-font";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -12,7 +13,9 @@ const BALLS = [
   { n: 42, bg: "#7a7068", fg: "#ffffff" },
 ];
 
-export default function OgImage() {
+export default async function OgImage() {
+  const { fonts, fontFamily } = await getOgFontConfig();
+
   return new ImageResponse(
     (
       <div
@@ -24,11 +27,10 @@ export default function OgImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: "sans-serif",
+          fontFamily,
           position: "relative",
         }}
       >
-        {/* 배경 장식 원 */}
         <div
           style={{
             position: "absolute",
@@ -54,7 +56,6 @@ export default function OgImage() {
           }}
         />
 
-        {/* 브랜드 로고 */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 40 }}>
           <div
             style={{
@@ -67,17 +68,16 @@ export default function OgImage() {
               justifyContent: "center",
               color: "#fff",
               fontSize: 28,
-              fontWeight: 800,
+              fontWeight: 700,
             }}
           >
             K
           </div>
-          <span style={{ fontSize: 42, fontWeight: 800, color: "#1d1a17", letterSpacing: -1 }}>
+          <span style={{ fontSize: 42, fontWeight: 700, color: "#1d1a17", letterSpacing: -1 }}>
             KRAFT Lotto
           </span>
         </div>
 
-        {/* 로또 볼 */}
         <div style={{ display: "flex", gap: 18, marginBottom: 44 }}>
           {BALLS.map((ball) => (
             <div
@@ -92,7 +92,7 @@ export default function OgImage() {
                 justifyContent: "center",
                 color: ball.fg,
                 fontSize: 34,
-                fontWeight: 800,
+                fontWeight: 700,
                 boxShadow: "0 8px 24px rgba(0,0,0,0.16)",
               }}
             >
@@ -101,13 +101,12 @@ export default function OgImage() {
           ))}
         </div>
 
-        {/* 설명 문구 */}
-        <div style={{ fontSize: 30, fontWeight: 700, color: "#1d1a17", marginBottom: 14, letterSpacing: -0.5 }}>
+        <div style={{ display: "flex", fontSize: 30, fontWeight: 700, color: "#1d1a17", marginBottom: 14, letterSpacing: -0.5 }}>
           로또 6/45 당첨 번호 · 통계 · 번호 추천
         </div>
-        <div style={{ fontSize: 22, color: "#5e564c" }}>kraft.io.kr</div>
+        <div style={{ display: "flex", fontSize: 22, color: "#5e564c" }}>kraft.io.kr</div>
       </div>
     ),
-    { ...size },
+    { ...size, fonts },
   );
 }
