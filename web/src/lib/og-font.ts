@@ -21,8 +21,8 @@ export async function getOgFontConfig(): Promise<FontConfig> {
   if (edgeCache) return { fonts: edgeCache, fontFamily: "Noto Sans KR, sans-serif" };
   try {
     const [korean, latin] = await Promise.all([
-      fetch(`${CDN}/noto-sans-kr-korean-700-normal.woff2`).then((r) => r.arrayBuffer()),
-      fetch(`${CDN}/noto-sans-kr-latin-700-normal.woff2`).then((r) => r.arrayBuffer()),
+      fetch(`${CDN}/noto-sans-kr-korean-700-normal.woff`).then((r) => r.arrayBuffer()),
+      fetch(`${CDN}/noto-sans-kr-latin-700-normal.woff`).then((r) => r.arrayBuffer()),
     ]);
     edgeCache = [
       { name: "Noto Sans KR", data: korean, weight: 700, style: "normal" },

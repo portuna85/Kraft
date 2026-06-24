@@ -23,8 +23,8 @@ export async function getOgFontConfig(): Promise<FontConfig> {
   try {
     const base = join(process.cwd(), "public", "fonts");
     const [korean, latin] = await Promise.all([
-      readFile(join(base, "NotoSansKR-Bold-korean.woff2")),
-      readFile(join(base, "NotoSansKR-Bold-latin.woff2")),
+      readFile(join(base, "NotoSansKR-Bold-korean.woff")),
+      readFile(join(base, "NotoSansKR-Bold-latin.woff")),
     ]);
     nodeCache = [
       { name: "Noto Sans KR", data: korean.buffer as ArrayBuffer, weight: 700, style: "normal" },
