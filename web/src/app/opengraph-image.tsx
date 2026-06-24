@@ -3,59 +3,111 @@ import { ImageResponse } from "next/og";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const ballNumbers = [3, 11, 19, 28, 34, 42];
+const BALLS = [
+  { n: 3,  bg: "#f5c842", fg: "#1d1a17" },
+  { n: 11, bg: "#3a7d44", fg: "#ffffff" },
+  { n: 19, bg: "#c94f24", fg: "#ffffff" },
+  { n: 28, bg: "#3a5fa0", fg: "#ffffff" },
+  { n: 34, bg: "#c94f24", fg: "#ffffff" },
+  { n: 42, bg: "#7a7068", fg: "#ffffff" },
+];
 
 export default function OgImage() {
   return new ImageResponse(
     (
       <div
         style={{
-          background: "#f6f1e8",
-          width: "100%",
-          height: "100%",
+          width: 1200,
+          height: 630,
+          background: "linear-gradient(145deg, #f6f1e8 0%, #efe5d2 100%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: 32,
+          fontFamily: "sans-serif",
+          position: "relative",
         }}
       >
-        <div style={{ display: "flex", gap: 20 }}>
-          {ballNumbers.map((n) => (
+        {/* 배경 장식 원 */}
+        <div
+          style={{
+            position: "absolute",
+            top: -140,
+            right: -140,
+            width: 520,
+            height: 520,
+            borderRadius: "50%",
+            background: "rgba(201, 79, 36, 0.07)",
+            display: "flex",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: -100,
+            left: -100,
+            width: 380,
+            height: 380,
+            borderRadius: "50%",
+            background: "rgba(201, 79, 36, 0.05)",
+            display: "flex",
+          }}
+        />
+
+        {/* 브랜드 로고 */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 40 }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              background: "#c94f24",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontSize: 28,
+              fontWeight: 800,
+            }}
+          >
+            K
+          </div>
+          <span style={{ fontSize: 42, fontWeight: 800, color: "#1d1a17", letterSpacing: -1 }}>
+            KRAFT Lotto
+          </span>
+        </div>
+
+        {/* 로또 볼 */}
+        <div style={{ display: "flex", gap: 18, marginBottom: 44 }}>
+          {BALLS.map((ball) => (
             <div
-              key={n}
+              key={ball.n}
               style={{
-                width: 88,
-                height: 88,
+                width: 92,
+                height: 92,
                 borderRadius: "50%",
-                background: "#ffc857",
+                background: ball.bg,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 36,
-                fontWeight: 700,
-                color: "#1d1a17",
+                color: ball.fg,
+                fontSize: 34,
+                fontWeight: 800,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.16)",
               }}
             >
-              {n}
+              {ball.n}
             </div>
           ))}
         </div>
-        <div
-          style={{
-            fontSize: 76,
-            fontWeight: 700,
-            color: "#1d1a17",
-            letterSpacing: "-2px",
-          }}
-        >
-          KRAFT Lotto
+
+        {/* 설명 문구 */}
+        <div style={{ fontSize: 30, fontWeight: 700, color: "#1d1a17", marginBottom: 14, letterSpacing: -0.5 }}>
+          로또 6/45 당첨 번호 · 통계 · 번호 추천
         </div>
-        <div style={{ fontSize: 34, color: "#c94f24" }}>
-          당첨 결과 조회 · 추천 조합 · 번호 저장
-        </div>
+        <div style={{ fontSize: 22, color: "#5e564c" }}>kraft.io.kr</div>
       </div>
     ),
-    { ...size }
+    { ...size },
   );
 }
