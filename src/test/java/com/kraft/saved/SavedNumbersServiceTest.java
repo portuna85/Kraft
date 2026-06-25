@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -153,5 +154,23 @@ class SavedNumbersServiceTest {
         SaveNumberResult result = service.save(TOKEN_HASH, new CreateSavedNumberRequest(VALID_NUMBERS, null, null));
 
         assertThat(result.savedNumber().source()).isEqualTo("MANUAL");
+    }
+
+    @Test
+    @DisplayName("동시 저장 레이스로 unique 제약 위반 시 기존 행을 반환하여 멱등 처리")
+    void save_concurrentInsertRace_returnsExistingWithCreatedFalse() {
+        String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
+        SavedNumber concurrentEntity = savedEntity(encoded, null, "MANUAL");
+        given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
+                .willReturn(Optional.empty())
+                .willReturn(Optional.of(concurrentEntity));
+        given(savedNumberRepository.countByClientTokenHash(TOKEN_HASH)).willReturn(0L);
+        given(savedNumberRepository.save(any(SavedNumber.class)))
+                .willThrow(new DataIntegrityViolationException("uk_saved_numbers"));
+
+        SaveNumberResult result = service.save(TOKEN_HASH, new CreateSavedNumberRequest(VALID_NUMBERS, null, null));
+
+        assertThat(result.created()).isFalse();
+        assertThat(result.savedNumber().numbers()).containsExactlyElementsOf(VALID_NUMBERS);
     }
 }

@@ -1,6 +1,5 @@
 package com.kraft.ops;
 
-import com.kraft.common.config.OpsProperties;
 import com.kraft.common.error.ApiException;
 import com.kraft.operationlog.WinningNumberOperationLogFilter;
 import com.kraft.operationlog.WinningNumberOperationLogPageResponse;
@@ -14,17 +13,15 @@ import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumberResponse;
 import com.kraft.winningnumber.WinningNumberUpsertRequest;
 import com.kraft.common.web.RequestIdFilter;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import org.springframework.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +36,6 @@ public class OpsService {
     private final WinningNumberCommandService winningNumberCommandService;
     private final WinningNumberCollectionService winningNumberCollectionService;
     private final WinningNumberOperationLogService winningNumberOperationLogService;
-    private final OpsProperties opsProperties;
     private final Clock clock;
     private final LottoDrawScheduleCalculator drawScheduleCalculator;
 
@@ -47,20 +43,17 @@ public class OpsService {
                       WinningNumberCommandService winningNumberCommandService,
                       WinningNumberCollectionService winningNumberCollectionService,
                       WinningNumberOperationLogService winningNumberOperationLogService,
-                      OpsProperties opsProperties,
                       Clock clock,
                       LottoDrawScheduleCalculator drawScheduleCalculator) {
         this.winningNumberRepository = winningNumberRepository;
         this.winningNumberCommandService = winningNumberCommandService;
         this.winningNumberCollectionService = winningNumberCollectionService;
         this.winningNumberOperationLogService = winningNumberOperationLogService;
-        this.opsProperties = opsProperties;
         this.clock = clock;
         this.drawScheduleCalculator = drawScheduleCalculator;
     }
 
-    public OpsSummaryResponse getSummary(String token) {
-        validateToken(token);
+    public OpsSummaryResponse getSummary() {
 
         ZonedDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(KST);
         OpsSummaryResponse response = winningNumberRepository.findTopByOrderByRoundDesc()
@@ -86,15 +79,13 @@ public class OpsService {
         return response;
     }
 
-    public WinningNumberOperationLogPageResponse getRecentOperationLogs(String token,
-                                                                        int page,
+    public WinningNumberOperationLogPageResponse getRecentOperationLogs(int page,
                                                                         int size,
                                                                         String operationType,
                                                                         String executionStatus,
                                                                         Integer round,
                                                                         String from,
                                                                         String to) {
-        validateToken(token);
         int normalizedPage = Math.max(page, 0);
         int normalizedSize = Math.clamp(size, 1, 100);
         WinningNumberOperationLogFilter filter = new WinningNumberOperationLogFilter(
@@ -116,8 +107,7 @@ public class OpsService {
     }
 
     @Transactional
-    public WinningNumberResponse upsertWinningNumber(String token, WinningNumberUpsertRequest request) {
-        validateToken(token);
+    public WinningNumberResponse upsertWinningNumber(WinningNumberUpsertRequest request) {
         String caller = callerDetail();
         log.info("운영 수동 회차 저장 시작: round={} drawDate={} caller={}", request.round(), request.drawDate(), caller);
         try {
@@ -144,14 +134,12 @@ public class OpsService {
     // @Transactional을 두지 않는다 — collectLatest() 내부의 외부 HTTP fetch(fetchRound)가
     // 트랜잭션 밖에서 실행돼야 커넥션을 길게 점유하지 않는다(P1-3). 실제 저장은
     // WinningNumberCommandService가 호출당 짧은 트랜잭션으로 처리한다.
-    public WinningNumberResponse collectLatestWinningNumber(String token) {
-        validateToken(token);
+    public WinningNumberResponse collectLatestWinningNumber() {
         log.info("운영 최신 회차 수집 요청: caller={}", callerDetail());
         return winningNumberCollectionService.collectLatest();
     }
 
-    public WinningNumberResponse collectWinningNumber(String token, int round) {
-        validateToken(token);
+    public WinningNumberResponse collectWinningNumber(int round) {
         if (round < 1) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_ROUND", "회차는 1 이상이어야 합니다.");
         }
@@ -163,18 +151,6 @@ public class OpsService {
         String ip = MDC.get(RequestIdFilter.MDC_CLIENT_IP);
         String requestId = MDC.get(RequestIdFilter.MDC_KEY);
         return "ops-api ip=" + (ip != null ? ip : "unknown") + " requestId=" + (requestId != null ? requestId : "none");
-    }
-
-    private void validateToken(String token) {
-        String expected = opsProperties.token();
-        if (expected == null || expected.isBlank()) {
-            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "OPS_DISABLED", "운영 API 토큰이 설정되지 않았습니다.");
-        }
-        if (token == null || !MessageDigest.isEqual(
-                expected.getBytes(StandardCharsets.UTF_8),
-                token.getBytes(StandardCharsets.UTF_8))) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "OPS_UNAUTHORIZED", "운영 API 인증에 실패했습니다.");
-        }
     }
 
     private WinningNumberOperationType parseOperationType(String value) {

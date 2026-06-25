@@ -14,15 +14,19 @@ public class CorsConfig {
     @Value("${kraft.public-base-url:}")
     private String publicBaseUrl;
 
+    // 허용 출처 목록: kraft.public-base-url이 설정된 경우 그 값만 허용.
+    // 미설정 시 "*" 폴백(로컬 개발용). prod 프로파일에서는 ProdEnvironmentValidator가
+    // kraft.public-base-url 필수 설정을 강제하므로 프로덕션에서 "*"가 사용되지 않는다.
+    List<String> resolvedOrigins() {
+        return publicBaseUrl != null && !publicBaseUrl.isBlank()
+                ? List.of(publicBaseUrl)
+                : List.of("*");
+    }
+
     @Bean
     CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        // S-1: 환경변수로 출처를 제한. 미설정 시 "*" 폴백(로컬 개발 호환)
-        config.setAllowedOriginPatterns(
-                publicBaseUrl != null && !publicBaseUrl.isBlank()
-                        ? List.of(publicBaseUrl)
-                        : List.of("*")
-        );
+        config.setAllowedOriginPatterns(resolvedOrigins());
         // B-3: DELETE 추가, X-Device-Token 추가
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of(

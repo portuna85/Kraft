@@ -48,10 +48,14 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-spring-boot4:2.4.0")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:4.1.0")
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
-    implementation("com.h2database:h2")
 
     developmentOnly(platform("org.springframework.boot:spring-boot-dependencies:4.1.0"))
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+    // H2: 로컬 bootRun(IntelliJ, Docker 없는 환경)과 테스트에서만 사용. bootJar 제외.
+    // compileOnly는 LocalSecurityConfig(JakartaWebServlet 임포트) 컴파일용; 런타임 jar 미포함.
+    compileOnly("com.h2database:h2")
+    developmentOnly("com.h2database:h2")
+    testImplementation("com.h2database:h2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:4.1.0")
     testImplementation("org.springframework.boot:spring-boot-webmvc-test:4.1.0")
