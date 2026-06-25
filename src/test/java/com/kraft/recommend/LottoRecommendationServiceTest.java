@@ -2,10 +2,9 @@ package com.kraft.recommend;
 
 import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
-import com.kraft.winningnumber.WinningNumber;
+import com.kraft.winningnumber.WinningBallsOnly;
 import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumbersCollectedEvent;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
@@ -46,15 +45,22 @@ class LottoRecommendationServiceTest {
     private static final OffsetDateTime NOW =
             OffsetDateTime.now(ZoneId.of("Asia/Seoul"));
 
-    private static WinningNumber winningNumber(int round, int n1, int n2, int n3, int n4, int n5, int n6) {
-        return new WinningNumber(round, LocalDate.now(), n1, n2, n3, n4, n5, n6,
-                7, 2_000_000_000L, 0L, 0, 0L, 0L, NOW);
+    private static WinningBallsOnly ballsOnly(int round, int n1, int n2, int n3, int n4, int n5, int n6) {
+        return new WinningBallsOnly() {
+            public int getRound() { return round; }
+            public int getN1() { return n1; }
+            public int getN2() { return n2; }
+            public int getN3() { return n3; }
+            public int getN4() { return n4; }
+            public int getN5() { return n5; }
+            public int getN6() { return n6; }
+        };
     }
 
     @BeforeEach
     void setUp() {
         lottoNumberCodec = new LottoNumberCodec();
-        given(winningNumberRepository.findAll()).willReturn(List.of());
+        given(winningNumberRepository.findAllBalls()).willReturn(List.of());
         service = new LottoRecommendationService(lottoNumberCodec, winningNumberRepository, combinationScorer);
         service.loadHistoricalCombinations();
     }
@@ -172,8 +178,7 @@ class LottoRecommendationServiceTest {
         void recommend_historicalCombinationsNeverReturned() {
             // 1~43번 조합은 모두 역대 당첨으로 등록 (극단 시나리오)
             // 실제로는 1,100개 수준이므로 특정 조합만 등록
-            WinningNumber historical = winningNumber(1, 1, 2, 3, 4, 5, 6);
-            given(winningNumberRepository.findAll()).willReturn(List.of(historical));
+            given(winningNumberRepository.findAllBalls()).willReturn(List.of(ballsOnly(1, 1, 2, 3, 4, 5, 6)));
             service.loadHistoricalCombinations();
 
             service.recommend(new RecommendNumbersRequest(5, null, false))
@@ -190,8 +195,7 @@ class LottoRecommendationServiceTest {
                     .recommendations()).hasSize(1);
 
             // 새 회차 수집
-            WinningNumber newRound = winningNumber(1200, 3, 11, 19, 28, 34, 42);
-            given(winningNumberRepository.findAll()).willReturn(List.of(newRound));
+            given(winningNumberRepository.findAllBalls()).willReturn(List.of(ballsOnly(1200, 3, 11, 19, 28, 34, 42)));
 
             service.onCollected(new WinningNumbersCollectedEvent(1200, true));
 
@@ -210,7 +214,7 @@ class LottoRecommendationServiceTest {
             service.onCollected(new WinningNumbersCollectedEvent(1200, false));
 
             // loadHistoricalCombinations()에서 1회 호출되었으므로 총 1회
-            verify(winningNumberRepository, org.mockito.Mockito.times(1)).findAll();
+            verify(winningNumberRepository, org.mockito.Mockito.times(1)).findAllBalls();
         }
     }
 
@@ -296,8 +300,8 @@ class LottoRecommendationServiceTest {
         void recommend_maximizePrize_historicalExclusionStillApplies() {
             // 역대 당첨 조합은 generateOne 단계에서 재추첨 처리되므로
             // scorer 호출 자체가 이루어지지 않음 → @BeforeEach의 기본 mock(0점)으로 충분
-            given(winningNumberRepository.findAll())
-                    .willReturn(List.of(winningNumber(1, 1, 2, 3, 4, 5, 6)));
+            given(winningNumberRepository.findAllBalls())
+                    .willReturn(List.of(ballsOnly(1, 1, 2, 3, 4, 5, 6)));
             service.loadHistoricalCombinations();
 
             Set<List<Integer>> results = new HashSet<>();

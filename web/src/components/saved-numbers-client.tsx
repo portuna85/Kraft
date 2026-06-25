@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
 
@@ -39,6 +39,24 @@ export function SavedNumbersClient() {
   const [latestRound, setLatestRound] = useState<{ round: number; drawDate: string } | null>(null);
   const [message, setMessage] = useState("");
   const [pendingDelete, setPendingDelete] = useState<{ item: SavedNumber; timer: number } | null>(null);
+  const pendingDeleteRef = useRef(pendingDelete);
+
+  useEffect(() => {
+    pendingDeleteRef.current = pendingDelete;
+  }, [pendingDelete]);
+
+  // Commit any in-flight delete when the component unmounts so the user's
+  // confirmed action is never silently dropped.
+  useEffect(() => {
+    return () => {
+      const pd = pendingDeleteRef.current;
+      if (pd) {
+        window.clearTimeout(pd.timer);
+        void finalizeDelete(pd.item);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const token = getDeviceToken();

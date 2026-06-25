@@ -1,7 +1,7 @@
 package com.kraft.statistics;
 
 import com.kraft.common.config.CacheConfig;
-import com.kraft.winningnumber.WinningNumber;
+import com.kraft.winningnumber.WinningBallsOnly;
 import com.kraft.winningnumber.WinningNumberRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -93,7 +93,7 @@ public class StatisticsSummaryRebuilder {
     private boolean rebuildAllSummariesInternal() {
         Timer.Sample sample = Timer.start(meterRegistry);
         try {
-            List<WinningNumber> all = winningNumberRepository.findAll();
+            List<WinningBallsOnly> all = winningNumberRepository.findAllBalls();
             if (all.isEmpty()) {
                 log.info("No winning numbers found; skipping statistics summary rebuild");
                 recordRebuildOutcome("empty");
@@ -102,9 +102,8 @@ public class StatisticsSummaryRebuilder {
 
             log.info("Starting statistics summary rebuild: totalRounds={}", all.size());
             OffsetDateTime now = OffsetDateTime.now(clock);
-            int latestRound = all.stream().mapToInt(WinningNumber::getRound).max().orElse(0);
 
-            rebuildFrequency(all, latestRound, now);
+            rebuildFrequency(all, now);
             rebuildPatterns(all, now);
             rebuildCompanions(all, now);
             recordRebuildOutcome("success");
@@ -128,11 +127,11 @@ public class StatisticsSummaryRebuilder {
                 .increment();
     }
 
-    private void rebuildFrequency(List<WinningNumber> rounds, int latestRound, OffsetDateTime now) {
+    private void rebuildFrequency(List<WinningBallsOnly> rounds, OffsetDateTime now) {
         Map<Integer, Integer> freqMap = new HashMap<>();
         Map<Integer, Integer> lastRoundMap = new HashMap<>();
 
-        for (WinningNumber w : rounds) {
+        for (WinningBallsOnly w : rounds) {
             for (int ball : List.of(w.getN1(), w.getN2(), w.getN3(), w.getN4(), w.getN5(), w.getN6())) {
                 freqMap.merge(ball, 1, Integer::sum);
                 lastRoundMap.merge(ball, w.getRound(), Math::max);
@@ -156,12 +155,12 @@ public class StatisticsSummaryRebuilder {
         frequencySummaryRepository.saveAll(toSave);
     }
 
-    private void rebuildPatterns(List<WinningNumber> rounds, OffsetDateTime now) {
+    private void rebuildPatterns(List<WinningBallsOnly> rounds, OffsetDateTime now) {
         Map<String, Integer> oddCountMap = new HashMap<>();
         Map<String, Integer> highCountMap = new HashMap<>();
         Map<String, Integer> sumBucketMap = new HashMap<>();
 
-        for (WinningNumber w : rounds) {
+        for (WinningBallsOnly w : rounds) {
             List<Integer> balls = List.of(w.getN1(), w.getN2(), w.getN3(), w.getN4(), w.getN5(), w.getN6());
 
             String oddKey = String.valueOf(balls.stream().filter(n -> n % 2 != 0).count());
@@ -213,10 +212,10 @@ public class StatisticsSummaryRebuilder {
         return statType + "::" + bucketKey;
     }
 
-    private void rebuildCompanions(List<WinningNumber> rounds, OffsetDateTime now) {
+    private void rebuildCompanions(List<WinningBallsOnly> rounds, OffsetDateTime now) {
         Map<String, int[]> pairMap = new HashMap<>();
 
-        for (WinningNumber w : rounds) {
+        for (WinningBallsOnly w : rounds) {
             List<Integer> balls = new ArrayList<>(
                     List.of(w.getN1(), w.getN2(), w.getN3(), w.getN4(), w.getN5(), w.getN6()));
             Collections.sort(balls);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
@@ -16,6 +16,7 @@ export function RecommendClient() {
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
   const [savedIndexes, setSavedIndexes] = useState<Set<number>>(new Set());
   const [isPending, setIsPending] = useState(false);
+  const fetchSeqRef = useRef(0);
 
   async function fetchRecommendations(
     reqCount: number,
@@ -23,6 +24,7 @@ export function RecommendClient() {
     reqMaximizePrize: boolean,
     initialMessage = "",
   ) {
+    const seq = ++fetchSeqRef.current;
     setMessage(initialMessage);
     setIsPending(true);
     setSavedIndexes(new Set());
@@ -39,6 +41,8 @@ export function RecommendClient() {
       });
       const payload = (await response.json()) as RecommendationResponse | { message?: string };
 
+      if (seq !== fetchSeqRef.current) return;
+
       if (!response.ok) {
         setMessage((payload as { message?: string }).message ?? "추천 생성에 실패했습니다.");
         return;
@@ -46,9 +50,13 @@ export function RecommendClient() {
 
       setRecommendations((payload as RecommendationResponse).recommendations);
     } catch {
-      setMessage("추천 결과를 불러오지 못했습니다.");
+      if (seq === fetchSeqRef.current) {
+        setMessage("추천 결과를 불러오지 못했습니다.");
+      }
     } finally {
-      setIsPending(false);
+      if (seq === fetchSeqRef.current) {
+        setIsPending(false);
+      }
     }
   }
 

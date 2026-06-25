@@ -12,6 +12,7 @@ import java.time.ZoneId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -49,6 +50,8 @@ class ApiIntegrationTest {
 
     @Autowired
     private WinningNumberOperationLogRepository winningNumberOperationLogRepository;
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -497,16 +500,8 @@ class ApiIntegrationTest {
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
-    private long extractId(String response) {
-        // W-5: 바디 구조가 {savedNumber: {id: ...}, created: ...}로 변경됨
-        int marker = response.indexOf("\"savedNumber\":");
-        int idMarker = response.indexOf("\"id\":", marker);
-        int start = idMarker + 5;
-        int end = response.indexOf(",", start);
-        if (end < 0) {
-            end = response.indexOf("}", start);
-        }
-        return Long.parseLong(response.substring(start, end).trim());
+    private long extractId(String response) throws Exception {
+        return OBJECT_MAPPER.readTree(response).path("savedNumber").path("id").asLong();
     }
 
     @TestConfiguration

@@ -2,7 +2,7 @@ package com.kraft.recommend;
 
 import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
-import com.kraft.winningnumber.WinningNumber;
+import com.kraft.winningnumber.WinningBallsOnly;
 import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumbersCollectedEvent;
 import jakarta.annotation.PostConstruct;
@@ -56,7 +56,7 @@ public class LottoRecommendationService {
 
     private void refreshHistoricalCombinations() {
         Set<Set<Integer>> combos = new HashSet<>();
-        for (WinningNumber wn : winningNumberRepository.findAll()) {
+        for (WinningBallsOnly wn : winningNumberRepository.findAllBalls()) {
             combos.add(Set.of(wn.getN1(), wn.getN2(), wn.getN3(), wn.getN4(), wn.getN5(), wn.getN6()));
         }
         historicalCombinations = Set.copyOf(combos);
