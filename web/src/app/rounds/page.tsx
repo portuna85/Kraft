@@ -65,11 +65,14 @@ export default async function RoundsPage({ searchParams }: Props) {
       logger.warn({ err: error }, "최신 당첨번호 조회 실패");
       return null;
     }),
-    getRounds(apiPage, 20),
+    getRounds(apiPage, 20).catch((error) => {
+      logger.warn({ err: error }, "회차 목록 조회 실패");
+      return null;
+    }),
   ]);
 
   const baseUrl = getPublicBaseUrl();
-  const totalPages = rounds.totalPages;
+  const totalPages = rounds?.totalPages ?? 0;
   const currentPage = Math.min(userPage, totalPages || 1);
   const pages = pageRange(currentPage, totalPages);
 
@@ -108,6 +111,10 @@ export default async function RoundsPage({ searchParams }: Props) {
         <h2 className="page-title rounds-title">전체 회차</h2>
         <RoundSearchForm />
 
+        {rounds === null ? (
+          <p className="page-subtitle">회차 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+        ) : (
+          <>
         <p className="muted rounds-summary">
           총 {rounds.totalElements.toLocaleString()}회 중 {currentPage} / {totalPages} 페이지
         </p>
@@ -164,6 +171,8 @@ export default async function RoundsPage({ searchParams }: Props) {
               <span className="pagination-btn disabled">다음</span>
             )}
           </nav>
+        )}
+          </>
         )}
       </section>
 

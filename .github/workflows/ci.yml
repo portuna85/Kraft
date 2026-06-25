@@ -42,7 +42,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
-      - run: npm test
+      - run: npm run test:coverage
       - run: npm run build
         env:
           KRAFT_BACKEND_INTERNAL_URL: http://localhost:8080
@@ -68,6 +68,7 @@ jobs:
         env:
           KRAFT_BACKEND_INTERNAL_URL: http://127.0.0.1:59999
           KRAFT_PUBLIC_BASE_URL: http://127.0.0.1:3100
+          NEXT_PUBLIC_UNDO_WINDOW_MS: "200"
       - run: npm run test:e2e
       - name: Upload Playwright report
         if: always()

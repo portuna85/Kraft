@@ -33,4 +33,18 @@ describe("getDeviceToken", () => {
     const { getDeviceToken: getDeviceToken2 } = await import("@/lib/device-token");
     expect(getDeviceToken2()).toBe(first);
   });
+
+  it("falls back to createRandomToken when crypto.randomUUID is unavailable", async () => {
+    const originalDescriptor = Object.getOwnPropertyDescriptor(crypto, "randomUUID");
+    Object.defineProperty(crypto, "randomUUID", { value: undefined, configurable: true, writable: true });
+    try {
+      const { getDeviceToken } = await import("@/lib/device-token");
+      const token = getDeviceToken();
+      expect(token).toHaveLength(64); // 32 bytes × 2 hex chars
+    } finally {
+      if (originalDescriptor) {
+        Object.defineProperty(crypto, "randomUUID", originalDescriptor);
+      }
+    }
+  });
 });

@@ -27,6 +27,9 @@ public class LottoNumberCodec {
         if (numbers == null || numbers.size() != 6) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_NUMBERS", "로또 번호는 정확히 6개여야 합니다.");
         }
+        if (numbers.stream().anyMatch(n -> n == null)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_NUMBERS", "번호 목록에 null 값이 포함되어 있습니다.");
+        }
 
         List<Integer> sorted = numbers.stream().sorted(Comparator.naturalOrder()).toList();
         for (int number : sorted) {

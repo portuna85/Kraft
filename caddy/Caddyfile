@@ -36,6 +36,10 @@ www.{$KRAFT_DOMAIN} {
 		}
 
 		handle {
+			# 모든 페이지 경로: 브라우저 SWR 60s+300s.
+			# nonce 기반 CSP 때문에 HTML+CSP 헤더가 함께 캐시돼야 안전하므로
+			# CDN용 s-maxage는 추가하지 않음 (CDN 도입 시 nonce 제거 먼저 필요).
+			header Cache-Control "public, max-age=60, stale-while-revalidate=300"
 			reverse_proxy web:3000 {
 				header_up X-Real-IP {remote_host}
 			}

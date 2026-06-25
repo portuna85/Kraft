@@ -7,7 +7,10 @@ const opsAllowedHost = process.env.KRAFT_OPS_ALLOWED_HOST;
 // sha256 해시만으로는 우리가 작성한 inline script(테마 초기화, JSON-LD)는 허용되지만
 // Next가 내부적으로 주입하는, 페이지마다 내용이 달라지는 RSC 스크립트는 허용할 수 없어
 // 모든 페이지에서 하이드레이션이 CSP에 막힌다(실측: /recommend, /saved 등에서 확인).
-// 그래서 nonce는 전 경로에 매 요청 발급한다 — ISR/force-static 회복은 보류.
+// 그래서 nonce는 전 경로에 매 요청 발급한다.
+// ISR 회복 대안: Caddy에 script-src 'unsafe-inline' 정적 CSP로 교체하는 방식이 있으나
+// 보안 트레이드오프로 보류. 현재는 Caddy에서 max-age=60 브라우저 SWR을 적용해
+// 재방문 비용을 낮추는 것으로 대체.
 function generateNonce(): string {
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);

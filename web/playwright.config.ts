@@ -28,6 +28,8 @@ export default defineConfig({
       // 서버 컴포넌트 페이지는 이미 구현된 폴백 UI로 렌더링된다.
       KRAFT_BACKEND_INTERNAL_URL: "http://127.0.0.1:59999",
       KRAFT_PUBLIC_BASE_URL: "http://127.0.0.1:3100",
+      // undo 창을 200ms로 단축해 DELETE 타이머 테스트가 5초를 기다리지 않도록 한다.
+      NEXT_PUBLIC_UNDO_WINDOW_MS: "200",
     },
   },
 });

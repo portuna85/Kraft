@@ -841,14 +841,51 @@ input:focus-visible {
 
 .saved-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 10px;
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: 20px;
   background: var(--surface-card);
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.saved-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.saved-match-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.saved-prize-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--surface-bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.saved-prize-badge.prize-win {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.saved-draw-ref {
+  font-size: 0.78rem;
+  color: var(--muted);
 }
 
 .status-text {
