@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
+import { browserFetch, BrowserApiError } from "@/lib/browser-api";
 
 type SavedNumber = {
   id: number;
@@ -62,17 +63,8 @@ export function SavedNumbersClient() {
     const token = getDeviceToken();
     const headers = { "X-Device-Token": token };
 
-    const fetchSaved = fetch("/api/v1/saved", { headers })
-      .then(async (res) => {
-        if (!res.ok) {
-          const err = (await res.json()) as { message?: string };
-          throw new Error(err.message ?? "저장한 번호를 불러오지 못했습니다.");
-        }
-        return res.json() as Promise<SavedNumber[]>;
-      });
-
-    const fetchResults = fetch("/api/v1/saved/results", { headers })
-      .then((res) => (res.ok ? (res.json() as Promise<MatchResult[]>) : Promise.resolve([])))
+    const fetchSaved = browserFetch<SavedNumber[]>("/api/v1/saved", { headers });
+    const fetchResults = browserFetch<MatchResult[]>("/api/v1/saved/results", { headers })
       .catch(() => [] as MatchResult[]);
 
     Promise.all([fetchSaved, fetchResults])
@@ -92,17 +84,15 @@ export function SavedNumbersClient() {
 
   async function finalizeDelete(item: SavedNumber) {
     try {
-      const res = await fetch(`/api/v1/saved/${item.id}`, {
+      await browserFetch(`/api/v1/saved/${item.id}`, {
         method: "DELETE",
         headers: { "X-Device-Token": getDeviceToken() },
       });
-      if (!res.ok) {
-        setItems((prev) => sortByCreatedAtDesc([...prev, item]));
-        setMessage("삭제에 실패했습니다.");
-      }
-    } catch {
+    } catch (err) {
       setItems((prev) => sortByCreatedAtDesc([...prev, item]));
-      setMessage("삭제하지 못했습니다.");
+      setMessage(
+        err instanceof BrowserApiError ? err.message : "삭제하지 못했습니다.",
+      );
     }
   }
 

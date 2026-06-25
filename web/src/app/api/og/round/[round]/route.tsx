@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 import { getOgFontConfig } from "@/lib/og-font-node";
+import { BALL_BANDS } from "@/lib/ball-color";
 
 // RSC(generateMetadata)가 쿼리 파라미터로 ball 데이터를 넘기므로
 // API route에서 별도 백엔드 fetch 없이 렌더링 가능.
@@ -10,12 +11,8 @@ export const runtime = "nodejs";
 const SIZE = { width: 1200, height: 630 };
 const BALL = 94;
 
-function ballColor(n: number): { bg: string; fg: string } {
-  if (n <= 10) return { bg: "#f5c842", fg: "#1d1a17" };
-  if (n <= 20) return { bg: "#3a5fa0", fg: "#ffffff" };
-  if (n <= 30) return { bg: "#c94f24", fg: "#ffffff" };
-  if (n <= 40) return { bg: "#7a7068", fg: "#ffffff" };
-  return { bg: "#3a7d44", fg: "#ffffff" };
+function ballColor(n: number) {
+  return BALL_BANDS.find((b) => n <= b.max) ?? BALL_BANDS[4];
 }
 
 function formatDate(value: string): string {
@@ -28,36 +25,30 @@ function formatMoney(value: number): string {
   return `${new Intl.NumberFormat("ko-KR").format(value)}원`;
 }
 
-const PLACEHOLDER_BALLS = [
-  { bg: "#f5c842", fg: "#1d1a17" },
-  { bg: "#3a5fa0", fg: "#ffffff" },
-  { bg: "#c94f24", fg: "#ffffff" },
-  { bg: "#7a7068", fg: "#ffffff" },
-  { bg: "#3a7d44", fg: "#ffffff" },
-  { bg: "#c94f24", fg: "#ffffff" },
-];
+function parseParams(searchParams: URLSearchParams) {
+  const ballsParam = searchParams.get("b");
+  return {
+    numbers: ballsParam
+      ? ballsParam.split(",").map(Number).filter((n) => n > 0 && n <= 45)
+      : null,
+    bonusNumber: Number(searchParams.get("bo") ?? 0),
+    drawDate: searchParams.get("d") ?? "",
+    firstPrizeAmount: Number(searchParams.get("p") ?? 0),
+  };
+}
+
+// 플레이스홀더: 각 색상 밴드 순서대로 5개 + 빨강 반복
+const PLACEHOLDER_BALLS = [0, 1, 2, 3, 4, 2].map((i) => ({
+  bg: BALL_BANDS[i].bg,
+  fg: BALL_BANDS[i].fg,
+}));
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ round: string }> },
 ) {
   const { round } = await params;
-  const { searchParams } = req.nextUrl;
-
-  const ballsParam = searchParams.get("b");
-  const bonusParam = searchParams.get("bo");
-  const dateParam = searchParams.get("d");
-  const prizeParam = searchParams.get("p");
-
-  const numbers = ballsParam
-    ? ballsParam
-        .split(",")
-        .map(Number)
-        .filter((n) => n > 0 && n <= 45)
-    : null;
-  const bonusNumber = bonusParam ? Number(bonusParam) : 0;
-  const drawDate = dateParam ?? "";
-  const firstPrizeAmount = prizeParam ? Number(prizeParam) : 0;
+  const { numbers, bonusNumber, drawDate, firstPrizeAmount } = parseParams(req.nextUrl.searchParams);
   const roundNum = Number(round);
 
   const hasData = numbers && numbers.length === 6 && bonusNumber > 0;

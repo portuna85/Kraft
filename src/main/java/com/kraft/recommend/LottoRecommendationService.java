@@ -79,6 +79,13 @@ public class LottoRecommendationService {
                     "제외 번호를 적용한 뒤에도 최소 6개 번호가 남아야 합니다.");
         }
 
+        long available = 45L - excluded.size();
+        long possible = combinations(available, 6);
+        if (count > possible) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INSUFFICIENT_UNIQUE_COMBINATIONS",
+                    "요청한 조합 수(" + count + ")가 가능한 고유 조합 수(" + possible + ")를 초과합니다.");
+        }
+
         List<List<Integer>> recommendations = new ArrayList<>();
         Set<String> seen = new HashSet<>();
         int attempts = 0;
@@ -109,6 +116,14 @@ public class LottoRecommendationService {
             }
         }
         return best;
+    }
+
+    private static long combinations(long n, int k) {
+        long result = 1;
+        for (int i = 0; i < k; i++) {
+            result = result * (n - i) / (i + 1);
+        }
+        return result;
     }
 
     private List<Integer> generateOne(Set<Integer> excluded) {

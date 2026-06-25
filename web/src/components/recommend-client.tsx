@@ -6,6 +6,7 @@ import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
 import { parseExcludedNumbers } from "@/lib/lotto-validation";
 import type { RecommendationResponse } from "@/lib/api";
+import { browserFetch, BrowserApiError } from "@/lib/browser-api";
 
 export function RecommendClient() {
   const [count, setCount] = useState("5");
@@ -30,27 +31,25 @@ export function RecommendClient() {
     setSavedIndexes(new Set());
 
     try {
-      const response = await fetch("/api/v1/numbers/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          count: reqCount,
-          excludedNumbers: reqExcluded,
-          maximizePrize: reqMaximizePrize,
-        }),
-      });
-      const payload = (await response.json()) as RecommendationResponse | { message?: string };
-
+      const payload = await browserFetch<RecommendationResponse>(
+        "/api/v1/numbers/recommend",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            count: reqCount,
+            excludedNumbers: reqExcluded,
+            maximizePrize: reqMaximizePrize,
+          }),
+        },
+      );
       if (seq !== fetchSeqRef.current) return;
-
-      if (!response.ok) {
-        setMessage((payload as { message?: string }).message ?? "추천 생성에 실패했습니다.");
-        return;
-      }
-
-      setRecommendations((payload as RecommendationResponse).recommendations);
-    } catch {
-      if (seq === fetchSeqRef.current) {
+      setRecommendations(payload.recommendations);
+    } catch (err) {
+      if (seq !== fetchSeqRef.current) return;
+      if (err instanceof BrowserApiError) {
+        setMessage(err.message || "추천 생성에 실패했습니다.");
+      } else {
         setMessage("추천 결과를 불러오지 못했습니다.");
       }
     } finally {
@@ -80,7 +79,7 @@ export function RecommendClient() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/v1/saved", {
+      const payload = await browserFetch<{ created?: boolean }>("/api/v1/saved", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,17 +91,14 @@ export function RecommendClient() {
           source: "RECOMMEND",
         }),
       });
-      const payload = (await response.json()) as { created?: boolean; message?: string };
-
-      if (!response.ok) {
-        setMessage(payload.message ?? "저장에 실패했습니다.");
-        return;
-      }
-
       setSavedIndexes((previous) => new Set(previous).add(index));
       setMessage(payload.created ? "저장했습니다." : "이미 저장된 조합입니다.");
-    } catch {
-      setMessage("저장하지 못했습니다.");
+    } catch (err) {
+      setMessage(
+        err instanceof BrowserApiError && err.message
+          ? err.message
+          : "저장하지 못했습니다.",
+      );
     } finally {
       setSavingIndex(null);
     }

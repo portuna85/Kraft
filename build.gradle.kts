@@ -128,6 +128,7 @@ if (strictCoverage == "true") {
         dependsOn(tasks.jacocoTestReport)
         classDirectories.setFrom(jacocoClassDirs())
         violationRules {
+            // 전체 프로젝트 임계값
             rule {
                 limit {
                     counter = "LINE"
@@ -149,6 +150,37 @@ if (strictCoverage == "true") {
                     value = "COVEREDRATIO"
                     minimum = "0.97".toBigDecimal()
                 }
+            }
+            // 핵심 도메인 패키지별 라인 커버리지 임계값
+            rule {
+                element = "PACKAGE"
+                includes = listOf("com/kraft/saved")
+                limit { counter = "LINE"; value = "COVEREDRATIO"; minimum = "0.85".toBigDecimal() }
+            }
+            rule {
+                element = "PACKAGE"
+                includes = listOf("com/kraft/recommend")
+                limit { counter = "LINE"; value = "COVEREDRATIO"; minimum = "0.85".toBigDecimal() }
+            }
+            rule {
+                element = "PACKAGE"
+                includes = listOf("com/kraft/winningnumber")
+                limit { counter = "LINE"; value = "COVEREDRATIO"; minimum = "0.80".toBigDecimal() }
+            }
+            rule {
+                element = "PACKAGE"
+                includes = listOf("com/kraft/statistics")
+                limit { counter = "LINE"; value = "COVEREDRATIO"; minimum = "0.80".toBigDecimal() }
+            }
+            rule {
+                element = "PACKAGE"
+                includes = listOf("com/kraft/ops")
+                limit { counter = "LINE"; value = "COVEREDRATIO"; minimum = "0.80".toBigDecimal() }
+            }
+            rule {
+                element = "PACKAGE"
+                includes = listOf("com/kraft/common/web")
+                limit { counter = "LINE"; value = "COVEREDRATIO"; minimum = "0.75".toBigDecimal() }
             }
         }
     }

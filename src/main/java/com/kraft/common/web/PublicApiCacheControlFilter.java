@@ -19,6 +19,12 @@ public class PublicApiCacheControlFilter extends OncePerRequestFilter {
     // 회차 번호로 조회하는 과거 회차는 발표 후 불변이므로 더 긴 캐시를 허용한다.
     private static final String LONG_PUBLIC_CACHE = "public, max-age=86400, stale-while-revalidate=3600";
 
+    private final ETagVersionProvider eTagVersionProvider;
+
+    public PublicApiCacheControlFilter(ETagVersionProvider eTagVersionProvider) {
+        this.eTagVersionProvider = eTagVersionProvider;
+    }
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return !HttpMethod.GET.matches(request.getMethod()) || !isCacheablePath(request.getRequestURI());
@@ -36,11 +42,12 @@ public class PublicApiCacheControlFilter extends OncePerRequestFilter {
             if (responseWrapper.getStatus() >= 200 && responseWrapper.getStatus() < 300) {
                 String cacheControl = cacheControlFor(request.getRequestURI());
                 responseWrapper.setHeader(HttpHeaders.CACHE_CONTROL, cacheControl);
-                byte[] body = responseWrapper.getContentAsByteArray();
                 String etag = responseWrapper.getHeader(HttpHeaders.ETAG);
-                if (body.length > 0 && etag == null) {
-                    etag = "\"" + DigestUtils.md5DigestAsHex(body) + "\"";
-                    responseWrapper.setHeader(HttpHeaders.ETAG, etag);
+                if (etag == null) {
+                    etag = resolveETag(request.getRequestURI(), responseWrapper);
+                    if (etag != null) {
+                        responseWrapper.setHeader(HttpHeaders.ETAG, etag);
+                    }
                 }
                 if (etag != null && etag.equals(request.getHeader(HttpHeaders.IF_NONE_MATCH))) {
                     // 304는 본문이 없어야 하므로 캐시된 본문은 wrapper에 버려두고 응답에는 복사하지 않는다.
@@ -55,6 +62,16 @@ public class PublicApiCacheControlFilter extends OncePerRequestFilter {
                 responseWrapper.copyBodyToResponse();
             }
         }
+    }
+
+    private String resolveETag(String path, ContentCachingResponseWrapper responseWrapper) {
+        String semantic = eTagVersionProvider.etagForPath(path);
+        if (semantic != null) {
+            return semantic;
+        }
+        // 도메인 버전을 알 수 없는 경로(예: /api/v1/status/incidents)만 MD5 폴백
+        byte[] body = responseWrapper.getContentAsByteArray();
+        return body.length > 0 ? "\"" + DigestUtils.md5DigestAsHex(body) + "\"" : null;
     }
 
     private static String cacheControlFor(String path) {

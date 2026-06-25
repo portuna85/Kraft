@@ -165,6 +165,28 @@ class LottoRecommendationServiceTest {
                         assertThat(apiEx.getCode()).isEqualTo("TOO_MANY_EXCLUSIONS");
                     });
         }
+
+        @Test
+        @DisplayName("후보 6개이고 count=2이면 INSUFFICIENT_UNIQUE_COMBINATIONS 예외 발생")
+        void recommend_countExceedsPossibleCombinations_throwsApiException() {
+            // 39개 제외 → 후보 6개 → C(6,6)=1가지뿐
+            List<Integer> excluded = List.of(
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                    21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                    31, 32, 33, 34, 35, 36, 37, 38, 39
+            );
+
+            assertThatThrownBy(() ->
+                    service.recommend(new RecommendNumbersRequest(2, excluded, false))
+            )
+                    .isInstanceOf(ApiException.class)
+                    .satisfies(ex -> {
+                        ApiException apiEx = (ApiException) ex;
+                        assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                        assertThat(apiEx.getCode()).isEqualTo("INSUFFICIENT_UNIQUE_COMBINATIONS");
+                    });
+        }
     }
 
     // ── 역대 당첨 조합 제외 ───────────────────────────────────────────────────
