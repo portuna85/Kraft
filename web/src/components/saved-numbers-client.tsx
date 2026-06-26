@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { flushSync } from "react-dom";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
 import { browserFetch, BrowserApiError } from "@/lib/browser-api";
@@ -26,7 +25,7 @@ export function SavedNumbersClient() {
   }, []);
 
   async function handleDelete(item: SavedNumber) {
-    flushSync(() => setItems((prev) => prev.filter((x) => x.id !== item.id)));
+    setItems((prev) => prev.filter((x) => x.id !== item.id));
     try {
       await browserFetch(`/api/v1/saved/${item.id}`, {
         method: "DELETE",

@@ -58,14 +58,15 @@ test("삭제 버튼 클릭 시 행이 즉시 제거되고 DELETE가 전송된다
   expect(deleteCalls.filter((m) => m === "DELETE")).toHaveLength(1);
 });
 
-test("DELETE 실패 시 행이 복구된다", async ({ page }) => {
-  mockSavedApi(page, { deleteStatus: 500 });
+test("DELETE 실패 시 DELETE가 전송됐고 행이 복구된다", async ({ page }) => {
+  const { deleteCalls } = mockSavedApi(page, { deleteStatus: 500 });
   await page.goto("/saved");
 
   const list = page.locator(".saved-list");
   await page.getByRole("button", { name: "삭제" }).click();
-  await expect(list.locator(".saved-item")).toHaveCount(0);
 
+  // mock이 즉각 응답하므로 삭제+복구가 거의 동시에 발생 — 최종 상태만 검증
   await page.waitForTimeout(300);
+  expect(deleteCalls.filter((m) => m === "DELETE")).toHaveLength(1);
   await expect(list.locator(".saved-item")).toHaveCount(1);
 });
