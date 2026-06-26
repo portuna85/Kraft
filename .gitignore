@@ -58,6 +58,9 @@ web/playwright-report/
 web/blob-report/
 web/playwright/.cache/
 
+### Test coverage output ###
+web/coverage/
+
 ### Generated infra configs (rendered from .tmpl at deploy time) ###
 infra/alertmanager/alertmanager.yml
 
