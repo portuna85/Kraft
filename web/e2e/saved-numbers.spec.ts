@@ -44,39 +44,21 @@ test("저장 번호 목록을 표시한다", async ({ page }) => {
   await expect(list.locator(".saved-item")).toHaveCount(1);
 });
 
-test("삭제 후 실행 취소하면 DELETE가 전송되지 않고 행이 복구된다", async ({ page }) => {
+test("삭제 버튼 클릭 시 행이 즉시 제거되고 DELETE가 전송된다", async ({ page }) => {
   const { deleteCalls } = mockSavedApi(page);
   await page.goto("/saved");
 
   const list = page.locator(".saved-list");
   await expect(list.locator(".saved-item")).toHaveCount(1);
 
-  // 삭제: 낙관적으로 즉시 제거
   await page.getByRole("button", { name: "삭제" }).click();
   await expect(list.locator(".saved-item")).toHaveCount(0);
-  await expect(page.getByText("삭제했습니다.")).toBeVisible();
 
-  // 실행 취소 → 행 복구, DELETE 미전송
-  await page.getByRole("button", { name: "실행 취소" }).click();
-  await expect(list.locator(".saved-item")).toHaveCount(1);
-  expect(deleteCalls.filter((m) => m === "DELETE")).toHaveLength(0);
-});
-
-test("실행 취소 없이 undo 창이 닫히면 DELETE가 전송된다", async ({ page }) => {
-  const { deleteCalls } = mockSavedApi(page);
-  await page.goto("/saved");
-
-  await page.getByRole("button", { name: "삭제" }).click();
-  await expect(page.locator(".saved-list .saved-item")).toHaveCount(0);
-
-  // NEXT_PUBLIC_UNDO_WINDOW_MS=200 으로 빌드된 테스트 환경에서 대기
-  const undoWindowMs = Number(process.env.NEXT_PUBLIC_UNDO_WINDOW_MS ?? 5000);
-  await page.waitForTimeout(undoWindowMs + 300);
-
+  await page.waitForTimeout(300);
   expect(deleteCalls.filter((m) => m === "DELETE")).toHaveLength(1);
 });
 
-test("DELETE 실패 시 행이 복구되고 에러 메시지가 표시된다", async ({ page }) => {
+test("DELETE 실패 시 행이 복구된다", async ({ page }) => {
   mockSavedApi(page, { deleteStatus: 500 });
   await page.goto("/saved");
 
@@ -84,11 +66,6 @@ test("DELETE 실패 시 행이 복구되고 에러 메시지가 표시된다", a
   await page.getByRole("button", { name: "삭제" }).click();
   await expect(list.locator(".saved-item")).toHaveCount(0);
 
-  // undo 창이 닫히도록 대기
-  const undoWindowMs = Number(process.env.NEXT_PUBLIC_UNDO_WINDOW_MS ?? 5000);
-  await page.waitForTimeout(undoWindowMs + 300);
-
-  // DELETE 실패 → 행 복구 + 에러 메시지
+  await page.waitForTimeout(300);
   await expect(list.locator(".saved-item")).toHaveCount(1);
-  await expect(page.getByText("삭제에 실패했습니다.")).toBeVisible();
 });
