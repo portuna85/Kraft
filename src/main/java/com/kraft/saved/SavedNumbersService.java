@@ -3,14 +3,10 @@ package com.kraft.saved;
 import com.kraft.common.config.SavedProperties;
 import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
-import com.kraft.winningnumber.WinningNumberQueryService;
-import com.kraft.winningnumber.WinningNumberResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,29 +18,16 @@ public class SavedNumbersService {
     private final SavedNumberRepository savedNumberRepository;
     private final LottoNumberCodec lottoNumberCodec;
     private final SavedProperties savedProperties;
-    private final WinningNumberQueryService winningNumberQueryService;
     private final Clock clock;
 
     public SavedNumbersService(SavedNumberRepository savedNumberRepository,
                                LottoNumberCodec lottoNumberCodec,
                                SavedProperties savedProperties,
-                               WinningNumberQueryService winningNumberQueryService,
                                Clock clock) {
         this.savedNumberRepository = savedNumberRepository;
         this.lottoNumberCodec = lottoNumberCodec;
         this.savedProperties = savedProperties;
-        this.winningNumberQueryService = winningNumberQueryService;
         this.clock = clock;
-    }
-
-    @Transactional(readOnly = true)
-    public List<SavedNumberMatchResult> compareWithLatest(String clientTokenHash) {
-        return winningNumberQueryService.findLatest()
-                .map(draw -> savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(clientTokenHash)
-                        .stream()
-                        .map(saved -> toMatchResult(saved, draw))
-                        .toList())
-                .orElseGet(List::of);
     }
 
     @Transactional(readOnly = true)
@@ -92,33 +75,6 @@ public class SavedNumbersService {
                     .map(existing -> new SaveNumberResult(toResponse(existing), false))
                     .orElseThrow(() -> ex);
         }
-    }
-
-    private SavedNumberMatchResult toMatchResult(SavedNumber saved, WinningNumberResponse draw) {
-        List<Integer> savedNumbers = lottoNumberCodec.fromStorageValue(saved.getNumbers());
-        Set<Integer> drawSet = new HashSet<>(draw.numbers());
-        int matchedCount = (int) savedNumbers.stream().filter(drawSet::contains).count();
-        boolean bonusMatch = savedNumbers.contains(draw.bonusNumber());
-        return new SavedNumberMatchResult(
-                toResponse(saved),
-                draw.round(),
-                draw.drawDate(),
-                draw.numbers(),
-                draw.bonusNumber(),
-                matchedCount,
-                bonusMatch,
-                prizeTier(matchedCount, bonusMatch)
-        );
-    }
-
-    private static String prizeTier(int matchedCount, boolean bonusMatch) {
-        return switch (matchedCount) {
-            case 6 -> "1등";
-            case 5 -> bonusMatch ? "2등" : "3등";
-            case 4 -> "4등";
-            case 3 -> "5등";
-            default -> "낙첨";
-        };
     }
 
     private SavedNumberResponse toResponse(SavedNumber savedNumber) {

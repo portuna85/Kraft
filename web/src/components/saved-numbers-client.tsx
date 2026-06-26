@@ -13,31 +13,14 @@ type SavedNumber = {
   createdAt: string;
 };
 
-type MatchResult = {
-  savedNumber: SavedNumber;
-  round: number;
-  drawDate: string;
-  drawNumbers: number[];
-  bonusNumber: number;
-  matchedCount: number;
-  bonusMatch: boolean;
-  prizeTier: string;
-};
-
 const UNDO_WINDOW_MS = Number(process.env.NEXT_PUBLIC_UNDO_WINDOW_MS ?? 5000);
 
 function sortByCreatedAtDesc(items: SavedNumber[]): SavedNumber[] {
   return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-function isWin(prizeTier: string) {
-  return prizeTier !== "낙첨";
-}
-
 export function SavedNumbersClient() {
   const [items, setItems] = useState<SavedNumber[]>([]);
-  const [matchMap, setMatchMap] = useState<Map<number, MatchResult>>(new Map());
-  const [latestRound, setLatestRound] = useState<{ round: number; drawDate: string } | null>(null);
   const [message, setMessage] = useState("");
   const [pendingDelete, setPendingDelete] = useState<{ item: SavedNumber; timer: number } | null>(null);
   const pendingDeleteRef = useRef(pendingDelete);
@@ -60,26 +43,17 @@ export function SavedNumbersClient() {
   }, []);
 
   useEffect(() => {
-    const token = getDeviceToken();
-    const headers = { "X-Device-Token": token };
-
-    const fetchSaved = browserFetch<SavedNumber[]>("/api/v1/saved", { headers });
-    const fetchResults = browserFetch<MatchResult[]>("/api/v1/saved/results", { headers })
-      .catch(() => [] as MatchResult[]);
-
-    Promise.all([fetchSaved, fetchResults])
-      .then(([saved, results]) => {
-        setItems(saved);
-        const map = new Map<number, MatchResult>();
-        for (const r of results) {
-          map.set(r.savedNumber.id, r);
-        }
-        setMatchMap(map);
-        if (results.length > 0) {
-          setLatestRound({ round: results[0].round, drawDate: results[0].drawDate });
-        }
-      })
-      .catch((err: Error) => setMessage(err.message));
+    browserFetch<SavedNumber[]>("/api/v1/saved", {
+      headers: { "X-Device-Token": getDeviceToken() },
+    })
+      .then(setItems)
+      .catch((err: unknown) => {
+        setMessage(
+          err instanceof BrowserApiError && err.message
+            ? err.message
+            : "저장한 번호를 불러오지 못했습니다.",
+        );
+      });
   }, []);
 
   async function finalizeDelete(item: SavedNumber) {
@@ -90,9 +64,11 @@ export function SavedNumbersClient() {
       });
     } catch (err) {
       setItems((prev) => sortByCreatedAtDesc([...prev, item]));
-      setMessage(
-        err instanceof BrowserApiError ? err.message : "삭제하지 못했습니다.",
-      );
+      if (err instanceof BrowserApiError) {
+        setMessage(err.message || "삭제에 실패했습니다.");
+      } else {
+        setMessage("삭제하지 못했습니다.");
+      }
     }
   }
 
@@ -131,40 +107,22 @@ export function SavedNumbersClient() {
         </p>
       ) : null}
 
-      {latestRound ? (
-        <p className="saved-draw-ref">
-          {latestRound.round}회 ({latestRound.drawDate}) 기준 당첨 결과
-        </p>
-      ) : null}
-
       <ul className="saved-list">
-        {items.map((item) => {
-          const match = matchMap.get(item.id);
-          return (
-            <li key={item.id} className="saved-item">
-              <div className="saved-item-row">
-                <LottoBalls numbers={item.numbers} />
-                <button
-                  type="button"
-                  className="saved-delete-btn"
-                  onClick={() => handleDelete(item)}
-                  aria-label="삭제"
-                >
-                  삭제
-                </button>
-              </div>
-              {match ? (
-                <div className="saved-match-info">
-                  <span className={`saved-prize-badge${isWin(match.prizeTier) ? " prize-win" : ""}`}>
-                    {match.prizeTier}
-                  </span>
-                  <span>{match.matchedCount}개 일치</span>
-                  {match.bonusMatch ? <span>보너스 일치</span> : null}
-                </div>
-              ) : null}
-            </li>
-          );
-        })}
+        {items.map((item) => (
+          <li key={item.id} className="saved-item">
+            <div className="saved-item-row">
+              <LottoBalls numbers={item.numbers} />
+              <button
+                type="button"
+                className="saved-delete-btn"
+                onClick={() => handleDelete(item)}
+                aria-label="삭제"
+              >
+                삭제
+              </button>
+            </div>
+          </li>
+        ))}
       </ul>
     </section>
   );

@@ -34,13 +34,6 @@ public class SavedNumbersController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(result);
     }
 
-    @GetMapping("/results")
-    public ResponseEntity<List<SavedNumberMatchResult>> results(
-            @RequestHeader(name = "X-Device-Token", required = true) String deviceToken) {
-        List<SavedNumberMatchResult> result = savedNumbersService.compareWithLatest(deviceTokenSupport.requireHashedToken(deviceToken));
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(result);
-    }
-
     @PostMapping
     public ResponseEntity<SaveNumberResult> save(@RequestHeader(name = "X-Device-Token", required = true) String deviceToken,
                                                  @Valid @RequestBody CreateSavedNumberRequest request) {

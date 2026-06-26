@@ -14,10 +14,6 @@ function mockSavedApi(
 ) {
   const deleteStatus = options.deleteStatus ?? 204;
 
-  page.route("**/api/v1/saved/results", (route) => {
-    route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
-  });
-
   page.route("**/api/v1/saved", (route) => {
     if (route.request().method() === "GET") {
       route.fulfill({

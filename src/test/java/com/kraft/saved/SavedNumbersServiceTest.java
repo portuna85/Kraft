@@ -3,7 +3,6 @@ package com.kraft.saved;
 import com.kraft.common.config.SavedProperties;
 import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
-import com.kraft.winningnumber.WinningNumberQueryService;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -30,9 +29,6 @@ class SavedNumbersServiceTest {
 
     @Mock
     private SavedNumberRepository savedNumberRepository;
-
-    @Mock
-    private WinningNumberQueryService winningNumberQueryService;
 
     private LottoNumberCodec lottoNumberCodec;
     private SavedProperties savedProperties;
@@ -62,7 +58,7 @@ class SavedNumbersServiceTest {
         lottoNumberCodec = new LottoNumberCodec();
         savedProperties = new SavedProperties(100);
         clock = Clock.fixed(Instant.parse("2026-06-13T10:00:00Z"), ZoneId.of("Asia/Seoul"));
-        service = new SavedNumbersService(savedNumberRepository, lottoNumberCodec, savedProperties, winningNumberQueryService, clock);
+        service = new SavedNumbersService(savedNumberRepository, lottoNumberCodec, savedProperties, clock);
     }
 
     @Test
