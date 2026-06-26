@@ -1,334 +1,476 @@
-<div align="center">
-
 # KRAFT Lotto
 
-**로또 6/45 당첨 결과 조회 · 번호 추천 · 통계 분석 · 번호 저장 풀스택 서비스**
+KRAFT Lotto는 로또 6/45 당첨 결과 조회, 번호 추천, 통계 분석, 저장 번호 관리, 운영 대시보드까지 포함한 웹 서비스입니다. 백엔드는 Spring Boot, 프론트엔드는 Next.js App Router로 구성되어 있고, 운영 환경은 Docker Compose, Caddy, MariaDB, Prometheus, Grafana, Alertmanager를 기준으로 배포됩니다.
 
-기획부터 백엔드 · 프론트엔드, 인프라, CI/CD, 운영 자동화, 모니터링까지 — **1인이 전 영역을 직접 설계하고 운영합니다.**
+[![Live](https://img.shields.io/badge/Live-kraft.io.kr-2348d8?style=flat-square)](https://kraft.io.kr/)
+[![CI](https://github.com/portuna85/Kraft/actions/workflows/ci.yml/badge.svg)](https://github.com/portuna85/Kraft/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/portuna85/Kraft/actions/workflows/codeql.yml/badge.svg)](https://github.com/portuna85/Kraft/actions/workflows/codeql.yml)
 
-<br/>
+## 핵심 기능
 
-[![Live](https://img.shields.io/badge/Live-kraft.io.kr-2348d8?style=flat-square&logo=icloud&logoColor=white)](https://kraft.io.kr/)
-![Tests](https://img.shields.io/badge/tests-224%20passing-2ea043?style=flat-square&logo=checkmarx&logoColor=white)
-![Coverage](https://img.shields.io/badge/coverage-82%25-2ea043?style=flat-square&logo=jacoco&logoColor=white)
-![Security](https://img.shields.io/badge/Trivy-0%20HIGH%2FCRITICAL-2ea043?style=flat-square&logo=trivy&logoColor=white)
+| 영역 | 기능 |
+| --- | --- |
+| 당첨 결과 | 최신 회차, 회차 목록, 특정 회차 상세, 당첨금/판매액 조회 |
+| 번호 추천 | 제외 번호와 추천 개수 설정, 과거 1등 조합 중복 확인, 저장 연계 |
+| 저장 번호 | 브라우저 기기 토큰 기반 저장/조회/삭제, 서버에는 토큰 해시만 보관 |
+| 통계 | 번호별 출현 빈도, 홀짝/고저/합계 패턴, 동반 출현 조합, 임의 조합 분석 |
+| 상태 페이지 | 데이터 최신성, 최근 30일 수집/보정 이력 공개 |
+| 운영 | 회차 직접 입력, 최신/특정 회차 외부 수집, 운영 로그 조회 |
+| 관리자 | Thymeleaf 기반 관리자 로그인, 회차 수집, 전체 백필, 감사 로그 |
+| 배포/운영 | Caddy 라우팅, TLS, 내부망 분리, 모니터링, 알림, DB 백업/복구 드릴 |
 
-<br/>
+> 번호 추천은 통계 기반 참고 기능입니다. 당첨을 보장하지 않습니다.
 
-![Java](https://img.shields.io/badge/Java-25-007396?style=flat-square&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?style=flat-square&logo=springboot&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![MariaDB](https://img.shields.io/badge/MariaDB-11.7-003545?style=flat-square&logo=mariadb&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Caddy](https://img.shields.io/badge/Caddy-1F88C0?style=flat-square&logo=caddy&logoColor=white)
-![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat-square&logo=prometheus&logoColor=white)
-![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat-square&logo=grafana&logoColor=white)
+## 기술 스택
 
-</div>
+| 영역 | 사용 기술 |
+| --- | --- |
+| Backend | Java 25, Spring Boot 4.1, Spring Web, Validation, Data JPA, Security, Actuator, Thymeleaf |
+| Data | MariaDB 11.7, Flyway, H2(local/test), Caffeine cache |
+| Batch/Resilience | ShedLock, Resilience4j CircuitBreaker, Spring Scheduler, Async event listener |
+| Frontend | Next.js 16 App Router, React 19, TypeScript, CSS, Server Components, ISR |
+| Test | JUnit 5, Spring Test, Testcontainers MariaDB, JaCoCo, Vitest, Testing Library, Playwright |
+| Static/Security | Checkstyle, SpotBugs, CodeQL, Trivy, Dependabot |
+| Infra | Docker Compose, Caddy, Prometheus, Grafana, Alertmanager, node-exporter, GHCR |
 
----
-
-## 목차
-
-| | | |
-| :-- | :-- | :-- |
-| [01 · 보여주는 것](#01--이-프로젝트가-보여주는-것) | [05 · 저장소 구조](#05--저장소-구조) | [09 · 배포 파이프라인](#09--배포-파이프라인) |
-| [02 · 핵심 기능](#02--핵심-기능) | [06 · 빠른 시작](#06--빠른-시작) | [10 · 운영 자동화](#10--운영-자동화) |
-| [03 · 기술 스택](#03--기술-스택) | [07 · 테스트 · 정적 분석](#07--테스트와-정적-분석) | [11 · 보안 메모](#11--보안-메모) |
-| [04 · 아키텍처](#04--아키텍처) | [08 · API 개요](#08--api-개요) | [12 · 환경 파일](#12--환경-파일) |
-
----
-
-## 01 · 이 프로젝트가 보여주는 것
-
-> [!NOTE]
-> 단순 CRUD 토이 프로젝트가 아니라, **실제 트래픽을 받는 서비스를 1인이 끝까지 책임지는 과정**에서 나온 엔지니어링 판단들을 모아둔 저장소입니다.
-
-| 원칙 | 무엇을 / 어떻게 |
-| :-- | :-- |
-| **테스트로 회귀를 막는다** | JUnit 179개 + Vitest 45개 + Playwright E2E 4개. JaCoCo 커버리지 게이트(라인 82% / 분기 65% / 메서드 88% / 클래스 97%)를 CI에 강제해, 통과 못 하면 머지할 수 없습니다. |
-| **정적 분석이 실제로 버그를 잡는다** | Checkstyle + SpotBugs를 strict 모드로 PR에 건다. SpotBugs를 Java 25 호환 버전으로 올리는 과정에서 클라이언트 입력이 검증 없이 응답 헤더에 반영되는 **CRLF 인젝션 가능성을 실제로 발견해 고쳤습니다.** |
-| **E2E가 단위 테스트로 못 잡는 걸 잡는다** | Playwright를 도입하는 과정에서, 실제 브라우저 렌더링에서만 드러나는 하이드레이션 이슈를 발견해 CSP 스크립트 정책을 다시 설계했습니다. 빌드 성공·타입체크 통과만으로는 보이지 않던 문제였습니다. |
-| **같은 요청도 경로에 따라 다른 IP로 보일 수 있다고 가정한다** | 관리자 도메인에 IP 기반 접근 제어를 추가할 때, 진단 로그를 먼저 붙여 셀프 트래픽이 헤어핀 NAT·컨테이너 NAT 등 경로에 따라 서로 다른 출발지 주소로 보인다는 걸 직접 검증한 뒤 반영했습니다. |
-| **인프라를 깊이까지 하드닝한다** | 모든 컨테이너 이미지 digest 고정, `cap_drop: ALL` + `no-new-privileges`, Docker 네트워크를 `edge` / `app` / `monitoring`으로 분리(`app`·`monitoring`은 internal 전용이라 DB는 호스트에서 직접 닿지 않음), Caddy `route {}`로 라우팅 우선순위 명시. |
-| **공급망까지 신경 쓴다** | GHCR 이미지에 SBOM·provenance attestation 부착, Trivy로 HIGH/CRITICAL 취약점 차단, CodeQL을 PR 단계부터 실행, Dependabot으로 의존성 추적. |
-| **동시성 문제를 가정하고 설계한다** | 외부 회차 수집과 수동 운영 API가 같은 회차를 동시에 처리해도 500이 아니라 멱등하게 update로 수렴하도록 INSERT를 별도 트랜잭션으로 분리, 외부 HTTP 호출은 DB 트랜잭션 밖에서 수행, 통계 재집계는 ShedLock으로 다중 인스턴스 환경에서도 중복 실행을 막음. |
-| **운영 자동화까지 끝낸다** | DB 백업/복구 드릴이 cron으로 매일/매주 자동 실행되고 RPO/RTO를 기록하며, 배포 실패 시 Caddy 설정과 이미지를 자동으로 롤백. |
-
----
-
-## 02 · 핵심 기능
-
-- 최신 회차 / 특정 회차 / 전체 회차 목록 조회
-- 번호 추천 (과거 1등 조합과의 중복 확인 포함)
-- 번호 출현 빈도, 패턴 통계, 동반 출현 통계, 조합 분석
-- 기기 단위 저장 번호 관리 (`X-Device-Token` 기반, 서버에 개인정보 없이 식별) — 저장 시 **최신 회차와 자동 대조**해 일치 개수·당첨 등수를 바로 보여줌
-- 방문자 화면에 데이터 최신성 표시, 공개 서비스 상태 페이지(`/status`)에서 최근 30일 수집 지연·보정 이력 확인
-- 운영 대시보드에서 수동 적재 · 최신 회차 수집 · 작업 로그 조회
-- 관리자 SSR 페이지에서 회차 수집과 감사 로그 확인 (IP 기반 접근 제어로 심층 방어)
-- 자동 수집, ISR on-demand revalidation, 보안 헤더, 공개 API rate limit
-
----
-
-## 03 · 기술 스택
-
-| 영역 | 사용 기술 | 비고 |
-| :-- | :-- | :-- |
-| **Backend** | Java 25, Spring Boot 4.1, Spring Web/Validation/JPA/Security, Thymeleaf | 가상 스레드 대응 런타임, 기능 단위 패키징 |
-| **Data** | MariaDB 11.7, Flyway, Caffeine, H2(로컬) | summary 테이블 + ShedLock 분산 락 |
-| **Resilience** | Resilience4j, ShedLock | 외부 API 서킷 브레이커, 스케줄러 중복 실행 방지, REQUIRES_NEW 트랜잭션 분리 |
-| **Frontend** | Next.js 16(App Router), React 19, TypeScript | SSR/ISR 혼합, 요청별 CSP nonce |
-| **Infra** | Docker Compose, Caddy | 네트워크 분리, 이미지 digest 고정, 관리자 도메인 IP allowlist |
-| **Observability** | Spring Actuator, Prometheus, Grafana, Alertmanager, node-exporter | |
-| **Test** | JUnit 5, Spring Test, Testcontainers(MariaDB), Vitest, Testing Library, Playwright | |
-| **CI/CD** | GitHub Actions, GHCR, Trivy, CodeQL, SBOM/provenance, SSH 배포 | |
-
----
-
-## 04 · 아키텍처
+## 아키텍처
 
 ```text
-                        ┌─────────────┐
-  사용자 ──────────────▶│    Caddy    │  edge / app 네트워크
-                        │ (리버스 프록시) │  도메인별 라우팅, TLS, 보안 헤더, IP allowlist
-                        └──────┬──────┘
-                  ┌────────────┼────────────┐
-                  ▼                         ▼
-          ┌───────────────┐         ┌──────────────┐
-          │  Next.js (web) │         │ Spring Boot   │
-          │  SSR / ISR     │◀───────▶│  (backend)    │  app / monitoring 네트워크
-          └───────────────┘  내부호출  └──────┬───────┘
-                                              │
-                          ┌───────────────────┼───────────────────┐
-                          ▼                   ▼                   ▼
-                   ┌────────────┐    ┌────────────────┐   ┌──────────────┐
-                   │  MariaDB    │    │ Prometheus/     │   │ 외부 당첨번호  │
-                   │ (app 전용,  │    │ Grafana/        │   │ 수집 API      │
-                   │  internal)  │    │ Alertmanager    │   │ (서킷 브레이커) │
-                   └────────────┘    └────────────────┘   └──────────────┘
+Browser
+  |
+  | HTTPS
+  v
+Caddy
+  |-- public domain
+  |     |-- /api/v1/*      -> Spring Boot backend:8080
+  |     |-- /*             -> Next.js web:3000
+  |     `-- /admin*, /ops*, /actuator*, /api/revalidate 차단
+  |
+  `-- admin domain
+        |-- /admin*        -> Spring Boot Thymeleaf admin
+        |-- /ops-api/*     -> Spring Boot /ops/*
+        |-- /grafana/*     -> Grafana
+        `-- IP allowlist 적용 가능
+
+Spring Boot
+  |-- MariaDB app network
+  |-- external lotto API, optional
+  |-- Prometheus metrics
+  `-- Next.js /api/revalidate webhook
+
+Next.js
+  |-- SSR/ISR public pages
+  |-- local/E2E API route handler fallback
+  `-- CSP nonce middleware
 ```
 
-> [!IMPORTANT]
-> `mariadb` / Prometheus 등은 `internal: true` 네트워크에 있어 **호스트에서 직접 접근할 수 없고**, Caddy를 통해서만 외부 트래픽이 들어옵니다. 관리자 도메인은 추가로 IP allowlist(미설정 시 전체 허용)로 한 번 더 막혀 있습니다.
+운영용 `docker-compose.prod.yml`은 `edge`, `app`, `monitoring` 네트워크를 분리합니다. MariaDB, Prometheus, Alertmanager, node-exporter는 외부 포트를 열지 않고 내부 네트워크에서만 접근합니다.
 
----
-
-## 05 · 저장소 구조
-
-<details open>
-<summary><b>디렉터리 트리</b></summary>
+## 저장소 구조
 
 ```text
 Kraft/
-├── src/main/java/com/kraft
-│   ├── admin/           # 관리자 SSR, 로그인, 감사 로그
-│   ├── common/          # 공통 설정, 에러 처리, 보안, 웹 유틸
-│   ├── ops/             # 운영 API
-│   ├── operationlog/    # 작업 로그, 공개 인시던트 요약 API
-│   ├── recommend/       # 번호 추천
-│   ├── saved/           # 저장 번호
-│   ├── statistics/      # 빈도/패턴/동반/분석 통계
-│   └── winningnumber/   # 회차 조회, 외부 수집, 백필, 데이터 최신성
-├── src/main/resources
-│   ├── db/migration/    # Flyway 마이그레이션
-│   └── templates/admin/ # 관리자 HTML 템플릿
-├── src/test/java        # 백엔드 테스트
-├── web/
-│   ├── src/app/         # Next.js 페이지, Route Handler
-│   ├── src/components/  # UI 컴포넌트
-│   ├── src/lib/         # API/포맷/검증/로깅 유틸
-│   ├── src/__tests__/   # 프론트엔드 단위 테스트(Vitest)
-│   └── e2e/             # 브라우저 E2E 테스트(Playwright)
-├── caddy/               # 공개/관리 도메인 라우팅
-├── infra/               # Prometheus, Grafana, Alertmanager 설정
-├── scripts/             # 배포, 마이그레이션, DB 백업/복구, 서버 초기화
-└── .github/workflows/   # CI, CD, PR Check, CodeQL
+|-- src/main/java/com/kraft/
+|   |-- admin/          관리자 SSR, 로그인, 잠금, 감사 로그
+|   |-- common/         공통 설정, 보안 필터, 오류 응답, 로또 번호 codec
+|   |-- ops/            운영 API와 운영 요약
+|   |-- operationlog/   수집/보정 작업 로그와 공개 상태 API
+|   |-- recommend/      번호 추천과 과거 1등 조합 검사
+|   |-- saved/          기기 토큰 기반 저장 번호
+|   |-- statistics/     빈도, 패턴, 동반 출현, 조합 분석
+|   `-- winningnumber/  회차 조회, 외부 수집, 백필, 최신성, ISR 이벤트
+|-- src/main/resources/
+|   |-- db/migration/   Flyway SQL
+|   |-- templates/admin/관리자 Thymeleaf 템플릿
+|   `-- application*.yml
+|-- src/test/           백엔드 단위/통합 테스트
+|-- web/
+|   |-- src/app/        Next.js 페이지와 Route Handler
+|   |-- src/components/ UI 컴포넌트
+|   |-- src/lib/        API, 포맷, 검증, 토큰, 로깅 유틸
+|   |-- src/__tests__/  Vitest 테스트
+|   `-- e2e/            Playwright 테스트
+|-- caddy/              Caddy 라우팅과 보안 헤더
+|-- infra/              Prometheus, Grafana, Alertmanager
+|-- scripts/            배포, 백업/복구, 마이그레이션, 서버 초기화
+|-- .github/            CI, CD, CodeQL, Dependabot
+`-- docker-compose*.yml
 ```
 
-</details>
+## 빠른 시작
 
----
+### 요구 사항
 
-## 06 · 빠른 시작
+- JDK 25
+- Node.js 24 이상
+- npm
+- Docker Desktop 또는 Docker Engine, MariaDB를 함께 실행할 때 필요
 
-> 로컬 개발 환경 기준입니다.
+### 1. 백엔드만 바로 실행, H2 메모리 DB
 
-**사전 요구사항** &nbsp;·&nbsp; JDK 25 · Node.js 24+ · npm · Docker
+가장 빠른 로컬 실행 방식입니다. MariaDB 없이 Spring Boot가 H2 메모리 DB로 시작합니다.
 
-#### 1. 개발용 DB 실행
+```powershell
+copy .env.local.example .env.local
+.\gradlew.bat bootRun --args="--spring.profiles.active=local"
+```
 
-```bash
+접속:
+
+| 항목 | URL |
+| --- | --- |
+| Backend API | http://localhost:8080 |
+| Health | http://localhost:8080/actuator/health |
+| H2 Console | http://localhost:8080/h2-console |
+| Admin Login | http://localhost:8080/admin/login |
+
+`.env.local.example`의 기본 관리자 계정은 로컬 개발용 `admin / admin`입니다. 실제 환경에서는 사용하지 마세요.
+
+### 2. 프론트엔드 실행
+
+Next.js 서버 컴포넌트가 백엔드를 직접 호출하므로 로컬에서는 `KRAFT_BACKEND_INTERNAL_URL`을 `localhost:8080`으로 맞춥니다.
+
+```powershell
+cd web
+copy .env.example .env.local
+```
+
+`web/.env.local`에서 아래 값을 로컬용으로 수정합니다.
+
+```properties
+KRAFT_BACKEND_INTERNAL_URL=http://localhost:8080
+KRAFT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+실행:
+
+```powershell
+npm ci
+npm run dev
+```
+
+접속:
+
+| 항목 | URL |
+| --- | --- |
+| Web | http://localhost:3000 |
+| Ops Page | http://localhost:3000/ops |
+
+### 3. MariaDB 개발 DB만 실행
+
+H2 대신 MariaDB로 개발하려면 DB 컨테이너를 먼저 띄우고 `.env.local`의 DB 주석을 해제합니다.
+
+```powershell
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-#### 2. 환경 파일 준비
+`.env.local` 예시:
 
-```bash
-copy .env.local.example .env.local
+```properties
+KRAFT_DB_URL=jdbc:mariadb://localhost:3306/kraft_lotto?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+KRAFT_DB_USERNAME=kraft_lotto
+KRAFT_DB_PASSWORD=devpass
+KRAFT_FLYWAY_ENABLED=true
+KRAFT_JPA_DDL_AUTO=validate
 ```
 
-> [!TIP]
-> 값을 채우지 않으면 **H2 인메모리**로 동작합니다.
+### 4. Docker로 전체 로컬 스택 실행
 
-#### 3. 백엔드 / 프론트엔드 실행
+백엔드, 웹, MariaDB, Prometheus, Grafana, Alertmanager, node-exporter를 한 번에 실행합니다.
 
-```bash
-# Backend
-.\gradlew.bat bootRun --args="--spring.profiles.active=local"
-
-# Frontend
-cd web && npm ci && npm run dev
-```
-
-#### 접속 주소
-
-| 서비스 | URL |
-| :-- | :-- |
-| Web | <http://localhost:3000> |
-| Backend API | <http://localhost:8080> |
-| Actuator Health | <http://localhost:8080/actuator/health> |
-| H2 Console | <http://localhost:8080/h2-console> |
-| Admin Login | <http://localhost:8080/admin/login> |
-| Ops Page | <http://localhost:3000/ops> |
-
-<details>
-<summary><b>Docker로 전체 스택 실행</b></summary>
-
-```bash
+```powershell
 copy .env.example .env
+```
+
+최소한 아래 값은 `.env`에 채웁니다.
+
+```properties
+MARIADB_ROOT_PASSWORD=devroot
+MARIADB_PASSWORD=devpass
+KRAFT_DB_PASSWORD=devpass
+KRAFT_OPS_TOKEN=local-dev-ops-token
+KRAFT_PUBLIC_BASE_URL=http://localhost
+GRAFANA_ADMIN_PASSWORD=admin
+```
+
+실행:
+
+```powershell
 docker compose up -d --build
 ```
 
-운영형 실행(`.env.prod` 준비 후):
+접속:
+
+| 항목 | URL |
+| --- | --- |
+| Web | http://localhost:3000 |
+| Backend API | http://localhost:8080 |
+| MariaDB | localhost:3306 |
+
+## 환경 파일
+
+| 파일 | 용도 |
+| --- | --- |
+| `.env.local.example` | Spring Boot를 로컬에서 직접 실행할 때 읽는 값 |
+| `.env.example` | 로컬 Docker Compose용 템플릿 |
+| `.env.prod.example` | CD에서 GitHub Secrets로 렌더링하는 운영 템플릿 |
+| `web/.env.example` | Next.js 로컬/빌드 환경 변수 템플릿 |
+
+주요 변수:
+
+| 변수 | 설명 |
+| --- | --- |
+| `KRAFT_DB_URL`, `KRAFT_DB_USERNAME`, `KRAFT_DB_PASSWORD` | Spring Boot DB 연결 |
+| `KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE` | 외부 회차 수집 URL. `{round}` 플레이스홀더 필요 |
+| `KRAFT_EXTERNAL_LOTTO_AUTO_COLLECT_CRON` | 자동 수집 cron. 기본 `0 30 21 * * SAT` |
+| `KRAFT_OPS_TOKEN` | `/ops/*` API 인증용 `X-Ops-Token` 값 |
+| `KRAFT_REVALIDATE_SECRET` | 백엔드와 Next.js `/api/revalidate` 간 공유 secret |
+| `KRAFT_REVALIDATE_WEB_URL` | 백엔드가 revalidation을 호출할 웹 서버 URL |
+| `KRAFT_BACKEND_INTERNAL_URL` | Next.js 서버에서 호출할 백엔드 내부 URL |
+| `KRAFT_PUBLIC_BASE_URL` | canonical URL, sitemap, OG 태그 기준 URL |
+| `KRAFT_OPS_ALLOWED_HOST` | `/ops` 프론트 페이지 접근 허용 호스트 |
+| `KRAFT_ADMIN_ALLOWED_CIDR` | Caddy 관리자 도메인 IP allowlist |
+| `KRAFT_SECURITY_TRUSTED_PROXY_CIDR` | Actuator/프록시 신뢰 CIDR |
+| `KRAFT_SECURITY_RATE_LIMIT_PER_MINUTE` | 공개 API/IP별 분당 제한 |
+| `KRAFT_SAVED_MAX_PER_CLIENT` | 기기 토큰별 저장 번호 최대 개수 |
+| `KRAFT_ADMIN_BOOTSTRAP_USERNAME`, `KRAFT_ADMIN_BOOTSTRAP_PASSWORD` | 관리자 최초 계정 생성 |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana 관리자 비밀번호 |
+
+외부 수집 URL이 비어 있으면 수집 API와 자동 수집 스케줄러는 비활성 상태로 동작합니다.
+
+## 공개 화면
+
+| 경로 | 설명 | 캐시 |
+| --- | --- | --- |
+| `/` | 최신 당첨 결과와 주요 기능 진입점 | ISR 60초 |
+| `/rounds` | 최신 결과, 회차 목록, 회차 검색 | ISR 60초 |
+| `/rounds/[round]` | 특정 회차 상세와 조합 분석 | ISR 1시간 |
+| `/recommend` | 번호 추천, 제외 번호, 저장 연계 | 동적 클라이언트 UI |
+| `/saved` | 기기 토큰 기반 저장 번호 관리 | noindex |
+| `/frequency` | 번호별 출현 빈도 | ISR 30분 |
+| `/stats` | 홀짝, 고저, 합계 패턴 통계 | ISR 30분 |
+| `/companion` | 동반 출현 번호쌍 통계 | ISR 30분 |
+| `/analysis` | 임의 번호 6개 조합 분석 | 동적 클라이언트 UI |
+| `/status` | 데이터 최신성, 수집/보정 이력 | ISR 60초, noindex |
+| `/ops` | 운영 대시보드. `/ops-api/*` 호출 | 호스트 제한 가능 |
+
+## API 개요
+
+### Public API
+
+기본 경로는 `/api/v1`입니다.
+
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/rounds/latest` | 최신 당첨 회차 |
+| `GET` | `/rounds/freshness` | 최신 데이터 반영 상태 |
+| `GET` | `/rounds?page=0&size=20` | 회차 목록. `size`는 1-100 |
+| `GET` | `/rounds/{round}` | 특정 회차 상세 |
+| `POST` | `/numbers/recommend` | 추천 조합 생성 |
+| `GET` | `/numbers/check?numbers=1,2,3,4,5,6` | 과거 1등 조합 여부 |
+| `GET` | `/stats/frequency?limit=100` | 번호 빈도. `limit`은 100, 200, 500만 허용 |
+| `GET` | `/stats/patterns` | 홀짝, 고저, 합계 패턴 통계 |
+| `GET` | `/stats/companion` | 동반 출현 번호쌍 |
+| `POST` | `/stats/analysis` | 번호 6개 조합 분석 |
+| `GET` | `/saved` | 저장 번호 목록. `X-Device-Token` 필요 |
+| `POST` | `/saved` | 번호 저장. `X-Device-Token` 필요 |
+| `DELETE` | `/saved/{id}` | 저장 번호 삭제. `X-Device-Token` 필요 |
+| `GET` | `/status/incidents` | 최근 공개 수집/보정 이력 |
+| `GET` | `/status` | 서비스 상태 요약 |
+
+예시:
+
+```bash
+curl http://localhost:8080/api/v1/rounds/latest
+
+curl -X POST http://localhost:8080/api/v1/numbers/recommend \
+  -H "Content-Type: application/json" \
+  -d '{"count":5,"excludedNumbers":[1,2,3],"maximizePrize":true}'
+
+curl -X POST http://localhost:8080/api/v1/saved \
+  -H "Content-Type: application/json" \
+  -H "X-Device-Token: 0123456789abcdef0123456789abcdef" \
+  -d '{"numbers":[3,11,19,28,34,42],"label":"주말","source":"MANUAL"}'
+```
+
+저장 번호의 `X-Device-Token`은 32-128자 문자열이어야 하며, 서버에는 SHA-256 해시만 저장됩니다.
+
+### Ops API
+
+기본 경로는 `/ops`이고 모든 요청에 `X-Ops-Token`이 필요합니다. 토큰이 비어 있으면 API는 비활성 상태로 응답합니다.
+
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/summary` | 운영 요약과 데이터 최신성 |
+| `GET` | `/logs` | 수집/보정 로그 목록. 필터: `page`, `size`, `operationType`, `executionStatus`, `round`, `from`, `to` |
+| `POST` | `/rounds` | 회차 직접 입력 또는 갱신 |
+| `POST` | `/collect/latest` | 다음 최신 회차 수집 |
+| `POST` | `/collect/{round}` | 특정 회차 외부 수집 |
+
+프론트 운영 페이지는 `/ops-api/*`를 호출합니다. Next.js 개발 서버는 rewrite로, 운영 Caddy는 `handle_path /ops-api/*`로 백엔드 `/ops/*`에 전달합니다.
+
+### Admin UI
+
+| 경로 | 설명 |
+| --- | --- |
+| `/admin/login` | 관리자 로그인 |
+| `/admin/dashboard` | 관리자 대시보드 |
+| `/admin/rounds` | 회차 수집, 전체 백필 |
+| `/admin/audit` | 관리자 감사 로그 |
+
+관리자 UI는 Spring Security 세션, CSRF, 로그인 실패 잠금, 감사 로그를 사용합니다. 운영 공개 도메인에서는 Caddy가 `/admin*`을 차단하고 관리자 도메인에서만 접근하도록 구성합니다.
+
+## 데이터 모델
+
+| 테이블 | 역할 |
+| --- | --- |
+| `winning_numbers` | 회차, 추첨일, 6개 번호, 보너스 번호, 1/2등 상금, 판매액 |
+| `saved_numbers` | 기기 토큰 해시별 저장 번호 |
+| `winning_number_operation_logs` | 외부 수집/수동 보정/백필 작업 이력 |
+| `winning_number_frequency_summary` | 번호별 출현 빈도 요약 |
+| `pattern_stats_summary` | 홀짝, 고저, 합계 구간 통계 요약 |
+| `companion_pair_summary` | 동반 출현 번호쌍 요약 |
+| `admin_users` | 관리자 계정 |
+| `admin_audit_log` | 관리자 행동 감사 로그 |
+| `shedlock` | 스케줄러 중복 실행 방지 락 |
+
+Flyway 마이그레이션은 `src/main/resources/db/migration`에서 관리합니다.
+
+## 수집과 갱신 흐름
+
+1. `WinningNumberAutoCollectScheduler`가 토요일 21:30 KST와 일요일 07:00 KST에 최신 회차 catch-up을 시도합니다.
+2. 외부 수집 URL은 `KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE`의 `{round}`를 회차 번호로 치환해 호출합니다.
+3. 수집 성공 시 회차별 upsert는 트랜잭션으로 처리하고, 작업 로그는 별도 트랜잭션으로 기록합니다.
+4. 커밋 이후 `StatisticsRefreshListener`가 통계 요약 테이블을 갱신합니다.
+5. 커밋 이후 `RevalidateWebhookListener`가 Next.js `/api/revalidate`를 호출해 `/`, `/rounds`, `/frequency`, `/stats`, `/companion`, `/rounds/{round}`를 재검증합니다.
+6. ShedLock이 다중 인스턴스 환경에서 스케줄러 중복 실행을 막습니다.
+
+전체 백필은 관리자 화면에서 비동기로 실행되며, 이미 저장된 회차 이후 첫 누락 회차부터 외부 API가 더 이상 데이터를 주지 않는 지점까지 순차 수집합니다.
+
+## 테스트와 품질 게이트
+
+### Backend
+
+```powershell
+.\gradlew.bat test bootJar
+.\gradlew.bat check -PstrictCoverage=true -PstrictStatic=true
+```
+
+`strictCoverage=true`는 JaCoCo 커버리지 게이트를 켭니다. 현재 기준은 전체 라인 82%, 브랜치 65%, 메서드 88%, 클래스 97%이며, 핵심 패키지별 라인 커버리지 기준도 별도로 둡니다.
+
+`strictStatic=true`는 Checkstyle 실패를 빌드 실패로 처리합니다. SpotBugs는 항상 실패를 차단합니다.
+
+### Frontend
+
+```powershell
+cd web
+npm ci
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+### E2E
+
+```powershell
+cd web
+npm run build
+npm run test:e2e
+```
+
+Playwright는 `web/scripts/serve-standalone.mjs`로 Next.js standalone 산출물을 3100번 포트에 띄우고, 백엔드 미가용 상황에서도 주요 클라이언트 흐름과 fallback UI를 검증합니다.
+
+### CI/CD
+
+| 파일 | 역할 |
+| --- | --- |
+| `.github/workflows/ci.yml` | 백엔드 테스트/빌드, 웹 lint/type/test/build, Playwright, 정적 분석, Caddy 검증, 이미지 publish, Trivy, latest 승격 |
+| `.github/workflows/pr.yml` | PR 의존성 취약점 스캔 |
+| `.github/workflows/codeql.yml` | Java/Kotlin, JavaScript/TypeScript CodeQL 분석 |
+| `.github/workflows/cd.yml` | CI 성공 후 SSH 배포, env 렌더링, image pull, readiness, smoke, 실패 시 rollback |
+| `.github/dependabot.yml` | Gradle, npm, Docker, GitHub Actions 주간 업데이트 |
+
+`scripts/check-no-removed-features.sh`는 제거된 Flutter, push/FCM, news 관련 코드가 재유입되지 않도록 CI에서 검사합니다.
+
+## 운영 배포
+
+운영 서버 초기화:
+
+```bash
+sudo bash scripts/server/init-ubuntu.sh
+```
+
+이 스크립트는 Ubuntu 24.04 기준으로 Docker, deploy 사용자, UFW, fail2ban, 저장소, 로그 디렉터리, DB 백업/복구 드릴 cron을 준비합니다.
+
+운영 Compose 실행:
 
 ```bash
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ```
 
-</details>
-
----
-
-## 07 · 테스트와 정적 분석
+로컬에서 운영 Compose를 시험하면서 포트를 열려면 `docker-compose.local.yml`을 함께 적용할 수 있습니다.
 
 ```bash
-# Backend
-.\gradlew.bat test bootJar
-.\gradlew.bat check -PstrictCoverage=true -PstrictStatic=true   # 커버리지 게이트 + Checkstyle + SpotBugs
-
-# Frontend
-cd web
-npm ci && npm run lint && npm run typecheck && npm test && npm run build
-
-# E2E (빌드 후)
-npm run test:e2e
+docker compose --env-file .env.prod -f docker-compose.prod.yml -f docker-compose.local.yml up -d
 ```
 
-| 항목 | 도구 | 게이트 |
-| :-- | :-- | :-- |
-| 백엔드 단위/통합 테스트 | JUnit 5, Spring Test, Testcontainers(MariaDB) | **179개**, CI 필수 |
-| 커버리지 | JaCoCo | 라인 82% / 분기 65% / 메서드 88% / 클래스 97% |
-| 정적 분석 | Checkstyle, SpotBugs | strict 모드 PR 게이트 |
-| 프론트엔드 단위 테스트 | Vitest, Testing Library | **45개** |
-| 브라우저 E2E | Playwright | 추천→저장, 저장 목록 대조/삭제, 404, 상태 페이지 폴백 — CI에서 실행(현재 배포 게이트는 아님) |
-| 보안 스캔 | Trivy(이미지+의존성), CodeQL | PR 단계부터 실행 |
+배포 스크립트:
 
----
+| 파일 | 역할 |
+| --- | --- |
+| `scripts/deploy/validate-env.sh` | 필수 운영 환경 변수 검증 |
+| `scripts/deploy/render-env.sh` | `.env.prod.example`을 `.env.prod`로 렌더링 |
+| `scripts/deploy/render-alertmanager.sh` | Alertmanager 템플릿 렌더링 |
+| `scripts/deploy/pull-and-up.sh` | 이미지 pull, Compose up, readiness/smoke |
+| `scripts/deploy/smoke-test.sh` | 공개 API, 보안 차단 경로, redirect, 헤더 검증 |
+| `scripts/deploy/rollback.sh` | 서비스 이미지를 이전 이미지로 rollback |
+| `scripts/deploy/rollback-caddy.sh` | Caddyfile만 이전 커밋으로 rollback |
+| `scripts/deploy/check-caddy-routes.sh` | Caddy 라우팅 로컬 검증 |
 
-## 08 · API 개요
+## 모니터링과 백업
 
-#### 공개 API &nbsp;`/api/v1/*`
+Prometheus는 `/actuator/prometheus`, node-exporter, Caddy metrics를 수집합니다. Grafana는 Prometheus datasource를 provisioning하고, Alertmanager는 Discord webhook 템플릿을 사용할 수 있습니다.
 
-| Method | Endpoint |
-| :-- | :-- |
-| `GET` | `/rounds/latest` · `/rounds/freshness` · `/rounds` · `/rounds/{round}` |
-| `POST` `GET` | `/numbers/recommend` · `/numbers/check` |
-| `GET` `POST` | `/stats/frequency` · `/patterns` · `/companion` · `/stats/analysis` |
-| `GET` `POST` `DELETE` | `/saved` · `/saved` · `/saved/{id}` |
-| `GET` | `/status/incidents` |
+주요 알림:
 
-> [!NOTE]
-> 공식 진입점은 **Caddy → `backend:8080` 직결**입니다. `web/src/app/api/v1/**`에도 동일 경로의 Next.js route handler가 있지만, 운영에서는 Caddy가 먼저 가로채므로 `npm run dev` 단독 실행이나 E2E 테스트에서만 쓰이는 **로컬 개발용 폴백**입니다.
+- Backend down
+- 5xx 비율 5% 초과
+- P95 응답 시간 2초 초과
+- JVM heap 85% 초과
+- 로또 데이터 최신성 지연
+- 외부 회차 수집 반복 실패
 
-#### 운영 API &nbsp;`/ops/*` &nbsp;<sub>`X-Ops-Token` 필요</sub>
+DB 백업:
 
-```http
-GET  /ops/summary
-GET  /ops/logs
-POST /ops/rounds
-POST /ops/collect/latest
-POST /ops/collect/{round}
+```bash
+bash scripts/db-backup.sh
+bash scripts/db-restore-drill.sh
+bash scripts/db-restore.sh /var/backups/kraft/kraft_lotto_YYYYMMDD_HHMMSS.sql.gz
 ```
 
----
+운영 MariaDB는 내부 `app` 네트워크에만 있으므로 백업/복구는 호스트 TCP 접속이 아니라 `docker compose exec mariadb` 경유로 실행됩니다. `BACKUP_REMOTE_DEST`와 rclone을 설정하면 원격 사본 업로드도 가능합니다.
 
-## 09 · 배포 파이프라인
+## 보안 메모
 
-```text
-PR 생성 ──▶ Backend/Web 빌드·테스트, Checkstyle/SpotBugs, CodeQL, Trivy(fs) ──▶ 머지
-main push ──▶ 전체 검증 + GHCR 이미지 빌드(SBOM/provenance) ──▶ Trivy 이미지 스캔
-         ──▶ latest 태그 승격 ──▶ (cd.yml) SSH 배포 ──▶ Caddy 로컬 라우팅 사전 점검
-                                ──▶ readiness 확인 ──▶ smoke test
-                                                       └─ 실패 시 Caddy → 이미지 순으로 자동 롤백
-```
+- 공개 도메인 Caddy는 `/admin*`, `/ops*`, `/actuator*`, `/api/revalidate`를 차단합니다.
+- 관리자 도메인은 `KRAFT_ADMIN_ALLOWED_CIDR`로 IP allowlist를 적용할 수 있습니다.
+- 공개 API는 stateless이고 세션 쿠키를 사용하지 않습니다.
+- 관리자 UI는 세션, CSRF, 단일 세션 제한, 로그인 실패 잠금을 적용합니다.
+- 저장 번호는 원본 기기 토큰을 저장하지 않고 SHA-256 해시만 저장합니다.
+- `/ops/*`는 `X-Ops-Token`으로 보호됩니다.
+- 공개 API와 Ops API에는 Caffeine 기반 분당 rate limit이 적용됩니다.
+- API 응답에는 보안 헤더와 캐시/ETag 정책을 적용합니다.
+- Next.js는 요청별 CSP nonce를 생성합니다.
+- 운영 컨테이너는 가능한 범위에서 non-root, `cap_drop: ALL`, `no-new-privileges`, read-only filesystem을 사용합니다.
 
-| 워크플로 | 역할 |
-| :-- | :-- |
-| `ci.yml` | 테스트 / 빌드 / 정적 분석 / E2E / 이미지 빌드 / 보안 스캔 / 태그 승격 |
-| `cd.yml` | SSH 배포, Caddy 강제 재생성, 로컬 라우팅 사전 점검, readiness/smoke test, 실패 시 자동 롤백 |
-| `pr.yml` | PR 전용 빌드 체크 + 의존성 취약점 스캔 |
-| `codeql.yml` | Java/TypeScript 정적 보안 분석 (push + PR + 주간 스케줄) |
+## 문제 해결
 
-서버 초기화는 `sudo bash scripts/server/init-ubuntu.sh` 한 번으로 Docker, deploy 사용자, UFW, fail2ban, 리포지토리 클론, DB 백업 cron까지 끝납니다.
-
----
-
-## 10 · 운영 자동화
-
-- **DB 백업/복구** — `scripts/db-backup.sh`(`docker compose exec`로 internal 네트워크의 mariadb 컨테이너 내부에서 실행 — 호스트 TCP 접근 자체가 불가능한 구조). cron으로 매일 03:00 백업, 매주 일요일 03:30 복구 드릴이 자동 실행되고 RPO(백업 경과 시간)·RTO(복구 소요 시간)가 로그로 기록됩니다. 원격(오프서버) 백업 사본은 선택적으로 rclone을 통해 추가할 수 있습니다.
-- **마이그레이션** — Flyway SQL(`src/main/resources/db/migration/`)로 스키마 버전 관리.
-- **모니터링** — Prometheus가 지표 수집, Grafana 대시보드, Alertmanager 알림, node-exporter 시스템 지표. 설정은 `infra/`에 있습니다.
-
----
-
-## 11 · 보안 메모
-
-- 공개 도메인은 Caddy에서 `/admin*`, `/ops*`, `/actuator*`를 차단하고, 관리자 도메인에서만 허용합니다.
-- 관리자 도메인은 추가로 IP allowlist(`remote_ip` 매처, 미설정 시 전체 허용)로 심층 방어를 적용할 수 있습니다.
-- 저장 번호 API는 `X-Device-Token`, 운영 API는 `X-Ops-Token`을 요구합니다.
-- Prometheus 엔드포인트는 trusted CIDR만 허용합니다.
-- 요청별 CSP nonce(`proxy.ts`)로 인라인 스크립트 없이 엄격한 CSP를 적용합니다.
-- `scripts/deploy/check-caddy-routes.sh`(빠른 로컬 점검)와 `scripts/deploy/smoke-test.sh`(외부 스모크 테스트)가 배포 직후 라우팅·차단 규칙까지 검사합니다.
-
----
-
-## 12 · 환경 파일
-
-| 파일 | 용도 |
-| :-- | :-- |
-| `.env.local.example` | 로컬에서 Spring Boot 직접 실행 |
-| `.env.example` | Docker Compose 개발/단일 서버 실행 |
-| `.env.prod.example` | 운영 배포 |
-
-<details>
-<summary><b>주요 환경 변수</b></summary>
-
-```text
-KRAFT_DB_URL                       KRAFT_OPS_TOKEN
-KRAFT_DB_USERNAME                  KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE
-KRAFT_DB_PASSWORD                  KRAFT_ADMIN_BOOTSTRAP_USERNAME/PASSWORD
-KRAFT_PUBLIC_BASE_URL              KRAFT_SECURITY_TRUSTED_PROXY_CIDR
-KRAFT_BACKEND_INTERNAL_URL         GRAFANA_ADMIN_PASSWORD
-KRAFT_REVALIDATE_SECRET            KRAFT_OPS_ALLOWED_HOST
-                                    KRAFT_ADMIN_ALLOWED_CIDR
-```
-
-</details>
-
----
-
-<div align="center">
-<sub><b>KRAFT Lotto</b> · 로또 6/45 풀스택 서비스 · 1인 개발·운영 · <a href="https://kraft.io.kr/">kraft.io.kr</a></sub>
-</div>
+| 증상 | 확인할 내용 |
+| --- | --- |
+| Next.js 화면에서 데이터를 못 불러옴 | `web/.env.local`의 `KRAFT_BACKEND_INTERNAL_URL=http://localhost:8080` 확인 |
+| `/ops` 호출이 503 | `KRAFT_OPS_TOKEN`이 비어 있으면 Ops API가 비활성화됨 |
+| 외부 수집이 503 | `KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE`이 설정되어야 함 |
+| Docker backend가 DB 연결 실패 | `.env`의 `MARIADB_PASSWORD`와 `KRAFT_DB_PASSWORD` 일치 확인 |
+| 운영 공개 도메인에서 `/admin` 403 | 정상 동작. 관리자 도메인으로 접근 |
+| H2 Console 접속 불가 | `local` 프로필인지, URL이 `/h2-console`인지 확인 |
