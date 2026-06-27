@@ -16,10 +16,10 @@ export function AdUnit({ unit, width, height, label = "광고" }: AdUnitProps) {
     if (initialized.current) return;
     initialized.current = true;
 
-    if (!document.querySelector('script[src*="daumcdn.net/kas"]')) {
+    if (!document.querySelector('script[src*="kakaocdn.net/kas"]')) {
       const script = document.createElement("script");
       script.async = true;
-      script.src = "https://t1.daumcdn.net/kas/static/ba.min.js";
+      script.src = "https://t1.kakaocdn.net/kas/static/ba.min.js";
       document.head.appendChild(script);
     }
   }, []);

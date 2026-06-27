@@ -21,12 +21,12 @@ function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV !== "production";
   return [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' https://t1.daumcdn.net${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' https://t1.kakaocdn.net${isDev ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: https://*.daumcdn.net https://*.kakao.com https://*.kakaocdn.net`,
     `font-src 'self'`,
-    `connect-src 'self' https://*.kakao.com https://*.daumcdn.net`,
-    `frame-src https://t1.daumcdn.net https://*.kakao.com`,
+    `connect-src 'self' https://*.kakao.com https://*.daumcdn.net https://*.kakaocdn.net`,
+    `frame-src https://t1.kakaocdn.net https://*.kakao.com`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
