@@ -109,6 +109,15 @@ export function NavLinks() {
     };
   }, [open]);
 
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width:1024px)");
+    const onResize = (e: MediaQueryListEvent) => {
+      if (e.matches) setOpen(false);
+    };
+    mq.addEventListener("change", onResize);
+    return () => mq.removeEventListener("change", onResize);
+  }, []);
+
   const desktopItems = primaryLinks.map((link) => (
     <Link
       key={link.href}
