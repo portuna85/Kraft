@@ -2556,6 +2556,14 @@ form button,
   .footer-nav {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
+  .ad-mobile {
+    display: none;
+  }
+
+  .ad-desktop {
+    display: flex;
+  }
 }
 
 /* ── Ad unit ───────────────────────────────────────────────────────────────── */
@@ -2566,6 +2574,10 @@ form button,
   min-height: 100px;
   margin-top: 24px;
   overflow: hidden;
+}
+
+.ad-desktop {
+  display: none;
 }
 
 /* ────────────────────────────────────────────────────────────────────────────── */

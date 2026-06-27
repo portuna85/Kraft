@@ -2,6 +2,8 @@ package com.kraft.winningnumber;
 
 import com.kraft.common.error.ApiException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -76,7 +78,7 @@ public class ExternalWinningNumberPayloadMapper {
     }
 
     private List<Integer> requireNumbers(Integer... nums) {
-        List<Integer> result = new java.util.ArrayList<>();
+        List<Integer> result = new ArrayList<>();
         for (int i = 0; i < nums.length; i++) {
             if (nums[i] == null) {
                 throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_PARSE_ERROR",
@@ -84,7 +86,7 @@ public class ExternalWinningNumberPayloadMapper {
             }
             result.add(nums[i]);
         }
-        return java.util.Collections.unmodifiableList(result);
+        return Collections.unmodifiableList(result);
     }
 
     private void validateNumbers(List<Integer> numbers) {

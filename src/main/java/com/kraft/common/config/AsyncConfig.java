@@ -1,5 +1,6 @@
 package com.kraft.common.config;
 
+import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -16,6 +17,11 @@ public class AsyncConfig {
         ex.setMaxPoolSize(4);
         ex.setQueueCapacity(50);
         ex.setThreadNamePrefix("kraft-evt-");
+        ex.setWaitForTasksToCompleteOnShutdown(true);
+        ex.setAwaitTerminationSeconds(30);
+        // 큐 포화 시 기본 AbortPolicy는 이벤트를 조용히 유실한다.
+        // CallerRuns는 발행 스레드에서 동기 처리해 유실 없이 역압을 전파한다.
+        ex.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         ex.initialize();
         return ex;
     }
@@ -32,6 +38,10 @@ public class AsyncConfig {
         ex.setMaxPoolSize(1);
         ex.setQueueCapacity(1);
         ex.setThreadNamePrefix("kraft-backfill-");
+        ex.setWaitForTasksToCompleteOnShutdown(true);
+        ex.setAwaitTerminationSeconds(60);
+        // 큐 1 설계로 이미 실행 중인 백필이 있으면 두 번째 요청은 드롭한다(의도된 스로틀).
+        ex.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
         ex.initialize();
         return ex;
     }

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,10 +35,17 @@ abstract class BaseApiIntegrationTest {
     @Autowired
     protected WinningNumberOperationLogRepository winningNumberOperationLogRepository;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
+        cacheManager.getCacheNames().forEach(name -> {
+            var cache = cacheManager.getCache(name);
+            if (cache != null) cache.clear();
+        });
         winningNumberOperationLogRepository.deleteAll();
         savedNumberRepository.deleteAll();
         winningNumberRepository.deleteAll();

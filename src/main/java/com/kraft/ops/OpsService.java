@@ -153,52 +153,46 @@ public class OpsService {
         return "ops-api ip=" + (ip != null ? ip : "unknown") + " requestId=" + (requestId != null ? requestId : "none");
     }
 
-    private WinningNumberOperationType parseOperationType(String value) {
+    private <E extends Enum<E>> E parseEnum(Class<E> type, String value, String code, String message) {
         if (value == null || value.isBlank()) {
             return null;
         }
         try {
-            return WinningNumberOperationType.valueOf(value.trim().toUpperCase());
+            return Enum.valueOf(type, value.trim().toUpperCase());
         } catch (IllegalArgumentException exception) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_OPERATION_TYPE", "지원하지 않는 작업 유형입니다.");
+            throw new ApiException(HttpStatus.BAD_REQUEST, code, message);
         }
     }
 
+    private WinningNumberOperationType parseOperationType(String value) {
+        return parseEnum(WinningNumberOperationType.class, value,
+                "INVALID_OPERATION_TYPE", "지원하지 않는 작업 유형입니다.");
+    }
+
     private WinningNumberOperationStatus parseExecutionStatus(String value) {
+        return parseEnum(WinningNumberOperationStatus.class, value,
+                "INVALID_EXECUTION_STATUS", "지원하지 않는 실행 상태입니다.");
+    }
+
+    private OffsetDateTime parseDate(String value, long plusDays, String code, String message) {
         if (value == null || value.isBlank()) {
             return null;
         }
         try {
-            return WinningNumberOperationStatus.valueOf(value.trim().toUpperCase());
-        } catch (IllegalArgumentException exception) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_EXECUTION_STATUS", "지원하지 않는 실행 상태입니다.");
+            return LocalDate.parse(value.trim())
+                    .plusDays(plusDays)
+                    .atStartOfDay(KST)
+                    .toOffsetDateTime();
+        } catch (RuntimeException exception) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, code, message);
         }
     }
 
     private OffsetDateTime parseFromDate(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        try {
-            return LocalDate.parse(value.trim())
-                    .atStartOfDay(KST)
-                    .toOffsetDateTime();
-        } catch (RuntimeException exception) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_FROM_DATE", "from 날짜 형식이 올바르지 않습니다. yyyy-MM-dd 형식을 사용하세요.");
-        }
+        return parseDate(value, 0, "INVALID_FROM_DATE", "from 날짜 형식이 올바르지 않습니다. yyyy-MM-dd 형식을 사용하세요.");
     }
 
     private OffsetDateTime parseToDateExclusive(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        try {
-            return LocalDate.parse(value.trim())
-                    .plusDays(1)
-                    .atStartOfDay(KST)
-                    .toOffsetDateTime();
-        } catch (RuntimeException exception) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_TO_DATE", "to 날짜 형식이 올바르지 않습니다. yyyy-MM-dd 형식을 사용하세요.");
-        }
+        return parseDate(value, 1, "INVALID_TO_DATE", "to 날짜 형식이 올바르지 않습니다. yyyy-MM-dd 형식을 사용하세요.");
     }
 }

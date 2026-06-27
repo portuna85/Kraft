@@ -84,11 +84,8 @@ export function RecommendClient() {
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void fetchRecommendations(DEFAULT_COUNT, [], DEFAULT_MAXIMIZE_PRIZE);
-    }, 0);
-
-    return () => window.clearTimeout(timer);
+    void fetchRecommendations(DEFAULT_COUNT, [], DEFAULT_MAXIMIZE_PRIZE);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleRecommend(event: React.FormEvent<HTMLFormElement>) {

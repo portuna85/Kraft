@@ -86,12 +86,13 @@ public class LottoRecommendationService {
                     "요청한 조합 수(" + count + ")가 가능한 고유 조합 수(" + possible + ")를 초과합니다.");
         }
 
+        List<Integer> candidates = buildCandidates(excluded);
         List<List<Integer>> recommendations = new ArrayList<>();
         Set<String> seen = new HashSet<>();
         int attempts = 0;
         int maxAttempts = count * MAX_ATTEMPTS;
         while (recommendations.size() < count && attempts++ < maxAttempts) {
-            List<Integer> candidate = maximizePrize ? generateBest(excluded) : generateOne(excluded);
+            List<Integer> candidate = maximizePrize ? generateBest(candidates) : generateOne(candidates);
             if (seen.add(lottoNumberCodec.toStorageValue(candidate))) {
                 recommendations.add(candidate);
             }
@@ -103,12 +104,12 @@ public class LottoRecommendationService {
      * 후보 풀에서 비인기도 점수가 가장 높은 조합을 반환한다.
      * 공동 당첨자를 최소화해 개인 수령액을 최대화하는 목적.
      */
-    private List<Integer> generateBest(Set<Integer> excluded) {
+    private List<Integer> generateBest(List<Integer> candidates) {
         List<Integer> best = null;
         int bestScore = Integer.MIN_VALUE;
 
         for (int i = 0; i < PRIZE_CANDIDATE_POOL; i++) {
-            List<Integer> candidate = generateOne(excluded);
+            List<Integer> candidate = generateOne(candidates);
             int score = combinationScorer.score(candidate);
             if (score > bestScore) {
                 bestScore = score;
@@ -126,19 +127,25 @@ public class LottoRecommendationService {
         return result;
     }
 
-    private List<Integer> generateOne(Set<Integer> excluded) {
+    private static List<Integer> buildCandidates(Set<Integer> excluded) {
         List<Integer> candidates = new ArrayList<>(45 - excluded.size());
         for (int i = 1; i <= 45; i++) {
             if (!excluded.contains(i)) {
                 candidates.add(i);
             }
         }
+        return candidates;
+    }
 
+    // 부분 Fisher-Yates(k=6): 전체 ~45개 대신 앞 6개 위치만 셔플해 O(n) → O(k) 로 단축.
+    // candidates 배열을 호출 간 재사용하므로 요청당 한 번만 빌드한다.
+    private List<Integer> generateOne(List<Integer> candidates) {
+        int n = candidates.size();
         Set<Set<Integer>> snapshot = historicalCombinations;
 
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            for (int i = candidates.size() - 1; i > 0; i--) {
-                int j = ThreadLocalRandom.current().nextInt(i + 1);
+            for (int i = 0; i < 6; i++) {
+                int j = i + ThreadLocalRandom.current().nextInt(n - i);
                 int tmp = candidates.get(i);
                 candidates.set(i, candidates.get(j));
                 candidates.set(j, tmp);
