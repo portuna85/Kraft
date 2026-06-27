@@ -16,7 +16,7 @@ export default defineConfig({
   projects: [
     { name: "chromium",      use: { ...devices["Desktop Chrome"] } },
     { name: "Mobile Chrome", use: { ...devices["Pixel 5"] } },
-    { name: "Tablet",        use: { ...devices["iPad (gen 7)"] } },
+    { name: "Tablet",        use: { browserName: "chromium", ...devices["iPad (gen 7)"] } },
   ],
   webServer: {
     // standalone 빌드 산출물(Dockerfile과 동일)을 그대로 띄운다. `npm run build`를

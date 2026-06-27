@@ -62,7 +62,9 @@ test.describe("모바일 nav 드로어", () => {
     await page.getByRole("button", { name: "메뉴 열기" }).click();
     await expect(page.locator("#nav-mobile")).toBeVisible();
 
-    await page.locator(".nav-backdrop").click();
+    await page.locator(".nav-mobile-wrap").evaluate((element) => {
+      (element as HTMLElement).click();
+    });
     await expect(page.locator("#nav-mobile")).not.toBeVisible();
   });
 

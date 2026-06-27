@@ -186,7 +186,7 @@ export function NavLinks() {
       {open && (
         <>
           <div className="nav-backdrop" aria-hidden="true" onClick={closeAndReturnFocus} />
-          <div className="nav-mobile-wrap">
+          <div className="nav-mobile-wrap" onClick={closeAndReturnFocus}>
             <nav id="nav-mobile" ref={mobileNavRef} className="nav-mobile" aria-label="주요 메뉴">
               {mobileItems}
             </nav>
