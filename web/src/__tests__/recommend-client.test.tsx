@@ -74,7 +74,7 @@ describe("RecommendClient", () => {
     fireEvent.submit((await screen.findByRole("button")).closest("form")!);
 
     await waitFor(() => {
-      expect(screen.getByText(/1/)).toBeInTheDocument();
+      expect(screen.getByText((_, element) => element?.textContent === "추천 1")).toBeInTheDocument();
     });
 
     [1, 7, 15, 23, 38, 45].forEach((n) => {
@@ -169,12 +169,11 @@ describe("RecommendClient", () => {
     render(<RecommendClient />);
     fireEvent.submit((await screen.findByRole("button")).closest("form")!);
 
-    const buttons = await screen.findAllByRole("button");
-    const saveButton = buttons[1];
+    const saveButton = await screen.findByRole("button", { name: /저장/i });
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(buttons[1]).toBeDisabled();
+      expect(screen.getByRole("button", { name: /저장됨/i })).toBeDisabled();
     });
   });
 });
