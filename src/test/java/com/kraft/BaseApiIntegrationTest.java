@@ -44,7 +44,9 @@ abstract class BaseApiIntegrationTest {
     void setUp() {
         cacheManager.getCacheNames().forEach(name -> {
             var cache = cacheManager.getCache(name);
-            if (cache != null) cache.clear();
+            if (cache != null) {
+                cache.clear();
+            }
         });
         winningNumberOperationLogRepository.deleteAll();
         savedNumberRepository.deleteAll();

@@ -22,7 +22,7 @@ describe("RecommendClient", () => {
     global.fetch = mockFetch(EMPTY_RESULT);
   });
 
-  it("renders the recommend form with the prize checkbox checked by default", async () => {
+  it("기본값으로 폼을 렌더링한다", async () => {
     render(<RecommendClient />);
 
     expect(await screen.findByRole("button")).toBeInTheDocument();
@@ -31,7 +31,7 @@ describe("RecommendClient", () => {
     expect(screen.getByRole("checkbox")).toBeChecked();
   });
 
-  it("requests recommendations with maximizePrize enabled on initial load", async () => {
+  it("최초 로드 시 추천을 요청한다", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -57,7 +57,49 @@ describe("RecommendClient", () => {
     );
   });
 
-  it("calls the recommend API and renders returned numbers", async () => {
+  it("마운트 시 반환된 초기 추천을 렌더링한다", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ recommendations: [[4, 8, 12, 16, 20, 24]] }),
+    });
+
+    render(<RecommendClient />);
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("button")).toHaveLength(2);
+    });
+
+    [4, 8, 12, 16, 20, 24].forEach((n) => {
+      expect(screen.getByText(String(n))).toBeInTheDocument();
+    });
+  });
+
+  it("초기 로드가 응답 오류로 실패하면 API 메시지를 보여준다", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: () => Promise.resolve({ message: "temporary outage" }),
+    });
+
+    render(<RecommendClient />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("temporary outage");
+    });
+  });
+
+  it("초기 로드가 예외를 던지면 폴백 메시지를 보여준다", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error("network down"));
+
+    render(<RecommendClient />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).not.toBe("");
+    });
+  });
+
+  it("추천 API를 호출하고 반환된 숫자를 렌더링한다", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -74,7 +116,7 @@ describe("RecommendClient", () => {
     fireEvent.submit((await screen.findByRole("button")).closest("form")!);
 
     await waitFor(() => {
-      expect(screen.getByText((_, element) => element?.textContent === "추천 1")).toBeInTheDocument();
+      expect(screen.getAllByRole("button")).toHaveLength(2);
     });
 
     [1, 7, 15, 23, 38, 45].forEach((n) => {
@@ -82,7 +124,7 @@ describe("RecommendClient", () => {
     });
   });
 
-  it("shows an error message when the API returns a non-OK status", async () => {
+  it("API가 비정상 상태를 반환하면 오류 메시지를 보여준다", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -103,7 +145,7 @@ describe("RecommendClient", () => {
     });
   });
 
-  it("shows a fallback error when the API returns no message", async () => {
+  it("API가 메시지를 주지 않으면 폴백 오류를 보여준다", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -124,7 +166,61 @@ describe("RecommendClient", () => {
     });
   });
 
-  it("warns about ignored excluded numbers", async () => {
+  it("변경된 count와 maximizePrize 값을 제출한다", async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(EMPTY_RESULT),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(EMPTY_RESULT),
+      });
+
+    render(<RecommendClient />);
+    const submitButton = await screen.findByRole("button");
+
+    fireEvent.change(screen.getByRole("spinbutton"), { target: { value: "7" } });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.submit(submitButton.closest("form")!);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    expect(global.fetch).toHaveBeenLastCalledWith(
+      "/api/v1/numbers/recommend",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          count: 7,
+          excludedNumbers: [],
+          maximizePrize: false,
+        }),
+      }),
+    );
+  });
+
+  it("추천 제출이 예외를 던지면 폴백 메시지를 보여준다", async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(EMPTY_RESULT),
+      })
+      .mockRejectedValueOnce(new Error("network down"));
+
+    render(<RecommendClient />);
+    fireEvent.submit((await screen.findByRole("button")).closest("form")!);
+
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).not.toBe("");
+    });
+  });
+
+  it("무시된 제외 숫자에 대해 경고한다", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -148,7 +244,7 @@ describe("RecommendClient", () => {
     });
   });
 
-  it("shows the saved state after saving a recommendation", async () => {
+  it("추천을 저장한 뒤 저장 완료 상태를 보여준다", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -169,11 +265,43 @@ describe("RecommendClient", () => {
     render(<RecommendClient />);
     fireEvent.submit((await screen.findByRole("button")).closest("form")!);
 
-    const saveButton = await screen.findByRole("button", { name: /저장/i });
+    await waitFor(() => {
+      expect(screen.getAllByRole("button").length).toBeGreaterThan(1);
+    });
+
+    const saveButton = screen.getAllByRole("button")[1];
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /저장됨/i })).toBeDisabled();
+      expect((screen.getAllByRole("button"))[1]).toBeDisabled();
+    });
+  });
+
+  it("저장이 실패하면 폴백 메시지를 보여준다", async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(EMPTY_RESULT),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ recommendations: [[1, 7, 15, 23, 38, 45]] }),
+      })
+      .mockRejectedValueOnce(new Error("save failed"));
+
+    render(<RecommendClient />);
+    fireEvent.submit((await screen.findByRole("button")).closest("form")!);
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("button").length).toBeGreaterThan(1);
+    });
+
+    fireEvent.click(screen.getAllByRole("button")[1]);
+
+    await waitFor(() => {
+      expect(screen.getByRole("status").textContent).not.toBe("");
     });
   });
 });

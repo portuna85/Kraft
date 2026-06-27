@@ -43,7 +43,7 @@ export function RecommendClient() {
   const [message, setMessage] = useState("");
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
   const [savedIndexes, setSavedIndexes] = useState<Set<number>>(new Set());
-  const [isPending, setIsPending] = useState(false);
+  const [isPending, setIsPending] = useState(true);
   const fetchSeqRef = useRef(0);
 
   async function fetchRecommendations(
@@ -84,8 +84,36 @@ export function RecommendClient() {
   }
 
   useEffect(() => {
-    void fetchRecommendations(DEFAULT_COUNT, [], DEFAULT_MAXIMIZE_PRIZE);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const seq = ++fetchSeqRef.current;
+
+    async function loadInitialRecommendations() {
+      try {
+        const payload = await browserFetch<RecommendationResponse>("/api/v1/numbers/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            count: DEFAULT_COUNT,
+            excludedNumbers: [],
+            maximizePrize: DEFAULT_MAXIMIZE_PRIZE,
+          }),
+        });
+        if (seq !== fetchSeqRef.current) return;
+        setRecommendations(payload.recommendations);
+      } catch (err) {
+        if (seq !== fetchSeqRef.current) return;
+        if (err instanceof BrowserApiError) {
+          setMessage(err.message || TEXT.generateFailed);
+        } else {
+          setMessage(TEXT.loadFailed);
+        }
+      } finally {
+        if (seq === fetchSeqRef.current) {
+          setIsPending(false);
+        }
+      }
+    }
+
+    void loadInitialRecommendations();
   }, []);
 
   async function handleRecommend(event: React.FormEvent<HTMLFormElement>) {
