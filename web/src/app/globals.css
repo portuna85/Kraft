@@ -2,24 +2,24 @@
   color-scheme: light;
   --bg: #f6f1e8;
   --bg-strong: #efe5d2;
-  --surface: rgba(255, 255, 255, 0.78);
-  --surface-strong: #fffaf2;
+  --surface: rgba(255, 252, 247, 0.92);
+  --surface-strong: #fffdf8;
   --text: #1d1a17;
   --muted: #5e564c;
-  --line: rgba(29, 26, 23, 0.12);
+  --line: rgba(29, 26, 23, 0.14);
   --accent: #c94f24;
   --accent-strong: #8d2f10;
   --ball: #ffc857;
   --bonus: #3a7d44;
-  --shadow: 0 18px 40px rgba(64, 39, 22, 0.12);
+  --shadow: 0 22px 48px rgba(64, 39, 22, 0.1);
   /* Overlay surfaces (cards, drawers) — separate from --surface for fine-grained dark overrides */
-  --surface-card:    rgba(255, 255, 255, 0.66);
-  --surface-card-md: rgba(255, 255, 255, 0.55);
-  --surface-card-sm: rgba(255, 255, 255, 0.50);
-  --header-bg:       rgba(246, 241, 232, 0.72);
+  --surface-card:    rgba(255, 255, 255, 0.92);
+  --surface-card-md: rgba(255, 252, 247, 0.84);
+  --surface-card-sm: rgba(255, 250, 244, 0.72);
+  --header-bg:       rgba(255, 249, 241, 0.88);
   --nav-mobile-bg:   rgba(246, 241, 232, 0.97);
-  --nav-active-bg:   rgba(255, 255, 255, 0.50);
-  --shimmer-highlight: rgba(255, 255, 255, 0.55);
+  --nav-active-bg:   rgba(201, 79, 36, 0.12);
+  --shimmer-highlight: rgba(255, 255, 255, 0.72);
   --ring: rgba(201, 79, 36, 0.18);
   /* Layout tokens — mobile-first defaults (<640px) */
   --shell-max: 1180px;
@@ -74,11 +74,14 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(circle at top left, rgba(201, 79, 36, 0.18), transparent 25%),
     radial-gradient(circle at top right, rgba(58, 125, 68, 0.14), transparent 30%),
-    linear-gradient(180deg, var(--bg), var(--bg-strong));
-  color: var(--text);
+    linear-gradient(180deg, var(--bg, #f6f1e8), var(--bg-strong, #efe5d2));
+  color: var(--text, #1d1a17);
   font-family: var(--font-sans), "Pretendard", system-ui, sans-serif;
   /* Noto Sans KR은 400/700/800만 임베드한다 — 500은 CSS 폰트 매칭 규칙상
      항상 400으로 대체 렌더링되므로 실제 렌더링 값과 선언을 일치시킨다. */
@@ -103,8 +106,10 @@ a {
 }
 
 .shell {
-  width: min(var(--shell-max), calc(100vw - (var(--shell-gutter) * 2)));
+  width: 100%;
+  max-width: var(--shell-max);
   margin: 0 auto;
+  padding-inline: var(--shell-gutter);
   min-width: 0;
 }
 
@@ -115,7 +120,7 @@ a {
   backdrop-filter: blur(18px);
   background: var(--header-bg);
   border-bottom: 1px solid var(--line);
-  box-shadow: 0 10px 30px rgba(40, 24, 12, 0.05);
+  box-shadow: 0 10px 30px rgba(40, 24, 12, 0.08);
 }
 
 .header-inner {
@@ -216,7 +221,7 @@ a {
 
 .nav a:hover {
   color: var(--text);
-  background: var(--surface-card);
+  background: var(--surface-card-md);
 }
 
 .nav a[aria-current="page"] {
@@ -249,7 +254,7 @@ a {
 .nav-stats-toggle:hover,
 .nav-stats-toggle[aria-expanded="true"] {
   color: var(--text);
-  background: var(--surface-card);
+  background: var(--surface-card-md);
 }
 
 .nav-stats-toggle.active {
@@ -326,6 +331,7 @@ a {
 
 .page {
   padding: var(--page-pad-top) 0 var(--page-pad-bottom);
+  flex: 1 0 auto;
 }
 
 .panel,
@@ -334,9 +340,11 @@ a {
 .ops-grid,
 .round-card,
 .stat-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
+  background-color: var(--surface, rgba(255, 252, 247, 0.92));
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--line, rgba(29, 26, 23, 0.14));
+  box-shadow: var(--shadow, 0 22px 48px rgba(64, 39, 22, 0.1));
   border-radius: 28px;
   position: relative;
   overflow: hidden;
@@ -354,7 +362,7 @@ a {
 }
 
 .eyebrow {
-  color: var(--accent-strong);
+  color: var(--accent-strong, #8d2f10);
   font-size: 0.78rem;
   font-weight: 700;
   font-family: var(--font-accent), var(--font-sans), sans-serif;
@@ -374,7 +382,7 @@ a {
 
 .page-subtitle,
 .muted {
-  color: var(--muted);
+  color: var(--muted, #5e564c);
   line-height: 1.72;
 }
 
@@ -440,7 +448,7 @@ a {
 }
 
 .button,
-button {
+button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-delete-btn):not(.recommend-save-btn):not(.freq-filter-tab):not(.link-button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -448,7 +456,7 @@ button {
   border-radius: 999px;
   min-height: 46px;
   padding: 12px 20px;
-  background: var(--accent);
+  background-color: var(--accent, #c94f24);
   color: white;
   font-family: var(--font-accent), var(--font-sans), sans-serif;
   font-weight: 700;
@@ -459,15 +467,17 @@ button {
 }
 
 .button:hover,
-button:hover {
+button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-delete-btn):not(.recommend-save-btn):not(.freq-filter-tab):not(.link-button):hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 28px rgba(141, 47, 16, 0.22);
 }
 
 .button.secondary {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--line);
+  background-color: transparent;
+  color: var(--text, #1d1a17);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--line, rgba(29, 26, 23, 0.14));
   box-shadow: none;
 }
 
@@ -639,14 +649,14 @@ button:hover {
 .recommend-form {
   display: grid;
   grid-template-columns: 0.7fr 1.3fr 1fr auto;
-  gap: 14px;
-  align-items: end;
+  gap: 18px;
+  align-items: stretch;
 }
 
 .recommend-form label {
   display: grid;
   gap: 8px;
-  color: var(--muted);
+  color: var(--muted, #5e564c);
   font-size: 0.92rem;
 }
 
@@ -655,7 +665,12 @@ button:hover {
   flex-direction: column;
   gap: 6px;
   cursor: pointer;
-  padding-bottom: 2px;
+  justify-content: center;
+  padding: 14px 16px;
+  border: 1px solid var(--line, rgba(29, 26, 23, 0.14));
+  border-radius: 18px;
+  background: var(--surface-card, rgba(255, 255, 255, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .recommend-toggle-control {
@@ -665,7 +680,7 @@ button:hover {
 }
 
 .recommend-toggle-label {
-  color: var(--text);
+  color: var(--text, #1d1a17);
 }
 
 .recommend-toggle input[type="checkbox"] {
@@ -674,10 +689,10 @@ button:hover {
   min-height: 20px;
   padding: 0;
   border-radius: 4px;
-  border: 1px solid var(--line);
-  background: var(--surface-strong);
+  border: 1px solid var(--line, rgba(29, 26, 23, 0.14));
+  background: var(--surface-strong, #fffdf8);
   margin: 0;
-  accent-color: var(--accent);
+  accent-color: var(--accent, #c94f24);
   cursor: pointer;
   flex: 0 0 auto;
 }
@@ -691,9 +706,14 @@ button:hover {
 
 .recommend-toggle-hint {
   font-size: 0.78rem;
-  color: var(--muted);
-  opacity: 0.7;
+  color: var(--muted, #5e564c);
+  opacity: 0.84;
   line-height: 1.4;
+}
+
+.recommend-form > button {
+  align-self: stretch;
+  min-width: 132px;
 }
 
 input:not([type="checkbox"]):not([type="radio"]) {
@@ -701,17 +721,17 @@ input:not([type="checkbox"]):not([type="radio"]) {
   min-height: 48px;
   padding: 12px 15px;
   border-radius: 16px;
-  border: 1px solid var(--line);
-  background: var(--surface-strong);
+  border: 1px solid var(--line, rgba(29, 26, 23, 0.14));
+  background: var(--surface-strong, #fffdf8);
   font: inherit;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent, #c94f24);
   outline-offset: 0;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--ring);
+  border-color: var(--accent, #c94f24);
+  box-shadow: 0 0 0 4px var(--ring, rgba(201, 79, 36, 0.18));
 }
 
 .saved-delete-btn {
@@ -719,17 +739,17 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   padding: 5px 10px;
   font-size: 0.78rem;
   border-radius: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line, rgba(29, 26, 23, 0.14));
   background: transparent;
-  color: var(--muted);
+  color: var(--muted, #5e564c);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .saved-delete-btn:hover {
-  background: var(--surface-strong);
-  color: var(--text);
-  border-color: var(--muted);
+  background: var(--surface-strong, #fffdf8);
+  color: var(--text, #1d1a17);
+  border-color: var(--muted, #5e564c);
 }
 
 .saved-list {
@@ -738,6 +758,16 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   list-style: none;
   display: grid;
   gap: 12px;
+}
+
+.saved-empty-state {
+  margin: 8px 0 0;
+  padding: 24px 20px;
+  border: 1px dashed var(--line, rgba(29, 26, 23, 0.14));
+  border-radius: 18px;
+  background: var(--surface-card-sm, rgba(255, 250, 244, 0.72));
+  color: var(--muted, #5e564c);
+  line-height: 1.6;
 }
 
 .recommend-grid {
@@ -967,8 +997,10 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 }
 
 .site-footer-bottom {
+  margin-top: auto;
   padding: 36px 0 60px;
   border-top: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 252, 247, 0.72));
   color: var(--muted);
 }
 
@@ -1842,6 +1874,10 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   gap: 20px;
 }
 
+.saved-layout {
+  gap: 16px;
+}
+
 .recommend-card {
   gap: 16px;
 }
@@ -2048,7 +2084,7 @@ form button,
 
 .balls {
   --ball-size: clamp(24px, calc((100vw - 80px) / 9.2), 42px);
-  gap: calc(var(--ball-size) * 0.18);
+  gap: 6px;
   flex-wrap: nowrap;
   overflow: visible;
 }
@@ -2056,11 +2092,11 @@ form button,
 .ball {
   width: var(--ball-size);
   height: var(--ball-size);
-  font-size: calc(var(--ball-size) * 0.34);
+  font-size: clamp(0.56rem, 2.5vw, 0.9rem);
 }
 
 .ball-separator {
-  font-size: calc(var(--ball-size) * 0.34);
+  font-size: clamp(0.56rem, 2.5vw, 0.9rem);
 }
 
 .freq-rank-group .ball {
@@ -2076,7 +2112,7 @@ form button,
 .recommend-card-info .ball {
   width: var(--ball-size);
   height: var(--ball-size);
-  font-size: calc(var(--ball-size) * 0.34);
+  font-size: clamp(0.5rem, 2.1vw, 0.78rem);
 }
 
 .prize-table td,
@@ -2510,7 +2546,21 @@ form button,
   }
 
   .recommend-form {
-    grid-template-columns: 0.7fr 1.3fr 1fr auto;
+    grid-template-columns: minmax(148px, 0.75fr) minmax(240px, 1.15fr) minmax(320px, 1.35fr) 148px;
+    align-items: end;
+  }
+
+  .recommend-form label {
+    align-content: start;
+  }
+
+  .recommend-toggle {
+    min-height: 96px;
+    padding: 16px 18px;
+  }
+
+  .recommend-form > button {
+    min-height: 96px;
   }
 
   .ops-manual-form,
@@ -2556,6 +2606,11 @@ form button,
 
   .footer-nav {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .saved-empty-state {
+    padding: 28px 24px;
+    font-size: 0.96rem;
   }
 
   .ad-mobile {
