@@ -1,6 +1,7 @@
 package com.kraft.statistics;
 
 import com.kraft.common.config.CacheConfig;
+import com.kraft.common.lotto.SumBuckets;
 import com.kraft.winningnumber.WinningNumber;
 import com.kraft.winningnumber.WinningNumberRepository;
 import java.util.ArrayList;
@@ -137,7 +138,7 @@ public class WinningStatisticsCacheService {
         int highCount = (int) numbers.stream().filter(n -> n >= 23).count();
         int lowCount = numbers.size() - highCount;
         int sum = numbers.stream().mapToInt(Integer::intValue).sum();
-        String sumBucket = sumBucket(sum);
+        String sumBucket = SumBuckets.bucketOf(sum);
 
         int consecutivePairCount = 0;
         for (int i = 0; i < numbers.size() - 1; i++) {
@@ -171,22 +172,6 @@ public class WinningStatisticsCacheService {
     private int latestRound() {
         return winningNumberRepository.findTopByOrderByRoundDesc()
                 .map(WinningNumber::getRound).orElse(0);
-    }
-
-    private static String sumBucket(int sum) {
-        if (sum < 66) {
-            return "21-65";
-        }
-        if (sum < 111) {
-            return "66-110";
-        }
-        if (sum < 156) {
-            return "111-155";
-        }
-        if (sum < 201) {
-            return "156-200";
-        }
-        return "201-255";
     }
 
     private static List<AnalysisResponse.RangeDistribution> computeRangeDistribution(List<Integer> numbers) {

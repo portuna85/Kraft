@@ -22,7 +22,6 @@ public class CacheConfig {
     public static final String STATS_FREQUENCY = "stats.frequency";
     public static final String STATS_PATTERN = "stats.pattern";
     public static final String STATS_COMPANION = "stats.companion";
-    public static final String RECOMMEND_RULES = "recommend.rules";
 
     @Bean
     CacheManager cacheManager() {
@@ -32,7 +31,6 @@ public class CacheConfig {
         manager.registerCustomCache(STATS_FREQUENCY, cache(10, TimeUnit.MINUTES, 4)); // null + 100 + 200 + 500
         manager.registerCustomCache(STATS_PATTERN, cache(10, TimeUnit.MINUTES, 10));
         manager.registerCustomCache(STATS_COMPANION, cache(10, TimeUnit.MINUTES, 1));
-        manager.registerCustomCache(RECOMMEND_RULES, cache(1, TimeUnit.HOURS, 1));
         return manager;
     }
 

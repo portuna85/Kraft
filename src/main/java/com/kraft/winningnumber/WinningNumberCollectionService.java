@@ -5,6 +5,7 @@ import com.kraft.operationlog.WinningNumberOperationLogService;
 import com.kraft.operationlog.WinningNumberOperationType;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -88,17 +89,20 @@ public class WinningNumberCollectionService {
      * 회복하던 기존 동작은 일시적 장애로 1주 이상 누락이 쌓이면 회복이 지연됐다(P0).
      */
     public List<WinningNumberResponse> collectUpToLatest(int maxRounds) {
-        List<WinningNumberResponse> collected = new java.util.ArrayList<>();
+        List<WinningNumberResponse> collected = new ArrayList<>();
+        Optional<WinningNumber> latestBefore = winningNumberRepository.findTopByOrderByRoundDesc();
+        int nextRound = latestBefore.map(winningNumber -> winningNumber.getRound() + 1).orElse(1);
+        boolean hadPreviousData = latestBefore.isPresent();
         for (int i = 0; i < maxRounds; i++) {
-            Optional<WinningNumber> latest = winningNumberRepository.findTopByOrderByRoundDesc();
-            int nextRound = latest.map(winningNumber -> winningNumber.getRound() + 1).orElse(1);
             try {
                 collected.add(collectFetchedRoundResult(nextRound).response());
+                nextRound++;
             } catch (RuntimeException exception) {
-                if (isEndOfData(exception) && latest.isPresent()) {
-                    log.info("자동 수집 catch-up 종료: latestRound={} 추가 회차 없음", latest.get().getRound());
+                if (isEndOfData(exception) && hadPreviousData) {
+                    log.info("자동 수집 catch-up 종료: latestRound={} 추가 회차 없음", nextRound - 1);
                     break;
                 }
+                collectFailureCounter.increment();
                 winningNumberOperationLogService.logFailure(
                         WinningNumberOperationType.EXTERNAL_COLLECT,
                         nextRound,

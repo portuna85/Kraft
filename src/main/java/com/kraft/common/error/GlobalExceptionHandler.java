@@ -12,8 +12,10 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
@@ -100,6 +102,25 @@ public class GlobalExceptionHandler {
                 exception.getResourcePath());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(errorBody(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "리소스를 찾을 수 없습니다.", request));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    ResponseEntity<ApiErrorResponse> handleMissingParam(MissingServletRequestParameterException exception,
+                                                        HttpServletRequest request) {
+        log.warn("필수 파라미터 누락: param={} path={}", exception.getParameterName(), request.getRequestURI());
+        return ResponseEntity.badRequest()
+                .body(errorBody(HttpStatus.BAD_REQUEST, "MISSING_PARAMETER",
+                        exception.getParameterName() + " 파라미터가 필요합니다.", request));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ApiErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException exception,
+                                                        HttpServletRequest request) {
+        log.warn("파라미터 타입 불일치: param={} value={} path={}", exception.getName(), exception.getValue(),
+                request.getRequestURI());
+        return ResponseEntity.badRequest()
+                .body(errorBody(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER_TYPE",
+                        exception.getName() + " 파라미터의 값이 올바르지 않습니다.", request));
     }
 
     @ExceptionHandler(Exception.class)

@@ -12,28 +12,27 @@ const DEFAULT_COUNT = 5;
 const DEFAULT_MAXIMIZE_PRIZE = true;
 
 const TEXT = {
-  countLabel: "\uC870\uD569 \uC218",
-  excludedLabel: "\uC81C\uC678 \uBC88\uD638",
-  excludedPlaceholder: "\uC608: 1, 2, 3",
-  maximizePrizeLabel: "\uACF5\uB3D9 \uB2F9\uCCA8 \uBD84\uC0B0\uD615 \uCD94\uCC9C",
-  maximizePrizeHint:
-    "\uACFC\uAC70 1\uB4F1 \uC870\uD569\uC744 \uC81C\uC678\uD558\uACE0 \uC0C1\uB300\uC801\uC73C\uB85C \uB35C \uACB9\uCE58\uB294 \uC870\uD569\uC744 \uC6B0\uC120 \uC120\uD0DD\uD569\uB2C8\uB2E4.",
-  submit: "\uCD94\uCC9C\uBC1B\uAE30",
-  pending: "\uC0DD\uC131 \uC911...",
+  countLabel: "조합 수",
+  excludedLabel: "제외 번호",
+  excludedPlaceholder: "예: 1, 2, 3",
+  maximizePrizeLabel: "공동 당첨 분산형 추천",
+  maximizePrizeHint: "과거 1등 조합을 제외하고 상대적으로 덜 겹치는 조합을 우선 선택합니다.",
+  submit: "추천받기",
+  pending: "생성 중...",
   disclaimer:
-    "\uBAA8\uB4E0 6\uAC1C \uBC88\uD638 \uC870\uD569\uC758 1\uB4F1 \uB2F9\uCCA8 \uD655\uB960\uC740 \uB3D9\uC77C\uD569\uB2C8\uB2E4. \u201C\uACF5\uB3D9 \uB2F9\uCCA8 \uBD84\uC0B0\uD615 \uCD94\uCC9C\u201D\uC740 \uACF5\uB3D9 \uB2F9\uCCA8 \uAC00\uB2A5\uC131\uC744 \uB0AE\uCD94\uB294 \uC120\uD0DD\uC77C \uBF44 \uD655\uB960\uC744 \uB192\uC774\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.",
-  detailLink: "\uC790\uC138\uD788 \uBCF4\uAE30",
-  recommendPrefix: "\uCD94\uCC9C",
-  save: "\uC800\uC7A5",
-  saving: "\uC800\uC7A5 \uC911...",
-  saved: "\uC800\uC7A5\uB428",
-  savedCreated: "\uC800\uC7A5\uD588\uC2B5\uB2C8\uB2E4.",
-  savedExists: "\uC774\uBBF8 \uC800\uC7A5\uD55C \uC870\uD569\uC785\uB2C8\uB2E4.",
-  saveFailed: "\uC800\uC7A5\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.",
-  generateFailed: "\uCD94\uCC9C \uC0DD\uC131\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.",
-  loadFailed: "\uCD94\uCC9C \uACB0\uACFC\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.",
-  ignoredPrefix: "\uBB34\uC2DC\uB41C \uC785\uB825\uAC12:",
-  saveLabelPrefix: "\uCD94\uCC9C \uC870\uD569",
+    "모든 6개 번호 조합의 1등 당첨 확률은 동일합니다. “공동 당첨 분산형 추천”은 공동 당첨 가능성을 낮추는 선택일 뿐 확률을 높이지 않습니다.",
+  detailLink: "자세히 보기",
+  recommendPrefix: "추천",
+  save: "저장",
+  saving: "저장 중...",
+  saved: "저장됨",
+  savedCreated: "저장했습니다.",
+  savedExists: "이미 저장한 조합입니다.",
+  saveFailed: "저장하지 못했습니다.",
+  generateFailed: "추천 생성에 실패했습니다.",
+  loadFailed: "추천 결과를 불러오지 못했습니다.",
+  ignoredPrefix: "무시된 입력값:",
+  saveLabelPrefix: "추천 조합",
 } as const;
 
 export function RecommendClient() {
