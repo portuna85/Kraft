@@ -59,6 +59,7 @@
 
 html {
   font-family: var(--font-sans), "Pretendard", system-ui, sans-serif;
+  overflow-x: clip;
 }
 
 body {
@@ -75,6 +76,15 @@ body {
   letter-spacing: -0.01em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
 }
 
 a {
@@ -85,6 +95,7 @@ a {
 .shell {
   width: min(1120px, calc(100vw - 32px));
   margin: 0 auto;
+  min-width: 0;
 }
 
 .site-header {
@@ -103,6 +114,7 @@ a {
   justify-content: space-between;
   min-height: 78px;
   gap: 24px;
+  min-width: 0;
 }
 
 .brand {
@@ -111,12 +123,16 @@ a {
   font-weight: 700;
   letter-spacing: -0.06em;
   text-transform: uppercase;
+  line-height: 1;
+  min-width: 0;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .theme-toggle {
@@ -416,6 +432,7 @@ a {
 .saved-section {
   display: grid;
   align-content: start;
+  min-width: 0;
 }
 
 .button,
@@ -458,6 +475,17 @@ button:hover {
 .grid {
   display: grid;
   gap: 24px;
+}
+
+.grid > *,
+.section-stack > *,
+.freq-summary > *,
+.recommend-grid > *,
+.round-detail-grid > *,
+.ops-grid > *,
+.panel > *,
+.saved-section > * {
+  min-width: 0;
 }
 
 .grid-3 {
@@ -871,6 +899,12 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
+}
+
+.saved-item-row .balls {
+  flex: 1 1 280px;
+  min-width: 0;
 }
 
 .saved-match-info {
@@ -951,6 +985,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   font-size: 0.8rem;
   color: var(--muted);
   text-decoration: none;
+  min-width: 0;
 }
 
 .footer-nav a:hover {
@@ -1135,8 +1170,8 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 }
 
 .status-incident-item {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(52px, auto) minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
@@ -1159,7 +1194,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 }
 
 .status-incident-time {
-  margin-left: auto;
+  justify-self: end;
   font-size: 0.85rem;
 }
 .pattern-section {
@@ -1215,7 +1250,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 }
 .companion-item {
   display: grid;
-  grid-template-columns: 28px 1fr auto;
+  grid-template-columns: minmax(28px, auto) minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   padding: 12px 16px;
@@ -1241,6 +1276,8 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 .pair-sep {
   color: var(--muted);
@@ -1252,6 +1289,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
+  min-width: 0;
 }
 .pair-count {
   font-family: var(--font-accent), var(--font-sans), sans-serif;
@@ -1726,7 +1764,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   gap: 14px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   .grid-3,
   .recommend-form,
   .ops-manual-form,
@@ -2032,7 +2070,7 @@ body {
 /* 900px 이하에서 햄버거 버튼(.nav-toggle)이 나타나므로 같은 구간에서 메뉴
    wrapper도 노출해야 한다. 이 규칙은 위 unconditional display:none 보다 뒤에
    와야 캐스케이드에서 이긴다(639px 이하는 더 아래 규칙이 다시 덮어씀). */
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   .nav-mobile-wrap {
     display: block;
   }
@@ -2082,16 +2120,35 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .ops-inline {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
   .frequency-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   .companion-filter-balls {
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 
   .pattern-item {
     grid-template-columns: 88px minmax(0, 1fr) 52px 52px;
+  }
+
+  .status-incident-item {
+    grid-template-columns: minmax(52px, auto) minmax(0, 1fr) auto;
+  }
+
+  .status-incident-time {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .footer-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 16px;
   }
 }
 
@@ -2166,6 +2223,11 @@ body {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+  }
+
+  .page-subtitle,
+  .footer-copy {
+    max-width: none;
   }
 
   .nav-backdrop {
@@ -2323,6 +2385,42 @@ body {
 
   .rank {
     text-align: left;
+  }
+
+  .saved-item-row,
+  .saved-match-info {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .saved-item-row .balls {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .saved-delete-btn {
+    align-self: stretch;
+  }
+
+  .status-incident-item {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .status-incident-time {
+    justify-self: start;
+  }
+
+  .footer-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+  }
+
+  .footer-nav a {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
   }
 
   .round-detail-balls {
