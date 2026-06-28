@@ -1,4 +1,8 @@
-﻿:root {
+﻿/* Layer order: later layer wins. Unlayered rules beat all layers.
+   Full per-rule migration can proceed incrementally. */
+@layer tokens, base, layout, components, utilities, responsive;
+
+:root {
   color-scheme: light;
   --bg: #f6f1e8;
   --bg-strong: #efe5d2;
@@ -121,6 +125,7 @@ a {
   background: var(--header-bg);
   border-bottom: 1px solid var(--line);
   box-shadow: 0 10px 30px rgba(40, 24, 12, 0.08);
+  padding-top: env(safe-area-inset-top);
 }
 
 .header-inner {
@@ -207,14 +212,17 @@ a {
 /* ── Navigation ──────────────────────────────────────────────────── */
 .nav {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   color: var(--muted);
   font-size: 0.92rem;
   align-items: center;
 }
 
 .nav a {
+  display: inline-flex;
+  align-items: center;
   padding: 9px 12px;
+  min-height: 40px;
   border-radius: 999px;
   transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
@@ -992,7 +1000,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 }
 
 .footer {
-  padding: 32px 0 60px;
+  padding: 32px 0 max(60px, env(safe-area-inset-bottom));
   color: var(--muted);
 }
 
@@ -1804,21 +1812,6 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
    Responsive system — mobile-first
    base (<640px) → min-width:640px (tablet) → min-width:1024px (desktop)
    ═══════════════════════════════════════════════════════════════ */
-
-/* ── Component additions (all viewports) ── */
-.nav {
-  gap: 10px;
-}
-
-.nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-}
-
-.header-actions {
-  min-width: 0;
-}
 
 .panel,
 .round-card,
