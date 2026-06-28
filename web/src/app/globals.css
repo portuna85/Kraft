@@ -1,8 +1,4 @@
-﻿/* Layer order: later layer wins. Unlayered rules beat all layers.
-   Full per-rule migration can proceed incrementally. */
-@layer tokens, base, layout, components, utilities, responsive;
-
-:root {
+﻿:root {
   color-scheme: light;
   --bg: #f6f1e8;
   --bg-strong: #efe5d2;
