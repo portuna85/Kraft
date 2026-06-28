@@ -8,7 +8,7 @@ describe("KRAFT_BACKEND_INTERNAL_URL fallback", () => {
     vi.resetModules();
   });
 
-  it("defaults to http://backend:8080 when env var is absent", async () => {
+  it("환경 변수가 없으면 http://backend:8080을 기본값으로 쓴다", async () => {
     delete process.env.KRAFT_BACKEND_INTERNAL_URL;
     // Dynamically import after clearing env so the module re-reads it
     const { getPublicBaseUrl } = await import("@/lib/api");
@@ -17,7 +17,7 @@ describe("KRAFT_BACKEND_INTERNAL_URL fallback", () => {
     expect(typeof getPublicBaseUrl).toBe("function");
   });
 
-  it("uses provided KRAFT_BACKEND_INTERNAL_URL", async () => {
+  it("지정된 KRAFT_BACKEND_INTERNAL_URL을 사용한다", async () => {
     process.env.KRAFT_BACKEND_INTERNAL_URL = "http://custom-backend:9090";
     vi.resetModules();
     const mod = await import("@/lib/api");
@@ -26,7 +26,7 @@ describe("KRAFT_BACKEND_INTERNAL_URL fallback", () => {
 });
 
 describe("API type contracts", () => {
-  it("WinningNumber type includes all blueprint fields", async () => {
+  it("WinningNumber 타입이 블루프린트의 모든 필드를 포함한다", async () => {
     // Compile-time check via TypeScript — this test ensures the type is importable
     // and has the expected shape at runtime (shape enforced by tsc, not vitest)
     const { getPublicBaseUrl } = await import("@/lib/api");

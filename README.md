@@ -111,9 +111,10 @@ Kraft/
 가장 빠른 로컬 실행 방식입니다. MariaDB 없이 Spring Boot가 H2 메모리 DB로 시작합니다.
 
 ```powershell
-copy .env.local.example .env.local
-.\gradlew.bat bootRun --args="--spring.profiles.active=local"
+.\scripts\dev-backend.ps1
 ```
+
+`.env.local`이 없으면 `.env.local.example`에서 자동 복사됩니다.
 
 접속:
 
@@ -128,26 +129,11 @@ copy .env.local.example .env.local
 
 ### 2. 프론트엔드 실행
 
-Next.js 서버 컴포넌트가 백엔드를 직접 호출하므로 로컬에서는 `KRAFT_BACKEND_INTERNAL_URL`을 `localhost:8080`으로 맞춥니다.
-
 ```powershell
-cd web
-copy .env.example .env.local
+.\scripts\dev-web.ps1
 ```
 
-`web/.env.local`에서 아래 값을 로컬용으로 수정합니다.
-
-```properties
-KRAFT_BACKEND_INTERNAL_URL=http://localhost:8080
-KRAFT_PUBLIC_BASE_URL=http://localhost:3000
-```
-
-실행:
-
-```powershell
-npm ci
-npm run dev
-```
+`web/.env.local`이 없으면 `web/.env.example`에서 자동 복사되고 `KRAFT_BACKEND_INTERNAL_URL`을 `localhost:8080`으로 설정합니다.
 
 접속:
 
@@ -158,21 +144,13 @@ npm run dev
 
 ### 3. MariaDB 개발 DB만 실행
 
-H2 대신 MariaDB로 개발하려면 DB 컨테이너를 먼저 띄우고 `.env.local`의 DB 주석을 해제합니다.
+H2 대신 MariaDB로 개발하려면 DB 컨테이너를 먼저 띄우고 `.env.local`의 MariaDB 섹션 주석을 해제합니다.
 
 ```powershell
-docker compose -f docker-compose.dev.yml up -d
+.\scripts\dev-db.ps1
 ```
 
-`.env.local` 예시:
-
-```properties
-KRAFT_DB_URL=jdbc:mariadb://localhost:3306/kraft_lotto?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
-KRAFT_DB_USERNAME=kraft_lotto
-KRAFT_DB_PASSWORD=devpass
-KRAFT_FLYWAY_ENABLED=true
-KRAFT_JPA_DDL_AUTO=validate
-```
+기본 계정: `kraft_lotto / devpass`, DB: `kraft_lotto`. 중지는 `.\scripts\dev-db.ps1 -Down`.
 
 ### 4. Docker로 전체 로컬 스택 실행
 
@@ -256,9 +234,9 @@ docker compose up -d --build
 
 ## API 개요
 
-### Public API
+자세한 엔드포인트, 요청/응답 예시, 인증 헤더, 오류 코드, 캐시 정책은 [docs/api.md](docs/api.md)를 참고하세요.
 
-기본 경로는 `/api/v1`입니다.
+### Public API (`/api/v1`)
 
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
@@ -278,47 +256,21 @@ docker compose up -d --build
 | `GET` | `/status/incidents` | 최근 공개 수집/보정 이력 |
 | `GET` | `/status` | 서비스 상태 요약 |
 
-예시:
+### Ops API (`/ops`)
 
-```bash
-curl http://localhost:8080/api/v1/rounds/latest
-
-curl -X POST http://localhost:8080/api/v1/numbers/recommend \
-  -H "Content-Type: application/json" \
-  -d '{"count":5,"excludedNumbers":[1,2,3],"maximizePrize":true}'
-
-curl -X POST http://localhost:8080/api/v1/saved \
-  -H "Content-Type: application/json" \
-  -H "X-Device-Token: 0123456789abcdef0123456789abcdef" \
-  -d '{"numbers":[3,11,19,28,34,42],"label":"주말","source":"MANUAL"}'
-```
-
-저장 번호의 `X-Device-Token`은 32-128자 문자열이어야 하며, 서버에는 SHA-256 해시만 저장됩니다.
-
-### Ops API
-
-기본 경로는 `/ops`이고 모든 요청에 `X-Ops-Token`이 필요합니다. 토큰이 비어 있으면 API는 비활성 상태로 응답합니다.
+모든 요청에 `X-Ops-Token` 헤더 필요. 토큰이 비어 있으면 비활성 상태로 응답합니다.
 
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
-| `GET` | `/summary` | 운영 요약과 데이터 최신성 |
-| `GET` | `/logs` | 수집/보정 로그 목록. 필터: `page`, `size`, `operationType`, `executionStatus`, `round`, `from`, `to` |
-| `POST` | `/rounds` | 회차 직접 입력 또는 갱신 |
-| `POST` | `/collect/latest` | 다음 최신 회차 수집 |
-| `POST` | `/collect/{round}` | 특정 회차 외부 수집 |
-
-프론트 운영 페이지는 `/ops-api/*`를 호출합니다. Next.js 개발 서버는 rewrite로, 운영 Caddy는 `handle_path /ops-api/*`로 백엔드 `/ops/*`에 전달합니다.
+| `GET` | `/ops/summary` | 운영 요약과 데이터 최신성 |
+| `GET` | `/ops/logs` | 수집/보정 로그 목록 |
+| `POST` | `/ops/rounds` | 회차 직접 입력 또는 갱신 |
+| `POST` | `/ops/collect/latest` | 다음 최신 회차 수집 |
+| `POST` | `/ops/collect/{round}` | 특정 회차 외부 수집 |
 
 ### Admin UI
 
-| 경로 | 설명 |
-| --- | --- |
-| `/admin/login` | 관리자 로그인 |
-| `/admin/dashboard` | 관리자 대시보드 |
-| `/admin/rounds` | 회차 수집, 전체 백필 |
-| `/admin/audit` | 관리자 감사 로그 |
-
-관리자 UI는 Spring Security 세션, CSRF, 로그인 실패 잠금, 감사 로그를 사용합니다. 운영 공개 도메인에서는 Caddy가 `/admin*`을 차단하고 관리자 도메인에서만 접근하도록 구성합니다.
+관리자 UI는 `/admin/login`에서 시작합니다. 운영 환경에서는 Caddy가 공개 도메인의 `/admin*` 접근을 차단합니다.
 
 ## 데이터 모델
 

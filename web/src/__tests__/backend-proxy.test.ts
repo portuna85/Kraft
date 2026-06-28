@@ -12,7 +12,7 @@ describe("proxyBackend", () => {
     vi.restoreAllMocks();
   });
 
-  it("preserves selected backend headers and body", async () => {
+  it("선택된 백엔드 헤더와 본문을 그대로 전달한다", async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ ok: true }), {
         status: 200,
@@ -40,7 +40,7 @@ describe("proxyBackend", () => {
     await expect(response.json()).resolves.toEqual({ ok: true });
   });
 
-  it("returns a 502 json response when the backend request fails", async () => {
+  it("백엔드 요청이 실패하면 502 JSON 응답을 반환한다", async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error("timeout")) as typeof fetch;
 
     const { proxyBackend } = await import("@/lib/backend-proxy");
