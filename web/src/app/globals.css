@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   color-scheme: light;
   --bg: #f6f1e8;
   --bg-strong: #efe5d2;
@@ -452,7 +452,7 @@ a {
 }
 
 .button,
-button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-delete-btn):not(.recommend-save-btn):not(.freq-filter-tab):not(.link-button) {
+button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-delete-btn):not(.recommend-save-btn):not(.freq-filter-tab):not(.link-button):not(.ball) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -471,7 +471,7 @@ button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-del
 }
 
 .button:hover,
-button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-delete-btn):not(.recommend-save-btn):not(.freq-filter-tab):not(.link-button):hover {
+button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-delete-btn):not(.recommend-save-btn):not(.freq-filter-tab):not(.link-button):not(.ball):hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 28px rgba(141, 47, 16, 0.22);
 }
