@@ -52,7 +52,7 @@ www.{$KRAFT_DOMAIN} {
 	header X-Content-Type-Options "nosniff"
 	header Referrer-Policy "strict-origin-when-cross-origin"
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
-	encode zstd gzip
+	encode gzip
 
 	# 진단용 액세스 로그. remote_ip allowlist가 실제로 어떤 IP를 보는지 확인하기 위함
 	# (2026-06-23 인시던트: 자가 헬스체크/스모크 테스트가 막혀 원인 파악이 필요했음).
