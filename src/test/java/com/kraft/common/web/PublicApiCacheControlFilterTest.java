@@ -72,4 +72,17 @@ class PublicApiCacheControlFilterTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "public, max-age=86400, stale-while-revalidate=3600"));
     }
+
+    @Test
+    @DisplayName("incidents 응답의 ETag는 회차 기반이 아니라 MD5 해시다")
+    void incidentsPath_getsMd5EtagNotRoundEtag() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/status/incidents"))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("ETag"))
+                .andReturn();
+
+        String etag = result.getResponse().getHeader("ETag");
+
+        assertThat(etag).doesNotContain("round-");
+    }
 }

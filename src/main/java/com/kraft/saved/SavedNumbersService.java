@@ -3,10 +3,15 @@ package com.kraft.saved;
 import com.kraft.common.config.SavedProperties;
 import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
+import com.kraft.common.lotto.LottoRank;
+import com.kraft.winningnumber.WinningNumberQueryService;
+import com.kraft.winningnumber.WinningNumberResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,15 +23,18 @@ public class SavedNumbersService {
     private final SavedNumberRepository savedNumberRepository;
     private final LottoNumberCodec lottoNumberCodec;
     private final SavedProperties savedProperties;
+    private final WinningNumberQueryService winningNumberQueryService;
     private final Clock clock;
 
     public SavedNumbersService(SavedNumberRepository savedNumberRepository,
                                LottoNumberCodec lottoNumberCodec,
                                SavedProperties savedProperties,
+                               WinningNumberQueryService winningNumberQueryService,
                                Clock clock) {
         this.savedNumberRepository = savedNumberRepository;
         this.lottoNumberCodec = lottoNumberCodec;
         this.savedProperties = savedProperties;
+        this.winningNumberQueryService = winningNumberQueryService;
         this.clock = clock;
     }
 
@@ -34,6 +42,18 @@ public class SavedNumbersService {
     public List<SavedNumberResponse> list(String clientTokenHash) {
         return savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(clientTokenHash).stream()
                 .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SavedNumberMatchResult> compareWithRound(String clientTokenHash, String roundParam) {
+        WinningNumberResponse draw = "latest".equalsIgnoreCase(roundParam)
+                ? winningNumberQueryService.findLatest()
+                        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ROUND_NOT_FOUND", "집계된 회차가 없습니다."))
+                : winningNumberQueryService.getByRound(parseRound(roundParam));
+
+        return savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(clientTokenHash).stream()
+                .map(saved -> toMatchResult(saved, draw))
                 .toList();
     }
 
@@ -75,6 +95,35 @@ public class SavedNumbersService {
                     .map(existing -> new SaveNumberResult(toResponse(existing), false))
                     .orElseThrow(() -> ex);
         }
+    }
+
+    private static int parseRound(String roundParam) {
+        try {
+            int round = Integer.parseInt(roundParam);
+            if (round < 1) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_ROUND", "round 파라미터가 올바르지 않습니다.");
+            }
+            return round;
+        } catch (NumberFormatException e) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_ROUND", "round 파라미터가 올바르지 않습니다.");
+        }
+    }
+
+    private SavedNumberMatchResult toMatchResult(SavedNumber saved, WinningNumberResponse draw) {
+        List<Integer> savedNumbers = lottoNumberCodec.fromStorageValue(saved.getNumbers());
+        Set<Integer> drawSet = new HashSet<>(draw.numbers());
+        int matchedCount = (int) savedNumbers.stream().filter(drawSet::contains).count();
+        boolean bonusMatch = savedNumbers.contains(draw.bonusNumber());
+        return new SavedNumberMatchResult(
+                toResponse(saved),
+                draw.round(),
+                draw.drawDate(),
+                draw.numbers(),
+                draw.bonusNumber(),
+                matchedCount,
+                bonusMatch,
+                LottoRank.of(matchedCount, bonusMatch)
+        );
     }
 
     private SavedNumberResponse toResponse(SavedNumber savedNumber) {

@@ -976,6 +976,24 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   color: var(--muted);
 }
 
+.saved-round-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 4px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.saved-round-selector select {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-card);
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
 .status-text {
   margin: 18px 0 0;
   color: var(--accent-strong);

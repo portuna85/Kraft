@@ -3,8 +3,11 @@ package com.kraft.saved;
 import com.kraft.common.config.SavedProperties;
 import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
+import com.kraft.winningnumber.WinningNumberQueryService;
+import com.kraft.winningnumber.WinningNumberResponse;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -29,6 +33,9 @@ class SavedNumbersServiceTest {
 
     @Mock
     private SavedNumberRepository savedNumberRepository;
+
+    @Mock
+    private WinningNumberQueryService winningNumberQueryService;
 
     private LottoNumberCodec lottoNumberCodec;
     private SavedProperties savedProperties;
@@ -58,7 +65,7 @@ class SavedNumbersServiceTest {
         lottoNumberCodec = new LottoNumberCodec();
         savedProperties = new SavedProperties(100);
         clock = Clock.fixed(Instant.parse("2026-06-13T10:00:00Z"), ZoneId.of("Asia/Seoul"));
-        service = new SavedNumbersService(savedNumberRepository, lottoNumberCodec, savedProperties, clock);
+        service = new SavedNumbersService(savedNumberRepository, lottoNumberCodec, savedProperties, winningNumberQueryService, clock);
     }
 
     @Test
@@ -150,6 +157,102 @@ class SavedNumbersServiceTest {
         SaveNumberResult result = service.save(TOKEN_HASH, new CreateSavedNumberRequest(VALID_NUMBERS, null, null));
 
         assertThat(result.savedNumber().source()).isEqualTo("MANUAL");
+    }
+
+    @Test
+    @DisplayName("round=latest 이면 최신 회차와 대조해 등수를 계산한다")
+    void compareWithRound_latest_returnsMatchResults() {
+        String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
+        given(savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(TOKEN_HASH))
+                .willReturn(List.of(savedEntity(encoded, null, "MANUAL")));
+        WinningNumberResponse draw = new WinningNumberResponse(
+                1234, LocalDate.of(2026, 6, 13), VALID_NUMBERS, 7,
+                1_000_000_000L, 0L, 0, 0L, 0L
+        );
+        given(winningNumberQueryService.findLatest()).willReturn(Optional.of(draw));
+
+        List<SavedNumberMatchResult> result = service.compareWithRound(TOKEN_HASH, "latest");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).matchedCount()).isEqualTo(6);
+        assertThat(result.get(0).prizeTier()).isEqualTo("1등");
+    }
+
+    @Test
+    @DisplayName("round=latest 인데 집계된 회차가 없으면 404 ApiException 발생")
+    void compareWithRound_latestButNoRound_throwsNotFound() {
+        given(winningNumberQueryService.findLatest()).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.compareWithRound(TOKEN_HASH, "latest"))
+                .isInstanceOf(ApiException.class)
+                .satisfies(ex -> {
+                    ApiException apiEx = (ApiException) ex;
+                    assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+                    assertThat(apiEx.getCode()).isEqualTo("ROUND_NOT_FOUND");
+                });
+    }
+
+    @Test
+    @DisplayName("명시적 회차 번호를 지정하면 해당 회차와 대조한다")
+    void compareWithRound_explicitRound_callsGetByRound() {
+        String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
+        given(savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(TOKEN_HASH))
+                .willReturn(List.of(savedEntity(encoded, null, "MANUAL")));
+        WinningNumberResponse draw = new WinningNumberResponse(
+                1234, LocalDate.of(2026, 6, 13), List.of(1, 2, 3, 4, 5, 6), 7,
+                1_000_000_000L, 0L, 0, 0L, 0L
+        );
+        given(winningNumberQueryService.getByRound(1234)).willReturn(draw);
+
+        List<SavedNumberMatchResult> result = service.compareWithRound(TOKEN_HASH, "1234");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).round()).isEqualTo(1234);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 회차를 지정하면 getByRound의 404가 그대로 전파된다")
+    void compareWithRound_nonexistentRound_propagatesNotFound() {
+        given(winningNumberQueryService.getByRound(anyInt()))
+                .willThrow(new ApiException(HttpStatus.NOT_FOUND, "ROUND_NOT_FOUND", "999999회차 정보를 찾을 수 없습니다."));
+
+        assertThatThrownBy(() -> service.compareWithRound(TOKEN_HASH, "999999"))
+                .isInstanceOf(ApiException.class)
+                .satisfies(ex -> {
+                    ApiException apiEx = (ApiException) ex;
+                    assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+                    assertThat(apiEx.getCode()).isEqualTo("ROUND_NOT_FOUND");
+                });
+    }
+
+    @Test
+    @DisplayName("잘못된 round 파라미터는 400 ApiException 발생")
+    void compareWithRound_invalidRoundParam_throwsBadRequest() {
+        assertThatThrownBy(() -> service.compareWithRound(TOKEN_HASH, "abc"))
+                .isInstanceOf(ApiException.class)
+                .satisfies(ex -> {
+                    ApiException apiEx = (ApiException) ex;
+                    assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(apiEx.getCode()).isEqualTo("INVALID_ROUND");
+                });
+
+        assertThatThrownBy(() -> service.compareWithRound(TOKEN_HASH, "-1"))
+                .isInstanceOf(ApiException.class)
+                .satisfies(ex -> assertThat(((ApiException) ex).getCode()).isEqualTo("INVALID_ROUND"));
+    }
+
+    @Test
+    @DisplayName("저장된 번호가 없으면 빈 리스트를 반환한다")
+    void compareWithRound_noSavedNumbers_returnsEmptyList() {
+        given(savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(TOKEN_HASH))
+                .willReturn(List.of());
+        WinningNumberResponse draw = new WinningNumberResponse(
+                1234, LocalDate.of(2026, 6, 13), VALID_NUMBERS, 7,
+                1_000_000_000L, 0L, 0, 0L, 0L
+        );
+        given(winningNumberQueryService.findLatest()).willReturn(Optional.of(draw));
+
+        assertThat(service.compareWithRound(TOKEN_HASH, "latest")).isEmpty();
     }
 
     @Test

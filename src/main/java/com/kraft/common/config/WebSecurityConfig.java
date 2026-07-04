@@ -1,5 +1,6 @@
 package com.kraft.common.config;
 
+import com.kraft.common.web.ClientIpResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -9,17 +10,16 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
-import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-    private final SecurityProperties securityProperties;
+    private final ClientIpResolver clientIpResolver;
 
-    public WebSecurityConfig(SecurityProperties securityProperties) {
-        this.securityProperties = securityProperties;
+    public WebSecurityConfig(ClientIpResolver clientIpResolver) {
+        this.clientIpResolver = clientIpResolver;
     }
 
     // This chain is fully stateless (STATELESS session policy) — no session cookie
@@ -39,11 +39,9 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // health 엔드포인트: 로드밸런서·k8s probe용 공개
                         .requestMatchers("/actuator/health/**").permitAll()
-                        // prometheus 스크래핑: 내부 Docker 네트워크(trusted CIDR)만 허용
-                        .requestMatchers("/actuator/**").access((a, ctx) -> {
-                            var matcher = new IpAddressMatcher(securityProperties.trustedProxyCidr());
-                            return new AuthorizationDecision(matcher.matches(ctx.getRequest()));
-                        })
+                        // prometheus 스크래핑: 내부 Docker 네트워크(trusted CIDR, 콤마 구분 다중 CIDR 지원)만 허용
+                        .requestMatchers("/actuator/**").access((a, ctx) ->
+                                new AuthorizationDecision(clientIpResolver.isTrustedProxy(ctx.getRequest().getRemoteAddr())))
                         .anyRequest().permitAll())
                 .build();
     }

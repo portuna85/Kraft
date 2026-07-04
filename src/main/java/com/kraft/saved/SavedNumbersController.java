@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -31,6 +32,15 @@ public class SavedNumbersController {
     public ResponseEntity<List<SavedNumberResponse>> list(
             @RequestHeader(name = "X-Device-Token", required = true) String deviceToken) {
         List<SavedNumberResponse> result = savedNumbersService.list(deviceTokenSupport.requireHashedToken(deviceToken));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(result);
+    }
+
+    @GetMapping("/matches")
+    public ResponseEntity<List<SavedNumberMatchResult>> matches(
+            @RequestHeader(name = "X-Device-Token", required = true) String deviceToken,
+            @RequestParam(name = "round", defaultValue = "latest") String round) {
+        String hash = deviceTokenSupport.requireHashedToken(deviceToken);
+        List<SavedNumberMatchResult> result = savedNumbersService.compareWithRound(hash, round);
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(result);
     }
 

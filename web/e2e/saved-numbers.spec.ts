@@ -26,6 +26,14 @@ function mockSavedApi(
     }
   });
 
+  page.route("**/api/v1/saved/matches**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([]),
+    });
+  });
+
   const deleteCalls: string[] = [];
   page.route("**/api/v1/saved/1", (route) => {
     deleteCalls.push(route.request().method());

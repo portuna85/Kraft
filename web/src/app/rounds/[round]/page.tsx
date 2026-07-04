@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import { LottoBalls } from "@/components/lotto-balls";
 import { PrizeTable } from "@/components/prize-table";
 import { JsonLdLottoRound } from "@/components/json-ld";
-import { analyzeNumbers, getLatestWinningNumber, getPublicBaseUrl, getRound, type AnalysisResponse } from "@/lib/api";
+import { getLatestWinningNumber, getPublicBaseUrl, getRound, type AnalysisResponse } from "@/lib/api";
+import { analyzeNumbers } from "@/lib/analyze";
 import { PageAd } from "@/components/ad-unit";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 
@@ -62,7 +63,7 @@ export default async function RoundDetailPage({ params }: Props) {
   const data = await getRound(roundNumber).catch(() => null);
   if (!data) notFound();
 
-  const analysis = await analyzeNumbers(data.numbers).catch(() => null);
+  const analysis = analyzeNumbers(data.numbers);
 
   const hasPrev = data.round > 1;
   const hasNext = latestRound > 0 ? data.round < latestRound : false;
@@ -95,7 +96,7 @@ export default async function RoundDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {analysis ? <RoundAnalysisSection analysis={analysis} /> : null}
+      <RoundAnalysisSection analysis={analysis} />
 
       <PageAd slot="rounds-detail" />
 

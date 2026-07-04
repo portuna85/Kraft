@@ -3,6 +3,7 @@ package com.kraft.common.web;
 import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumbersCollectedEvent;
 import jakarta.annotation.PostConstruct;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import org.springframework.scheduling.annotation.Async;
@@ -19,6 +20,12 @@ public class ETagVersionProvider {
 
     private static final Pattern HISTORICAL_ROUND = Pattern.compile("^/api/v1/rounds/(\\d+)$");
     private static final String UNKNOWN = "\"round-unknown\"";
+    // 회차 번호와 무관하게 콘텐츠가 바뀔 수 있는 경로 — 회차 기반 ETag를 적용하면 최대 1주간 stale 304가 발생하므로
+    // 항상 MD5 폴백(응답 바디 해시)을 쓰도록 강제한다.
+    private static final Set<String> MD5_FALLBACK_PATHS = Set.of(
+            "/api/v1/rounds/freshness",
+            "/api/v1/status/incidents"
+    );
 
     private final AtomicReference<String> mutableETag = new AtomicReference<>(UNKNOWN);
     private final WinningNumberRepository winningNumberRepository;
@@ -49,6 +56,9 @@ public class ETagVersionProvider {
         var matcher = HISTORICAL_ROUND.matcher(requestPath);
         if (matcher.matches()) {
             return "\"round-" + matcher.group(1) + "\"";
+        }
+        if (MD5_FALLBACK_PATHS.contains(requestPath)) {
+            return null;
         }
         String version = mutableETag.get();
         return UNKNOWN.equals(version) ? null : version;

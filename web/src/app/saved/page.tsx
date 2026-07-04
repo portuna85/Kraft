@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SavedNumbersClient } from "@/components/saved-numbers-client";
+import { getLatestWinningNumber } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "저장 번호",
@@ -11,12 +12,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/saved" },
 };
 
-export default function SavedPage() {
+export default async function SavedPage() {
+  const latest = await getLatestWinningNumber().catch(() => null);
+
   return (
     <section className="panel">
       <p className="eyebrow">저장 번호</p>
       <h1 className="page-title">저장 번호</h1>
-      <SavedNumbersClient />
+      <SavedNumbersClient latestRound={latest?.round ?? 0} />
     </section>
   );
 }

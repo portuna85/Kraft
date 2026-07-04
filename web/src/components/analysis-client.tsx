@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import type { AnalysisResponse } from "@/lib/api";
+import { analyzeNumbers } from "@/lib/analyze";
 
 export function AnalysisClient() {
   const [input, setInput] = useState("");
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState("");
-  const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setResult(null);
@@ -21,26 +21,17 @@ export function AnalysisClient() {
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const response = await fetch("/api/v1/stats/analysis", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ numbers: parts }),
-          cache: "no-store",
-        });
+    if (parts.some((n) => n < 1 || n > 45)) {
+      setError("번호는 1부터 45 사이여야 합니다.");
+      return;
+    }
 
-        if (!response.ok) {
-          const body = (await response.json().catch(() => ({}))) as { message?: string };
-          setError(body.message ?? "분석에 실패했습니다.");
-          return;
-        }
+    if (new Set(parts).size !== parts.length) {
+      setError("중복된 번호가 있습니다.");
+      return;
+    }
 
-        setResult((await response.json()) as AnalysisResponse);
-      } catch {
-        setError("분석 결과를 불러오지 못했습니다.");
-      }
-    });
+    setResult(analyzeNumbers(parts));
   }
 
   return (
@@ -55,9 +46,7 @@ export function AnalysisClient() {
             autoComplete="off"
           />
         </label>
-        <button type="submit" disabled={isPending}>
-          {isPending ? "분석 중..." : "분석하기"}
-        </button>
+        <button type="submit">분석하기</button>
       </form>
 
       {error ? (

@@ -76,20 +76,6 @@ async function fetchJson<T>(path: string, init?: RequestInitWithNext): Promise<T
   return response.json() as Promise<T>;
 }
 
-// W-2: POST 요청을 fetchJson으로 통합
-async function fetchJsonPost<T>(
-  path: string,
-  body: unknown,
-  headers?: Record<string, string>
-): Promise<T> {
-  return fetchJson<T>(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-}
-
 export function getPublicBaseUrl(): string {
   return publicBaseUrl;
 }
@@ -174,10 +160,5 @@ export async function getCompanionStats(): Promise<CompanionStatsResponse> {
   return fetchJson<CompanionStatsResponse>("/api/v1/stats/companion", {
     next: { revalidate: 600 }
   });
-}
-
-// W-2: analyzeNumbers를 fetchJsonPost로 통합
-export async function analyzeNumbers(numbers: number[]): Promise<AnalysisResponse> {
-  return fetchJsonPost<AnalysisResponse>("/api/v1/stats/analysis", { numbers });
 }
 
