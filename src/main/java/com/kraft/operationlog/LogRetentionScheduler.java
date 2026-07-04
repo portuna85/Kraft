@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.OffsetDateTime;
 
 @Component
@@ -18,6 +19,7 @@ public class LogRetentionScheduler {
 
     private final WinningNumberOperationLogRepository operationLogRepository;
     private final AdminAuditLogRepository adminAuditLogRepository;
+    private final Clock clock;
 
     @Value("${kraft.retention.operation-log-days:30}")
     private int operationLogRetentionDays;
@@ -26,20 +28,22 @@ public class LogRetentionScheduler {
     private int adminAuditLogRetentionDays;
 
     public LogRetentionScheduler(WinningNumberOperationLogRepository operationLogRepository,
-                                 AdminAuditLogRepository adminAuditLogRepository) {
+                                 AdminAuditLogRepository adminAuditLogRepository,
+                                 Clock clock) {
         this.operationLogRepository = operationLogRepository;
         this.adminAuditLogRepository = adminAuditLogRepository;
+        this.clock = clock;
     }
 
     @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Seoul")
     @SchedulerLock(name = "purge-old-logs", lockAtMostFor = "PT10M", lockAtLeastFor = "PT1M")
     @Transactional
     public void purgeOldLogs() {
-        OffsetDateTime operationLogCutoff = OffsetDateTime.now().minusDays(operationLogRetentionDays);
+        OffsetDateTime operationLogCutoff = OffsetDateTime.now(clock).minusDays(operationLogRetentionDays);
         operationLogRepository.deleteByCreatedAtBefore(operationLogCutoff);
         log.info("작업 로그 보관기간 초과 행 삭제 완료: cutoff={}", operationLogCutoff);
 
-        OffsetDateTime adminAuditLogCutoff = OffsetDateTime.now().minusDays(adminAuditLogRetentionDays);
+        OffsetDateTime adminAuditLogCutoff = OffsetDateTime.now(clock).minusDays(adminAuditLogRetentionDays);
         adminAuditLogRepository.deleteByCreatedAtBefore(adminAuditLogCutoff);
         log.info("관리자 감사 로그 보관기간 초과 행 삭제 완료: cutoff={}", adminAuditLogCutoff);
     }

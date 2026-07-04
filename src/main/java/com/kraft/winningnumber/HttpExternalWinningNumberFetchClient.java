@@ -44,14 +44,15 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
         }
 
         String url = externalLottoProperties.urlTemplate().replace("{round}", Integer.toString(round));
-        log.info("외부 회차 수집 요청 시작: round={} url={}", round, url);
+        // 전체 URL은 쿼리 파라미터를 포함할 수 있어 로그에 남기지 않는다 — round만으로 추적에 충분하다.
+        log.info("외부 회차 수집 요청 시작: round={}", round);
 
         Map<String, Object> body = restClient.get()
                 .uri(url)
                 // Required by dhlottery.co.kr's new API (lt645/selectPstLt645InfoNew.do)
                 .header("Accept", "application/json, text/javascript, */*; q=0.01")
-                .header("X-Requested-With", "XMLHttpRequest")
-                .header("Referer", "https://www.dhlottery.co.kr/lt645/result")
+                .header("X-Requested-With", externalLottoProperties.requestedWith())
+                .header("Referer", externalLottoProperties.referer())
                 .retrieve()
                 .body(Map.class);
 

@@ -14,6 +14,10 @@ FROM eclipse-temurin:25-jre@sha256:5cf92df78f6dba978777d5cffa3c856e583f86814fde8
 WORKDIR /app
 
 # 컨테이너 친화적 JVM 옵션
+# ZGC는 대형 힙 저지연에 강점이 있는데, 컨테이너 메모리 제한(docker-compose의 1g×55%≈560MB)이
+# 그 강점이 크게 발휘되기 어려운 크기라 현재 선택이 측정으로 뒷받침된 것은 아니다. 트래픽 규모상
+# 문제가 될 가능성은 낮으나, 변경을 고려한다면 측정 없이 바꾸지 말고 Grafana의 GC pause/heap
+# 지표로 G1 대비 A/B를 먼저 확인할 것.
 ENV JAVA_TOOL_OPTIONS="-XX:+UseZGC -XX:MaxRAMPercentage=55.0 -XX:+ExitOnOutOfMemoryError"
 
 RUN apt-get update \

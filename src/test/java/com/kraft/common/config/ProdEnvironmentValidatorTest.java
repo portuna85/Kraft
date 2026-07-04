@@ -80,7 +80,8 @@ class ProdEnvironmentValidatorTest {
                                                       String opsToken) throws Exception {
         ProdEnvironmentValidator validator = new ProdEnvironmentValidator(
                 new MockEnvironment().withProperty("spring.profiles.active", "prod"),
-                new ExternalLottoProperties(externalUrlTemplate, "0 30 21 * * SAT"),
+                new ExternalLottoProperties(externalUrlTemplate, "0 30 21 * * SAT",
+                        "https://www.dhlottery.co.kr/lt645/result", "XMLHttpRequest"),
                 new RevalidateProperties(revalidateSecret, "http://web:3000"),
                 new OpsProperties(opsToken)
         );

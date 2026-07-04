@@ -1,5 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getLatestWinningNumber, getPublicBaseUrl } from "@/lib/api";
+
+// 레이아웃 밖 라우트 핸들러라 페이지의 revalidate와 달리 실제로 Full Route Cache에 적용된다.
+// Next.js 세그먼트 설정 export는 리터럴이어야 정적 분석이 되므로 lib/revalidate.ts의
+// REVALIDATE_SITEMAP(=3600)과 값을 수동으로 맞춘다(import 시 빌드 실패).
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

@@ -1,3 +1,10 @@
+import {
+  REVALIDATE_LATEST,
+  REVALIDATE_ROUNDS_LIST,
+  REVALIDATE_ROUND_DETAIL,
+  REVALIDATE_STATS,
+} from "@/lib/revalidate";
+
 const backendBaseUrl = process.env.KRAFT_BACKEND_INTERNAL_URL ?? "http://backend:8080";
 const publicBaseUrl = process.env.KRAFT_PUBLIC_BASE_URL ?? "http://localhost";
 
@@ -82,31 +89,31 @@ export function getPublicBaseUrl(): string {
 
 export async function getLatestWinningNumber(): Promise<WinningNumber> {
   return fetchJson<WinningNumber>("/api/v1/rounds/latest", {
-    next: { revalidate: 60 }
+    next: { revalidate: REVALIDATE_LATEST }
   });
 }
 
 export async function getRoundFreshness(): Promise<RoundFreshness> {
   return fetchJson<RoundFreshness>("/api/v1/rounds/freshness", {
-    next: { revalidate: 60 }
+    next: { revalidate: REVALIDATE_LATEST }
   });
 }
 
 export async function getPublicIncidents(): Promise<PublicIncident[]> {
   return fetchJson<PublicIncident[]>("/api/v1/status/incidents", {
-    next: { revalidate: 60 }
+    next: { revalidate: REVALIDATE_LATEST }
   });
 }
 
 export async function getRounds(page = 0, size = 20): Promise<WinningNumberList> {
   return fetchJson<WinningNumberList>(`/api/v1/rounds?page=${page}&size=${size}`, {
-    next: { revalidate: 60 }
+    next: { revalidate: REVALIDATE_ROUNDS_LIST }
   });
 }
 
 export async function getRound(round: number): Promise<WinningNumber> {
   return fetchJson<WinningNumber>(`/api/v1/rounds/${round}`, {
-    next: { revalidate: 60 }
+    next: { revalidate: REVALIDATE_ROUND_DETAIL }
   });
 }
 
@@ -146,19 +153,19 @@ export type AnalysisResponse = {
 
 export async function getFrequencyStats(): Promise<FrequencyStatsResponse> {
   return fetchJson<FrequencyStatsResponse>("/api/v1/stats/frequency", {
-    next: { revalidate: 600 }
+    next: { revalidate: REVALIDATE_STATS }
   });
 }
 
 export async function getPatternStats(): Promise<PatternStatsResponse> {
   return fetchJson<PatternStatsResponse>("/api/v1/stats/patterns", {
-    next: { revalidate: 600 }
+    next: { revalidate: REVALIDATE_STATS }
   });
 }
 
 export async function getCompanionStats(): Promise<CompanionStatsResponse> {
   return fetchJson<CompanionStatsResponse>("/api/v1/stats/companion", {
-    next: { revalidate: 600 }
+    next: { revalidate: REVALIDATE_STATS }
   });
 }
 

@@ -37,6 +37,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    // 아티팩트명은 "springsecurity6"이지만 Boot 4.1.0 BOM이 실제 Spring Security 7.1.0과
+    // 함께 이 버전(3.1.5.RELEASE)을 관리·검증해 배포한다 — 별도 springsecurity7 아티팩트는
+    // 존재하지 않으며 버전 스큐가 아니다(확인: dependencyInsight로 Security 7.1.0 확인 완료).
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.flywaydb:flyway-core")

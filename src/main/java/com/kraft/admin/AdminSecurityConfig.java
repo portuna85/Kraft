@@ -23,6 +23,7 @@ import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Configuration
@@ -46,6 +47,14 @@ public class AdminSecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    // maximumSessions(1)이 세션 파기(브라우저 종료·만료 등) 이벤트를 인메모리 SessionRegistry에
+    // 반영하려면 이 리스너가 필요하다. 없으면 파기된 세션이 레지스트리에 남아 재로그인이
+    // "기존 세션 1개 초과"로 거부되는 문제가 생긴다.
+    @Bean
+    HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     @Bean

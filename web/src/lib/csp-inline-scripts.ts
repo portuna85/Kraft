@@ -1,6 +1,6 @@
-// 루트 레이아웃이 모든 요청에서 inline script CSP nonce를 위해 headers()를 호출하면
-// force-static/ISR 페이지까지 강제로 동적 렌더링된다. 이 두 스크립트는 배포 수명 동안
-// 내용이 고정이므로 nonce 대신 정적 sha256 해시로 허용한다(web/src/proxy.ts에서 사용).
+// 정적 sha256 해시 방식을 시도했으나 Next가 내부적으로 주입하는 RSC 하이드레이션 스크립트까지는
+// 허용할 수 없어 전 페이지 하이드레이션이 CSP에 막히는 문제가 있었다(회귀 이력은 web/src/proxy.ts 참고).
+// 그래서 이 스크립트는 layout.tsx에서 매 요청 발급되는 nonce로 허용한다.
 export const THEME_INIT_SCRIPT =
   "try{if(localStorage.getItem('kraft-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}";
 

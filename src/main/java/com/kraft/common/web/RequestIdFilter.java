@@ -59,7 +59,9 @@ public class RequestIdFilter extends OncePerRequestFilter {
         int status = response.getStatus();
         String method = request.getMethod();
         String path = buildPath(request);
-        String remote = request.getRemoteAddr();
+        // MDC에 이미 채워둔 resolved 클라이언트 IP를 그대로 쓴다 — request.getRemoteAddr()는
+        // 리버스 프록시(Caddy) 뒤에서는 항상 프록시 컨테이너 IP라 로그 분석 시 혼동을 준다.
+        String remote = MDC.get(MDC_CLIENT_IP);
 
         if (status >= 500) {
             log.error("HTTP {} {} -> status={} durationMs={} remote={}",
