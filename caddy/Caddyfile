@@ -54,7 +54,7 @@ www.{$KRAFT_DOMAIN} {
 			header Cache-Control "public, max-age=60, stale-while-revalidate=300"
 			reverse_proxy web:3000 {
 				header_up X-Real-IP {remote_host}
-				@error status>=400
+				@error status 4xx 5xx
 				handle_response @error {
 					# 4xx/5xx 오류 응답은 위의 기본 Cache-Control을 상속해 캐시되면 안 되므로 명시적으로 덮어쓴다.
 					header Cache-Control "no-store"

@@ -57,7 +57,6 @@ export function SavedNumbersClient({ latestRound }: Props) {
 
   useEffect(() => {
     if (items.length === 0) {
-      setMatchMap(new Map());
       return;
     }
 
