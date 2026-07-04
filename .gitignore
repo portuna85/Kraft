@@ -72,5 +72,4 @@ scripts/migrate/env-migration.sh
 
 ### Local-only docs (never commit) ###
 docs/*.md
-!docs/improvement.md
 !docs/api.md
