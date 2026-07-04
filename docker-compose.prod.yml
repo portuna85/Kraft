@@ -93,6 +93,7 @@ services:
     networks:
       - app
       - monitoring
+      - egress
 
   web:
     image: ${KRAFT_WEB_IMAGE_REF}:${KRAFT_WEB_IMAGE_TAG}
@@ -278,6 +279,7 @@ services:
         max-file: "3"
     networks:
       - monitoring
+      - egress
 
   node-exporter:
     image: prom/node-exporter:v1.9.1@sha256:d00a542e409ee618a4edc67da14dd48c5da66726bbd5537ab2af9c1dfc442c8a
@@ -313,6 +315,11 @@ networks:
   monitoring:
     name: kraft-monitoring
     internal: true
+  # app/monitoring은 inbound 노출을 막기 위한 internal 네트워크라 outbound(인터넷)도 함께 막힌다.
+  # 외부 로또 API 수집(backend)과 Discord 알림(alertmanager)은 인터넷 egress가 반드시 필요하므로
+  # 그 두 서비스만 이 non-internal 네트워크에 추가로 연결한다(ingress 전용인 edge와는 목적을 분리).
+  egress:
+    name: kraft-egress
 
 volumes:
   mariadb-data:
