@@ -56,6 +56,9 @@ www.{$KRAFT_DOMAIN} {
 				header_up X-Real-IP {remote_host}
 				@error status 4xx 5xx
 				handle_response @error {
+					# copy_response가 없으면 원본 상태코드/본문이 버려지고 200 빈 응답으로 대체된다 —
+					# 이 블록의 목적은 헤더 교체뿐이므로 반드시 원본 응답을 그대로 복사한 뒤 헤더만 덮어쓴다.
+					copy_response
 					# 4xx/5xx 오류 응답은 위의 기본 Cache-Control을 상속해 캐시되면 안 되므로 명시적으로 덮어쓴다.
 					header Cache-Control "no-store"
 				}
