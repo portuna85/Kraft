@@ -13,7 +13,7 @@ services:
       MARIADB_USER: ${MARIADB_USER:-kraft_lotto}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - mariadb-data:/var/lib/mysql
     deploy:
@@ -67,7 +67,7 @@ services:
     volumes:
       - backend-logs:/app/logs
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     deploy:
       resources:
         limits:
@@ -81,7 +81,10 @@ services:
         max-size: "50m"
         max-file: "3"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      # 서킷브레이커(register-health-indicator: true)는 전체 /actuator/health 집계에 포함되므로
+      # 외부 수집처 장애로 회로가 열리면 여기서 DOWN이 되어 재시작 루프에 빠질 수 있다.
+      # readiness 프로브는 서킷브레이커 상태를 포함하지 않아 prod와 동일하게 안전하다.
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health/readiness | grep -q '\"status\":\"UP\"'"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -109,7 +112,7 @@ services:
       - web-next-cache:/app/.next/cache
       - web-logs:/app/logs/web
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       backend:
         condition: service_healthy

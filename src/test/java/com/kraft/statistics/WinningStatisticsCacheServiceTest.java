@@ -137,6 +137,25 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("limit 지정 빈도 조회 시 최신 회차부터 limit개만 집계하는지 확인 (WinningBallsOnly 프로젝션)")
+    void getFrequencyStatsByLimit_aggregatesOnlyLatestLimitRounds() {
+        FrequencyStatsResponse response = service.getFrequencyStatsByLimit(1);
+
+        assertThat(response.totalRounds()).isEqualTo(2);
+        assertThat(response.frequencies()).hasSize(45);
+
+        // limit=1이면 최신 회차(2: 1,2,10,20,30,45)만 집계 — 회차 1에만 있는 3,4,5,6은 포함되지 않는다
+        response.frequencies().forEach(f -> {
+            if (List.of(1, 2, 10, 20, 30, 45).contains(f.ballNumber())) {
+                assertThat(f.frequency()).isEqualTo(1);
+                assertThat(f.lastRound()).isEqualTo(2);
+            } else if (List.of(3, 4, 5, 6).contains(f.ballNumber())) {
+                assertThat(f.frequency()).isEqualTo(0);
+            }
+        });
+    }
+
+    @Test
     @DisplayName("번호 분석 시 메트릭이 정확하게 계산되는지 확인")
     void analyze_returnsCorrectMetrics() {
         AnalysisResponse result = service.analyze(List.of(1, 2, 3, 4, 5, 6));

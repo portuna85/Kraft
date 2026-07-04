@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,6 +31,16 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(jsonPath("$.status", is("정상")))
                 .andExpect(jsonPath("$.timezone", is("Asia/Seoul")))
                 .andExpect(jsonPath("$.latestRound", is(1200)));
+    }
+
+    @Test
+    @DisplayName("토큰 없이 접근해 401을 받아도 보안 헤더가 붙는다 (필터 순서 회귀)")
+    void opsUnauthorizedResponse_stillCarriesSecurityHeaders() throws Exception {
+        mockMvc.perform(get("/ops/summary"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().exists("Content-Security-Policy"));
     }
 
     @Test

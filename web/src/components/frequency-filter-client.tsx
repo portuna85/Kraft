@@ -28,27 +28,37 @@ function BallWithStats({ item, sampleSize }: { item: BallFrequency; sampleSize: 
   );
 }
 
-async function checkCombination(numbers: number[]): Promise<boolean | null> {
+type CheckState = "loading" | "error" | boolean;
+
+async function checkCombination(numbers: number[]): Promise<boolean | "error"> {
   try {
     const query = numbers.map((number) => `numbers=${number}`).join("&");
     const response = await fetch(`/api/v1/numbers/check?${query}`);
-    if (!response.ok) return null;
+    if (!response.ok) return "error";
 
     const payload = (await response.json()) as { wonFirstPrize?: boolean };
-    return payload.wonFirstPrize ?? null;
+    return payload.wonFirstPrize ?? "error";
   } catch {
-    return null;
+    return "error";
   }
 }
 
 function CombinationGroup({ label, items }: { label: string; items: BallFrequency[] }) {
   const numbers = items.map((item) => item.ballNumber);
   const key = numbers.join(",");
-  const [wonState, setWonState] = useState<{ key: string; value: boolean | null }>({
+  const [wonState, setWonState] = useState<{ key: string; value: CheckState }>({
     key,
-    value: null,
+    value: "loading",
   });
-  const won = wonState.key === key ? wonState.value : null;
+  const won = wonState.key === key ? wonState.value : "loading";
+
+  function runCheck() {
+    setWonState({ key, value: "loading" });
+    const values = key.split(",").map((value) => Number.parseInt(value, 10));
+    void checkCombination(values).then((result) => {
+      setWonState({ key, value: result });
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +78,20 @@ function CombinationGroup({ label, items }: { label: string; items: BallFrequenc
       <p className="freq-rank-label">{label}</p>
       <LottoBalls numbers={numbers} />
       <p className="freq-win-record">
-        {won === null ? "확인 중..." : won ? "1등 당첨 이력 있음" : "1등 당첨 이력 없음"}
+        {won === "loading"
+          ? "확인 중..."
+          : won === "error"
+            ? (
+                <>
+                  확인 실패{" "}
+                  <button type="button" className="link-button" onClick={runCheck}>
+                    다시 시도
+                  </button>
+                </>
+              )
+            : won
+              ? "1등 당첨 이력 있음"
+              : "1등 당첨 이력 없음"}
       </p>
     </div>
   );

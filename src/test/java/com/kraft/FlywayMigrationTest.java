@@ -22,7 +22,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class FlywayMigrationTest {
 
     @Container
-    static MariaDBContainer<?> mariadb = new MariaDBContainer<>("mariadb:11.4")
+    static MariaDBContainer<?> mariadb = new MariaDBContainer<>("mariadb:11.7")
             .withDatabaseName("kraft_test")
             .withUsername("test")
             .withPassword("test");

@@ -2,6 +2,7 @@ package com.kraft.statistics;
 
 import com.kraft.common.config.CacheConfig;
 import com.kraft.common.lotto.SumBuckets;
+import com.kraft.winningnumber.WinningBallsOnly;
 import com.kraft.winningnumber.WinningNumber;
 import com.kraft.winningnumber.WinningNumberRepository;
 import java.util.ArrayList;
@@ -67,16 +68,16 @@ public class WinningStatisticsCacheService {
 
     @Cacheable(value = CacheConfig.STATS_FREQUENCY, key = "#limit")
     public FrequencyStatsResponse getFrequencyStatsByLimit(int limit) {
-        List<WinningNumber> rounds = winningNumberRepository
-                .findByOrderByRoundDesc(PageRequest.of(0, limit));
+        List<WinningBallsOnly> rounds = winningNumberRepository
+                .findBallsByOrderByRoundDesc(PageRequest.of(0, limit));
         return computeFrequencyResponse(rounds);
     }
 
-    private FrequencyStatsResponse computeFrequencyResponse(List<WinningNumber> rounds) {
+    private FrequencyStatsResponse computeFrequencyResponse(List<WinningBallsOnly> rounds) {
         Map<Integer, Integer> freqMap = new HashMap<>();
         Map<Integer, Integer> lastRoundMap = new HashMap<>();
 
-        for (WinningNumber w : rounds) {
+        for (WinningBallsOnly w : rounds) {
             for (int ball : List.of(w.getN1(), w.getN2(), w.getN3(), w.getN4(), w.getN5(), w.getN6())) {
                 freqMap.merge(ball, 1, Integer::sum);
                 lastRoundMap.merge(ball, w.getRound(), Math::max);

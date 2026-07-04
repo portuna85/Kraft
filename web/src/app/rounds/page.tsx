@@ -15,7 +15,11 @@ export const revalidate = 60;
 
 type PageItem = number | "ellipsis";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { page: pageParam } = await searchParams;
+  const userPage = Math.max(1, Number.parseInt(pageParam ?? "1", 10) || 1);
+  const canonical = userPage > 1 ? `/rounds?page=${userPage}` : "/rounds";
+
   let latest: WinningNumber | null = null;
 
   try {
@@ -28,14 +32,14 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       title: "최신 결과와 전체 회차",
       description: "최신 로또 6/45 당첨 번호와 전체 회차 목록을 확인할 수 있습니다.",
-      alternates: { canonical: "/rounds" },
+      alternates: { canonical },
     };
   }
 
   return {
     title: `${latest.round}회 로또 당첨번호와 전체 회차`,
     description: `${latest.round}회 로또 6/45 당첨 번호 ${[...latest.numbers].join(", ")} 보너스 ${latest.bonusNumber}. 전체 회차 목록을 함께 제공합니다.`,
-    alternates: { canonical: "/rounds" },
+    alternates: { canonical },
     openGraph: {
       title: `${latest.round}회 로또 당첨번호 (${latest.drawDate}) | KRAFT Lotto`,
       url: "/rounds",
