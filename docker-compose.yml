@@ -96,11 +96,22 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        KRAFT_PUBLIC_BASE_URL: ${KRAFT_PUBLIC_BASE_URL:-http://localhost}
+        NEXT_PUBLIC_NAVER_SITE_VERIFICATION: ${NEXT_PUBLIC_NAVER_SITE_VERIFICATION:-}
+        NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: ${NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION:-}
+        NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST: ${NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST:-}
+        NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL: ${NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL:-}
+        NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY: ${NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY:-}
+        NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST_DESKTOP: ${NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST_DESKTOP:-}
+        NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL_DESKTOP: ${NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL_DESKTOP:-}
+        NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY_DESKTOP: ${NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY_DESKTOP:-}
     container_name: kraft-web
     restart: unless-stopped
     read_only: true
     tmpfs:
       - "/tmp:size=32m,noexec,nosuid"
+      - "/app/logs/web:size=32m,uid=10001,gid=10001,mode=0755"
     security_opt:
       - "no-new-privileges:true"
     cap_drop:
@@ -112,7 +123,6 @@ services:
           cpus: "0.50"
     volumes:
       - web-next-cache:/app/.next/cache
-      - web-logs:/app/logs/web
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -248,7 +258,6 @@ volumes:
   mariadb-data:
   backend-logs:
   web-next-cache:
-  web-logs:
   prometheus-data:
   grafana-data:
   alertmanager-data:
