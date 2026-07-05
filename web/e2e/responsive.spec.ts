@@ -25,11 +25,11 @@ for (const vp of VIEWPORTS) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 모바일 네비게이션 드로어
 // ─────────────────────────────────────────────────────────────────────────────
-test.describe("모바일 nav 드로어", () => {
+test.describe("모바일 내비게이션 드로어", () => {
   // Pixel 5 너비 = 393px — CSS 기준 640px 미만 → 햄버거 메뉴
   test.use({ viewport: { width: 393, height: 851 } });
 
-  test("햄버거 버튼이 보이고 데스크톱 nav는 숨겨진다", async ({ page }) => {
+  test("햄버거 버튼이 보이고 데스크톱 내비게이션은 숨겨진다", async ({ page }) => {
     await page.goto("/");
 
     const toggle = page.getByRole("button", { name: "메뉴 열기" });
@@ -45,7 +45,7 @@ test.describe("모바일 nav 드로어", () => {
     await expect(page.getByRole("button", { name: "메뉴 닫기" })).toBeVisible();
   });
 
-  test("Escape 키로 드로어 닫힘", async ({ page }) => {
+  test("탈출 키로 드로어 닫힘", async ({ page }) => {
     await page.goto("/");
 
     await page.getByRole("button", { name: "메뉴 열기" }).click();
@@ -83,11 +83,11 @@ test.describe("모바일 nav 드로어", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 태블릿 네비게이션 드로어
 // ─────────────────────────────────────────────────────────────────────────────
-test.describe("태블릿 nav 드로어", () => {
+test.describe("태블릿 내비게이션 드로어", () => {
   // 640px ≤ width < 1024px → 햄버거 메뉴 (전폭 드로어)
   test.use({ viewport: { width: 768, height: 1024 } });
 
-  test("햄버거 버튼이 보이고 데스크톱 nav는 숨겨진다", async ({ page }) => {
+  test("햄버거 버튼이 보이고 데스크톱 내비게이션은 숨겨진다", async ({ page }) => {
     await page.goto("/");
 
     await expect(page.getByRole("button", { name: "메뉴 열기" })).toBeVisible();
@@ -101,7 +101,7 @@ test.describe("태블릿 nav 드로어", () => {
     await expect(page.locator("#nav-mobile")).toBeVisible();
   });
 
-  test("Escape 키로 드로어 닫힘", async ({ page }) => {
+  test("탈출 키로 드로어 닫힘", async ({ page }) => {
     await page.goto("/");
 
     await page.getByRole("button", { name: "메뉴 열기" }).click();
@@ -115,10 +115,10 @@ test.describe("태블릿 nav 드로어", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 데스크톱: 데스크톱 nav 보임, 햄버거 숨겨짐
 // ─────────────────────────────────────────────────────────────────────────────
-test.describe("데스크톱 nav", () => {
+test.describe("데스크톱 내비게이션", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test("데스크톱 nav가 보이고 햄버거 버튼은 숨겨진다", async ({ page }) => {
+  test("데스크톱 내비게이션이 보이고 햄버거 버튼은 숨겨진다", async ({ page }) => {
     await page.goto("/");
 
     await expect(page.locator(".nav-desktop")).toBeVisible();

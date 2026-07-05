@@ -36,7 +36,7 @@ class ExternalWinningNumberPayloadMapperTest {
     }
 
     @Test
-    @DisplayName("새 lt645 API 스타일 페이로드(YYYYMMDD 날짜, tm1-6WnNo 필드)가 올바르게 매핑되는지 확인")
+    @DisplayName("새 외부 응답 형식의 날짜와 번호 필드가 올바르게 매핑되는지 확인")
     void mapsNewLt645StylePayload() {
         WinningNumberUpsertRequest request = mapper.toRequest(Map.ofEntries(
                 Map.entry("ltEpsd", 1227),

@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DisplayName("공개 API 캐시 제어 필터 테스트")
+@DisplayName("공개 캐시 제어 필터 테스트")
 class PublicApiCacheControlFilterTest {
 
     @Autowired
@@ -48,7 +48,7 @@ class PublicApiCacheControlFilterTest {
     }
 
     @Test
-    @DisplayName("If-None-Match가 일치하면 304를 빈 본문으로 반환한다")
+    @DisplayName("조건부 요청 이태그가 일치하면 304를 빈 본문으로 반환한다")
     void matchingIfNoneMatch_returnsNotModifiedWithEmptyBody() throws Exception {
         MvcResult first = mockMvc.perform(get("/api/v1/stats/frequency"))
                 .andExpect(status().isOk())
@@ -74,7 +74,7 @@ class PublicApiCacheControlFilterTest {
     }
 
     @Test
-    @DisplayName("incidents 응답의 ETag는 회차 기반이 아니라 MD5 해시다")
+    @DisplayName("장애 이력 응답의 이태그는 회차 기반이 아니라 내용 해시다")
     void incidentsPath_getsMd5EtagNotRoundEtag() throws Exception {
         MvcResult result = mockMvc.perform(get("/api/v1/status/incidents"))
                 .andExpect(status().isOk())

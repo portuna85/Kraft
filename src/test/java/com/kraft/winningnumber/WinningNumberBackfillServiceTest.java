@@ -49,7 +49,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("DB가 비어있으면 1회차부터 데이터가 없을 때까지 백필을 진행한다")
+    @DisplayName("데이터베이스가 비어 있으면 1회차부터 데이터가 없을 때까지 백필을 진행한다")
     void backfillAll_emptyDb_collectsUntilRoundNotFound() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
         given(fetchClient.fetchRound(1)).willReturn(request(1));
@@ -70,7 +70,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("연속된 DB 데이터가 있는 경우 다음 회차부터 시작하며 수집된 것이 없으면 이벤트를 발행하지 않는다")
+    @DisplayName("연속된 데이터베이스 데이터가 있는 경우 다음 회차부터 시작하며 수집된 것이 없으면 이벤트를 발행하지 않는다")
     void backfillAll_continuousDbStopsImmediatelyWithoutPublishing() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(
                 java.util.stream.IntStream.rangeClosed(1, 500).boxed().toList()
@@ -87,7 +87,7 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
-    @DisplayName("DB에 누락된 회차가 있으면 첫 번째 누락된 회차부터 시작한다")
+    @DisplayName("데이터베이스에 누락된 회차가 있으면 첫 번째 누락된 회차부터 시작한다")
     void backfillAll_sparseDbStartsFromFirstMissingRound() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of(1, 2, 4, 1228));
         given(fetchClient.fetchRound(3)).willReturn(request(3));

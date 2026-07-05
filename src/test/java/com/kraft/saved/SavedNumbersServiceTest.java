@@ -28,7 +28,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SavedNumbersService 단위 테스트")
+@DisplayName("저장 번호 서비스 단위 테스트")
 class SavedNumbersServiceTest {
 
     @Mock
@@ -69,7 +69,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("새 번호 저장 시 created=true 반환")
+    @DisplayName("새 번호 저장 시 생성됨을 반환한다")
     void save_newNumbers_returnsCreatedTrue() {
         String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
         given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
@@ -86,7 +86,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("이미 저장된 번호 재저장 시 created=false 반환 (멱등성)")
+    @DisplayName("이미 저장된 번호 재저장 시 생성되지 않았음을 반환한다")
     void save_duplicateNumbers_returnsCreatedFalse() {
         String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
         given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
@@ -98,7 +98,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("저장 한도 초과 시 CONFLICT ApiException 발생 (B-1 회귀)")
+    @DisplayName("저장 한도 초과 시 충돌 예외가 발생한다")
     void save_overLimit_throwsConflictApiException() {
         String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
         given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
@@ -117,7 +117,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 번호 삭제 시 NOT_FOUND ApiException 발생 (B-1 회귀)")
+    @DisplayName("존재하지 않는 번호 삭제 시 찾을 수 없음 예외가 발생한다")
     void delete_notFound_throwsNotFoundApiException() {
         given(savedNumberRepository.findByIdAndClientTokenHash(99L, TOKEN_HASH))
                 .willReturn(Optional.empty());
@@ -145,7 +145,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("source가 null이면 MANUAL로 저장")
+    @DisplayName("출처가 없으면 수동 저장으로 처리한다")
     void save_nullSource_defaultsToManual() {
         String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
         given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
@@ -160,7 +160,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("round=latest 이면 최신 회차와 대조해 등수를 계산한다")
+    @DisplayName("최신 회차 기준이면 최신 회차와 대조해 등수를 계산한다")
     void compareWithRound_latest_returnsMatchResults() {
         String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
         given(savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(TOKEN_HASH))
@@ -179,7 +179,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("round=latest 인데 집계된 회차가 없으면 404 ApiException 발생")
+    @DisplayName("최신 회차 기준인데 집계된 회차가 없으면 404 예외가 발생한다")
     void compareWithRound_latestButNoRound_throwsNotFound() {
         given(winningNumberQueryService.findLatest()).willReturn(Optional.empty());
 
@@ -211,7 +211,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 회차를 지정하면 getByRound의 404가 그대로 전파된다")
+    @DisplayName("존재하지 않는 회차를 지정하면 404 예외가 그대로 전파된다")
     void compareWithRound_nonexistentRound_propagatesNotFound() {
         given(winningNumberQueryService.getByRound(anyInt()))
                 .willThrow(new ApiException(HttpStatus.NOT_FOUND, "ROUND_NOT_FOUND", "999999회차 정보를 찾을 수 없습니다."));
@@ -226,7 +226,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("잘못된 round 파라미터는 400 ApiException 발생")
+    @DisplayName("잘못된 회차 파라미터는 400 예외가 발생한다")
     void compareWithRound_invalidRoundParam_throwsBadRequest() {
         assertThatThrownBy(() -> service.compareWithRound(TOKEN_HASH, "abc"))
                 .isInstanceOf(ApiException.class)
@@ -256,7 +256,7 @@ class SavedNumbersServiceTest {
     }
 
     @Test
-    @DisplayName("동시 저장 레이스로 unique 제약 위반 시 기존 행을 반환하여 멱등 처리")
+    @DisplayName("동시 저장 경쟁으로 고유 제약 위반 시 기존 행을 반환하여 멱등 처리한다")
     void save_concurrentInsertRace_returnsExistingWithCreatedFalse() {
         String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
         SavedNumber concurrentEntity = savedEntity(encoded, null, "MANUAL");

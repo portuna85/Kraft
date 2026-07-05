@@ -18,7 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
 @Testcontainers
-@DisplayName("Flyway 마이그레이션 및 스키마 검증 테스트")
+@DisplayName("데이터베이스 마이그레이션 및 스키마 검증 테스트")
 class FlywayMigrationTest {
 
     @Container

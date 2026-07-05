@@ -22,14 +22,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 )
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DisplayName("공개 API rate limit 필터 테스트")
+@DisplayName("공개 요청 제한 필터 테스트")
 class PublicRateLimitFilterTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    @DisplayName("429 응답에 Retry-After 헤더가 포함되는지 확인")
+    @DisplayName("429 응답에 재시도 안내 헤더가 포함되는지 확인")
     void rateLimitExceeded_returnsRetryAfterHeader() throws Exception {
         mockMvc.perform(get("/api/v1/stats/frequency"))
                 .andExpect(status().isOk())

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-describe("proxyBackend", () => {
+describe("백엔드 프록시", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -40,7 +40,7 @@ describe("proxyBackend", () => {
     await expect(response.json()).resolves.toEqual({ ok: true });
   });
 
-  it("백엔드 요청이 실패하면 502 JSON 응답을 반환한다", async () => {
+  it("백엔드 요청이 실패하면 502 응답을 반환한다", async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error("timeout")) as typeof fetch;
 
     const { proxyBackend } = await import("@/lib/backend-proxy");

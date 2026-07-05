@@ -10,13 +10,13 @@ import org.springframework.http.HttpStatus;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DisplayName("LottoNumberCodec 단위 테스트")
+@DisplayName("로또 번호 코덱 단위 테스트")
 class LottoNumberCodecTest {
 
     private final LottoNumberCodec codec = new LottoNumberCodec();
 
     @Test
-    @DisplayName("null 원소가 포함된 목록은 400 반환 (500 아님)")
+    @DisplayName("값이 없는 원소가 포함된 목록은 400을 반환한다")
     void normalize_nullElement_returns400() {
         List<Integer> withNull = Arrays.asList(1, 2, 3, null, 5, 6);
 

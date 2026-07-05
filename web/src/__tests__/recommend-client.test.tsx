@@ -16,7 +16,7 @@ function mockFetch(body: unknown, status = 200) {
 
 const EMPTY_RESULT = { recommendations: [] };
 
-describe("RecommendClient", () => {
+describe("번호 추천 화면", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     global.fetch = mockFetch(EMPTY_RESULT);
@@ -75,7 +75,7 @@ describe("RecommendClient", () => {
     });
   });
 
-  it("초기 로드가 응답 오류로 실패하면 API 메시지를 보여준다", async () => {
+  it("초기 로드가 응답 오류로 실패하면 서버 메시지를 보여준다", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 503,
@@ -99,7 +99,7 @@ describe("RecommendClient", () => {
     });
   });
 
-  it("추천 API를 호출하고 반환된 숫자를 렌더링한다", async () => {
+  it("번호 추천 요청을 보내고 반환된 숫자를 렌더링한다", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -124,7 +124,7 @@ describe("RecommendClient", () => {
     });
   });
 
-  it("API가 비정상 상태를 반환하면 오류 메시지를 보여준다", async () => {
+  it("서버가 비정상 상태를 반환하면 오류 메시지를 보여준다", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -145,7 +145,7 @@ describe("RecommendClient", () => {
     });
   });
 
-  it("API가 메시지를 주지 않으면 폴백 오류를 보여준다", async () => {
+  it("서버가 메시지를 주지 않으면 폴백 오류를 보여준다", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -166,7 +166,7 @@ describe("RecommendClient", () => {
     });
   });
 
-  it("변경된 count와 maximizePrize 값을 제출한다", async () => {
+  it("변경된 추천 개수와 당첨금 최대화 값을 제출한다", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,

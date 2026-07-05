@@ -129,7 +129,7 @@ class WinningNumberCollectionServiceTest {
     }
 
     @Test
-    @DisplayName("다중 회차 catch-up 시 회차별이 아닌 전체 완료 후 이벤트를 1회만 발행한다")
+    @DisplayName("다중 회차 따라잡기 시 회차별이 아닌 전체 완료 후 이벤트를 1회만 발행한다")
     void collectUpToLatest_publishesEventOnlyOnceAfterAllRounds() {
         WinningNumberRepository repository = mock(WinningNumberRepository.class);
         ExternalWinningNumberFetchClient fetchClient = mock(ExternalWinningNumberFetchClient.class);

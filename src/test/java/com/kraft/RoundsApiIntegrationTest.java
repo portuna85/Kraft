@@ -10,11 +10,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@DisplayName("회차 API 통합 테스트")
+@DisplayName("회차 조회 통합 테스트")
 class RoundsApiIntegrationTest extends BaseApiIntegrationTest {
 
     @Test
-    @DisplayName("최신 회차 조회 엔드포인트가 최신 회차 정보와 요청 ID를 반환하는지 확인")
+    @DisplayName("최신 회차 조회 엔드포인트가 최신 회차 정보와 요청 식별자를 반환하는지 확인")
     void latestRoundEndpointReturnsLatestRoundAndRequestId() throws Exception {
         mockMvc.perform(get("/api/v1/rounds/latest"))
                 .andExpect(status().isOk())

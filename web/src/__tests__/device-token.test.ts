@@ -1,12 +1,12 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
-describe("getDeviceToken", () => {
+describe("디바이스 토큰 조회", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.resetModules();
   });
 
-  it("SSR 환경(window 미정의)에서는 빈 문자열을 반환한다", async () => {
+  it("서버 렌더링 환경에서는 빈 문자열을 반환한다", async () => {
     // Simulate SSR by temporarily hiding window
     const win = globalThis.window;
     // @ts-expect-error — intentional SSR simulation
@@ -34,7 +34,7 @@ describe("getDeviceToken", () => {
     expect(getDeviceToken2()).toBe(first);
   });
 
-  it("crypto.randomUUID를 쓸 수 없으면 createRandomToken으로 대체한다", async () => {
+  it("브라우저 난수 식별자를 쓸 수 없으면 자체 토큰 생성으로 대체한다", async () => {
     const originalDescriptor = Object.getOwnPropertyDescriptor(crypto, "randomUUID");
     Object.defineProperty(crypto, "randomUUID", { value: undefined, configurable: true, writable: true });
     try {

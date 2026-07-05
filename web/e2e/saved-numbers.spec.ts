@@ -52,7 +52,7 @@ test("저장 번호 목록을 표시한다", async ({ page }) => {
   await expect(list.locator(".saved-item")).toHaveCount(1);
 });
 
-test("삭제 버튼 클릭 시 행이 즉시 제거되고 DELETE가 전송된다", async ({ page }) => {
+test("삭제 버튼 클릭 시 행이 즉시 제거되고 삭제 요청이 전송된다", async ({ page }) => {
   const { deleteCalls } = mockSavedApi(page);
   await page.goto("/saved");
 
@@ -66,7 +66,7 @@ test("삭제 버튼 클릭 시 행이 즉시 제거되고 DELETE가 전송된다
   expect(deleteCalls.filter((m) => m === "DELETE")).toHaveLength(1);
 });
 
-test("DELETE 실패 시 DELETE가 전송됐고 행이 복구된다", async ({ page }) => {
+test("삭제 실패 시 삭제 요청이 전송됐고 행이 복구된다", async ({ page }) => {
   const { deleteCalls } = mockSavedApi(page, { deleteStatus: 500 });
   await page.goto("/saved");
 

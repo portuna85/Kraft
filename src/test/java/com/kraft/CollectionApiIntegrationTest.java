@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@DisplayName("회차 수집 API 통합 테스트")
+@DisplayName("회차 수집 통합 테스트")
 class CollectionApiIntegrationTest extends BaseApiIntegrationTest {
 
     @Test
@@ -32,7 +32,7 @@ class CollectionApiIntegrationTest extends BaseApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("특정 회차 수집 시 요청된 회차를 가져와서 저장하는지 확인")
+    @DisplayName("특정 회차 수집 시 요청 회차를 가져와 저장하는지 확인")
     void opsCollectSpecificRoundFetchesAndUpsertsRequestedRound() throws Exception {
         mockMvc.perform(post("/ops/collect/1305")
                         .header("X-Ops-Token", "test-ops-token"))

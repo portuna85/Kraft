@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class GlobalErrorHandlingIntegrationTest extends BaseApiIntegrationTest {
 
     @Test
-    @DisplayName("필수 쿼리 파라미터 누락 시 400 MISSING_PARAMETER 반환")
+    @DisplayName("필수 쿼리 파라미터 누락 시 400 오류를 반환한다")
     void missingRequiredQueryParam_returns400() throws Exception {
         mockMvc.perform(get("/api/v1/numbers/check"))
                 .andExpect(status().isBadRequest())
@@ -20,7 +20,7 @@ class GlobalErrorHandlingIntegrationTest extends BaseApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("쿼리 파라미터 타입 불일치 시 400 INVALID_PARAMETER_TYPE 반환")
+    @DisplayName("쿼리 파라미터 타입 불일치 시 400 오류를 반환한다")
     void queryParamTypeMismatch_returns400() throws Exception {
         mockMvc.perform(get("/api/v1/numbers/check").param("numbers", "abc"))
                 .andExpect(status().isBadRequest())
@@ -28,7 +28,7 @@ class GlobalErrorHandlingIntegrationTest extends BaseApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("경로 변수 타입 불일치 시 400 INVALID_PARAMETER_TYPE 반환")
+    @DisplayName("경로 변수 타입 불일치 시 400 오류를 반환한다")
     void pathVariableTypeMismatch_returns400() throws Exception {
         mockMvc.perform(get("/api/v1/rounds/abc"))
                 .andExpect(status().isBadRequest())

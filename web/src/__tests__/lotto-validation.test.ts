@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validateLottoNumbers, parseExcludedNumbers } from "@/lib/lotto-validation";
 
-describe("validateLottoNumbers", () => {
+describe("로또 번호 검증", () => {
   it("유효한 6개 숫자 세트를 허용한다", () => {
     const result = validateLottoNumbers([1, 7, 15, 23, 38, 45]);
     expect(result.ok).toBe(true);
@@ -49,20 +49,20 @@ describe("validateLottoNumbers", () => {
   });
 });
 
-describe("parseExcludedNumbers", () => {
+describe("제외 번호 파싱", () => {
   it("쉼표로 구분된 유효한 숫자 목록을 파싱한다", () => {
     const { valid, ignored } = parseExcludedNumbers("1, 10, 45");
     expect(valid).toEqual([1, 10, 45]);
     expect(ignored).toEqual([]);
   });
 
-  it("범위를 벗어난 값을 ignored에 담는다", () => {
+  it("범위를 벗어난 값을 무시 목록에 담는다", () => {
     const { valid, ignored } = parseExcludedNumbers("0, 5, 46");
     expect(valid).toEqual([5]);
     expect(ignored).toEqual(["0", "46"]);
   });
 
-  it("숫자가 아닌 토큰을 ignored에 담는다", () => {
+  it("숫자가 아닌 토큰을 무시 목록에 담는다", () => {
     const { valid, ignored } = parseExcludedNumbers("3, abc, 7");
     expect(valid).toEqual([3, 7]);
     expect(ignored).toEqual(["abc"]);

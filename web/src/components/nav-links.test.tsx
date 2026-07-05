@@ -48,7 +48,7 @@ function makeMatchMedia(initialMatches: boolean) {
   return mq;
 }
 
-describe("NavLinks", () => {
+describe("내비게이션 링크", () => {
   let mq: ReturnType<typeof makeMatchMedia>;
 
   beforeEach(() => {
@@ -64,7 +64,7 @@ describe("NavLinks", () => {
     expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
   });
 
-  it("토글 클릭 시 드로어가 열리고 aria-expanded가 true로 바뀐다", async () => {
+  it("토글 클릭 시 드로어가 열리고 확장 상태가 참으로 바뀐다", async () => {
     render(<NavLinks />);
 
     const toggle = screen.getByRole("button", { name: "메뉴 열기" });
@@ -81,7 +81,7 @@ describe("NavLinks", () => {
     expect(document.getElementById("nav-mobile")).toBeInTheDocument();
   });
 
-  it("드로어가 열리면 scroll-lock이 걸린다", async () => {
+  it("드로어가 열리면 스크롤 잠금이 걸린다", async () => {
     render(<NavLinks />);
 
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
@@ -91,7 +91,7 @@ describe("NavLinks", () => {
     });
   });
 
-  it("Escape 키로 드로어가 닫히고 토글로 포커스가 복원된다", async () => {
+  it("탈출 키로 드로어가 닫히고 토글로 포커스가 복원된다", async () => {
     render(<NavLinks />);
 
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));
@@ -109,7 +109,7 @@ describe("NavLinks", () => {
     expect(document.body.style.overflow).toBe("");
   });
 
-  it("matchMedia 1024px+ change 이벤트로 드로어가 자동 닫힌다", async () => {
+  it("넓은 화면 변경 이벤트로 드로어가 자동 닫힌다", async () => {
     render(<NavLinks />);
 
     fireEvent.click(screen.getByRole("button", { name: "메뉴 열기" }));

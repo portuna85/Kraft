@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DisplayName("통계 API 컨트롤러 테스트")
+@DisplayName("통계 컨트롤러 테스트")
 class StatisticsApiControllerTest {
 
     @Autowired
@@ -96,7 +96,7 @@ class StatisticsApiControllerTest {
     }
 
     @Test
-    @DisplayName("회차 조회 API가 공개 캐시 헤더를 반환하는지 확인")
+    @DisplayName("회차 조회가 공개 캐시 헤더를 반환하는지 확인")
     void roundsLatest_returnsCacheHeaders() throws Exception {
         mockMvc.perform(get("/api/v1/rounds/latest"))
                 .andExpect(status().isOk())

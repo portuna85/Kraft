@@ -41,7 +41,7 @@ class AdminLoginAttemptServiceTest {
     }
 
     @Test
-    @DisplayName("동일 IP에서의 5회 실패만으로는 다른 IP를 잠그지 않는다 (계정 임계값은 IP 임계값보다 높음)")
+    @DisplayName("동일 주소에서의 5회 실패만으로는 다른 주소를 잠그지 않는다")
     void isLockedOut_singleIpFailures_doNotLockOtherIpsViaAccountThreshold() {
         for (int i = 0; i < 5; i++) {
             service.recordFailure("admin", "1.2.3.4");
@@ -54,7 +54,7 @@ class AdminLoginAttemptServiceTest {
     }
 
     @Test
-    @DisplayName("여러 IP에 분산된 실패가 계정 임계값에 도달하면 모든 IP에서 잠긴다 (분산 brute-force 방어)")
+    @DisplayName("여러 주소에 분산된 실패가 계정 임계값에 도달하면 모든 주소에서 잠긴다")
     void isLockedOut_distributedFailuresAcrossManyIps_triggersAccountLockout() {
         for (int i = 0; i < 30; i++) {
             service.recordFailure("admin", "10.0.0." + i);

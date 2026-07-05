@@ -13,11 +13,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@DisplayName("ETagVersionProvider 테스트")
+@DisplayName("이태그 버전 제공자 테스트")
 class ETagVersionProviderTest {
 
     @Test
-    @DisplayName("freshness 경로는 회차가 알려진 상태에서도 항상 null(MD5 폴백)을 반환한다")
+    @DisplayName("최신성 경로는 회차가 알려진 상태에서도 항상 폴백 이태그를 사용한다")
     void freshnessPath_alwaysReturnsNullEvenWithKnownRound() {
         ETagVersionProvider provider = providerWithLatestRound(1234);
 
@@ -25,7 +25,7 @@ class ETagVersionProviderTest {
     }
 
     @Test
-    @DisplayName("incidents 경로는 회차가 알려진 상태에서도 항상 null(MD5 폴백)을 반환한다")
+    @DisplayName("장애 이력 경로는 회차가 알려진 상태에서도 항상 폴백 이태그를 사용한다")
     void incidentsPath_alwaysReturnsNullEvenWithKnownRound() {
         ETagVersionProvider provider = providerWithLatestRound(1234);
 
@@ -33,7 +33,7 @@ class ETagVersionProviderTest {
     }
 
     @Test
-    @DisplayName("회차를 아직 모르는 상태에서도 freshness/incidents는 null을 반환한다")
+    @DisplayName("회차를 아직 모르는 상태에서도 특수 경로는 폴백 이태그를 사용한다")
     void unknownRoundState_stillReturnsNullForSpecialPaths() {
         ETagVersionProvider provider = providerWithNoRound();
 
@@ -42,7 +42,7 @@ class ETagVersionProviderTest {
     }
 
     @Test
-    @DisplayName("히스토리 회차 경로는 여전히 round-N ETag를 반환한다")
+    @DisplayName("과거 회차 경로는 회차 기반 이태그를 반환한다")
     void historicalRoundPath_stillReturnsRoundEtag() {
         ETagVersionProvider provider = providerWithLatestRound(1234);
 
@@ -50,7 +50,7 @@ class ETagVersionProviderTest {
     }
 
     @Test
-    @DisplayName("그 외 비-특수 경로는 여전히 최신 회차 기반 ETag를 반환한다")
+    @DisplayName("그 외 경로는 최신 회차 기반 이태그를 반환한다")
     void otherNonSpecialPath_stillReturnsMutableRoundEtag() {
         ETagVersionProvider provider = providerWithLatestRound(1234);
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { calcAfterTax } from "@/lib/tax";
 
-describe("calcAfterTax", () => {
+describe("세후 금액 계산", () => {
   it("2,000,000원 이하 당첨금은 전액을 반환한다(비과세)", () => {
     expect(calcAfterTax(0)).toBe(0);
     expect(calcAfterTax(1_000_000)).toBe(1_000_000);

@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DisplayName("DeviceTokenSupport 단위 테스트")
+@DisplayName("디바이스 토큰 지원 단위 테스트")
 class DeviceTokenSupportTest {
 
     private final DeviceTokenSupport support = new DeviceTokenSupport();
@@ -16,14 +16,14 @@ class DeviceTokenSupportTest {
     private static final String VALID_TOKEN = "a".repeat(36); // 36-char UUID-length token
 
     @Test
-    @DisplayName("정상 토큰은 SHA-256 해시를 반환한다")
+    @DisplayName("정상 토큰은 해시를 반환한다")
     void requireHashedToken_validToken_returnsHash() {
         String hash = support.requireHashedToken(VALID_TOKEN);
         assertThat(hash).hasSize(64).matches("[0-9a-f]+");
     }
 
     @Test
-    @DisplayName("null 토큰은 DEVICE_TOKEN_REQUIRED 예외를 발생시킨다")
+    @DisplayName("값이 없는 토큰은 필수 토큰 예외를 발생시킨다")
     void requireHashedToken_null_throwsRequired() {
         assertThatThrownBy(() -> support.requireHashedToken(null))
                 .isInstanceOf(ApiException.class)
@@ -31,7 +31,7 @@ class DeviceTokenSupportTest {
     }
 
     @Test
-    @DisplayName("빈 토큰은 DEVICE_TOKEN_REQUIRED 예외를 발생시킨다")
+    @DisplayName("빈 토큰은 필수 토큰 예외를 발생시킨다")
     void requireHashedToken_blank_throwsRequired() {
         assertThatThrownBy(() -> support.requireHashedToken("   "))
                 .isInstanceOf(ApiException.class)
@@ -39,7 +39,7 @@ class DeviceTokenSupportTest {
     }
 
     @Test
-    @DisplayName("31자 토큰은 INVALID_DEVICE_TOKEN 예외를 발생시킨다")
+    @DisplayName("31자 토큰은 유효하지 않은 토큰 예외를 발생시킨다")
     void requireHashedToken_tooShort_throwsInvalid() {
         assertThatThrownBy(() -> support.requireHashedToken("a".repeat(31)))
                 .isInstanceOf(ApiException.class)
@@ -51,7 +51,7 @@ class DeviceTokenSupportTest {
     }
 
     @Test
-    @DisplayName("129자 토큰은 INVALID_DEVICE_TOKEN 예외를 발생시킨다")
+    @DisplayName("129자 토큰은 유효하지 않은 토큰 예외를 발생시킨다")
     void requireHashedToken_tooLong_throwsInvalid() {
         assertThatThrownBy(() -> support.requireHashedToken("a".repeat(129)))
                 .isInstanceOf(ApiException.class)

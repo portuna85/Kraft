@@ -61,7 +61,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("ApiException 발생 시 올바른 상태 코드와 응답 바디를 반환하는지 확인 (4xx)")
+    @DisplayName("애플리케이션 예외 발생 시 올바른 클라이언트 오류 상태 코드와 응답 바디를 반환하는지 확인")
     void handleApiException_returnsCorrectStatusAndBody_for4xx() throws Exception {
         mockMvc.perform(get("/test/not-found").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -72,7 +72,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("ApiException 발생 시 서버 오류에 대해 5xx 상태 코드를 반환하는지 확인")
+    @DisplayName("애플리케이션 예외 발생 시 서버 오류 계열 상태 코드를 반환하는지 확인")
     void handleApiException_returns5xxStatus_forServerError() throws Exception {
         mockMvc.perform(get("/test/server-error").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError())
@@ -100,7 +100,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("잘못된 JSON 바디 전송 시 400 상태 코드를 반환하는지 확인")
+    @DisplayName("잘못된 요청 본문 전송 시 400 상태 코드를 반환하는지 확인")
     void handleNotReadable_returns400() throws Exception {
         mockMvc.perform(post("/test/body")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -111,7 +111,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("지원되지 않는 Content-Type 사용 시 415 상태 코드를 반환하는지 확인")
+    @DisplayName("지원되지 않는 콘텐츠 유형 사용 시 415 상태 코드를 반환하는지 확인")
     void handleUnsupportedMediaType_returns415() throws Exception {
         mockMvc.perform(post("/test/body")
                         .contentType(MediaType.TEXT_PLAIN)

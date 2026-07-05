@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("LottoFreshnessMetrics 단위 테스트")
+@DisplayName("로또 최신성 지표 단위 테스트")
 class LottoFreshnessMetricsTest {
 
     @Mock
@@ -27,7 +27,7 @@ class LottoFreshnessMetricsTest {
     private LottoDrawScheduleCalculator drawScheduleCalculator;
 
     @Test
-    @DisplayName("최신 회차가 없으면 모든 freshness metric은 0이어야 한다")
+    @DisplayName("최신 회차가 없으면 모든 최신성 지표는 0이어야 한다")
     void snapshot_returnsZeroesWhenNoWinningNumberExists() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-20T12:00:00Z"), ZoneId.of("Asia/Seoul"));
         given(winningNumberRepository.findTopByOrderByRoundDesc()).willReturn(Optional.empty());
@@ -42,7 +42,7 @@ class LottoFreshnessMetricsTest {
     }
 
     @Test
-    @DisplayName("최신 회차가 있으면 최신/예상/지연 일수를 한 번의 snapshot으로 계산한다")
+    @DisplayName("최신 회차가 있으면 최신 회차와 예상 회차와 지연 일수를 한 번에 계산한다")
     void snapshot_returnsDerivedFreshnessValues() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-20T12:00:00Z"), ZoneId.of("Asia/Seoul"));
         WinningNumber latest = new WinningNumber(

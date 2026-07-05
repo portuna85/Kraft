@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DisplayName("AdminController 스모크 테스트")
+@DisplayName("관리자 컨트롤러 스모크 테스트")
 class AdminControllerSmokeTest {
 
     @Autowired
@@ -52,21 +52,21 @@ class AdminControllerSmokeTest {
     }
 
     @Test
-    @DisplayName("대시보드 조회 시 200 OK를 반환한다")
+    @DisplayName("대시보드 조회 시 200 응답을 반환한다")
     void dashboard_returns200() throws Exception {
         mockMvc.perform(get("/admin/dashboard").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("회차 관리 페이지 조회 시 200 OK를 반환한다")
+    @DisplayName("회차 관리 페이지 조회 시 200 응답을 반환한다")
     void rounds_returns200() throws Exception {
         mockMvc.perform(get("/admin/rounds").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("CSRF 토큰 없이 로그인 시도 시 만료 페이지로 리다이렉트된다")
+    @DisplayName("위조 요청 방지 토큰 없이 로그인 시도 시 만료 페이지로 리다이렉트된다")
     void loginPost_withoutCsrf_redirectsToExpiredLoginPage() throws Exception {
         mockMvc.perform(post("/admin/login")
                         .param("username", "admin")

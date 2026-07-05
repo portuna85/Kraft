@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { analyzeNumbers } from "@/lib/analyze";
 
-describe("analyzeNumbers", () => {
+describe("번호 분석", () => {
   it("홀짝 개수를 올바르게 센다", () => {
     const result = analyzeNumbers([1, 2, 3, 4, 5, 6]);
     expect(result.oddCount).toBe(3);
@@ -52,14 +52,14 @@ describe("analyzeNumbers", () => {
     expect(byLabel["40-45"]).toBe(2);
   });
 
-  it("입력 배열을 변형하지 않고 정렬된 numbers를 반환한다", () => {
+  it("입력 배열을 변형하지 않고 정렬된 번호 목록을 반환한다", () => {
     const input = [6, 5, 4, 3, 2, 1];
     const result = analyzeNumbers(input);
     expect(input).toEqual([6, 5, 4, 3, 2, 1]);
     expect(result.numbers).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
-  it("백엔드 WinningStatisticsCacheServiceTest 픽스처와 동일한 결과를 낸다", () => {
+  it("백엔드 통계 캐시 서비스 픽스처와 동일한 결과를 낸다", () => {
     const result = analyzeNumbers([1, 2, 3, 4, 5, 6]);
     expect(result.oddCount).toBe(3);
     expect(result.evenCount).toBe(3);

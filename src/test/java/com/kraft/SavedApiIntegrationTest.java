@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@DisplayName("저장 번호 API 통합 테스트")
+@DisplayName("저장 번호 통합 테스트")
 class SavedApiIntegrationTest extends BaseApiIntegrationTest {
 
     @Test
@@ -73,7 +73,7 @@ class SavedApiIntegrationTest extends BaseApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("round=latest로 저장 번호와 최신 회차를 대조하면 등수가 계산된다")
+    @DisplayName("최신 회차 기준으로 저장 번호를 대조하면 등수가 계산된다")
     void savedMatchesEndpoint_latestRound_returnsMatchResult() throws Exception {
         String deviceToken = "test-device-token-for-matches-endpoint-01";
 

@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@DisplayName("운영 API 통합 테스트")
+@DisplayName("운영 기능 통합 테스트")
 class OpsApiIntegrationTest extends BaseApiIntegrationTest {
 
     @Test
@@ -133,7 +133,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("운영 로그 조회 시 한국 표준시(KST) 기준 날짜 범위 필터링을 지원하는지 확인")
+    @DisplayName("운영 로그 조회 시 한국 표준시 기준 날짜 범위 필터링을 지원하는지 확인")
     void opsLogsSupportsDateRangeFilteringInKst() throws Exception {
         String today = LocalDate.now(ZoneId.of("Asia/Seoul")).toString();
 

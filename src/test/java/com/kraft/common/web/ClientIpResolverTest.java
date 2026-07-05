@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@DisplayName("Client IP resolver 테스트")
+@DisplayName("클라이언트 주소 해석기 테스트")
 class ClientIpResolverTest {
 
     private ClientIpResolver resolver;
@@ -23,7 +23,7 @@ class ClientIpResolverTest {
     }
 
     @Test
-    @DisplayName("XFF 헤더가 없으면 remoteAddr를 반환한다")
+    @DisplayName("전달 주소 헤더가 없으면 원격 주소를 반환한다")
     void resolve_returnsRemoteAddr_whenNoXff() {
         HttpServletRequest req = mock(HttpServletRequest.class);
         when(req.getHeader("X-Forwarded-For")).thenReturn(null);
@@ -33,7 +33,7 @@ class ClientIpResolverTest {
     }
 
     @Test
-    @DisplayName("XFF 헤더가 비어 있으면 remoteAddr를 반환한다")
+    @DisplayName("전달 주소 헤더가 비어 있으면 원격 주소를 반환한다")
     void resolve_returnsRemoteAddr_whenXffBlank() {
         HttpServletRequest req = mock(HttpServletRequest.class);
         when(req.getHeader("X-Forwarded-For")).thenReturn("  ");
@@ -43,7 +43,7 @@ class ClientIpResolverTest {
     }
 
     @Test
-    @DisplayName("단일 XFF IP가 비신뢰 주소면 해당 IP를 반환한다")
+    @DisplayName("단일 전달 주소가 비신뢰 주소면 해당 주소를 반환한다")
     void resolve_returnsClientIp_whenSingleXffNotTrusted() {
         HttpServletRequest req = mock(HttpServletRequest.class);
         when(req.getRemoteAddr()).thenReturn("172.20.0.2");
@@ -53,7 +53,7 @@ class ClientIpResolverTest {
     }
 
     @Test
-    @DisplayName("XFF 체인에서는 신뢰 프록시를 건너뛴다")
+    @DisplayName("전달 주소 체인에서는 신뢰 프록시를 건너뛴다")
     void resolve_skipsTrustedProxy_inXffChain() {
         HttpServletRequest req = mock(HttpServletRequest.class);
         when(req.getRemoteAddr()).thenReturn("172.20.0.2");
@@ -64,7 +64,7 @@ class ClientIpResolverTest {
     }
 
     @Test
-    @DisplayName("모든 XFF IP가 신뢰 주소면 remoteAddr를 반환한다")
+    @DisplayName("모든 전달 주소가 신뢰 주소면 원격 주소를 반환한다")
     void resolve_returnsRemoteAddr_whenAllXffAreTrusted() {
         HttpServletRequest req = mock(HttpServletRequest.class);
         when(req.getHeader("X-Forwarded-For"))
@@ -75,14 +75,14 @@ class ClientIpResolverTest {
     }
 
     @Test
-    @DisplayName("여러 CIDR 중 하나에 포함되면 신뢰 프록시로 본다")
+    @DisplayName("여러 신뢰 대역 중 하나에 포함되면 신뢰 프록시로 본다")
     void isTrustedProxy_trueWhenIpMatchesAnyConfiguredCidr() {
         assertThat(resolver.isTrustedProxy("172.20.0.2")).isTrue();
         assertThat(resolver.isTrustedProxy("10.10.10.10")).isTrue();
     }
 
     @Test
-    @DisplayName("모든 CIDR 밖 주소는 비신뢰 프록시다")
+    @DisplayName("모든 신뢰 대역 밖 주소는 비신뢰 프록시다")
     void isTrustedProxy_falseWhenIpMatchesNoConfiguredCidr() {
         assertThat(resolver.isTrustedProxy("192.168.0.10")).isFalse();
         assertThat(resolver.isTrustedProxy("203.0.113.1")).isFalse();
@@ -101,7 +101,7 @@ class ClientIpResolverTest {
     }
 
     @Test
-    @DisplayName("잘못된 CIDR 항목은 무시하고 정상 항목만 평가한다")
+    @DisplayName("잘못된 대역 항목은 무시하고 정상 항목만 평가한다")
     void isTrustedProxy_ignoresInvalidCidrs() {
         SecurityProperties props = mock(SecurityProperties.class);
         when(props.trustedProxyCidr()).thenReturn("bad-cidr, 172.16.0.0/12");

@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("WinningNumberCommandService 단위 테스트")
+@DisplayName("당첨 번호 명령 서비스 단위 테스트")
 class WinningNumberCommandServiceTest {
 
     @Mock
@@ -54,7 +54,7 @@ class WinningNumberCommandServiceTest {
     }
 
     @Test
-    @DisplayName("보너스 번호가 본번호와 중복이면 BAD_REQUEST ApiException 발생")
+    @DisplayName("보너스 번호가 본번호와 중복이면 잘못된 요청 예외가 발생한다")
     void upsert_bonusDuplicatesMainNumber_throwsBadRequest() {
         assertThatThrownBy(() -> service.upsert(request(NUMBERS, 1)))
                 .isInstanceOf(ApiException.class)
@@ -66,7 +66,7 @@ class WinningNumberCommandServiceTest {
     }
 
     @Test
-    @DisplayName("신규 회차 upsert 시 changed=true 반환")
+    @DisplayName("신규 회차 저장 시 변경됨을 반환한다")
     void upsertWithResult_newRound_changedTrue() {
         given(repository.findByRound(1)).willReturn(Optional.empty());
         given(repository.save(any())).willAnswer(inv -> inv.getArgument(0));
@@ -77,7 +77,7 @@ class WinningNumberCommandServiceTest {
     }
 
     @Test
-    @DisplayName("변경 없는 기존 회차 upsert 시 changed=false 반환")
+    @DisplayName("변경 없는 기존 회차 저장 시 변경되지 않음을 반환한다")
     void upsertWithResult_existingUnchanged_changedFalse() {
         WinningNumber existing = buildEntity();
         given(repository.findByRound(1)).willReturn(Optional.of(existing));
@@ -89,7 +89,7 @@ class WinningNumberCommandServiceTest {
     }
 
     @Test
-    @DisplayName("1등 금액 변경 시 changed=true 반환")
+    @DisplayName("1등 금액 변경 시 변경됨을 반환한다")
     void upsertWithResult_prizeAmountChanged_changedTrue() {
         WinningNumber existing = buildEntity();
         given(repository.findByRound(1)).willReturn(Optional.of(existing));
@@ -104,7 +104,7 @@ class WinningNumberCommandServiceTest {
     }
 
     @Test
-    @DisplayName("2등 금액만 변경 시 changed=true 반환")
+    @DisplayName("2등 금액만 변경 시 변경됨을 반환한다")
     void upsertWithResult_secondPrizeChanged_changedTrue() {
         WinningNumber existing = buildEntity();
         given(repository.findByRound(1)).willReturn(Optional.of(existing));
@@ -119,7 +119,7 @@ class WinningNumberCommandServiceTest {
     }
 
     @Test
-    @DisplayName("2등 당첨자 수만 변경 시 changed=true 반환")
+    @DisplayName("2등 당첨자 수만 변경 시 변경됨을 반환한다")
     void upsertWithResult_secondWinnersChanged_changedTrue() {
         WinningNumber existing = buildEntity();
         given(repository.findByRound(1)).willReturn(Optional.of(existing));
@@ -134,7 +134,7 @@ class WinningNumberCommandServiceTest {
     }
 
     @Test
-    @DisplayName("총 판매금액만 변경 시 changed=true 반환")
+    @DisplayName("총 판매금액만 변경 시 변경됨을 반환한다")
     void upsertWithResult_totalSalesChanged_changedTrue() {
         WinningNumber existing = buildEntity();
         given(repository.findByRound(1)).willReturn(Optional.of(existing));
@@ -149,7 +149,7 @@ class WinningNumberCommandServiceTest {
     }
 
     @Test
-    @DisplayName("1등 누적금액만 변경 시 changed=true 반환")
+    @DisplayName("1등 누적금액만 변경 시 변경됨을 반환한다")
     void upsertWithResult_firstAccumAmountChanged_changedTrue() {
         WinningNumber existing = buildEntity();
         given(repository.findByRound(1)).willReturn(Optional.of(existing));
@@ -164,7 +164,7 @@ class WinningNumberCommandServiceTest {
     }
 
     @Test
-    @DisplayName("동시 insert 경쟁으로 unique 제약 위반 시 update로 재해석하여 멱등 처리")
+    @DisplayName("동시 삽입 경쟁으로 고유 제약 위반 시 갱신으로 재해석하여 멱등 처리한다")
     void upsertWithResult_concurrentInsertRace_fallsBackToUpdate() {
         WinningNumber concurrentlyInserted = buildEntity();
         given(repository.findByRound(1))

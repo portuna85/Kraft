@@ -30,7 +30,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("LottoRecommendationService 단위 테스트")
+@DisplayName("로또 번호 추천 서비스 단위 테스트")
 class LottoRecommendationServiceTest {
 
     @Mock
@@ -68,11 +68,11 @@ class LottoRecommendationServiceTest {
     // ── 기본 추천 동작 ────────────────────────────────────────────────────────
 
     @Nested
-    @DisplayName("기본 추천 (maximizePrize=false)")
+    @DisplayName("기본 추천")
     class BasicRecommend {
 
         @Test
-        @DisplayName("요청한 count만큼 조합을 반환한다")
+        @DisplayName("요청한 개수만큼 조합을 반환한다")
         void recommend_returnsRequestedCount() {
             RecommendNumbersRequest request = new RecommendNumbersRequest(5, null, false);
 
@@ -82,7 +82,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("요청이 null이면 기본값 1개를 반환한다")
+        @DisplayName("요청이 없으면 기본값 1개를 반환한다")
         void recommend_nullRequest_returnsOneCombo() {
             RecommendNumbersResponse response = service.recommend(null);
 
@@ -120,7 +120,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("maximizePrize=false이면 scorer.score()를 호출하지 않는다")
+        @DisplayName("당첨금 최대화 모드가 아니면 점수 계산기를 호출하지 않는다")
         void recommend_notMaximizePrize_scorerNotCalled() {
             service.recommend(new RecommendNumbersRequest(3, null, false));
 
@@ -146,7 +146,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("후보가 6개 미만이 되도록 제외하면 TOO_MANY_EXCLUSIONS 예외 발생")
+        @DisplayName("후보가 6개 미만이 되도록 제외하면 과도한 제외 번호 예외가 발생한다")
         void recommend_tooManyExclusions_throwsApiException() {
             List<Integer> excluded = List.of(
                     1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -167,7 +167,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("후보 6개이고 count=2이면 INSUFFICIENT_UNIQUE_COMBINATIONS 예외 발생")
+        @DisplayName("후보 6개에서 2세트를 요청하면 조합 부족 예외가 발생한다")
         void recommend_countExceedsPossibleCombinations_throwsApiException() {
             // 39개 제외 → 후보 6개 → C(6,6)=1가지뿐
             List<Integer> excluded = List.of(
@@ -210,7 +210,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("역대 당첨 조합 로드 후 새 회차 이벤트(dataChanged=true) 수신 시 갱신된다")
+        @DisplayName("역대 당첨 조합 로드 후 변경된 새 회차 이벤트를 받으면 갱신된다")
         void onCollected_dataChanged_refreshesHistoricalCombinations() {
             // 초기: 빈 목록
             assertThat(service.recommend(new RecommendNumbersRequest(1, null, false))
@@ -231,7 +231,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("새 회차 이벤트(dataChanged=false) 수신 시 repository를 재조회하지 않는다")
+        @DisplayName("변경 없는 새 회차 이벤트를 받으면 저장소를 재조회하지 않는다")
         void onCollected_dataNotChanged_doesNotRefresh() {
             service.onCollected(new WinningNumbersCollectedEvent(1200, false));
 
@@ -243,7 +243,7 @@ class LottoRecommendationServiceTest {
     // ── 당첨금 최대화 모드 ────────────────────────────────────────────────────
 
     @Nested
-    @DisplayName("당첨금 최대화 모드 (maximizePrize=true)")
+    @DisplayName("당첨금 최대화 모드")
     class MaximizePrize {
 
         @BeforeEach
@@ -253,7 +253,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("maximizePrize=true이면 후보 풀 크기(50)만큼 scorer.score()를 호출한다")
+        @DisplayName("당첨금 최대화 모드이면 후보 풀 크기만큼 점수 계산기를 호출한다")
         void recommend_maximizePrize_callsScorerForCandidatePool() {
             service.recommend(new RecommendNumbersRequest(1, null, true));
 
@@ -262,7 +262,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("maximizePrize=true, count=3이면 score()를 최소 150회 호출한다")
+        @DisplayName("당첨금 최대화 모드에서 3세트를 요청하면 점수 계산기를 최소 150회 호출한다")
         void recommend_maximizePrize_multipleCount_callsScorerPerCombo() {
             service.recommend(new RecommendNumbersRequest(3, null, true));
 
@@ -271,7 +271,7 @@ class LottoRecommendationServiceTest {
 
         @SuppressWarnings("unchecked")
         @Test
-        @DisplayName("maximizePrize=true이면 scorer가 가장 높은 점수를 부여한 조합을 반환한다")
+        @DisplayName("당첨금 최대화 모드이면 가장 높은 점수의 조합을 반환한다")
         void recommend_maximizePrize_returnsHighestScoredCandidate() {
             // 점수 = 조합 번호의 합계 → 결정론적이고 검증 가능한 스코어
             given(combinationScorer.score(anyList())).willAnswer(inv -> {
@@ -294,7 +294,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("maximizePrize=true이어도 반환 조합은 유효한 로또 번호 형식이다")
+        @DisplayName("당첨금 최대화 모드에서도 반환 조합은 유효한 로또 번호 형식이다")
         void recommend_maximizePrize_returnsValidCombos() {
             service.recommend(new RecommendNumbersRequest(3, null, true))
                     .recommendations()
@@ -307,7 +307,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("maximizePrize=true이어도 제외 번호는 결과에 포함되지 않는다")
+        @DisplayName("당첨금 최대화 모드에서도 제외 번호는 결과에 포함되지 않는다")
         void recommend_maximizePrize_respectsExcludedNumbers() {
             List<Integer> excluded = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
@@ -318,7 +318,7 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("maximizePrize=true이어도 역대 당첨 조합은 제외된다")
+        @DisplayName("당첨금 최대화 모드에서도 역대 당첨 조합은 제외된다")
         void recommend_maximizePrize_historicalExclusionStillApplies() {
             // 역대 당첨 조합은 generateOne 단계에서 재추첨 처리되므로
             // scorer 호출 자체가 이루어지지 않음 → @BeforeEach의 기본 mock(0점)으로 충분

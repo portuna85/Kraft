@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("CombinationScorer 단위 테스트")
+@DisplayName("조합 점수 계산기 단위 테스트")
 class CombinationScorerTest {
 
     private CombinationScorer scorer;
@@ -21,7 +21,7 @@ class CombinationScorerTest {
     // ── 비인기도 점수 방향성 ───────────────────────────────────────────────────
 
     @Test
-    @DisplayName("고번호(32~45) 조합은 저번호(1~9) 조합보다 점수가 높다 — 생일 편향 역이용")
+    @DisplayName("고번호 조합은 저번호 조합보다 점수가 높다")
     void score_highNumberCombo_outscoresLowNumberCombo() {
         List<Integer> highNumbers  = List.of(32, 35, 38, 40, 43, 45); // 모두 32 이상
         List<Integer> lowNumbers   = List.of(1, 2, 3, 4, 5, 6);       // 한 자리 + 낮은 합계
@@ -30,7 +30,7 @@ class CombinationScorerTest {
     }
 
     @Test
-    @DisplayName("높은 합계(130~220) 조합은 낮은 합계(<100) 조합보다 점수가 높다")
+    @DisplayName("높은 합계 조합은 낮은 합계 조합보다 점수가 높다")
     void score_highSumCombo_outscoresLowSumCombo() {
         List<Integer> highSum = List.of(30, 32, 34, 36, 38, 40); // 합계 210
         List<Integer> lowSum  = List.of(1, 2, 3, 4, 5, 9);       // 합계 24
@@ -144,7 +144,7 @@ class CombinationScorerTest {
     }
 
     @Test
-    @DisplayName("고번호+고합계 조합(32,36,38,40,43,45)은 양수 점수를 받는다")
+    @DisplayName("고번호와 고합계 조합은 양수 점수를 받는다")
     void score_bestStructuredCombo_isPositive() {
         assertThat(scorer.score(List.of(32, 36, 38, 40, 43, 45))).isPositive();
     }

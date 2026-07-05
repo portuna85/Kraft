@@ -110,7 +110,7 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
-    @DisplayName("재생성을 반복해도 패턴/동반 출현 행이 delete-and-reinsert 되지 않고 같은 id로 갱신된다")
+    @DisplayName("재생성을 반복해도 패턴과 동반 출현 행이 삭제 후 재삽입되지 않고 같은 식별자로 갱신된다")
     void rebuildAllSummaries_repeatedRuns_upsertSameRowsInsteadOfChurning() {
         summaryRebuilder.rebuildAllSummaries();
         Long oddRowId = patternStatsSummaryRepository
@@ -137,7 +137,7 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
-    @DisplayName("limit 지정 빈도 조회 시 최신 회차부터 limit개만 집계하는지 확인 (WinningBallsOnly 프로젝션)")
+    @DisplayName("제한 개수 지정 빈도 조회 시 최신 회차부터 지정 개수만 집계하는지 확인")
     void getFrequencyStatsByLimit_aggregatesOnlyLatestLimitRounds() {
         FrequencyStatsResponse response = service.getFrequencyStatsByLimit(1);
 
