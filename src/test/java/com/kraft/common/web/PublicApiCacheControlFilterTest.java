@@ -74,6 +74,37 @@ class PublicApiCacheControlFilterTest {
     }
 
     @Test
+    @DisplayName("과거 회차 상세의 이태그는 회차 번호가 아니라 내용 해시다")
+    void historicalRoundPath_getsMd5EtagNotRoundEtag() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/rounds/1"))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("ETag"))
+                .andReturn();
+
+        String etag = result.getResponse().getHeader("ETag");
+
+        assertThat(etag).doesNotContain("round-");
+    }
+
+    @Test
+    @DisplayName("과거 회차가 보정되면 기존 이태그로도 새 응답(200)을 받는다")
+    void historicalRoundPath_afterCorrection_previousEtagGetsFreshResponse() throws Exception {
+        MvcResult before = mockMvc.perform(get("/api/v1/rounds/1"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String staleEtag = before.getResponse().getHeader("ETag");
+
+        WinningNumber corrected = winningNumberRepository.findByRound(1).orElseThrow();
+        corrected.update(corrected.getDrawDate(), 11, 24, 30, 34, 38, 41, 17,
+                900_000_000L, 0L, 0, 0L, 0L);
+        winningNumberRepository.save(corrected);
+
+        mockMvc.perform(get("/api/v1/rounds/1").header("If-None-Match", staleEtag))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertThat(result.getResponse().getHeader("ETag")).isNotEqualTo(staleEtag));
+    }
+
+    @Test
     @DisplayName("장애 이력 응답의 이태그는 회차 기반이 아니라 내용 해시다")
     void incidentsPath_getsMd5EtagNotRoundEtag() throws Exception {
         MvcResult result = mockMvc.perform(get("/api/v1/status/incidents"))
