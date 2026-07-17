@@ -3,6 +3,10 @@ import {
   REVALIDATE_ROUNDS_LIST,
   REVALIDATE_ROUND_DETAIL,
   REVALIDATE_STATS,
+  TAG_ROUNDS_LATEST,
+  TAG_ROUNDS_LIST,
+  TAG_STATS,
+  tagRoundDetail,
 } from "@/lib/revalidate";
 
 const backendBaseUrl = process.env.KRAFT_BACKEND_INTERNAL_URL ?? "http://backend:8080";
@@ -50,6 +54,7 @@ export type PublicIncident = {
 type RequestInitWithNext = RequestInit & {
   next?: {
     revalidate?: number;
+    tags?: string[];
   };
 };
 
@@ -90,13 +95,13 @@ export function getPublicBaseUrl(): string {
 
 export async function getLatestWinningNumber(): Promise<WinningNumber> {
   return fetchJson<WinningNumber>("/api/v1/rounds/latest", {
-    next: { revalidate: REVALIDATE_LATEST }
+    next: { revalidate: REVALIDATE_LATEST, tags: [TAG_ROUNDS_LATEST] }
   });
 }
 
 export async function getRoundFreshness(): Promise<RoundFreshness> {
   return fetchJson<RoundFreshness>("/api/v1/rounds/freshness", {
-    next: { revalidate: REVALIDATE_LATEST }
+    next: { revalidate: REVALIDATE_LATEST, tags: [TAG_ROUNDS_LATEST] }
   });
 }
 
@@ -108,13 +113,13 @@ export async function getPublicIncidents(): Promise<PublicIncident[]> {
 
 export async function getRounds(page = 0, size = 20): Promise<WinningNumberList> {
   return fetchJson<WinningNumberList>(`/api/v1/rounds?page=${page}&size=${size}`, {
-    next: { revalidate: REVALIDATE_ROUNDS_LIST }
+    next: { revalidate: REVALIDATE_ROUNDS_LIST, tags: [TAG_ROUNDS_LIST] }
   });
 }
 
 export async function getRound(round: number): Promise<WinningNumber> {
   return fetchJson<WinningNumber>(`/api/v1/rounds/${round}`, {
-    next: { revalidate: REVALIDATE_ROUND_DETAIL }
+    next: { revalidate: REVALIDATE_ROUND_DETAIL, tags: [tagRoundDetail(round)] }
   });
 }
 
@@ -158,19 +163,19 @@ export type AnalysisResponse = {
 
 export async function getFrequencyStats(): Promise<FrequencyStatsResponse> {
   return fetchJson<FrequencyStatsResponse>("/api/v1/stats/frequency", {
-    next: { revalidate: REVALIDATE_STATS }
+    next: { revalidate: REVALIDATE_STATS, tags: [TAG_STATS] }
   });
 }
 
 export async function getPatternStats(): Promise<PatternStatsResponse> {
   return fetchJson<PatternStatsResponse>("/api/v1/stats/patterns", {
-    next: { revalidate: REVALIDATE_STATS }
+    next: { revalidate: REVALIDATE_STATS, tags: [TAG_STATS] }
   });
 }
 
 export async function getCompanionStats(): Promise<CompanionStatsResponse> {
   return fetchJson<CompanionStatsResponse>("/api/v1/stats/companion", {
-    next: { revalidate: REVALIDATE_STATS }
+    next: { revalidate: REVALIDATE_STATS, tags: [TAG_STATS] }
   });
 }
 

@@ -52,15 +52,16 @@ public class RevalidateWebhookListener {
             return;
         }
         List<String> paths = revalidatePathsFor(event.round());
+        List<String> tags = tagsFor(event.round());
         try {
             String url = revalidateProperties.webUrl() + "/api/revalidate";
             restClient.post()
                     .uri(url)
                     .header("X-Revalidate-Secret", revalidateProperties.secret())
-                    .body(Map.of("paths", paths))
+                    .body(Map.of("paths", paths, "tags", tags))
                     .retrieve()
                     .toBodilessEntity();
-            log.info("ISR revalidation 요청 완료: paths={}", paths);
+            log.info("ISR revalidation 요청 완료: paths={} tags={}", paths, tags);
         } catch (Exception e) {
             revalidateFailureCounter.increment();
             log.warn("ISR revalidation 요청 실패 (무시): {}", e.getMessage());
@@ -71,5 +72,10 @@ public class RevalidateWebhookListener {
         List<String> paths = new java.util.ArrayList<>(REVALIDATE_PATHS);
         paths.add("/rounds/" + round);
         return List.copyOf(paths);
+    }
+
+    // 프론트 web/src/lib/revalidate.ts의 TAG_* 상수와 이름이 일치해야 한다.
+    static List<String> tagsFor(int round) {
+        return List.of("rounds:latest", "rounds:list", "stats:all", "rounds:detail:" + round);
     }
 }
