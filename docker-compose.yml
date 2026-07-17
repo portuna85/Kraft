@@ -39,6 +39,10 @@ services:
       dockerfile: Dockerfile
     container_name: kraft-backend
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    cap_drop:
+      - ALL
     depends_on:
       mariadb:
         condition: service_healthy
