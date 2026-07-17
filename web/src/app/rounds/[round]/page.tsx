@@ -7,7 +7,7 @@ import { PrizeTable } from "@/components/prize-table";
 import { JsonLdLottoRound } from "@/components/json-ld";
 import { BackendError, getLatestWinningNumber, getPublicBaseUrl, getRound, type AnalysisResponse } from "@/lib/api";
 import { analyzeNumbers } from "@/lib/analyze";
-import { PageAd } from "@/components/ad-unit";
+import { AdSenseSidebar, AdSenseUnit, PageAd } from "@/components/ad-unit";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
 
@@ -85,6 +85,7 @@ export default async function RoundDetailPage({ params }: Props) {
   const baseUrl = getPublicBaseUrl();
 
   return (
+    <div className="page-with-sidebar">
     <section className="panel">
       <JsonLdLottoRound
         baseUrl={baseUrl}
@@ -113,6 +114,12 @@ export default async function RoundDetailPage({ params }: Props) {
       <RoundAnalysisSection analysis={analysis} />
 
       <PageAd slot="rounds-detail" />
+      <AdSenseUnit
+        slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL ?? ""}
+        width={728}
+        height={90}
+        className="ad-desktop"
+      />
 
       <nav className="round-nav" aria-label="회차 이동">
         {hasPrev ? (
@@ -136,6 +143,8 @@ export default async function RoundDetailPage({ params }: Props) {
         )}
       </nav>
     </section>
+      <AdSenseSidebar slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_SIDEBAR ?? ""} />
+    </div>
   );
 }
 

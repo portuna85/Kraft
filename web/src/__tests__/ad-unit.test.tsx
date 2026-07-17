@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { AdUnit, PageAd } from "@/components/ad-unit";
+import { AdSenseUnit, AdUnit, PageAd } from "@/components/ad-unit";
 
 describe("광고 유닛", () => {
   it("전달받은 unit·width·height로 ins 태그를 렌더링하고 정확한 크기를 예약한다", () => {
@@ -26,5 +26,41 @@ describe("광고 유닛", () => {
     const { container } = render(<PageAd slot="rounds-list" />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("애드센스 유닛", () => {
+  const originalClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = originalClientId;
+  });
+
+  it("client ID와 slot이 모두 있으면 ins.adsbygoogle 태그를 올바른 속성으로 렌더링한다", () => {
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = "ca-pub-1234567890123456";
+    render(<AdSenseUnit slot="1111111111" width={728} height={90} />);
+
+    const ins = document.querySelector("ins.adsbygoogle");
+    expect(ins).toBeInTheDocument();
+    expect(ins).toHaveAttribute("data-ad-client", "ca-pub-1234567890123456");
+    expect(ins).toHaveAttribute("data-ad-slot", "1111111111");
+  });
+
+  it("slot이 비어있으면 ins를 렌더링하지 않되 지정한 크기의 플레이스홀더 자리는 예약한다", () => {
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = "ca-pub-1234567890123456";
+    render(<AdSenseUnit slot="" width={300} height={600} label="사이드바 광고" />);
+
+    expect(document.querySelector("ins.adsbygoogle")).not.toBeInTheDocument();
+
+    const placeholder = screen.getByLabelText("사이드바 광고");
+    expect(placeholder).toHaveStyle({ minWidth: "300px", minHeight: "600px" });
+  });
+
+  it("client ID가 없으면 ins를 렌더링하지 않되 플레이스홀더 자리는 예약한다", () => {
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = "";
+    render(<AdSenseUnit slot="1111111111" width={728} height={90} />);
+
+    expect(document.querySelector("ins.adsbygoogle")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("광고")).toHaveStyle({ minWidth: "728px", minHeight: "90px" });
   });
 });

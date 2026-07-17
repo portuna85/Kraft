@@ -7,7 +7,7 @@ import { RoundSearchForm } from "@/components/round-search-form";
 import { DataFreshnessNote } from "@/components/data-freshness-note";
 import { JsonLdLottoRound } from "@/components/json-ld";
 import { getLatestWinningNumber, getPublicBaseUrl, getRounds, type WinningNumber } from "@/lib/api";
-import { PageAd } from "@/components/ad-unit";
+import { AdSenseSidebar, AdSenseUnit, PageAd } from "@/components/ad-unit";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
 
@@ -90,6 +90,7 @@ export default async function RoundsPage({ searchParams }: Props) {
   const pages = pageRange(currentPage, totalPages);
 
   return (
+    <div className="page-with-sidebar">
     <div className="section-stack">
       {latest && (
         <JsonLdLottoRound
@@ -190,6 +191,14 @@ export default async function RoundsPage({ searchParams }: Props) {
       </section>
 
       <PageAd slot="rounds-list" />
+      <AdSenseUnit
+        slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST ?? ""}
+        width={728}
+        height={90}
+        className="ad-desktop"
+      />
+    </div>
+      <AdSenseSidebar slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_SIDEBAR ?? ""} />
     </div>
   );
 }

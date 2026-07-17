@@ -21,12 +21,12 @@ function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV !== "production";
   return [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' https://t1.kakaocdn.net${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' https://t1.kakaocdn.net https://pagead2.googlesyndication.com${isDev ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' data: https://*.daumcdn.net https://*.kakao.com https://*.kakaocdn.net`,
+    `img-src 'self' data: https://*.daumcdn.net https://*.kakao.com https://*.kakaocdn.net https://*.googlesyndication.com https://*.g.doubleclick.net`,
     `font-src 'self'`,
-    `connect-src 'self' https://*.kakao.com https://*.daumcdn.net https://*.kakaocdn.net`,
-    `frame-src https://t1.kakaocdn.net https://*.kakao.com`,
+    `connect-src 'self' https://*.kakao.com https://*.daumcdn.net https://*.kakaocdn.net https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net`,
+    `frame-src https://t1.kakaocdn.net https://*.kakao.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

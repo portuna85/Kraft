@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { FrequencyFilterClient } from "@/components/frequency-filter-client";
-import { PageAd } from "@/components/ad-unit";
+import { AdSenseSidebar, AdSenseUnit, PageAd } from "@/components/ad-unit";
 import { JsonLdBreadcrumb } from "@/components/json-ld";
 import { getFrequencyStats, getPublicBaseUrl } from "@/lib/api";
 import logger from "@/lib/logger";
@@ -30,12 +30,21 @@ export default async function FrequencyPage() {
   }
 
   return (
-    <section className="panel">
-      <JsonLdBreadcrumb baseUrl={baseUrl} nonce={nonce} items={[{ name: "출현 통계", item: `${baseUrl}/frequency` }]} />
-      <p className="eyebrow">출현 통계</p>
-      <h1 className="page-title">번호 출현 통계</h1>
-      <FrequencyFilterClient initial={stats} />
-      <PageAd slot="frequency" />
-    </section>
+    <div className="page-with-sidebar">
+      <section className="panel">
+        <JsonLdBreadcrumb baseUrl={baseUrl} nonce={nonce} items={[{ name: "출현 통계", item: `${baseUrl}/frequency` }]} />
+        <p className="eyebrow">출현 통계</p>
+        <h1 className="page-title">번호 출현 통계</h1>
+        <FrequencyFilterClient initial={stats} />
+        <PageAd slot="frequency" />
+        <AdSenseUnit
+          slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY ?? ""}
+          width={728}
+          height={90}
+          className="ad-desktop"
+        />
+      </section>
+      <AdSenseSidebar slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_SIDEBAR ?? ""} />
+    </div>
   );
 }

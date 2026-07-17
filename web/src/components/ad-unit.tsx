@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Script from "next/script";
 
 type AdUnitProps = {
@@ -61,5 +62,69 @@ export function PageAd({ slot }: PageAdProps) {
       {mobile && <AdUnit unit={mobile} width={320} height={100} className="ad-mobile" />}
       {desktop && <AdUnit unit={desktop} width={728} height={90} className="ad-desktop" />}
     </>
+  );
+}
+
+type AdSenseUnitProps = {
+  slot: string;
+  width: number;
+  height: number;
+  label?: string;
+  className?: string;
+};
+
+// 애드핏 PageAd와 달리 slot이 비어 있어도 null을 반환하지 않고 자리만 예약한 플레이스홀더를
+// 렌더한다. 애드센스 계정 승인 전이라 실 slot ID가 없는 기간에도 사이드바/레이아웃을
+// 로컬에서 CLS 없이 검증할 수 있어야 하기 때문이다.
+export function AdSenseUnit({ slot, width, height, label = "광고", className }: AdSenseUnitProps) {
+  const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ?? "";
+  const enabled = Boolean(clientId && slot);
+
+  useEffect(() => {
+    if (!enabled) return;
+    try {
+      // @ts-expect-error adsbygoogle 전역
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+      console.error("[AdSenseUnit] adsbygoogle push 실패", e);
+    }
+  }, [enabled]);
+
+  return (
+    <div
+      className={`ad-unit${className ? ` ${className}` : ""}`}
+      aria-label={label}
+      style={{ minWidth: width, minHeight: height }}
+    >
+      {enabled ? (
+        <>
+          <ins
+            className="adsbygoogle"
+            style={{ display: "inline-block", width, height }}
+            data-ad-client={clientId}
+            data-ad-slot={slot}
+          />
+          <Script
+            id="adsbygoogle-sdk"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`}
+            strategy="lazyOnload"
+            crossOrigin="anonymous"
+            onError={() => console.error("애드센스 SDK 로드 실패")}
+          />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+export function AdSenseSidebar({ slot }: { slot: string }) {
+  return (
+    <AdSenseUnit
+      slot={slot}
+      width={300}
+      height={600}
+      label="사이드바 광고"
+      className="ad-sidebar"
+    />
   );
 }
