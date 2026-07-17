@@ -1,6 +1,7 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
+# To regenerate this file, run: ./gradlew :dependencies --write-locks
 biz.aQute.bnd:biz.aQute.bnd.annotation:7.1.0=compileClasspath,testCompileClasspath
 ch.qos.logback:logback-classic:1.5.34=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 ch.qos.logback:logback-core:1.5.34=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
@@ -180,6 +181,7 @@ org.springframework.boot:spring-boot-data-commons:4.1.0=compileClasspath,product
 org.springframework.boot:spring-boot-data-jpa:4.1.0=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework.boot:spring-boot-dependencies:4.1.0=compileClasspath,developmentOnly,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework.boot:spring-boot-devtools:4.1.0=developmentOnly,runtimeClasspath
+org.springframework.boot:spring-boot-flyway:4.1.0=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework.boot:spring-boot-health:4.1.0=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework.boot:spring-boot-hibernate:4.1.0=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework.boot:spring-boot-http-converter:4.1.0=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
@@ -237,11 +239,11 @@ org.springframework:spring-test:7.0.8=testCompileClasspath,testRuntimeClasspath
 org.springframework:spring-tx:7.0.8=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework:spring-web:7.0.8=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.springframework:spring-webmvc:7.0.8=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-org.testcontainers:database-commons:1.21.1=testCompileClasspath,testRuntimeClasspath
-org.testcontainers:jdbc:1.21.1=testCompileClasspath,testRuntimeClasspath
-org.testcontainers:junit-jupiter:1.21.1=testCompileClasspath,testRuntimeClasspath
-org.testcontainers:mariadb:1.21.1=testCompileClasspath,testRuntimeClasspath
 org.testcontainers:testcontainers-bom:2.0.5=testCompileClasspath,testRuntimeClasspath
+org.testcontainers:testcontainers-database-commons:2.0.5=testCompileClasspath,testRuntimeClasspath
+org.testcontainers:testcontainers-jdbc:2.0.5=testCompileClasspath,testRuntimeClasspath
+org.testcontainers:testcontainers-junit-jupiter:2.0.5=testCompileClasspath,testRuntimeClasspath
+org.testcontainers:testcontainers-mariadb:2.0.5=testCompileClasspath,testRuntimeClasspath
 org.testcontainers:testcontainers:2.0.5=testCompileClasspath,testRuntimeClasspath
 org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.5.RELEASE=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.thymeleaf:thymeleaf-spring6:3.1.5.RELEASE=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath

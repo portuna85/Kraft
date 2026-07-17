@@ -1,8 +1,36 @@
-# KRAFT Lotto
+# 🎰 KRAFT Lotto
 
-로또 6/45 당첨 결과, 통계, 번호 추천, 저장 번호 관리를 제공하는 서비스입니다. 백엔드는 Spring Boot(Java 25), 프론트엔드는 Next.js App Router(React 19)로 만들어졌고, Docker Compose + Caddy + MariaDB 조합으로 배포됩니다.
+로또 6/45 당첨 결과, 통계, 번호 추천, 저장 번호 관리를 제공하는 서비스
 
-운영 사이트: https://kraft.io.kr/
+[![Java](https://img.shields.io/badge/Java-25-orange?logo=openjdk&logoColor=white)](#기술-스택)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?logo=springboot&logoColor=white)](#기술-스택)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs&logoColor=white)](#기술-스택)
+[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](#기술-스택)
+[![MariaDB](https://img.shields.io/badge/MariaDB-11.7-003545?logo=mariadb&logoColor=white)](#기술-스택)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](#기술-스택)
+
+**운영 사이트:** [kraft.io.kr](https://kraft.io.kr/)
+
+백엔드는 Spring Boot(Java 25), 프론트엔드는 Next.js App Router(React 19)로 만들어졌고, Docker Compose + Caddy + MariaDB 조합으로 배포됩니다.
+
+---
+
+## 목차
+
+- [무엇을 하는 서비스인가](#무엇을-하는-서비스인가)
+- [기술 스택](#기술-스택)
+- [아키텍처](#아키텍처)
+- [저장소 구조](#저장소-구조)
+- [로컬에서 실행하기](#로컬에서-실행하기)
+- [환경 파일](#환경-파일)
+- [API 개요](#api-개요)
+- [데이터 수집 흐름](#데이터-수집-흐름)
+- [테스트](#테스트)
+- [CI/CD](#cicd)
+- [운영 배포](#운영-배포)
+- [문제 해결](#문제-해결)
+
+---
 
 ## 무엇을 하는 서비스인가
 
@@ -13,17 +41,16 @@
 - 데이터 최신성과 최근 수집/보정 이력을 보여주는 공개 상태 페이지
 - 회차 수동 입력, 외부 수집 트리거, 감사 로그를 갖춘 운영/관리자 화면
 
-번호 추천은 통계적 참고용이며 당첨을 보장하지 않습니다.
+> 번호 추천은 통계적 참고용이며 당첨을 보장하지 않습니다.
 
 ## 기술 스택
 
-**백엔드** — Java 25, Spring Boot 4.1(Web/Validation/Data JPA/Security/Actuator/Thymeleaf), MariaDB 11.7(Flyway 마이그레이션), H2(로컬/테스트), Caffeine 캐시, ShedLock(스케줄러 중복 실행 방지), Resilience4j 서킷브레이커(외부 API 격리)
-
-**프론트엔드** — Next.js 16(App Router), React 19, TypeScript, Server Components + ISR, 요청별 CSP nonce
-
-**테스트/품질** — JUnit 5 + Testcontainers(MariaDB), JaCoCo, Checkstyle, SpotBugs / Vitest + Testing Library, Playwright / CodeQL, Trivy, Dependabot
-
-**인프라** — Docker Compose, Caddy(에지 라우팅·TLS), Prometheus + Grafana + Alertmanager, GHCR
+| 영역 | 구성 |
+| --- | --- |
+| **백엔드** | Java 25, Spring Boot 4.1(Web/Validation/Data JPA/Security/Actuator/Thymeleaf), MariaDB 11.7(Flyway 마이그레이션), H2(로컬/테스트), Caffeine 캐시, ShedLock(스케줄러 중복 실행 방지), Resilience4j 서킷브레이커(외부 API 격리) |
+| **프론트엔드** | Next.js 16(App Router), React 19, TypeScript, Server Components + ISR, 요청별 CSP nonce |
+| **테스트/품질** | JUnit 5 + Testcontainers(MariaDB), JaCoCo, Checkstyle, SpotBugs / Vitest + Testing Library, Playwright / CodeQL, Trivy, Dependabot |
+| **인프라** | Docker Compose, Caddy(에지 라우팅·TLS), Prometheus + Grafana + Alertmanager, GHCR |
 
 ## 아키텍처
 
@@ -74,7 +101,7 @@ scripts/          로컬 실행, 배포, 서버 초기화, DB 백업/복구
 
 ## 로컬에서 실행하기
 
-요구 사항: JDK 25, Node.js 24+, npm, (선택) Docker.
+> 요구 사항: JDK 25, Node.js 24+, npm, (선택) Docker.
 
 **백엔드만 — H2 메모리 DB, 가장 빠름**
 
@@ -170,12 +197,14 @@ npm run test:e2e
 
 ## CI/CD
 
-- `ci.yml` — 백엔드/프론트 빌드·테스트, 정적 분석, Playwright E2E, Caddy 설정 검증, 이미지 publish(SBOM/provenance), Trivy 스캔
-- `cd.yml` — CI 성공 후 SSH로 배포, readiness/smoke 테스트, 실패 시 자동 rollback
-- `codeql.yml` — 주간 정적 보안 분석
-- `pr.yml` — PR 대상 의존성 취약점 스캔
+| 워크플로 | 역할 |
+| --- | --- |
+| `ci.yml` | 백엔드/프론트 빌드·테스트, 정적 분석, Playwright E2E, Caddy 설정 검증, 이미지 publish(SBOM/provenance), Trivy 스캔 |
+| `cd.yml` | CI 성공 후 SSH로 배포, readiness/smoke 테스트, 실패 시 자동 rollback |
+| `codeql.yml` | 주간 정적 보안 분석 |
+| `pr.yml` | PR 대상 의존성 취약점 스캔 |
 
-1인 개발 프로젝트라 PR 없이 `main`에 직접 커밋·푸시합니다.
+> 1인 개발 프로젝트라 PR 없이 `main`에 직접 커밋·푸시합니다.
 
 ## 운영 배포
 

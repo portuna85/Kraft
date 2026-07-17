@@ -1,2 +1,0 @@
-org.springframework.boot.sql.init.dependency.DatabaseInitializerDetector=\
-  com.kraft.common.config.FlywayDatabaseInitializerDetector

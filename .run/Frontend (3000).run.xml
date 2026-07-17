@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Frontend (3000)" type="js.build_tools.npm" factoryName="npm">
+    <package-json value="$PROJECT_DIR$/web/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="dev" />
+    </scripts>
+    <node-interpreter value="project" />
+    <package-manager value="npm" />
+    <envs>
+      <env name="KRAFT_BACKEND_INTERNAL_URL" value="http://localhost:8080" />
+      <env name="KRAFT_PUBLIC_BASE_URL" value="http://localhost:3000" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>

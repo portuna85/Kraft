@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Full Stack (8080 + 3000)" type="CompoundRunConfigurationType">
+    <toRun name="Backend (8080)" type="SpringBootApplicationConfigurationType" />
+    <toRun name="Frontend (3000)" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>

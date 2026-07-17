@@ -37,6 +37,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("org.springframework.boot:spring-boot-flyway")
     // 아티팩트명은 "springsecurity6"이지만 Boot 4.1.0 BOM이 실제 Spring Security 7.1.0과
     // 함께 이 버전(3.1.5.RELEASE)을 관리·검증해 배포한다 — 별도 springsecurity7 아티팩트는
     // 존재하지 않으며 버전 스큐가 아니다(확인: dependencyInsight로 Security 7.1.0 확인 완료).
@@ -65,8 +66,8 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("com.fasterxml.jackson.core:jackson-databind")
     testImplementation(platform("org.testcontainers:testcontainers-bom:2.0.5"))
-    testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.testcontainers:mariadb")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+    testImplementation("org.testcontainers:testcontainers-mariadb")
 }
 
 tasks.withType<Test> {
