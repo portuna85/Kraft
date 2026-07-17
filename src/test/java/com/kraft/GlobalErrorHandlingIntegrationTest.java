@@ -2,9 +2,12 @@ package com.kraft;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,5 +36,21 @@ class GlobalErrorHandlingIntegrationTest extends BaseApiIntegrationTest {
         mockMvc.perform(get("/api/v1/rounds/abc"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code", is("INVALID_PARAMETER_TYPE")));
+    }
+
+    @Test
+    @DisplayName("지원되지 않는 HTTP 메서드 요청 시 500이 아닌 405 오류를 반환한다")
+    void unsupportedHttpMethod_returns405NotInternalServerError() throws Exception {
+        mockMvc.perform(delete("/api/v1/rounds/latest"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(header().exists("Allow"))
+                .andExpect(jsonPath("$.code", is("METHOD_NOT_ALLOWED")));
+    }
+
+    @Test
+    @DisplayName("지원되지 않는 Accept 헤더 요청 시 500이 아닌 406 오류를 반환한다")
+    void unacceptableMediaType_returns406NotInternalServerError() throws Exception {
+        mockMvc.perform(get("/api/v1/rounds/latest").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isNotAcceptable());
     }
 }

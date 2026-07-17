@@ -3,18 +3,22 @@ package com.kraft.common.error;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -121,6 +125,33 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest()
                 .body(errorBody(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER_TYPE",
                         exception.getName() + " 파라미터의 값이 올바르지 않습니다.", request));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    ResponseEntity<ApiErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException exception,
+                                                              HttpServletRequest request) {
+        log.debug("지원되지 않는 메서드: method={} path={}", exception.getMethod(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .headers(h -> Optional.ofNullable(exception.getSupportedHttpMethods()).ifPresent(h::setAllow))
+                .body(errorBody(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED",
+                        "지원되지 않는 HTTP 메서드입니다.", request));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    ResponseEntity<ApiErrorResponse> handleNotAcceptable(HttpMediaTypeNotAcceptableException exception,
+                                                         HttpServletRequest request) {
+        log.debug("지원되지 않는 Accept 형식: path={}", request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
+                .body(errorBody(HttpStatus.NOT_ACCEPTABLE, "NOT_ACCEPTABLE",
+                        "요청한 Accept 형식으로 응답할 수 없습니다.", request));
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    ResponseEntity<ApiErrorResponse> handleHandlerMethodValidation(HandlerMethodValidationException exception,
+                                                                    HttpServletRequest request) {
+        log.warn("컨트롤러 파라미터 검증 실패: path={} message={}", request.getRequestURI(), exception.getMessage());
+        return ResponseEntity.badRequest()
+                .body(errorBody(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "입력값 검증에 실패했습니다.", request));
     }
 
     @ExceptionHandler(Exception.class)
