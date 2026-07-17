@@ -10,7 +10,9 @@ function readTheme(): boolean {
 }
 
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(readTheme);
+  // 서버는 항상 false로 렌더링하므로(document 없음), 초기 클라이언트 렌더도 동일하게
+  // false로 시작해 hydration mismatch를 피한다. mount 후 실제 테마로 한 번 갱신한다.
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     function syncTheme() {

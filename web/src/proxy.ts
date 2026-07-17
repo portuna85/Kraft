@@ -55,7 +55,6 @@ export function proxy(req: NextRequest) {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", csp);
-  response.headers.set("x-nonce", nonce);
 
   return response;
 }
