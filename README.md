@@ -316,7 +316,7 @@ docker compose up -d --build
 | `GET` | `/stats/frequency?limit=100` | 번호 빈도. `limit`은 100, 200, 500만 허용(프로젝션 조회) |
 | `GET` | `/stats/patterns` | 홀짝, 고저, 합계 패턴 통계 |
 | `GET` | `/stats/companion` | 동반 출현 번호쌍 |
-| `POST` | `/stats/analysis` | 번호 6개 조합 분석 |
+| `POST` | `/stats/analysis` | 번호 6개 조합 분석. 프론트 UI는 왕복 없는 `lib/analyze.ts` 로컬 계산을 사용하고 이 엔드포인트는 외부 소비자용 공개 계약 — 두 구현의 일치는 골든 픽스처 테스트(`WinningStatisticsCacheServiceTest`/`analyze.test.ts`)로 보장 |
 | `GET` | `/saved` | 저장 번호 목록. `X-Device-Token` 필요 |
 | `POST` | `/saved` | 번호 저장. `X-Device-Token` 필요 |
 | `DELETE` | `/saved/{id}` | 저장 번호 삭제. `X-Device-Token` 필요 |

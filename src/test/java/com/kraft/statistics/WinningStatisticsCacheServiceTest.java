@@ -219,6 +219,53 @@ class WinningStatisticsCacheServiceTest {
         assertThat(result.highCount()).isEqualTo(0);
     }
 
+    /**
+     * BE-14 골든 픽스처 — web/src/__tests__/analyze.test.ts의 "백엔드 통계 캐시 서비스
+     * 픽스처와 동일한 결과를 낸다" 테스트와 입력·기댓값이 반드시 일치해야 한다.
+     * WinningStatisticsCacheService.analyze()(Java)와 lib/analyze.ts의 analyzeNumbers()(TS)는
+     * 같은 계산을 독립적으로 구현하므로, 어느 한쪽만 고쳐도 이 두 테스트가 함께 깨져야 드리프트를
+     * 잡을 수 있다.
+     */
+    @Test
+    @DisplayName("골든 픽스처: 범위 분산 조합(9,10,19,20,40,45)이 TS 구현과 동일한 결과를 낸다")
+    void analyze_goldenFixture_rangeDistributionCombo() {
+        AnalysisResponse result = service.analyze(List.of(9, 10, 19, 20, 40, 45));
+
+        assertThat(result.oddCount()).isEqualTo(3);
+        assertThat(result.evenCount()).isEqualTo(3);
+        assertThat(result.lowCount()).isEqualTo(4);
+        assertThat(result.highCount()).isEqualTo(2);
+        assertThat(result.sumOfNumbers()).isEqualTo(143);
+        assertThat(result.sumBucket()).isEqualTo("111-155");
+        assertThat(result.consecutivePairCount()).isEqualTo(2); // 9-10, 19-20
+        assertThat(result.rangeDistribution()).containsExactly(
+                new AnalysisResponse.RangeDistribution("1-9", 1),
+                new AnalysisResponse.RangeDistribution("10-19", 2),
+                new AnalysisResponse.RangeDistribution("20-29", 1),
+                new AnalysisResponse.RangeDistribution("30-39", 0),
+                new AnalysisResponse.RangeDistribution("40-45", 2));
+    }
+
+    @Test
+    @DisplayName("골든 픽스처: 7의 배수 조합(7,14,21,28,35,42)이 TS 구현과 동일한 결과를 낸다")
+    void analyze_goldenFixture_multiplesOfSevenCombo() {
+        AnalysisResponse result = service.analyze(List.of(7, 14, 21, 28, 35, 42));
+
+        assertThat(result.oddCount()).isEqualTo(3);
+        assertThat(result.evenCount()).isEqualTo(3);
+        assertThat(result.lowCount()).isEqualTo(3);
+        assertThat(result.highCount()).isEqualTo(3);
+        assertThat(result.sumOfNumbers()).isEqualTo(147);
+        assertThat(result.sumBucket()).isEqualTo("111-155");
+        assertThat(result.consecutivePairCount()).isEqualTo(0);
+        assertThat(result.rangeDistribution()).containsExactly(
+                new AnalysisResponse.RangeDistribution("1-9", 1),
+                new AnalysisResponse.RangeDistribution("10-19", 1),
+                new AnalysisResponse.RangeDistribution("20-29", 2),
+                new AnalysisResponse.RangeDistribution("30-39", 1),
+                new AnalysisResponse.RangeDistribution("40-45", 1));
+    }
+
     private WinningNumber round(int r, int n1, int n2, int n3, int n4, int n5, int n6, int bonus) {
         return new WinningNumber(r, LocalDate.of(2026, 1, r),
                 n1, n2, n3, n4, n5, n6, bonus,

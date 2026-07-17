@@ -69,4 +69,45 @@ describe("번호 분석", () => {
     expect(result.lowCount).toBe(6);
     expect(result.highCount).toBe(0);
   });
+
+  // BE-14 골든 픽스처 — WinningStatisticsCacheServiceTest(Java)의 analyze_goldenFixture_*
+  // 테스트와 입력·기댓값이 반드시 일치해야 한다. 두 언어의 독립 구현이 갈라지면 이 두
+  // 테스트 세트 중 한쪽만 깨지므로 드리프트가 드러난다.
+  it("골든 픽스처: 범위 분산 조합(9,10,19,20,40,45)이 백엔드 구현과 동일한 결과를 낸다", () => {
+    const result = analyzeNumbers([9, 10, 19, 20, 40, 45]);
+
+    expect(result.oddCount).toBe(3);
+    expect(result.evenCount).toBe(3);
+    expect(result.lowCount).toBe(4);
+    expect(result.highCount).toBe(2);
+    expect(result.sumOfNumbers).toBe(143);
+    expect(result.sumBucket).toBe("111-155");
+    expect(result.consecutivePairCount).toBe(2); // 9-10, 19-20
+    expect(result.rangeDistribution).toEqual([
+      { range: "1-9", count: 1 },
+      { range: "10-19", count: 2 },
+      { range: "20-29", count: 1 },
+      { range: "30-39", count: 0 },
+      { range: "40-45", count: 2 }
+    ]);
+  });
+
+  it("골든 픽스처: 7의 배수 조합(7,14,21,28,35,42)이 백엔드 구현과 동일한 결과를 낸다", () => {
+    const result = analyzeNumbers([7, 14, 21, 28, 35, 42]);
+
+    expect(result.oddCount).toBe(3);
+    expect(result.evenCount).toBe(3);
+    expect(result.lowCount).toBe(3);
+    expect(result.highCount).toBe(3);
+    expect(result.sumOfNumbers).toBe(147);
+    expect(result.sumBucket).toBe("111-155");
+    expect(result.consecutivePairCount).toBe(0);
+    expect(result.rangeDistribution).toEqual([
+      { range: "1-9", count: 1 },
+      { range: "10-19", count: 1 },
+      { range: "20-29", count: 2 },
+      { range: "30-39", count: 1 },
+      { range: "40-45", count: 1 }
+    ]);
+  });
 });
