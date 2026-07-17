@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -50,14 +51,14 @@ class PublicRateLimitFilterTest {
         // limit=1이므로 OPTIONS가 카운트를 소모하면 뒤따르는 GET이 429가 된다
         for (int i = 0; i < 3; i++) {
             mockMvc.perform(options("/api/v1/stats/frequency")
-                            .with(req -> { req.setRemoteAddr("10.9.9.1"); return req; })
+                            .with(remoteAddr("10.9.9.1"))
                             .header("Origin", "https://example.com")
                             .header("Access-Control-Request-Method", "GET"))
                     .andExpect(status().isOk());
         }
 
         mockMvc.perform(get("/api/v1/stats/frequency")
-                        .with(req -> { req.setRemoteAddr("10.9.9.1"); return req; }))
+                        .with(remoteAddr("10.9.9.1")))
                 .andExpect(status().isOk());
     }
 
@@ -65,14 +66,21 @@ class PublicRateLimitFilterTest {
     @DisplayName("한도 초과 429 응답에도 CORS 헤더가 포함된다")
     void rateLimitExceeded_includesCorsHeaders() throws Exception {
         mockMvc.perform(get("/api/v1/stats/frequency")
-                        .with(req -> { req.setRemoteAddr("10.9.9.2"); return req; })
+                        .with(remoteAddr("10.9.9.2"))
                         .header("Origin", "https://example.com"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/stats/frequency")
-                        .with(req -> { req.setRemoteAddr("10.9.9.2"); return req; })
+                        .with(remoteAddr("10.9.9.2"))
                         .header("Origin", "https://example.com"))
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().exists("Access-Control-Allow-Origin"));
+    }
+
+    private static RequestPostProcessor remoteAddr(String ip) {
+        return request -> {
+            request.setRemoteAddr(ip);
+            return request;
+        };
     }
 }
