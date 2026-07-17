@@ -976,11 +976,18 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   color: var(--muted);
 }
 
+.saved-round-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 4px;
+}
+
 .saved-round-selector {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 12px 0 4px;
   font-size: 0.88rem;
   color: var(--muted);
 }
@@ -992,6 +999,28 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   background: var(--surface-card);
   color: var(--text);
   font-size: 0.88rem;
+}
+
+.saved-round-custom-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.saved-round-custom-form input {
+  width: 110px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-card);
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.saved-match-error {
+  flex-basis: 100%;
+  font-size: 0.85rem;
+  color: var(--muted);
 }
 
 .status-text {

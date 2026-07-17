@@ -10,9 +10,10 @@ const SAVED_ITEM = {
 
 function mockSavedApi(
   page: import("@playwright/test").Page,
-  options: { deleteStatus?: number } = {},
+  options: { deleteStatus?: number; matchStatus?: number } = {},
 ) {
   const deleteStatus = options.deleteStatus ?? 204;
+  const matchStatus = options.matchStatus ?? 200;
 
   page.route("**/api/v1/saved", (route) => {
     if (route.request().method() === "GET") {
@@ -27,11 +28,15 @@ function mockSavedApi(
   });
 
   page.route("**/api/v1/saved/matches**", (route) => {
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify([]),
-    });
+    if (matchStatus >= 400) {
+      route.fulfill({ status: matchStatus });
+    } else {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([]),
+      });
+    }
   });
 
   const deleteCalls: string[] = [];
