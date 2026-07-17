@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -101,14 +102,34 @@ class ClientIpResolverTest {
     }
 
     @Test
-    @DisplayName("잘못된 대역 항목은 무시하고 정상 항목만 평가한다")
-    void isTrustedProxy_ignoresInvalidCidrs() {
+    @DisplayName("형식이 잘못된 CIDR 설정은 기동 시(생성자에서) 예외를 던진다")
+    void constructor_throwsIllegalState_whenCidrFormatInvalid() {
         SecurityProperties props = mock(SecurityProperties.class);
         when(props.trustedProxyCidr()).thenReturn("bad-cidr, 172.16.0.0/12");
 
-        ClientIpResolver resolverWithInvalidEntry = new ClientIpResolver(props);
+        assertThatThrownBy(() -> new ClientIpResolver(props))
+                .isInstanceOf(IllegalStateException.class);
+    }
 
-        assertThat(resolverWithInvalidEntry.isTrustedProxy("172.20.0.2")).isTrue();
-        assertThat(resolverWithInvalidEntry.isTrustedProxy("203.0.113.1")).isFalse();
+    @Test
+    @DisplayName("프리픽스 길이가 범위를 벗어난 CIDR 설정은 기동 시 예외를 던진다")
+    void constructor_throwsIllegalState_whenPrefixLengthOutOfRange() {
+        SecurityProperties props = mock(SecurityProperties.class);
+        when(props.trustedProxyCidr()).thenReturn("172.16.0.0/33");
+
+        assertThatThrownBy(() -> new ClientIpResolver(props))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("유효한 CIDR만 있으면 기동 시 예외 없이 정상 동작한다")
+    void constructor_succeeds_whenAllCidrsValid() {
+        SecurityProperties props = mock(SecurityProperties.class);
+        when(props.trustedProxyCidr()).thenReturn("172.16.0.0/12, 10.0.0.0/8, ::1/128");
+
+        ClientIpResolver resolverWithValidEntries = new ClientIpResolver(props);
+
+        assertThat(resolverWithValidEntries.isTrustedProxy("172.20.0.2")).isTrue();
+        assertThat(resolverWithValidEntries.isTrustedProxy("203.0.113.1")).isFalse();
     }
 }
