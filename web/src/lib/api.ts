@@ -44,6 +44,7 @@ export type PublicIncident = {
   type: string;
   resolved: boolean;
   occurredAt: string;
+  occurrences: number;
 };
 
 type RequestInitWithNext = RequestInit & {

@@ -5,7 +5,11 @@ import jakarta.persistence.criteria.Predicate;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.MDC;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -97,14 +101,45 @@ public class WinningNumberOperationLogService {
     @Transactional(readOnly = true)
     public List<PublicIncidentResponse> getPublicIncidents() {
         OffsetDateTime since = OffsetDateTime.now(clock).minusDays(PUBLIC_INCIDENT_WINDOW_DAYS);
-        return repository.findNotableSince(since).stream()
+        List<WinningNumberOperationLog> logs = repository.findNotableSince(since);
+
+        // (유형, 회차)로 그룹핑 — 같은 회차의 반복 실패/재시도가 카드로 중복 노출되지 않게 한다.
+        // findNotableSince가 이미 createdAt DESC로 정렬돼 있어, 각 키의 "첫 등장"이 그 그룹의
+        // 최신 로그이고, LinkedHashMap의 삽입 순서가 그대로 그룹별 최신순 정렬이 된다.
+        Map<String, List<WinningNumberOperationLog>> grouped = logs.stream()
+                .collect(Collectors.groupingBy(
+                        log -> log.getOperationType() + ":" + log.getRound(),
+                        LinkedHashMap::new,
+                        Collectors.toList()));
+
+        List<List<WinningNumberOperationLog>> topGroups = grouped.values().stream()
                 .limit(PUBLIC_INCIDENT_MAX)
-                .map(log -> new PublicIncidentResponse(
-                        log.getRound(),
-                        describe(log),
-                        isResolved(log),
-                        log.getCreatedAt()
-                ))
+                .toList();
+
+        Set<Integer> roundsNeedingResolution = topGroups.stream()
+                .map(group -> group.get(0))
+                .filter(latest -> latest.getExecutionStatus() != WinningNumberOperationStatus.SUCCESS
+                        && latest.getRound() != null)
+                .map(WinningNumberOperationLog::getRound)
+                .collect(Collectors.toSet());
+
+        // 건별 existsSuccessForRoundAfter 대신 한 번의 round IN 쿼리로 해결 여부를 일괄 조회한다.
+        Map<Integer, OffsetDateTime> latestSuccessByRound = roundsNeedingResolution.isEmpty()
+                ? Map.of()
+                : repository.findLatestSuccessTimestampsForRounds(roundsNeedingResolution).stream()
+                        .collect(Collectors.toMap(RoundLatestSuccess::round, RoundLatestSuccess::latestSuccessAt));
+
+        return topGroups.stream()
+                .map(group -> {
+                    WinningNumberOperationLog latest = group.get(0);
+                    return new PublicIncidentResponse(
+                            latest.getRound(),
+                            describe(latest),
+                            isResolved(latest, latestSuccessByRound),
+                            latest.getCreatedAt(),
+                            group.size()
+                    );
+                })
                 .toList();
     }
 
@@ -116,14 +151,15 @@ public class WinningNumberOperationLogService {
         };
     }
 
-    private boolean isResolved(WinningNumberOperationLog log) {
-        if (log.getExecutionStatus() == WinningNumberOperationStatus.SUCCESS) {
+    private boolean isResolved(WinningNumberOperationLog latest, Map<Integer, OffsetDateTime> latestSuccessByRound) {
+        if (latest.getExecutionStatus() == WinningNumberOperationStatus.SUCCESS) {
             return true;
         }
-        if (log.getRound() == null) {
+        if (latest.getRound() == null) {
             return false;
         }
-        return repository.existsSuccessForRoundAfter(log.getRound(), log.getCreatedAt());
+        OffsetDateTime latestSuccess = latestSuccessByRound.get(latest.getRound());
+        return latestSuccess != null && latestSuccess.isAfter(latest.getCreatedAt());
     }
 
     private String truncate(String value, int maxLength) {

@@ -48,10 +48,16 @@ export default async function StatusPage() {
         <p className="muted">최근 30일 동안 기록된 수집 지연이나 보정 이력이 없습니다.</p>
       ) : (
         <ul className="status-incident-list">
-          {incidents.map((incident, index) => (
-            <li key={`${incident.occurredAt}-${index}`} className="status-incident-item">
+          {incidents.map((incident) => (
+            <li
+              key={`${incident.type}-${incident.round}`}
+              className="status-incident-item"
+            >
               <span className="status-incident-round">{incident.round ? `${incident.round}회` : "-"}</span>
-              <span className="status-incident-type">{incident.type}</span>
+              <span className="status-incident-type">
+                {incident.type}
+                {incident.occurrences > 1 ? ` (시도 ${incident.occurrences}회)` : ""}
+              </span>
               <span className={`status-incident-state${incident.resolved ? " resolved" : ""}`}>
                 {incident.resolved ? "해결됨" : "확인 중"}
               </span>

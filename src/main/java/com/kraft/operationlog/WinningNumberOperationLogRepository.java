@@ -1,6 +1,7 @@
 package com.kraft.operationlog;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,10 +24,13 @@ public interface WinningNumberOperationLogRepository extends JpaRepository<Winni
             + "ORDER BY l.createdAt DESC")
     List<WinningNumberOperationLog> findNotableSince(@Param("since") OffsetDateTime since);
 
-    @Query("SELECT COUNT(l) > 0 FROM WinningNumberOperationLog l "
-            + "WHERE l.round = :round AND l.createdAt > :after "
-            + "AND l.executionStatus = com.kraft.operationlog.WinningNumberOperationStatus.SUCCESS")
-    boolean existsSuccessForRoundAfter(@Param("round") Integer round, @Param("after") OffsetDateTime after);
+    // 공개 인시던트 카드 집계용: 여러 회차의 해결 여부를 건별 exists 쿼리 대신 한 번에 조회한다.
+    @Query("SELECT new com.kraft.operationlog.RoundLatestSuccess(l.round, MAX(l.createdAt)) "
+            + "FROM WinningNumberOperationLog l "
+            + "WHERE l.round IN :rounds "
+            + "AND l.executionStatus = com.kraft.operationlog.WinningNumberOperationStatus.SUCCESS "
+            + "GROUP BY l.round")
+    List<RoundLatestSuccess> findLatestSuccessTimestampsForRounds(@Param("rounds") Collection<Integer> rounds);
 
     void deleteByCreatedAtBefore(OffsetDateTime cutoff);
 }
