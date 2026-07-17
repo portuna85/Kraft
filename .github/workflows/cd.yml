@@ -6,6 +6,10 @@ on:
     types: [completed]
     branches: [main]
 
+permissions:
+  contents: read
+  packages: read
+
 # 동시 배포 방지 — 진행 중인 배포는 취소하지 않음
 concurrency:
   group: production
@@ -55,7 +59,7 @@ jobs:
           GRAFANA_ADMIN_PASSWORD:         ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
           ALERTMANAGER_DISCORD_WEBHOOK_URL: ${{ secrets.ALERTMANAGER_DISCORD_WEBHOOK_URL }}
           # GHCR 인증 (private 이미지 pull)
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_TOKEN: ${{ github.token }}
           GHCR_USER:  ${{ github.repository_owner }}
         with:
           host:     ${{ secrets.DEPLOY_HOST }}
