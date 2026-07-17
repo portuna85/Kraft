@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
-import type { BallFrequency, FrequencyStatsResponse } from "@/lib/api";
+import type { BallFrequency, FrequencyStatsResponse, RankedCombination } from "@/lib/api";
 import { ballColorClass } from "@/lib/ball-color";
+import { browserFetch } from "@/lib/browser-api";
 
 const FILTERS = [
   { label: "전체", value: null },
@@ -28,70 +29,13 @@ function BallWithStats({ item, sampleSize }: { item: BallFrequency; sampleSize: 
   );
 }
 
-type CheckState = "loading" | "error" | boolean;
-
-async function checkCombination(numbers: number[]): Promise<boolean | "error"> {
-  try {
-    const query = numbers.map((number) => `numbers=${number}`).join("&");
-    const response = await fetch(`/api/v1/numbers/check?${query}`);
-    if (!response.ok) return "error";
-
-    const payload = (await response.json()) as { wonFirstPrize?: boolean };
-    return payload.wonFirstPrize ?? "error";
-  } catch {
-    return "error";
-  }
-}
-
-function CombinationGroup({ label, items }: { label: string; items: BallFrequency[] }) {
-  const numbers = items.map((item) => item.ballNumber);
-  const key = numbers.join(",");
-  const [wonState, setWonState] = useState<{ key: string; value: CheckState }>({
-    key,
-    value: "loading",
-  });
-  const won = wonState.key === key ? wonState.value : "loading";
-
-  function runCheck() {
-    setWonState({ key, value: "loading" });
-    const values = key.split(",").map((value) => Number.parseInt(value, 10));
-    void checkCombination(values).then((result) => {
-      setWonState({ key, value: result });
-    });
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    const values = key.split(",").map((value) => Number.parseInt(value, 10));
-
-    void checkCombination(values).then((result) => {
-      if (!cancelled) setWonState({ key, value: result });
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [key]);
-
+function CombinationGroup({ label, combination }: { label: string; combination: RankedCombination }) {
   return (
     <div className="freq-rank-group">
       <p className="freq-rank-label">{label}</p>
-      <LottoBalls numbers={numbers} />
+      <LottoBalls numbers={combination.balls.map((item) => item.ballNumber)} />
       <p className="freq-win-record">
-        {won === "loading"
-          ? "확인 중..."
-          : won === "error"
-            ? (
-                <>
-                  확인 실패{" "}
-                  <button type="button" className="link-button" onClick={runCheck}>
-                    다시 시도
-                  </button>
-                </>
-              )
-            : won
-              ? "1등 당첨 이력 있음"
-              : "1등 당첨 이력 없음"}
+        {combination.wonFirstPrize ? "1등 당첨 이력 있음" : "1등 당첨 이력 없음"}
       </p>
     </div>
   );
@@ -100,35 +44,39 @@ function CombinationGroup({ label, items }: { label: string; items: BallFrequenc
 export function FrequencyFilterClient({ initial }: Props) {
   const [stats, setStats] = useState(initial);
   const [activeLimit, setActiveLimit] = useState<number | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [pendingLimit, setPendingLimit] = useState<number | null>(null);
+  const [filterState, setFilterState] = useState<"idle" | "loading" | "error">("idle");
 
   function applyFilter(limit: number | null) {
     if (limit === activeLimit) return;
 
-    startTransition(async () => {
-      if (limit === null) {
-        setStats(initial);
-        setActiveLimit(null);
-        return;
-      }
+    if (limit === null) {
+      setStats(initial);
+      setActiveLimit(null);
+      setFilterState("idle");
+      return;
+    }
 
-      try {
-        const response = await fetch(`/api/v1/stats/frequency?limit=${limit}`);
-        if (!response.ok) return;
-
-        setStats((await response.json()) as FrequencyStatsResponse);
+    setPendingLimit(limit);
+    setFilterState("loading");
+    browserFetch<FrequencyStatsResponse>(`/api/v1/stats/frequency?limit=${limit}`)
+      .then((response) => {
+        setStats(response);
         setActiveLimit(limit);
-      } catch {
-        // Keep the previous state if a transient fetch error occurs.
-      }
-    });
+        setFilterState("idle");
+      })
+      .catch(() => {
+        // 이전 stats/activeLimit을 유지 — 실패했다는 사실만 알린다.
+        setFilterState("error");
+      });
+  }
+
+  function retry() {
+    if (pendingLimit !== null) applyFilter(pendingLimit);
   }
 
   const byNumber = [...stats.frequencies].sort((a, b) => a.ballNumber - b.ballNumber);
-  const byFrequency = [...stats.frequencies].sort((a, b) => b.frequency - a.frequency);
   const sampleSize = activeLimit ?? stats.totalRounds;
-  const top6 = byFrequency.slice(0, 6).sort((a, b) => a.ballNumber - b.ballNumber);
-  const bottom6 = [...byFrequency].reverse().slice(0, 6).sort((a, b) => a.ballNumber - b.ballNumber);
 
   return (
     <>
@@ -140,7 +88,7 @@ export function FrequencyFilterClient({ initial }: Props) {
             key={label}
             type="button"
             aria-pressed={activeLimit === value}
-            disabled={isPending}
+            disabled={filterState === "loading"}
             onClick={() => applyFilter(value)}
             className={`freq-filter-tab${activeLimit === value ? " active" : ""}`}
           >
@@ -149,15 +97,24 @@ export function FrequencyFilterClient({ initial }: Props) {
         ))}
       </div>
 
-      <p className="freq-filter-desc">
+      <p className="freq-filter-desc" aria-live="polite">
         {activeLimit === null ? `총 ${stats.totalRounds}회 전체 기준` : `최근 ${activeLimit}회 기준`}으로 각 번호가
         당첨 번호에 포함된 누적 횟수를 보여줍니다.
-        {isPending && <span className="muted"> 불러오는 중...</span>}
+        {filterState === "loading" && <span className="muted"> 불러오는 중...</span>}
+        {filterState === "error" && (
+          <span className="muted">
+            {" "}
+            불러오지 못했습니다.{" "}
+            <button type="button" className="link-button" onClick={retry}>
+              다시 시도
+            </button>
+          </span>
+        )}
       </p>
 
       <div className="freq-summary">
-        <CombinationGroup label="가장 자주 나온 번호 TOP 6" items={top6} />
-        <CombinationGroup label="가장 적게 나온 번호 BOTTOM 6" items={bottom6} />
+        <CombinationGroup label="가장 자주 나온 번호 TOP 6" combination={stats.topSix} />
+        <CombinationGroup label="가장 적게 나온 번호 BOTTOM 6" combination={stats.bottomSix} />
       </div>
 
       <div className="frequency-grid">

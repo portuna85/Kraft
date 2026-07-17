@@ -123,9 +123,13 @@ export type PatternBucket = { bucketKey: string; count: number };
 export type CompanionPair = { ballA: number; ballB: number; coCount: number };
 export type RangeDistribution = { range: string; count: number };
 
+export type RankedCombination = { balls: BallFrequency[]; wonFirstPrize: boolean };
+
 export type FrequencyStatsResponse = {
   totalRounds: number;
   frequencies: BallFrequency[];
+  topSix: RankedCombination;
+  bottomSix: RankedCombination;
 };
 
 export type PatternStatsResponse = {
