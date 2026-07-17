@@ -156,6 +156,20 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("summary가 비어있으면 findMaxLastRound는 0을 반환한다")
+    void findMaxLastRound_returnsZero_whenSummaryEmpty() {
+        assertThat(frequencySummaryRepository.findMaxLastRound()).isZero();
+    }
+
+    @Test
+    @DisplayName("재생성 후 findMaxLastRound는 최신 회차를 반환한다")
+    void findMaxLastRound_returnsLatestRound_afterRebuild() {
+        summaryRebuilder.rebuildAllSummaries();
+
+        assertThat(frequencySummaryRepository.findMaxLastRound()).isEqualTo(2);
+    }
+
+    @Test
     @DisplayName("번호 분석 시 메트릭이 정확하게 계산되는지 확인")
     void analyze_returnsCorrectMetrics() {
         AnalysisResponse result = service.analyze(List.of(1, 2, 3, 4, 5, 6));

@@ -53,6 +53,15 @@ groups:
           summary: "KRAFT Lotto 데이터가 최신 회차보다 지연됨"
           description: "kraft_lotto_data_stale_days가 1일 이상 지속됨. 최신 회차={{ $labels.instance }}, 자동 수집 또는 외부 소스 점검 필요."
 
+      - alert: KraftLottoStatisticsLagging
+        expr: kraft_lotto_latest_round{job="kraft-backend"} - kraft_lotto_statistics_projected_round{job="kraft-backend"} >= 1
+        for: 6h
+        labels:
+          severity: warning
+        annotations:
+          summary: "통계 summary가 최신 회차보다 뒤처짐"
+          description: "kraft_lotto_latest_round와 kraft_lotto_statistics_projected_round의 차이가 6시간 이상 1 이상 유지됨. 수동 보정 이벤트 발행 실패나 재조정 스케줄러 점검 필요."
+
       - alert: KraftLottoExternalCollectFailing
         expr: increase(kraft_lotto_external_collect_failures_total{job="kraft-backend"}[1h]) >= 3
         for: 0m
