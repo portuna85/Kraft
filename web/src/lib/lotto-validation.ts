@@ -53,5 +53,5 @@ export function parseExcludedNumbers(input: string): ParseExcludedResult {
       ignored.push(trimmed);
     }
   }
-  return { valid, ignored };
+  return { valid: [...new Set(valid)], ignored };
 }

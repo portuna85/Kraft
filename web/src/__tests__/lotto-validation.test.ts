@@ -85,4 +85,10 @@ describe("제외 번호 파싱", () => {
     expect(valid).toEqual([1, 45]);
     expect(ignored).toEqual([]);
   });
+
+  it("중복된 값을 제거한다", () => {
+    const { valid, ignored } = parseExcludedNumbers("3, 3, 5");
+    expect(valid).toEqual([3, 5]);
+    expect(ignored).toEqual([]);
+  });
 });
