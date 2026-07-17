@@ -63,6 +63,31 @@ class AdminLoginAttemptServiceTest {
     }
 
     @Test
+    @DisplayName("100자 초과 username은 절단된 키로 기록·판정되어 원본과 동일하게 잠긴다")
+    void isLockedOut_overlongUsername_usesNormalizedKeyConsistently() {
+        String overlong = "a".repeat(150);
+        for (int i = 0; i < 5; i++) {
+            service.recordFailure(overlong, "1.2.3.4");
+        }
+        // 절단 결과가 같은 다른 원본(prefix 100자 동일)도 같은 키로 잠금 판정된다
+        assertThat(service.isLockedOut(overlong, "1.2.3.4")).isTrue();
+        assertThat(service.isLockedOut("a".repeat(120), "1.2.3.4")).isTrue();
+    }
+
+    @Test
+    @DisplayName("normalizeUsername은 trim 후 100자로 절단하고 서로게이트 페어를 자르지 않는다")
+    void normalizeUsername_trimsAndTruncatesWithoutSplittingSurrogatePairs() {
+        assertThat(AdminLoginAttemptService.normalizeUsername(null)).isNull();
+        assertThat(AdminLoginAttemptService.normalizeUsername("  admin  ")).isEqualTo("admin");
+        assertThat(AdminLoginAttemptService.normalizeUsername("a".repeat(150))).hasSize(100);
+
+        // 99자 + 서로게이트 페어(😀=2 char) → 100번째 char가 high surrogate이므로 99자로 절단
+        String surrogateBoundary = "a".repeat(99) + "😀".repeat(5);
+        String normalized = AdminLoginAttemptService.normalizeUsername(surrogateBoundary);
+        assertThat(normalized).hasSize(99);
+    }
+
+    @Test
     @DisplayName("로그인 시도 초기화 시 잠금이 해제되는지 확인")
     void resetAttempts_clearsLockout() {
         for (int i = 0; i < 5; i++) {

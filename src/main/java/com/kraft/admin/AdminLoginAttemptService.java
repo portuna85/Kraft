@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class AdminLoginAttemptService {
 
+    // admin_audit_log.admin_user 컬럼 길이(VARCHAR(100))와 동일해야 한다.
+    static final int MAX_USERNAME_LENGTH = 100;
+
     private static final int MAX_ATTEMPTS_PER_IP = 5;
     private static final int MAX_ATTEMPTS_PER_ACCOUNT = 30;
     private static final Duration LOCKOUT_WINDOW = Duration.ofMinutes(15);
@@ -33,20 +36,43 @@ public class AdminLoginAttemptService {
             .build();
 
     public void recordFailure(String username, String ip) {
-        attempts.get(key(username, ip), k -> new AtomicInteger(0)).incrementAndGet();
-        accountAttempts.get(username, k -> new AtomicInteger(0)).incrementAndGet();
+        String normalized = normalizeUsername(username);
+        attempts.get(key(normalized, ip), k -> new AtomicInteger(0)).incrementAndGet();
+        accountAttempts.get(normalized, k -> new AtomicInteger(0)).incrementAndGet();
     }
 
     public void resetAttempts(String username, String ip) {
-        attempts.invalidate(key(username, ip));
-        accountAttempts.invalidate(username);
+        String normalized = normalizeUsername(username);
+        attempts.invalidate(key(normalized, ip));
+        accountAttempts.invalidate(normalized);
     }
 
     public boolean isLockedOut(String username, String ip) {
-        AtomicInteger byIp = attempts.getIfPresent(key(username, ip));
-        AtomicInteger byAccount = accountAttempts.getIfPresent(username);
+        String normalized = normalizeUsername(username);
+        AtomicInteger byIp = attempts.getIfPresent(key(normalized, ip));
+        AtomicInteger byAccount = accountAttempts.getIfPresent(normalized);
         return (byIp != null && byIp.get() >= MAX_ATTEMPTS_PER_IP)
                 || (byAccount != null && byAccount.get() >= MAX_ATTEMPTS_PER_ACCOUNT);
+    }
+
+    /**
+     * 실패 로그인의 username은 외부 입력이므로 admin_audit_log.admin_user(VARCHAR(100)) 한도에 맞춰
+     * trim·절단해 기록(감사 로그)과 잠금 캐시가 항상 같은 키를 보게 한다. 절단 없이는 100자 초과
+     * username이 감사 로그 INSERT를 깨뜨려 로그인 실패 응답 자체가 500이 된다.
+     */
+    static String normalizeUsername(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String trimmed = raw.trim();
+        if (trimmed.length() <= MAX_USERNAME_LENGTH) {
+            return trimmed;
+        }
+        int cut = MAX_USERNAME_LENGTH;
+        if (Character.isHighSurrogate(trimmed.charAt(cut - 1))) {
+            cut--;
+        }
+        return trimmed.substring(0, cut);
     }
 
     private String key(String username, String ip) {

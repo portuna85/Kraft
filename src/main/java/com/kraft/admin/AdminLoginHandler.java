@@ -36,9 +36,10 @@ public class AdminLoginHandler implements AuthenticationSuccessHandler, Authenti
     @Override
     public void onAuthenticationFailure(HttpServletRequest req, HttpServletResponse res,
                                         AuthenticationException ex) throws IOException {
-        String username = req.getParameter("username");
+        // 감사 로그(VARCHAR(100))와 잠금 캐시가 같은 키를 보도록 서비스와 동일 규칙으로 정규화한다.
+        String username = AdminLoginAttemptService.normalizeUsername(req.getParameter("username"));
         String ip = ipResolver.resolve(req);
-        if (username != null) {
+        if (username != null && !username.isEmpty()) {
             lockout.recordFailure(username, ip);
             audit.record(username, "LOGIN_FAILURE", null, ex.getMessage(), ip);
         }
