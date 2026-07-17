@@ -2,10 +2,12 @@ package com.kraft.statistics;
 
 import com.kraft.common.config.CacheConfig;
 import com.kraft.common.lotto.SumBuckets;
+import com.kraft.recommend.LottoRecommendationService;
 import com.kraft.winningnumber.WinningBallsOnly;
 import com.kraft.winningnumber.WinningNumber;
 import com.kraft.winningnumber.WinningNumberRepository;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,17 +35,20 @@ public class WinningStatisticsCacheService {
     private final PatternStatsSummaryRepository patternStatsSummaryRepository;
     private final CompanionPairSummaryRepository companionPairSummaryRepository;
     private final StatisticsSummaryRebuilder summaryRebuilder;
+    private final LottoRecommendationService lottoRecommendationService;
 
     public WinningStatisticsCacheService(WinningNumberRepository winningNumberRepository,
                                          FrequencySummaryRepository frequencySummaryRepository,
                                          PatternStatsSummaryRepository patternStatsSummaryRepository,
                                          CompanionPairSummaryRepository companionPairSummaryRepository,
-                                         StatisticsSummaryRebuilder summaryRebuilder) {
+                                         StatisticsSummaryRebuilder summaryRebuilder,
+                                         LottoRecommendationService lottoRecommendationService) {
         this.winningNumberRepository = winningNumberRepository;
         this.frequencySummaryRepository = frequencySummaryRepository;
         this.patternStatsSummaryRepository = patternStatsSummaryRepository;
         this.companionPairSummaryRepository = companionPairSummaryRepository;
         this.summaryRebuilder = summaryRebuilder;
+        this.lottoRecommendationService = lottoRecommendationService;
     }
 
     // ──────────────────────────────────────────────
@@ -63,7 +68,7 @@ public class WinningStatisticsCacheService {
         List<BallFrequencyDto> frequencies = summaries.stream()
                 .map(s -> new BallFrequencyDto(s.getBallNumber(), s.getFrequency(), s.getLastRound()))
                 .toList();
-        return new FrequencyStatsResponse(latestRound(), frequencies);
+        return toFrequencyResponse(latestRound(), frequencies);
     }
 
     @Cacheable(value = CacheConfig.STATS_FREQUENCY, key = "#limit")
@@ -92,7 +97,35 @@ public class WinningStatisticsCacheService {
                     lastRoundMap.getOrDefault(ball, 0)
             ));
         }
-        return new FrequencyStatsResponse(latestRound(), frequencies);
+        return toFrequencyResponse(latestRound(), frequencies);
+    }
+
+    private static final RankedCombinationDto EMPTY_RANKED_GROUP = new RankedCombinationDto(List.of(), false);
+
+    private FrequencyStatsResponse toFrequencyResponse(int latestRound, List<BallFrequencyDto> frequencies) {
+        // 회차 데이터가 아직 없으면(초기 상태) summary가 45개 미만일 수 있다 — top/bottom 6을
+        // 구성할 수 없으므로 빈 그룹으로 채운다.
+        if (frequencies.size() < 6) {
+            return new FrequencyStatsResponse(latestRound, frequencies, EMPTY_RANKED_GROUP, EMPTY_RANKED_GROUP);
+        }
+        List<BallFrequencyDto> byFreqDesc = frequencies.stream()
+                .sorted(Comparator.comparingInt(BallFrequencyDto::frequency).reversed())
+                .toList();
+        List<BallFrequencyDto> byFreqAsc = frequencies.stream()
+                .sorted(Comparator.comparingInt(BallFrequencyDto::frequency))
+                .toList();
+        RankedCombinationDto topSix = rankedGroup(byFreqDesc.subList(0, 6));
+        RankedCombinationDto bottomSix = rankedGroup(byFreqAsc.subList(0, 6));
+        return new FrequencyStatsResponse(latestRound, frequencies, topSix, bottomSix);
+    }
+
+    private RankedCombinationDto rankedGroup(List<BallFrequencyDto> six) {
+        List<BallFrequencyDto> sortedByBall = six.stream()
+                .sorted(Comparator.comparingInt(BallFrequencyDto::ballNumber))
+                .toList();
+        List<Integer> numbers = sortedByBall.stream().map(BallFrequencyDto::ballNumber).toList();
+        boolean wonFirstPrize = lottoRecommendationService.isHistoricalFirstPrizeCombination(numbers);
+        return new RankedCombinationDto(sortedByBall, wonFirstPrize);
     }
 
     @Cacheable(CacheConfig.STATS_PATTERN)

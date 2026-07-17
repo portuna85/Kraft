@@ -137,6 +137,42 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("topSix/bottomSix에 1등 당첨 이력이 동봉된다")
+    void getFrequencyStats_includesTopAndBottomSixWithWinHistory() {
+        FrequencyStatsResponse response = service.getFrequencyStats();
+
+        assertThat(response.topSix().balls()).hasSize(6);
+        assertThat(response.bottomSix().balls()).hasSize(6);
+        // 번호가 ballNumber 오름차순으로 정렬돼 내려오는지 확인(프론트가 그대로 렌더링할 수 있도록)
+        assertThat(response.topSix().balls())
+                .isSortedAccordingTo((a, b) -> Integer.compare(a.ballNumber(), b.ballNumber()));
+        assertThat(response.bottomSix().balls())
+                .isSortedAccordingTo((a, b) -> Integer.compare(a.ballNumber(), b.ballNumber()));
+    }
+
+    @Test
+    @DisplayName("limit 파라미터가 있어도 topSix/bottomSix가 계산된다")
+    void getFrequencyStatsByLimit_includesTopAndBottomSix() {
+        FrequencyStatsResponse response = service.getFrequencyStatsByLimit(1);
+
+        assertThat(response.topSix().balls()).hasSize(6);
+        assertThat(response.bottomSix().balls()).hasSize(6);
+    }
+
+    @Test
+    @DisplayName("회차 데이터가 전혀 없으면 topSix/bottomSix가 빈 그룹으로 채워지고 예외를 던지지 않는다")
+    void getFrequencyStats_noWinningNumbers_returnsEmptyRankedGroups() {
+        winningNumberRepository.deleteAll();
+        frequencySummaryRepository.deleteAll();
+
+        FrequencyStatsResponse response = service.getFrequencyStats();
+
+        assertThat(response.frequencies()).isEmpty();
+        assertThat(response.topSix().balls()).isEmpty();
+        assertThat(response.bottomSix().balls()).isEmpty();
+    }
+
+    @Test
     @DisplayName("제한 개수 지정 빈도 조회 시 최신 회차부터 지정 개수만 집계하는지 확인")
     void getFrequencyStatsByLimit_aggregatesOnlyLatestLimitRounds() {
         FrequencyStatsResponse response = service.getFrequencyStatsByLimit(1);
