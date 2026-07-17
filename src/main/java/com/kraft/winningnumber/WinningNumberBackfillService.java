@@ -72,13 +72,24 @@ public class WinningNumberBackfillService {
         return running.get();
     }
 
-    /** 관리자 트리거용 — 백그라운드 실행, 중복 실행 방지. */
+    /**
+     * 시작 예약을 시도한다. 성공(true)한 호출자만 {@link #backfillAllAsync()}를 호출해야 한다.
+     * 이 메서드를 {@code isRunning()} 체크와 {@code backfillAllAsync()} 호출 사이의 별도 단계로
+     * 두지 않고 동기 CAS 하나로 합쳐, 두 호출 사이의 TOCTOU 구간(동시 요청이 둘 다 "실행 중 아님"을
+     * 보고 둘 다 진행하는 경우)을 없앤다.
+     */
+    public boolean tryStart() {
+        return running.compareAndSet(false, true);
+    }
+
+    /** tryStart()가 성공적으로 시작 예약을 했지만 태스크 제출 자체가 거부된 경우 호출자가 되돌리는 용도. */
+    public void releaseStart() {
+        running.set(false);
+    }
+
+    /** 관리자 트리거용 — 백그라운드 실행. tryStart() 성공 후에만 호출해야 한다. */
     @Async("backfillTaskExecutor")
     public void backfillAllAsync() {
-        if (!running.compareAndSet(false, true)) {
-            log.warn("전체 회차 수집이 이미 진행 중입니다. 요청을 무시합니다.");
-            return;
-        }
         try {
             backfillAll();
         } catch (RuntimeException e) {

@@ -6,6 +6,7 @@ import com.kraft.winningnumber.WinningNumberCollectionService;
 import com.kraft.winningnumber.WinningNumberListResponse;
 import com.kraft.winningnumber.WinningNumberQueryService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -92,11 +93,21 @@ public class AdminController {
     public String collectAll(@AuthenticationPrincipal UserDetails user,
                              HttpServletRequest req,
                              RedirectAttributes redirect) {
-        if (backfillService.isRunning()) {
+        // isRunning() 체크 후 별도로 backfillAllAsync()를 호출하면 그 사이(TOCTOU) 두 요청이 동시에
+        // "실행 중 아님"을 볼 수 있다. tryStart()의 CAS가 시작 예약 자체를 원자적으로 만든다.
+        if (!backfillService.tryStart()) {
             redirect.addFlashAttribute("error", "전체 회차 수집이 이미 진행 중입니다. 완료 후 다시 시도하세요.");
             return "redirect:/admin/rounds";
         }
-        backfillService.backfillAllAsync();
+        try {
+            backfillService.backfillAllAsync();
+        } catch (TaskRejectedException e) {
+            // 실행자 큐가 가득 찬 극단적 상황 — tryStart로 예약한 running 플래그를 되돌리지 않으면
+            // 이후 모든 요청이 영구히 "진행 중"으로 잘못 거부된다.
+            backfillService.releaseStart();
+            redirect.addFlashAttribute("error", "전체 회차 수집 시작에 실패했습니다. 잠시 후 다시 시도하세요.");
+            return "redirect:/admin/rounds";
+        }
         auditLogService.record(user.getUsername(), "COLLECT_ALL",
                 "전체 회차 수집 시작", null, ipResolver.resolve(req));
         redirect.addFlashAttribute("success",

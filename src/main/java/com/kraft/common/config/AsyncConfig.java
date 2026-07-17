@@ -28,20 +28,22 @@ public class AsyncConfig {
 
     /**
      * 전체 회차 수집(백필) 전용 단일 스레드 풀.
-     * 수 분이 걸리는 장시간 작업이 이벤트 처리 풀을 점유하지 않도록 분리하고,
-     * 단일 스레드 + 큐 1로 동시 백필 실행을 차단한다.
+     * 수 분이 걸리는 장시간 작업이 이벤트 처리 풀을 점유하지 않도록 분리한다.
+     * 동시 실행 차단은 이제 {@code WinningNumberBackfillService.tryStart()}의 동기 CAS가
+     * 시작 예약 단계에서 담당하므로, 이 풀에 두 번째 태스크가 도달하는 일은 정상 경로에서는
+     * 없다. 큐 0 + AbortPolicy로 만약 도달하면 조용히 유실(DiscardPolicy)하는 대신 예외를
+     * 던져 호출자(AdminController)가 running 플래그를 되돌리고 사용자에게 알리게 한다.
      */
     @Bean(name = "backfillTaskExecutor")
     ThreadPoolTaskExecutor backfillTaskExecutor() {
         var ex = new ThreadPoolTaskExecutor();
         ex.setCorePoolSize(1);
         ex.setMaxPoolSize(1);
-        ex.setQueueCapacity(1);
+        ex.setQueueCapacity(0);
         ex.setThreadNamePrefix("kraft-backfill-");
         ex.setWaitForTasksToCompleteOnShutdown(true);
         ex.setAwaitTerminationSeconds(60);
-        // 큐 1 설계로 이미 실행 중인 백필이 있으면 두 번째 요청은 드롭한다(의도된 스로틀).
-        ex.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
+        ex.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
         ex.initialize();
         return ex;
     }

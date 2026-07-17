@@ -3,6 +3,13 @@ package com.kraft.winningnumber;
 import com.kraft.common.error.ApiException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -180,6 +187,56 @@ class WinningNumberBackfillServiceTest {
         verify(fetchClient, times(3)).fetchRound(1);
         verify(commandService, never()).upsertWithResult(org.mockito.ArgumentMatchers.any());
         verify(collectionService, never()).publishBulkCollected(org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
+    @DisplayName("동시 tryStart 호출 중 정확히 하나만 성공한다")
+    void tryStart_concurrentCalls_onlyOneSucceeds() throws InterruptedException {
+        int threadCount = 20;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch ready = new CountDownLatch(threadCount);
+        CountDownLatch go = new CountDownLatch(1);
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        try {
+            List<? extends Future<?>> futures = IntStream.range(0, threadCount)
+                    .mapToObj(i -> executor.submit(() -> {
+                        ready.countDown();
+                        try {
+                            go.await();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                        if (service.tryStart()) {
+                            successCount.incrementAndGet();
+                        }
+                    }))
+                    .toList();
+
+            ready.await();
+            go.countDown();
+            for (Future<?> future : futures) {
+                future.get(5, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            executor.shutdownNow();
+        }
+
+        assertThat(successCount.get()).isEqualTo(1);
+        assertThat(service.isRunning()).isTrue();
+    }
+
+    @Test
+    @DisplayName("완료 후(releaseStart)에는 다시 시작 예약이 가능하다")
+    void tryStart_afterRelease_canStartAgain() {
+        assertThat(service.tryStart()).isTrue();
+        assertThat(service.tryStart()).isFalse();
+
+        service.releaseStart();
+
+        assertThat(service.tryStart()).isTrue();
     }
 
     private WinningNumberUpsertRequest request(int round) {
