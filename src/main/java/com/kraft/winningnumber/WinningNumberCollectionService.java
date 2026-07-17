@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -29,13 +30,15 @@ public class WinningNumberCollectionService {
     private final WinningNumberOperationLogService winningNumberOperationLogService;
     private final WinningNumberCollectionEventPublisher collectionEventPublisher;
     private final Counter collectFailureCounter;
+    private final long catchUpDelayMs;
 
     public WinningNumberCollectionService(WinningNumberRepository winningNumberRepository,
                                           ExternalWinningNumberFetchClient externalWinningNumberFetchClient,
                                           WinningNumberCommandService winningNumberCommandService,
                                           WinningNumberOperationLogService winningNumberOperationLogService,
                                           WinningNumberCollectionEventPublisher collectionEventPublisher,
-                                          MeterRegistry meterRegistry) {
+                                          MeterRegistry meterRegistry,
+                                          @Value("${kraft.external-lotto.catch-up-delay-ms:200}") long catchUpDelayMs) {
         this.winningNumberRepository = winningNumberRepository;
         this.externalWinningNumberFetchClient = externalWinningNumberFetchClient;
         this.winningNumberCommandService = winningNumberCommandService;
@@ -44,6 +47,7 @@ public class WinningNumberCollectionService {
         this.collectFailureCounter = Counter.builder("kraft_lotto_external_collect_failures_total")
                 .description("외부 회차 수집 실패 횟수(end-of-data 제외)")
                 .register(meterRegistry);
+        this.catchUpDelayMs = catchUpDelayMs;
     }
 
     /**
@@ -97,6 +101,9 @@ public class WinningNumberCollectionService {
             try {
                 collected.add(collectFetchedRoundResult(nextRound).response());
                 nextRound++;
+                if (i < maxRounds - 1) {
+                    sleepQuietly(catchUpDelayMs);
+                }
             } catch (RuntimeException exception) {
                 if (isEndOfData(exception) && hadPreviousData) {
                     log.info("자동 수집 catch-up 종료: latestRound={} 추가 회차 없음", nextRound - 1);
@@ -158,5 +165,16 @@ public class WinningNumberCollectionService {
     private boolean isEndOfData(RuntimeException exception) {
         return exception instanceof ApiException apiException
                 && "LOTTO_SOURCE_ROUND_NOT_FOUND".equals(apiException.getCode());
+    }
+
+    private void sleepQuietly(long millis) {
+        if (millis <= 0) {
+            return;
+        }
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

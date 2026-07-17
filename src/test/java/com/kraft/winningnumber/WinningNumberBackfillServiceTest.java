@@ -173,6 +173,19 @@ class WinningNumberBackfillServiceTest {
     }
 
     @Test
+    @DisplayName("LOTTO_SOURCE_VALIDATION_ERROR는 재시도 없이 즉시 중단된다")
+    void backfillAll_validationError_stopsImmediately() {
+        given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());
+        given(fetchClient.fetchRound(1)).willThrow(sourceException("LOTTO_SOURCE_VALIDATION_ERROR"));
+
+        BackfillResult result = service.backfillAll();
+
+        assertThat(result.collectedCount()).isZero();
+        verify(fetchClient, times(1)).fetchRound(1);
+        verify(collectionService, never()).publishBulkCollected(org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
     @DisplayName("필드 파싱 실패는 데이터의 끝이 아닌 일시 오류로 간주해 재시도 후 중단한다")
     void backfillAll_parseErrorIsTransientNotEndOfData() {
         given(repository.findAllRoundsOrderByRoundAsc()).willReturn(List.of());

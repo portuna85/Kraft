@@ -36,7 +36,8 @@ public class WinningNumberBackfillService {
             Set.of("LOTTO_SOURCE_ROUND_NOT_FOUND");
     /** 재시도가 무의미한 치명적 오류 → 즉시 중단. */
     private static final Set<String> FATAL_CODES =
-            Set.of("LOTTO_SOURCE_DISABLED");
+            Set.of("LOTTO_SOURCE_DISABLED", "LOTTO_SOURCE_VALIDATION_ERROR",
+                    "LOTTO_SOURCE_ROUND_MISMATCH", "LOTTO_SOURCE_INVALID_DATE");
     /** 무한 루프 방지 상한 (실제 6/45 회차 수보다 충분히 큼). */
     private static final int SAFETY_CAP = 10_000;
 
