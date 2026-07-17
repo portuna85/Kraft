@@ -2,6 +2,7 @@ package com.kraft.common.config;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -23,8 +24,11 @@ public class CorsConfig {
                 : List.of("*");
     }
 
+    // CorsFilter는 RequestIdFilter(HIGHEST) 다음, SecurityHeaders(2)·RateLimit(10)보다 앞에서
+    // 실행되어야 429 등 단락 응답에도 CORS 헤더가 붙는다. 순수 @Bean CorsFilter는 순서 미지정
+    // (LOWEST_PRECEDENCE)이므로 FilterRegistrationBean으로 순서를 고정한다.
     @Bean
-    CorsFilter corsFilter() {
+    FilterRegistrationBean<CorsFilter> corsFilterRegistration() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(resolvedOrigins());
         // B-3: DELETE 추가, X-Device-Token 추가
@@ -40,6 +44,9 @@ public class CorsConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
-        return new CorsFilter(source);
+
+        FilterRegistrationBean<CorsFilter> registration = new FilterRegistrationBean<>(new CorsFilter(source));
+        registration.setOrder(1);
+        return registration;
     }
 }

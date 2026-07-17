@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -57,6 +58,11 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        // CORS preflight는 브라우저가 자동 발행하므로 한도를 소모하면 안 된다 —
+        // 응답은 앞선 CorsFilter(order 1)가 처리한다.
+        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
+            return true;
+        }
         String path = request.getRequestURI();
         return !path.startsWith("/api/") && !path.startsWith("/ops/");
     }

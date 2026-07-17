@@ -10,6 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,5 +42,37 @@ class PublicRateLimitFilterTest {
                 .andExpect(header().string("Retry-After", "60"))
                 .andExpect(header().string("X-RateLimit-Limit", "1"))
                 .andExpect(header().string("X-RateLimit-Remaining", "0"));
+    }
+
+    @Test
+    @DisplayName("preflight OPTIONS 요청은 레이트리밋 카운트를 소모하지 않는다")
+    void preflightOptions_doesNotConsumeRateLimit() throws Exception {
+        // limit=1이므로 OPTIONS가 카운트를 소모하면 뒤따르는 GET이 429가 된다
+        for (int i = 0; i < 3; i++) {
+            mockMvc.perform(options("/api/v1/stats/frequency")
+                            .with(req -> { req.setRemoteAddr("10.9.9.1"); return req; })
+                            .header("Origin", "https://example.com")
+                            .header("Access-Control-Request-Method", "GET"))
+                    .andExpect(status().isOk());
+        }
+
+        mockMvc.perform(get("/api/v1/stats/frequency")
+                        .with(req -> { req.setRemoteAddr("10.9.9.1"); return req; }))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("한도 초과 429 응답에도 CORS 헤더가 포함된다")
+    void rateLimitExceeded_includesCorsHeaders() throws Exception {
+        mockMvc.perform(get("/api/v1/stats/frequency")
+                        .with(req -> { req.setRemoteAddr("10.9.9.2"); return req; })
+                        .header("Origin", "https://example.com"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/stats/frequency")
+                        .with(req -> { req.setRemoteAddr("10.9.9.2"); return req; })
+                        .header("Origin", "https://example.com"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().exists("Access-Control-Allow-Origin"));
     }
 }
