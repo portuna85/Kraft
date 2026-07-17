@@ -30,7 +30,7 @@ export default async function CompanionPage() {
   }
 
   // 초기 payload는 상위 50개만 전달해 SSR/RSC 응답 크기를 줄인다. 번호 필터 선택 시
-  // 클라이언트가 전체 990쌍을 지연 fetch해 상위 50개 밖의 번호도 정확히 매칭한다.
+  // 클라이언트가 서버의 번호별 필터 API(ball 파라미터)를 호출해 상위 50개 밖의 번호도 정확히 매칭한다.
   const initialPairs = stats.topPairs.slice(0, 50);
 
   return (
