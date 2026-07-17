@@ -11,6 +11,7 @@ cd "$REPO_ROOT"
 
 echo "==> Validating environment..."
 bash scripts/deploy/validate-env.sh
+echo "==> Admin allowlist CIDR: ${KRAFT_ADMIN_ALLOWED_CIDR:-<unset>}"
 
 echo "==> Pulling images..."
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" pull --quiet

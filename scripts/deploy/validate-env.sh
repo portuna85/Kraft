@@ -11,6 +11,7 @@ REQUIRED_VARS=(
   KRAFT_REVALIDATE_SECRET
   KRAFT_PUBLIC_BASE_URL
   GRAFANA_ADMIN_PASSWORD
+  KRAFT_ADMIN_ALLOWED_CIDR
 )
 
 OPTIONAL_VARS=(
@@ -38,5 +39,10 @@ for var in "${OPTIONAL_VARS[@]}"; do
     echo "WARN:  optional variable not set (will use default): $var"
   fi
 done
+
+if [[ "${KRAFT_ADMIN_ALLOWED_CIDR:-}" == *"0.0.0.0/0"* && "${KRAFT_ALLOW_WORLD_OPEN_ADMIN:-}" != "true" ]]; then
+  echo "ERROR: KRAFT_ADMIN_ALLOWED_CIDR가 전체 개방(0.0.0.0/0)입니다. 의도라면 KRAFT_ALLOW_WORLD_OPEN_ADMIN=true를 명시하세요." >&2
+  error=1
+fi
 
 [[ $error -eq 0 ]] && echo "OK: all required variables are set" || exit 1
