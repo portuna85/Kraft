@@ -154,4 +154,10 @@ class CombinationScorerTest {
     void score_allMultiplesOf5_isNegative() {
         assertThat(scorer.score(List.of(5, 10, 15, 20, 25, 30))).isNegative();
     }
+
+    @Test
+    @DisplayName("휴리스틱 버전은 heuristic-v1로 명명·버전화되어 있다")
+    void version_isHeuristicV1() {
+        assertThat(CombinationScorer.VERSION).isEqualTo("heuristic-v1");
+    }
 }

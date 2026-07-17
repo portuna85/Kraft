@@ -4,10 +4,11 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
- * 로또 조합의 "비인기도" 점수를 계산한다.
+ * 로또 조합의 "비인기도(common-choice avoidance)" 점수를 계산하는 휴리스틱 — 버전 {@link #VERSION}.
  *
- * 점수가 높을수록 다른 구매자들이 동일 조합을 선택할 확률이 낮다.
- * 1등 당첨 시 공동 당첨자가 적어 개인 수령액이 높아진다.
+ * 점수가 높을수록 다른 구매자들이 동일 조합을 선택할 확률이 낮다고 추정한다(실제 판매 데이터가
+ * 아닌 통계적으로 알려진 편향에 기반한 경험칙). 1등 당첨 시 공동 당첨자가 적어 개인 수령액이
+ * 높아지는 방향을 노린다 — 1등 당첨 확률 자체를 높이지는 않는다.
  *
  * 반영된 편향:
  * - 생일 편향: 1~31번은 생년월일 선택으로 과다 선택됨 → 32~45 선호
@@ -15,9 +16,13 @@ import org.springframework.stereotype.Component;
  * - 라운드 번호 편향: 5·10·15·20·25·30·35·40·45, 7·14·21·28·35·42 인기
  * - 낮은 합계 편향: 생일 번호 선택으로 합계가 낮은 조합이 혼잡
  * - 연속 번호: 패턴으로 선택되는 경향 있음
+ *
+ * 가중치 조정 시 {@link #VERSION}을 올려 로그·메트릭에서 이전 버전과 구분할 수 있게 한다.
  */
 @Component
 public class CombinationScorer {
+
+    public static final String VERSION = "heuristic-v1";
 
     public int score(List<Integer> sorted) {
         int score = 0;

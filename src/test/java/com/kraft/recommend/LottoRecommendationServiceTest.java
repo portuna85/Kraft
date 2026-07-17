@@ -238,6 +238,65 @@ class LottoRecommendationServiceTest {
             // loadHistoricalCombinations()에서 1회 호출되었으므로 총 1회
             verify(winningNumberRepository, org.mockito.Mockito.times(1)).findAllBalls();
         }
+
+        @Test
+        @DisplayName("역대 조합 판정은 45비트 비트마스크 기반이라 입력 순서와 무관하다")
+        void isHistoricalFirstPrizeCombination_orderIndependent() {
+            given(winningNumberRepository.findAllBalls())
+                    .willReturn(List.of(ballsOnly(1, 3, 11, 19, 28, 34, 42)));
+            service.loadHistoricalCombinations();
+
+            assertThat(service.isHistoricalFirstPrizeCombination(List.of(3, 11, 19, 28, 34, 42))).isTrue();
+            // 정렬되지 않은 순서로 넣어도(normalize가 정렬) 동일하게 판정되어야 한다
+            assertThat(service.isHistoricalFirstPrizeCombination(List.of(42, 3, 34, 11, 28, 19))).isTrue();
+        }
+
+        @Test
+        @DisplayName("비트마스크가 다른 조합끼리는 서로 다른 조합으로 오판되지 않는다")
+        void isHistoricalFirstPrizeCombination_distinctCombosDoNotCollide() {
+            given(winningNumberRepository.findAllBalls())
+                    .willReturn(List.of(ballsOnly(1, 1, 2, 3, 4, 5, 6)));
+            service.loadHistoricalCombinations();
+
+            assertThat(service.isHistoricalFirstPrizeCombination(List.of(1, 2, 3, 4, 5, 6))).isTrue();
+            assertThat(service.isHistoricalFirstPrizeCombination(List.of(7, 8, 9, 10, 11, 12))).isFalse();
+            assertThat(service.isHistoricalFirstPrizeCombination(List.of(2, 3, 4, 5, 6, 7))).isFalse();
+        }
+    }
+
+    // ── 속성 테스트: 모든 추천 결과가 지켜야 할 불변 조건 ─────────────────────────
+
+    @Nested
+    @DisplayName("속성 테스트 — 추천 결과 불변 조건")
+    class PropertyBasedInvariants {
+
+        @RepeatedTest(50)
+        @DisplayName("무작위 요청에 대해 6개 유일·1~45 범위·제외 준수·과거 1등 배제·중복 없음이 항상 성립한다")
+        void recommend_alwaysSatisfiesAllInvariants() {
+            given(winningNumberRepository.findAllBalls())
+                    .willReturn(List.of(ballsOnly(1, 1, 2, 3, 4, 5, 6), ballsOnly(2, 7, 14, 21, 28, 35, 42)));
+            service.loadHistoricalCombinations();
+
+            List<Integer> excluded = List.of(9, 18, 27, 36, 45);
+            RecommendNumbersRequest request = new RecommendNumbersRequest(4, excluded, false);
+
+            List<List<Integer>> combos = service.recommend(request).recommendations();
+
+            assertThat(combos).hasSize(4);
+            Set<Long> seenMasks = new HashSet<>();
+            for (List<Integer> combo : combos) {
+                assertThat(combo).hasSize(6);
+                assertThat(combo).doesNotHaveDuplicates();
+                assertThat(combo).isSorted();
+                assertThat(combo).allMatch(n -> n >= 1 && n <= 45);
+                assertThat(combo).doesNotContainAnyElementsOf(excluded);
+                assertThat(combo).isNotEqualTo(List.of(1, 2, 3, 4, 5, 6));
+                assertThat(combo).isNotEqualTo(List.of(7, 14, 21, 28, 35, 42));
+                assertThat(seenMasks.add(combo.stream()
+                        .mapToLong(n -> 1L << (n - 1)).reduce(0L, (a, b) -> a | b)))
+                        .as("조합 간 중복 없음").isTrue();
+            }
+        }
     }
 
     // ── 당첨금 최대화 모드 ────────────────────────────────────────────────────
