@@ -96,6 +96,35 @@ class StatisticsApiControllerTest {
     }
 
     @Test
+    @DisplayName("ball 파라미터로 해당 번호가 포함된 쌍만 반환한다")
+    void getCompanion_withBallParam_returnsOnlyMatchingPairs() throws Exception {
+        summaryRebuilder.rebuildAllSummaries();
+
+        mockMvc.perform(get("/api/v1/stats/companion").param("ball", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalRounds").value(2))
+                .andExpect(jsonPath("$.topPairs[*].ballA").exists())
+                .andExpect(result -> {
+                    String json = result.getResponse().getContentAsString();
+                    org.assertj.core.api.Assertions.assertThat(json)
+                            .contains("\"ballA\":1")
+                            .doesNotContain("\"ballA\":10,\"ballB\":20");
+                });
+    }
+
+    @Test
+    @DisplayName("ball이 1~45 밖이면 400을 반환한다")
+    void getCompanion_withInvalidBall_returns400() throws Exception {
+        mockMvc.perform(get("/api/v1/stats/companion").param("ball", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_BALL"));
+
+        mockMvc.perform(get("/api/v1/stats/companion").param("ball", "46"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_BALL"));
+    }
+
+    @Test
     @DisplayName("회차 조회가 공개 캐시 헤더를 반환하는지 확인")
     void roundsLatest_returnsCacheHeaders() throws Exception {
         mockMvc.perform(get("/api/v1/rounds/latest"))

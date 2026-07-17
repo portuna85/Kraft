@@ -30,7 +30,7 @@ public class CacheConfig {
         manager.registerCustomCache(ROUNDS_LIST, cache(1, TimeUnit.HOURS, 20));
         manager.registerCustomCache(STATS_FREQUENCY, cache(10, TimeUnit.MINUTES, 4)); // null + 100 + 200 + 500
         manager.registerCustomCache(STATS_PATTERN, cache(10, TimeUnit.MINUTES, 10));
-        manager.registerCustomCache(STATS_COMPANION, cache(10, TimeUnit.MINUTES, 1));
+        manager.registerCustomCache(STATS_COMPANION, cache(10, TimeUnit.MINUTES, 46)); // null(전체) + ball 1~45
         return manager;
     }
 

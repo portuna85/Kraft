@@ -131,6 +131,24 @@ public class WinningStatisticsCacheService {
         return new CompanionStatsResponse(latestRound(), topPairs);
     }
 
+    @Cacheable(value = CacheConfig.STATS_COMPANION, key = "#ball")
+    public CompanionStatsResponse getCompanionStatsByBall(int ball) {
+        List<CompanionPairSummary> pairs = companionPairSummaryRepository
+                .findByBallAOrBallBOrderByCoCountDescBallAAscBallBAsc(ball, ball);
+
+        if (pairs.isEmpty() && companionPairSummaryRepository.count() == 0) {
+            log.info("동반 summary 없음 — 재계산 시작");
+            rebuildSummariesIgnoringConcurrencyFailure();
+            pairs = companionPairSummaryRepository
+                    .findByBallAOrBallBOrderByCoCountDescBallAAscBallBAsc(ball, ball);
+        }
+
+        List<CompanionPairDto> topPairs = pairs.stream()
+                .map(p -> new CompanionPairDto(p.getBallA(), p.getBallB(), p.getCoCount()))
+                .toList();
+        return new CompanionStatsResponse(latestRound(), topPairs);
+    }
+
     public AnalysisResponse analyze(List<Integer> rawNumbers) {
         List<Integer> numbers = rawNumbers.stream().sorted().toList();
 

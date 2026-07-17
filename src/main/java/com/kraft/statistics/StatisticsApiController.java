@@ -51,8 +51,15 @@ public class StatisticsApiController {
     }
 
     @GetMapping("/companion")
-    public CompanionStatsResponse companion() {
-        return statisticsService.getCompanionStats();
+    public CompanionStatsResponse companion(@RequestParam(required = false) Integer ball) {
+        if (ball == null) {
+            return statisticsService.getCompanionStats();
+        }
+        if (ball < 1 || ball > 45) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_BALL",
+                    "ball 허용 범위: 1~45");
+        }
+        return statisticsService.getCompanionStatsByBall(ball);
     }
 
     @PostMapping("/analysis")
