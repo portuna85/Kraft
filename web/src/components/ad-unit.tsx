@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import Script from "next/script";
 
 type AdUnitProps = {
   unit: string;
@@ -11,27 +11,26 @@ type AdUnitProps = {
 };
 
 export function AdUnit({ unit, width, height, label = "광고", className }: AdUnitProps) {
-  const initialized = useRef(false);
-
-  useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
-
-    if (!document.querySelector('script[src*="kakaocdn.net/kas"]')) {
-      const script = document.createElement("script");
-      script.async = true;
-      script.src = "https://t1.kakaocdn.net/kas/static/ba.min.js";
-      document.head.appendChild(script);
-    }
-  }, []);
-
   return (
-    <div className={`ad-unit${className ? ` ${className}` : ""}`} aria-label={label}>
+    <div
+      className={`ad-unit${className ? ` ${className}` : ""}`}
+      aria-label={label}
+      style={{ minWidth: width, minHeight: height }}
+    >
       <ins
         className="kakao_ad_area"
         data-ad-unit={unit}
         data-ad-width={String(width)}
         data-ad-height={String(height)}
+      />
+      {/* id로 동일 src의 중복 로드를 Next가 자동으로 걸러낸다 — 한 페이지에 AdUnit이
+          여러 개(모바일+데스크톱) 있어도 SDK 스크립트는 한 번만 삽입된다.
+          lazyOnload: 페이지가 상호작용 가능해진 뒤 로드해 초기 렌더 성능에 영향 없음. */}
+      <Script
+        id="kakao-adfit-sdk"
+        src="https://t1.kakaocdn.net/kas/static/ba.min.js"
+        strategy="lazyOnload"
+        onError={() => console.error("카카오 애드핏 SDK 로드 실패")}
       />
     </div>
   );
