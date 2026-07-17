@@ -28,7 +28,7 @@ jobs:
       - name: Set lowercase repo name
         run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
         env:
           # 배포 대상 SHA (CI가 빌드·푸시한 이미지 태그와 일치)
           DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
