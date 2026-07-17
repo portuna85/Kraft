@@ -14,19 +14,13 @@ export const metadata: Metadata = {
 };
 
 export default async function CompanionPage() {
-  const stats = await getCompanionStats().catch((error) => {
-    logger.warn({ err: error }, "동반 출현 통계 조회 실패");
-    return null;
-  });
-
-  if (!stats) {
-    return (
-      <section className="panel">
-        <p className="eyebrow">동반 출현</p>
-        <h1 className="page-title">통계를 준비 중입니다</h1>
-        <p className="page-subtitle">잠시 후 다시 확인해 주세요.</p>
-      </section>
-    );
+  // 이 페이지의 유일한 핵심 데이터 — 실패를 200 폴백으로 숨기지 않고 error.tsx(5xx)로 넘긴다.
+  let stats;
+  try {
+    stats = await getCompanionStats();
+  } catch (error) {
+    logger.error({ err: error }, "동반 출현 통계 조회 실패 — 핵심 데이터 실패로 페이지 오류 처리");
+    throw error;
   }
 
   // 초기 payload는 상위 50개만 전달해 SSR/RSC 응답 크기를 줄인다. 번호 필터 선택 시

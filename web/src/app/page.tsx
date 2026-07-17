@@ -36,33 +36,28 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  let latest: WinningNumber | null = null;
-
+  // 홈의 유일한 핵심 데이터 — 실패를 "준비 중입니다" 200으로 숨기면 업타임 체커·크롤러가
+  // 장애를 인지하지 못하고 Caddy가 그 상태를 60초간 캐시한다. 여기서는 로그만 남기고
+  // 에러를 그대로 던져 error.tsx(5xx)가 처리하게 한다.
+  let latest: WinningNumber;
   try {
     latest = await getLatestWinningNumber();
   } catch (error) {
-    logger.warn({ err: error }, "최신 당첨번호 조회 실패");
+    logger.error({ err: error }, "최신 당첨번호 조회 실패 — 핵심 데이터 실패로 페이지 오류 처리");
+    throw error;
   }
 
   return (
     <div className="section-stack">
-      {latest ? (
-        <section className="panel result-panel hero-panel">
-          <p className="eyebrow">최신 결과</p>
-          <h1 className="result-title">
-            {latest.round}회 당첨 결과 <span className="result-date">({formatDrawDate(latest.drawDate)})</span>
-          </h1>
-          <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
-          <PrizeTable firstPrizeAmount={latest.firstPrizeAmount} secondPrize={latest.secondPrize} />
-          <DataFreshnessNote />
-        </section>
-      ) : (
-        <section className="panel result-panel hero-panel">
-          <p className="eyebrow">최신 결과</p>
-          <h1 className="result-title">최신 결과를 준비 중입니다</h1>
-          <p className="page-subtitle">잠시 후 다시 확인해 주세요.</p>
-        </section>
-      )}
+      <section className="panel result-panel hero-panel">
+        <p className="eyebrow">최신 결과</p>
+        <h1 className="result-title">
+          {latest.round}회 당첨 결과 <span className="result-date">({formatDrawDate(latest.drawDate)})</span>
+        </h1>
+        <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
+        <PrizeTable firstPrizeAmount={latest.firstPrizeAmount} secondPrize={latest.secondPrize} />
+        <DataFreshnessNote />
+      </section>
 
       <section className="grid grid-3 home-shortcuts">
         <Link href="/rounds" className="stat-card stat-link">

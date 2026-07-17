@@ -77,6 +77,13 @@ export default async function RoundsPage({ searchParams }: Props) {
     }),
   ]);
 
+  // 두 핵심 데이터가 모두 실패한 경우(전면 장애)만 페이지 실패로 처리한다.
+  // 한쪽만 실패하면 기존처럼 부분 폴백 UI를 유지한다.
+  if (!latest && !rounds) {
+    logger.error("최신 당첨번호·회차 목록 모두 조회 실패 — 핵심 데이터 전면 실패로 페이지 오류 처리");
+    throw new Error("BACKEND_UNAVAILABLE");
+  }
+
   const baseUrl = getPublicBaseUrl();
   const totalPages = rounds?.totalPages ?? 0;
   const currentPage = Math.min(userPage, totalPages || 1);

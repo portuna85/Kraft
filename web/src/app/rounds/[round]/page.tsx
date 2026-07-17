@@ -5,10 +5,11 @@ import { notFound } from "next/navigation";
 import { LottoBalls } from "@/components/lotto-balls";
 import { PrizeTable } from "@/components/prize-table";
 import { JsonLdLottoRound } from "@/components/json-ld";
-import { getLatestWinningNumber, getPublicBaseUrl, getRound, type AnalysisResponse } from "@/lib/api";
+import { BackendError, getLatestWinningNumber, getPublicBaseUrl, getRound, type AnalysisResponse } from "@/lib/api";
 import { analyzeNumbers } from "@/lib/analyze";
 import { PageAd } from "@/components/ad-unit";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
+import logger from "@/lib/logger";
 
 // 루트 레이아웃이 CSP nonce를 위해 headers()를 호출해 전 페이지가 동적 렌더링되므로
 // 이 값은 Full Route Cache에 영향을 주지 않는다(문서화 목적으로 유지, 실제 캐시는 lib/api.ts의 fetch revalidate가 담당).
@@ -62,8 +63,19 @@ export default async function RoundDetailPage({ params }: Props) {
     // ignore latest round fallback
   }
 
-  const data = await getRound(roundNumber).catch(() => null);
-  if (!data) notFound();
+  let data;
+  try {
+    data = await getRound(roundNumber);
+  } catch (error) {
+    // 존재하지 않는 회차(백엔드 404)는 진짜 404로, 백엔드 장애(5xx)나 네트워크 오류는
+    // error.tsx(5xx)로 구분한다 — 이전에는 두 경우 모두 notFound()로 뭉뚱그려져
+    // 백엔드 장애가 "없는 페이지"로 위장됐다.
+    if (error instanceof BackendError && error.status < 500) {
+      notFound();
+    }
+    logger.error({ err: error }, `${roundNumber}회차 조회 실패 — 핵심 데이터 실패로 페이지 오류 처리`);
+    throw error;
+  }
 
   const analysis = analyzeNumbers(data.numbers);
 
