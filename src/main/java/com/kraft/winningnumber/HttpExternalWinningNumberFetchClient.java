@@ -62,6 +62,7 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
 
         Map<String, Object> payload = extractPayloadForRound(body, round);
         WinningNumberUpsertRequest request = payloadMapper.toRequest(payload);
+        requireRoundMatch(round, request);
         log.info("외부 회차 수집 요청 완료: round={} drawDate={}", request.round(), request.drawDate());
         return request;
     }
@@ -105,5 +106,14 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
         }
         throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_ROUND_NOT_FOUND",
                 "응답 목록에서 회차 %d를 찾을 수 없습니다.".formatted(round));
+    }
+
+    // 신형(list) 포맷은 extractPayloadForRound가 이미 회차로 필터링하지만, 구형(flat) 포맷은
+    // body를 그대로 반환하므로 이 체크가 회차 불일치를 잡는 유일한 방어선이다.
+    static void requireRoundMatch(int requestedRound, WinningNumberUpsertRequest request) {
+        if (request.round() != requestedRound) {
+            throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_ROUND_MISMATCH",
+                    "요청 회차(%d)와 응답 회차(%d)가 다릅니다.".formatted(requestedRound, request.round()));
+        }
     }
 }

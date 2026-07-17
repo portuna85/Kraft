@@ -2,6 +2,8 @@ package com.kraft.winningnumber;
 
 import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -35,11 +37,13 @@ class WinningNumberCommandServiceTest {
     private static final List<Integer> NUMBERS = List.of(1, 2, 3, 4, 5, 6);
     private static final int BONUS = 7;
 
+    private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
+
     @BeforeEach
     void setUp() {
         Clock clock = Clock.fixed(Instant.parse("2026-06-14T00:00:00Z"), ZoneId.of("Asia/Seoul"));
         service = new WinningNumberCommandService(repository, new LottoNumberCodec(), clock,
-                new WinningNumberInsertExecutor(repository));
+                new WinningNumberInsertExecutor(repository), VALIDATOR);
     }
 
     private WinningNumberUpsertRequest request(List<Integer> numbers, int bonus) {
@@ -161,6 +165,37 @@ class WinningNumberCommandServiceTest {
         WinningNumberUpsertResult result = service.upsertWithResult(changedRequest);
 
         assertThat(result.changed()).isTrue();
+    }
+
+    @Test
+    @DisplayName("추첨일이 미래(현재+1일 초과)면 LOTTO_SOURCE_INVALID_DATE로 거부된다")
+    void upsertWithResult_futureDrawDate_throwsInvalidDate() {
+        WinningNumberUpsertRequest futureRequest = new WinningNumberUpsertRequest(
+                1, LocalDate.of(2026, 6, 20), NUMBERS, BONUS,
+                1_000_000_000L, null, null, null, null);
+
+        assertThatThrownBy(() -> service.upsertWithResult(futureRequest))
+                .isInstanceOf(ApiException.class)
+                .satisfies(ex -> {
+                    ApiException apiEx = (ApiException) ex;
+                    assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY);
+                    assertThat(apiEx.getCode()).isEqualTo("LOTTO_SOURCE_INVALID_DATE");
+                });
+    }
+
+    @Test
+    @DisplayName("음수 2등 당첨금은 LOTTO_SOURCE_VALIDATION_ERROR로 거부된다")
+    void upsertWithResult_negativeSecondPrize_throwsValidationError() {
+        WinningNumberUpsertRequest negativeRequest = new WinningNumberUpsertRequest(
+                1, DRAW_DATE, NUMBERS, BONUS, 1_000_000_000L, -1L, null, null, null);
+
+        assertThatThrownBy(() -> service.upsertWithResult(negativeRequest))
+                .isInstanceOf(ApiException.class)
+                .satisfies(ex -> {
+                    ApiException apiEx = (ApiException) ex;
+                    assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY);
+                    assertThat(apiEx.getCode()).isEqualTo("LOTTO_SOURCE_VALIDATION_ERROR");
+                });
     }
 
     @Test

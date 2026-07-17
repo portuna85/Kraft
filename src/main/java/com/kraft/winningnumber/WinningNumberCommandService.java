@@ -2,8 +2,13 @@ package com.kraft.winningnumber;
 
 import com.kraft.common.error.ApiException;
 import com.kraft.common.lotto.LottoNumberCodec;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,22 +22,39 @@ public class WinningNumberCommandService {
     private final LottoNumberCodec lottoNumberCodec;
     private final Clock clock;
     private final WinningNumberInsertExecutor insertExecutor;
+    private final Validator validator;
 
     public WinningNumberCommandService(WinningNumberRepository winningNumberRepository,
                                        LottoNumberCodec lottoNumberCodec,
                                        Clock clock,
-                                       WinningNumberInsertExecutor insertExecutor) {
+                                       WinningNumberInsertExecutor insertExecutor,
+                                       Validator validator) {
         this.winningNumberRepository = winningNumberRepository;
         this.lottoNumberCodec = lottoNumberCodec;
         this.clock = clock;
         this.insertExecutor = insertExecutor;
+        this.validator = validator;
     }
 
     public WinningNumberResponse upsert(WinningNumberUpsertRequest request) {
         return upsertWithResult(request).response();
     }
 
+    /**
+     * 컨트롤러의 {@code @Valid}는 이 메서드를 직접 호출하는 외부 수집 경로(스케줄러·백필)에는
+     * 적용되지 않으므로, 그 경로에서 유일하게 공유되는 이 지점에서 프로그램적으로 재검증한다.
+     * 관리자 콘솔 수동 upsert는 컨트롤러의 @Valid가 먼저 걸러내므로 위반이 발생하지 않는다.
+     */
     public WinningNumberUpsertResult upsertWithResult(WinningNumberUpsertRequest request) {
+        Set<ConstraintViolation<WinningNumberUpsertRequest>> violations = validator.validate(request);
+        if (!violations.isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_VALIDATION_ERROR", summarize(violations));
+        }
+        if (request.drawDate().isAfter(LocalDate.now(clock).plusDays(1))) {
+            throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_INVALID_DATE",
+                    "추첨일이 미래입니다: " + request.drawDate());
+        }
+
         var normalized = lottoNumberCodec.normalize(request.numbers());
         if (normalized.contains(request.bonusNumber())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_BONUS_NUMBER",
@@ -122,6 +144,12 @@ public class WinningNumberCommandService {
                 orZero(request.firstAccumAmount()),
                 OffsetDateTime.now(clock)
         );
+    }
+
+    private static String summarize(Set<ConstraintViolation<WinningNumberUpsertRequest>> violations) {
+        return violations.stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining("; "));
     }
 
     private static long orZero(Long value) {
