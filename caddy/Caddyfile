@@ -3,7 +3,7 @@ www.{$KRAFT_DOMAIN} {
 }
 
 {$KRAFT_DOMAIN} {
-	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 	header X-Content-Type-Options "nosniff"
 	header Referrer-Policy "strict-origin-when-cross-origin"
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
@@ -68,7 +68,7 @@ www.{$KRAFT_DOMAIN} {
 }
 
 {$KRAFT_ADMIN_DOMAIN} {
-	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 	header X-Content-Type-Options "nosniff"
 	header Referrer-Policy "strict-origin-when-cross-origin"
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
