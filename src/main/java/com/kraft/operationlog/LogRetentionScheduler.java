@@ -40,11 +40,11 @@ public class LogRetentionScheduler {
     @Transactional
     public void purgeOldLogs() {
         OffsetDateTime operationLogCutoff = OffsetDateTime.now(clock).minusDays(operationLogRetentionDays);
-        operationLogRepository.deleteByCreatedAtBefore(operationLogCutoff);
-        log.info("작업 로그 보관기간 초과 행 삭제 완료: cutoff={}", operationLogCutoff);
+        int deletedOperationLogs = operationLogRepository.deleteByCreatedAtBefore(operationLogCutoff);
+        log.info("작업 로그 보관기간 초과 행 삭제 완료: cutoff={} deleted={}", operationLogCutoff, deletedOperationLogs);
 
         OffsetDateTime adminAuditLogCutoff = OffsetDateTime.now(clock).minusDays(adminAuditLogRetentionDays);
-        adminAuditLogRepository.deleteByCreatedAtBefore(adminAuditLogCutoff);
-        log.info("관리자 감사 로그 보관기간 초과 행 삭제 완료: cutoff={}", adminAuditLogCutoff);
+        int deletedAdminAuditLogs = adminAuditLogRepository.deleteByCreatedAtBefore(adminAuditLogCutoff);
+        log.info("관리자 감사 로그 보관기간 초과 행 삭제 완료: cutoff={} deleted={}", adminAuditLogCutoff, deletedAdminAuditLogs);
     }
 }
