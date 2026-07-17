@@ -42,6 +42,18 @@ check_header_contains() {
   fi
 }
 
+check_body_matches() {
+  local desc="$1" url="$2" pattern="$3"
+  local body
+  body=$(curl -sS --max-time 10 "$url" 2>/dev/null || true)
+  if echo "$body" | grep -Eq "$pattern"; then
+    echo "  OK  [body match] $desc"
+  else
+    echo "  FAIL[body did not match /$pattern/] $desc ($url)" >&2
+    FAIL=1
+  fi
+}
+
 echo "==> Smoke tests against $BASE"
 
 # Core API: stats work even with an empty DB.
@@ -51,6 +63,10 @@ check_status "GET /api/v1/stats/companion -> 200" "$API/stats/companion" "200"
 check_header_contains "GET /api/v1/stats/frequency exposes Cache-Control" "$API/stats/frequency" "Cache-Control" "max-age=60"
 check_header_contains "GET /api/v1/stats/frequency exposes X-Request-Id" "$API/stats/frequency" "X-Request-Id" ""
 check_header_contains "GET /api/v1/rounds/latest exposes Cache-Control" "$API/rounds/latest" "Cache-Control" "max-age=60"
+
+# 홈이 CSP nonce 헤더를 반환하는지, 최신 회차가 실제 렌더링되는지.
+check_header_contains "홈이 CSP 헤더를 반환" "$BASE/" "Content-Security-Policy" "nonce-"
+check_body_matches "홈 최신 회차 렌더링" "$BASE/" '[0-9]{3,4}회 당첨 결과'
 
 # Removed paths (blueprint 17) must be 404.
 check_status "GET /api/v1/push/token -> 404" "$API/push/token" "404"
@@ -75,6 +91,26 @@ if [[ "${KRAFT_SMOKE_RATE_LIMIT:-false}" == "true" ]]; then
   done
   check_status "GET /api/v1/rounds/latest -> 429 after burst" "$RATE_LIMIT_URL" "429"
   check_header_contains "429 responses expose Retry-After" "$RATE_LIMIT_URL" "Retry-After" "60"
+fi
+
+# Flyway가 리포에 존재하는 최신 마이그레이션 버전까지 도달했는지 확인.
+# 배포 호스트 밖(예: CI 로컬 실행)에서는 kraft-mariadb 컨테이너가 없을 수 있으므로
+# 그 경우는 실패가 아니라 SKIP으로 처리한다.
+if command -v docker >/dev/null 2>&1 && docker inspect kraft-mariadb >/dev/null 2>&1; then
+  repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
+  expected_version=$(find "$repo_root/src/main/resources/db/migration" -maxdepth 1 -name 'V*.sql' \
+    | sed -E 's#.*/V([0-9]+)__.*#\1#' | sort -n | tail -1)
+  applied_version=$(docker exec kraft-mariadb sh -c \
+    'MYSQL_PWD=$MARIADB_PASSWORD mariadb -u"$MARIADB_USER" kraft_lotto -N -e \
+    "SELECT MAX(CAST(version AS UNSIGNED)) FROM flyway_schema_history WHERE success=1"' 2>/dev/null || echo "")
+  if [[ -n "$expected_version" && "$applied_version" == "$expected_version" ]]; then
+    echo "  OK  [flyway v$applied_version] Flyway 최신 버전 도달"
+  else
+    echo "  FAIL[flyway applied=$applied_version expected=$expected_version] Flyway 최신 버전 미도달" >&2
+    FAIL=1
+  fi
+else
+  echo "  SKIP[kraft-mariadb container not found] Flyway 버전 체크 — 배포 호스트 밖에서 실행 중으로 판단"
 fi
 
 if [[ $FAIL -ne 0 ]]; then
