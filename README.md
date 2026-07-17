@@ -493,13 +493,25 @@ bash scripts/db-restore.sh /var/backups/kraft/kraft_lotto_YYYYMMDD_HHMMSS.sql.gz
 | Edge (공개 도메인) | Caddy가 `/admin*`, `/ops*`, `/actuator*`, `/api/revalidate` 차단 |
 | 관리자 도메인 | `KRAFT_ADMIN_ALLOWED_CIDR`로 IP allowlist 적용 가능 |
 | 공개 API | stateless, 세션 쿠키 미사용. 신뢰 프록시 CIDR은 콤마 구분 다중 대역 지원 |
-| 관리자 UI | 세션, CSRF, 단일 세션 제한(`HttpSessionEventPublisher` 등록), 로그인 실패 잠금 |
+| 관리자 UI | 세션, CSRF, 단일 세션 제한(`HttpSessionEventPublisher` 등록), 로그인 실패 잠금, prod 세션 쿠키 `secure`·`same-site=strict`·`http-only` 명시(`application-prod.yml`) |
 | 저장 번호 | 원본 기기 토큰을 저장하지 않고 SHA-256 해시만 저장 |
 | Ops API | `X-Ops-Token`을 상수 시간 비교로 검증 |
 | Rate limit | 공개 API와 Ops API에 Caffeine 기반 분당 제한 적용(단일 인스턴스 기준) |
 | 응답 헤더/ETag | 보안 헤더와 캐시/ETag 정책 적용. 회차 증가와 무관하게 바뀌는 응답(freshness/incidents)은 MD5 기반 ETag로 별도 처리해 stale 304 방지 |
 | CSP | Next.js가 요청별 CSP nonce를 생성하고, 401/503 등 거부 응답에도 보안 헤더가 항상 붙도록 필터 순서를 관리 |
 | 컨테이너 | 가능한 범위에서 non-root, `cap_drop: ALL`, `no-new-privileges`, read-only filesystem 사용 |
+
+### 시크릿 로테이션 런북
+
+모든 시크릿은 DB 등에 저장되는 값이 아니라 매 요청마다 상수 시간 비교(또는 Spring Security 표준 인증)로만 검증되므로, **GitHub Secrets 값을 바꾸고 재배포하는 것만으로 즉시 교체**된다. 별도 무효화 절차나 이전 값과의 유예 기간이 없다 — 교체 순간 이전 값은 즉시 거부된다.
+
+| 시크릿 | 용도 | 교체 절차 | 권장 주기 |
+| --- | --- | --- | --- |
+| `KRAFT_OPS_TOKEN` | `/ops/*` API 인증(`X-Ops-Token`) | GitHub Secrets에서 새 무작위 값으로 교체 → 재배포 | 분기 1회, 유출 의심 시 즉시 |
+| `KRAFT_REVALIDATE_SECRET` | ISR on-demand revalidate 웹훅 인증(백엔드→프론트) | 동일 값을 GitHub Secrets 한 곳에서 관리하므로 교체 후 재배포 한 번으로 양쪽에 반영됨 | 분기 1회, 유출 의심 시 즉시 |
+| `KRAFT_ADMIN_BOOTSTRAP_USERNAME`/`PASSWORD` | `admin_users` 테이블이 비어 있을 때만 동작하는 1회성 관리자 계정 생성 | 최초 배포 후 관리자 계정이 생성됐다면 GitHub Secrets에서 **완전히 제거**(재사용 목적이 아님 — 남겨두면 DB가 어떤 이유로든 초기화될 때 예상 못 한 계정이 재생성될 수 있음) | 계정 생성 직후 1회 |
+| `MARIADB_PASSWORD`/`MARIADB_ROOT_PASSWORD` | DB 접속 자격 증명 | GitHub Secrets 교체 → 배포 전 DB에서 실제 비밀번호를 `ALTER USER`로 먼저 변경 후 재배포(순서를 바꾸면 접속 실패로 기동 실패) | 유출 의심 시 즉시. 정기 교체는 운영 부담 대비 비용 판단 필요 |
+| 관리자 비밀번호(`admin_users` 테이블) | 관리자 콘솔 로그인 | 콘솔 내 변경 기능은 아직 없음 — DB에서 `admin_users.password`를 새 BCrypt 해시로 직접 갱신(`AdminSecurityConfig`의 `BCryptPasswordEncoder` 사용) | 계정별 정책에 따름 |
 
 ## 🧯 문제 해결
 

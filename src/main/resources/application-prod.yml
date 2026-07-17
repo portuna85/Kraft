@@ -1,3 +1,13 @@
+server:
+  servlet:
+    session:
+      cookie:
+        # 관리자 콘솔(폼 로그인)만 세션 쿠키를 사용한다(/api/**는 STATELESS) — HTTPS로만
+        # 전송되고 크로스사이트 요청에는 실리지 않도록 명시적으로 강화한다.
+        secure: true
+        same-site: strict
+        http-only: true
+
 spring:
   config:
     activate:
