@@ -1,13 +1,18 @@
 package com.kraft;
 
+import com.kraft.winningnumber.WinningNumbersCollectedEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,8 +21,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@RecordApplicationEvents
 @DisplayName("운영 기능 통합 테스트")
 class OpsApiIntegrationTest extends BaseApiIntegrationTest {
+
+    @Autowired
+    private ApplicationEvents applicationEvents;
 
     @Test
     @DisplayName("운영 요약 정보 조회 시 토큰이 필요하며 최신 회차 정보를 반환하는지 확인")
@@ -227,5 +236,58 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.round", is(1201)))
                 .andExpect(jsonPath("$.bonusNumber", is(10)));
+    }
+
+    @Test
+    @DisplayName("수동 회차 보정이 변경을 일으키면 수집 이벤트가 발행된다")
+    void opsRoundUpsert_whenChanged_publishesCollectedEvent() throws Exception {
+        mockMvc.perform(post("/ops/rounds")
+                        .header("X-Ops-Token", "test-ops-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "round": 1201,
+                                  "drawDate": "2026-06-20",
+                                  "numbers": [5, 12, 18, 27, 36, 44],
+                                  "bonusNumber": 9,
+                                  "firstPrizeAmount": 2100000000
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        assertThat(applicationEvents.stream(WinningNumbersCollectedEvent.class))
+                .anyMatch(event -> event.round() == 1201 && event.dataChanged());
+    }
+
+    @Test
+    @DisplayName("변경 없는 수동 보정은 이벤트를 발행하지 않는다")
+    void opsRoundUpsert_whenUnchanged_doesNotPublishEvent() throws Exception {
+        String payload = """
+                {
+                  "round": 1201,
+                  "drawDate": "2026-06-20",
+                  "numbers": [5, 12, 18, 27, 36, 44],
+                  "bonusNumber": 9,
+                  "firstPrizeAmount": 2100000000
+                }
+                """;
+
+        mockMvc.perform(post("/ops/rounds")
+                        .header("X-Ops-Token", "test-ops-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk());
+
+        // 동일 내용으로 다시 보정 — changed=false여야 하므로 두 번째 요청은 이벤트를 발행하지 않는다
+        long beforeCount = applicationEvents.stream(WinningNumbersCollectedEvent.class).count();
+
+        mockMvc.perform(post("/ops/rounds")
+                        .header("X-Ops-Token", "test-ops-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk());
+
+        long afterCount = applicationEvents.stream(WinningNumbersCollectedEvent.class).count();
+        assertThat(afterCount).isEqualTo(beforeCount);
     }
 }

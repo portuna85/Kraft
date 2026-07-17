@@ -12,12 +12,15 @@ import com.kraft.winningnumber.WinningNumberCommandService;
 import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumberResponse;
 import com.kraft.winningnumber.WinningNumberUpsertRequest;
+import com.kraft.winningnumber.WinningNumberUpsertResult;
+import com.kraft.winningnumber.WinningNumbersCollectedEvent;
 import com.kraft.common.web.RequestIdFilter;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +39,7 @@ public class OpsService {
     private final WinningNumberCommandService winningNumberCommandService;
     private final WinningNumberCollectionService winningNumberCollectionService;
     private final WinningNumberOperationLogService winningNumberOperationLogService;
+    private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
     private final LottoDrawScheduleCalculator drawScheduleCalculator;
 
@@ -43,12 +47,14 @@ public class OpsService {
                       WinningNumberCommandService winningNumberCommandService,
                       WinningNumberCollectionService winningNumberCollectionService,
                       WinningNumberOperationLogService winningNumberOperationLogService,
+                      ApplicationEventPublisher eventPublisher,
                       Clock clock,
                       LottoDrawScheduleCalculator drawScheduleCalculator) {
         this.winningNumberRepository = winningNumberRepository;
         this.winningNumberCommandService = winningNumberCommandService;
         this.winningNumberCollectionService = winningNumberCollectionService;
         this.winningNumberOperationLogService = winningNumberOperationLogService;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
         this.drawScheduleCalculator = drawScheduleCalculator;
     }
@@ -111,14 +117,22 @@ public class OpsService {
         String caller = callerDetail();
         log.info("운영 수동 회차 저장 시작: round={} drawDate={} caller={}", request.round(), request.drawDate(), caller);
         try {
-            WinningNumberResponse response = winningNumberCommandService.upsert(request);
+            WinningNumberUpsertResult result = winningNumberCommandService.upsertWithResult(request);
+            WinningNumberResponse response = result.response();
+            if (result.changed()) {
+                // 수동 보정도 자동 수집과 동일하게 이벤트를 발행해야 통계 재집계·추천 캐시·ETag·ISR이
+                // 갱신된다. REQUIRES_NEW publisher를 쓰면 이 메서드의 트랜잭션이 커밋되기 전에
+                // AFTER_COMMIT 리스너가 발화해 미커밋 데이터를 읽을 수 있으므로, 여기서는 활성
+                // 트랜잭션에 직접 발행해 커밋 후에 리스너가 실행되게 한다.
+                eventPublisher.publishEvent(new WinningNumbersCollectedEvent(response.round(), true));
+            }
             winningNumberOperationLogService.logSuccess(
                     WinningNumberOperationType.MANUAL_UPSERT,
                     response.round(),
                     caller,
                     "운영 수동 회차 저장에 성공했습니다."
             );
-            log.info("운영 수동 회차 저장 완료: round={} caller={}", response.round(), caller);
+            log.info("운영 수동 회차 저장 완료: round={} changed={} caller={}", response.round(), result.changed(), caller);
             return response;
         } catch (RuntimeException exception) {
             winningNumberOperationLogService.logFailure(
