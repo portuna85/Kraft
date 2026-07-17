@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -54,7 +55,7 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
                 .header("X-Requested-With", externalLottoProperties.requestedWith())
                 .header("Referer", externalLottoProperties.referer())
                 .retrieve()
-                .body(Map.class);
+                .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 
         if (body == null || body.isEmpty()) {
             throw new ApiException(HttpStatus.BAD_GATEWAY, "LOTTO_SOURCE_EMPTY", "외부 수집 응답이 비어 있습니다.");
