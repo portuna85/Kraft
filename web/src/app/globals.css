@@ -2690,6 +2690,43 @@ form button,
   margin-top: 0;
 }
 
+.ad-sticky-mobile {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  background: var(--surface, #fff);
+  border-top: 1px solid var(--border, #e5e5e5);
+}
+
+.ad-sticky-mobile .ad-unit {
+  margin-top: 0;
+  min-height: 50px;
+}
+
+.ad-sticky-mobile-close {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  z-index: 1;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--text-muted, #999);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+@media (min-width: 1024px) {
+  .ad-sticky-mobile {
+    display: none;
+  }
+}
+
 /* ────────────────────────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

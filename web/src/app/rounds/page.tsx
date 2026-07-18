@@ -192,6 +192,12 @@ export default async function RoundsPage({ searchParams }: Props) {
 
       <PageAd slot="rounds-list" />
       <AdSenseUnit
+        slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST_MOBILE ?? ""}
+        width={300}
+        height={250}
+        className="ad-mobile"
+      />
+      <AdSenseUnit
         slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST ?? ""}
         width={728}
         height={90}

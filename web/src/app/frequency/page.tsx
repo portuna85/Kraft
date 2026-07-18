@@ -38,6 +38,12 @@ export default async function FrequencyPage() {
         <FrequencyFilterClient initial={stats} />
         <PageAd slot="frequency" />
         <AdSenseUnit
+          slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY_MOBILE ?? ""}
+          width={300}
+          height={250}
+          className="ad-mobile"
+        />
+        <AdSenseUnit
           slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY ?? ""}
           width={728}
           height={90}

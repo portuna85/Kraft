@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { Noto_Sans_KR, Noto_Serif_KR, Space_Grotesk } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { StickyMobileAd } from "@/components/ad-unit";
 import { JsonLdWebSite } from "@/components/json-ld";
 import { getPublicBaseUrl } from "@/lib/api";
 import { THEME_INIT_SCRIPT } from "@/lib/csp-inline-scripts";
@@ -87,6 +88,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <div className="shell">{children}</div>
         </main>
         <Footer />
+        <StickyMobileAd unit={process.env.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_STICKY ?? ""} />
       </body>
     </html>
   );

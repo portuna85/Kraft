@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Script from "next/script";
 
 type AdUnitProps = {
@@ -126,5 +126,25 @@ export function AdSenseSidebar({ slot }: { slot: string }) {
       label="사이드바 광고"
       className="ad-sidebar"
     />
+  );
+}
+
+export function StickyMobileAd({ unit }: { unit: string }) {
+  const [closed, setClosed] = useState(false);
+
+  if (!unit || closed) return null;
+
+  return (
+    <div className="ad-sticky-mobile">
+      <button
+        type="button"
+        onClick={() => setClosed(true)}
+        aria-label="광고 닫기"
+        className="ad-sticky-mobile-close"
+      >
+        ✕
+      </button>
+      <AdUnit unit={unit} width={320} height={50} label="하단 고정 광고" />
+    </div>
   );
 }

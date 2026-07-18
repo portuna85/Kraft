@@ -115,6 +115,12 @@ export default async function RoundDetailPage({ params }: Props) {
 
       <PageAd slot="rounds-detail" />
       <AdSenseUnit
+        slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL_MOBILE ?? ""}
+        width={300}
+        height={250}
+        className="ad-mobile"
+      />
+      <AdSenseUnit
         slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL ?? ""}
         width={728}
         height={90}

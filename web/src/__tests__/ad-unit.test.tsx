@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { AdSenseUnit, AdUnit, PageAd } from "@/components/ad-unit";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { AdSenseUnit, AdUnit, PageAd, StickyMobileAd } from "@/components/ad-unit";
 
 describe("광고 유닛", () => {
   it("전달받은 unit·width·height로 ins 태그를 렌더링하고 정확한 크기를 예약한다", () => {
@@ -62,5 +62,30 @@ describe("애드센스 유닛", () => {
 
     expect(document.querySelector("ins.adsbygoogle")).not.toBeInTheDocument();
     expect(screen.getByLabelText("광고")).toHaveStyle({ minWidth: "728px", minHeight: "90px" });
+  });
+});
+
+describe("모바일 하단 고정 배너", () => {
+  it("unit이 비어있으면 아무것도 렌더링하지 않는다", () => {
+    const { container } = render(<StickyMobileAd unit="" />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("unit이 있으면 광고와 닫기 버튼을 렌더링한다", () => {
+    render(<StickyMobileAd unit="DAN-sticky123" />);
+
+    const ins = document.querySelector("ins.kakao_ad_area");
+    expect(ins).toBeInTheDocument();
+    expect(ins).toHaveAttribute("data-ad-unit", "DAN-sticky123");
+    expect(screen.getByLabelText("광고 닫기")).toBeInTheDocument();
+  });
+
+  it("닫기 버튼을 클릭하면 배너가 사라진다", () => {
+    const { container } = render(<StickyMobileAd unit="DAN-sticky123" />);
+
+    fireEvent.click(screen.getByLabelText("광고 닫기"));
+
+    expect(container).toBeEmptyDOMElement();
   });
 });
