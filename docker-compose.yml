@@ -58,6 +58,7 @@ services:
       dockerfile: Dockerfile
     container_name: kraft-backend
     restart: unless-stopped
+    init: true
     security_opt:
       - "no-new-privileges:true"
     cap_drop:
@@ -192,7 +193,7 @@ services:
     depends_on:
       - prometheus
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-changeme}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"

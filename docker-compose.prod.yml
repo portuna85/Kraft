@@ -60,6 +60,7 @@ services:
     image: ${KRAFT_BACKEND_IMAGE_REF}:${KRAFT_BACKEND_IMAGE_TAG}
     container_name: kraft-backend
     restart: unless-stopped
+    init: true
     read_only: true
     tmpfs:
       - "/tmp:size=64m,noexec,nosuid"
