@@ -109,41 +109,27 @@ public class WinningNumberCommandService {
     private void updateExisting(WinningNumber existing,
                                 WinningNumberUpsertRequest request,
                                 java.util.List<Integer> normalized) {
-        existing.update(
-                request.drawDate(),
-                normalized.get(0),
-                normalized.get(1),
-                normalized.get(2),
-                normalized.get(3),
-                normalized.get(4),
-                normalized.get(5),
-                request.bonusNumber(),
-                request.firstPrizeAmount(),
-                orZero(request.secondPrize()),
-                orZeroInt(request.secondWinners()),
-                orZero(request.totalSales()),
-                orZero(request.firstAccumAmount())
-        );
+        fieldsFrom(request, normalized).applyUpdateTo(existing);
     }
 
     private WinningNumber createNew(WinningNumberUpsertRequest request, java.util.List<Integer> normalized) {
-        return new WinningNumber(
-                request.round(),
-                request.drawDate(),
-                normalized.get(0),
-                normalized.get(1),
-                normalized.get(2),
-                normalized.get(3),
-                normalized.get(4),
-                normalized.get(5),
-                request.bonusNumber(),
-                request.firstPrizeAmount(),
-                orZero(request.secondPrize()),
-                orZeroInt(request.secondWinners()),
-                orZero(request.totalSales()),
-                orZero(request.firstAccumAmount()),
-                OffsetDateTime.now(clock)
-        );
+        return fieldsFrom(request, normalized)
+                .round(request.round())
+                .createdAt(OffsetDateTime.now(clock))
+                .build();
+    }
+
+    private WinningNumber.Builder fieldsFrom(WinningNumberUpsertRequest request, java.util.List<Integer> normalized) {
+        return WinningNumber.builder()
+                .drawDate(request.drawDate())
+                .numbers(normalized.get(0), normalized.get(1), normalized.get(2),
+                        normalized.get(3), normalized.get(4), normalized.get(5))
+                .bonusNumber(request.bonusNumber())
+                .firstPrizeAmount(request.firstPrizeAmount())
+                .secondPrize(orZero(request.secondPrize()))
+                .secondWinners(orZeroInt(request.secondWinners()))
+                .totalSales(orZero(request.totalSales()))
+                .firstAccumAmount(orZero(request.firstAccumAmount()));
     }
 
     private static String summarize(Set<ConstraintViolation<WinningNumberUpsertRequest>> violations) {

@@ -101,6 +101,102 @@ public class WinningNumber {
         this.createdAt = createdAt;
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * 생성자·update()의 위치 인자가 많아(12~14개) 순서 실수 위험이 있어, 실제 값이
+     * 외부 API 응답에서 동적으로 채워지는 프로덕션 호출부(WinningNumberCommandService)는
+     * 이 빌더를 통해 이름으로 값을 지정한다. 테스트 픽스처처럼 리터럴을 직접 나열하는
+     * 곳은 기존 생성자를 계속 써도 무방하다.
+     */
+    public static final class Builder {
+        private Integer round;
+        private LocalDate drawDate;
+        private Integer n1;
+        private Integer n2;
+        private Integer n3;
+        private Integer n4;
+        private Integer n5;
+        private Integer n6;
+        private Integer bonusNumber;
+        private Long firstPrizeAmount;
+        private Long secondPrize;
+        private Integer secondWinners;
+        private Long totalSales;
+        private Long firstAccumAmount;
+        private OffsetDateTime createdAt;
+
+        private Builder() {
+        }
+
+        public Builder round(Integer round) {
+            this.round = round;
+            return this;
+        }
+
+        public Builder drawDate(LocalDate drawDate) {
+            this.drawDate = drawDate;
+            return this;
+        }
+
+        public Builder numbers(Integer n1, Integer n2, Integer n3, Integer n4, Integer n5, Integer n6) {
+            this.n1 = n1;
+            this.n2 = n2;
+            this.n3 = n3;
+            this.n4 = n4;
+            this.n5 = n5;
+            this.n6 = n6;
+            return this;
+        }
+
+        public Builder bonusNumber(Integer bonusNumber) {
+            this.bonusNumber = bonusNumber;
+            return this;
+        }
+
+        public Builder firstPrizeAmount(Long firstPrizeAmount) {
+            this.firstPrizeAmount = firstPrizeAmount;
+            return this;
+        }
+
+        public Builder secondPrize(Long secondPrize) {
+            this.secondPrize = secondPrize;
+            return this;
+        }
+
+        public Builder secondWinners(Integer secondWinners) {
+            this.secondWinners = secondWinners;
+            return this;
+        }
+
+        public Builder totalSales(Long totalSales) {
+            this.totalSales = totalSales;
+            return this;
+        }
+
+        public Builder firstAccumAmount(Long firstAccumAmount) {
+            this.firstAccumAmount = firstAccumAmount;
+            return this;
+        }
+
+        public Builder createdAt(OffsetDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public WinningNumber build() {
+            return new WinningNumber(round, drawDate, n1, n2, n3, n4, n5, n6, bonusNumber,
+                    firstPrizeAmount, secondPrize, secondWinners, totalSales, firstAccumAmount, createdAt);
+        }
+
+        public void applyUpdateTo(WinningNumber target) {
+            target.update(drawDate, n1, n2, n3, n4, n5, n6, bonusNumber,
+                    firstPrizeAmount, secondPrize, secondWinners, totalSales, firstAccumAmount);
+        }
+    }
+
     public void update(LocalDate drawDate,
                        Integer n1,
                        Integer n2,

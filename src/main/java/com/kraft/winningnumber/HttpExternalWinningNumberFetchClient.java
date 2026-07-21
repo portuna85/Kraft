@@ -4,6 +4,7 @@ import com.kraft.common.config.ExternalLottoProperties;
 import com.kraft.common.error.ApiException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,11 @@ public class HttpExternalWinningNumberFetchClient implements ExternalWinningNumb
         this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
+    // Retry는 CircuitBreaker보다 바깥에서 동작해(Resilience4j 기본 애스펙트 순서) 시도마다
+    // 서킷브레이커 카운트에 반영된다. retry-exceptions로 지정한 IO/5xx성 예외만 재시도하고,
+    // 파싱 실패·회차 불일치 같은 ApiException은 재시도해도 같은 결과라 대상에서 제외했다.
     @Override
+    @Retry(name = "externalLotto")
     @CircuitBreaker(name = "externalLotto", fallbackMethod = "fetchRoundFallback")
     public WinningNumberUpsertRequest fetchRound(int round) {
         if (!externalLottoProperties.enabled()) {
