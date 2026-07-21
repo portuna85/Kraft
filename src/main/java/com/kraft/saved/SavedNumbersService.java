@@ -6,11 +6,11 @@ import com.kraft.common.lotto.LottoNumberCodec;
 import com.kraft.common.lotto.LottoRank;
 import com.kraft.winningnumber.WinningNumberQueryService;
 import com.kraft.winningnumber.WinningNumberResponse;
-import org.springframework.dao.DataIntegrityViolationException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,17 +21,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class SavedNumbersService {
 
     private final SavedNumberRepository savedNumberRepository;
+    private final SavedNumberClientLockRepository savedNumberClientLockRepository;
+    private final SavedNumberClientLockInitializer savedNumberClientLockInitializer;
     private final LottoNumberCodec lottoNumberCodec;
     private final SavedProperties savedProperties;
     private final WinningNumberQueryService winningNumberQueryService;
     private final Clock clock;
 
     public SavedNumbersService(SavedNumberRepository savedNumberRepository,
+                               SavedNumberClientLockRepository savedNumberClientLockRepository,
+                               SavedNumberClientLockInitializer savedNumberClientLockInitializer,
                                LottoNumberCodec lottoNumberCodec,
                                SavedProperties savedProperties,
                                WinningNumberQueryService winningNumberQueryService,
                                Clock clock) {
         this.savedNumberRepository = savedNumberRepository;
+        this.savedNumberClientLockRepository = savedNumberClientLockRepository;
+        this.savedNumberClientLockInitializer = savedNumberClientLockInitializer;
         this.lottoNumberCodec = lottoNumberCodec;
         this.savedProperties = savedProperties;
         this.winningNumberQueryService = winningNumberQueryService;
@@ -59,42 +65,44 @@ public class SavedNumbersService {
 
     public SaveNumberResult save(String clientTokenHash, CreateSavedNumberRequest request) {
         String normalizedNumbers = lottoNumberCodec.toStorageValue(request.numbers());
-        return savedNumberRepository.findByClientTokenHashAndNumbers(clientTokenHash, normalizedNumbers)
-                .map(existing -> new SaveNumberResult(toResponse(existing), false))
-                .orElseGet(() -> createSavedNumber(clientTokenHash, request, normalizedNumbers));
+
+        // 클라이언트별 잠금 행을 확보(REQUIRES_NEW, 즉시 커밋)한 뒤 그 행을 레코드 락으로
+        // 잠그고서 중복·한도 확인과 삽입까지 한 트랜잭션 안에서 마친다(B2). saved_numbers
+        // 자체에 FOR UPDATE 범위 잠금을 걸면 아직 행이 없는 신규 클라이언트 구간에 갭 락이
+        // 걸려 동시 INSERT끼리 데드락이 날 수 있어(2세션만으로도 재현됨), 항상 존재가
+        // 보장되는 잠금 행을 레코드 락으로 잠그는 방식으로 바꿨다.
+        savedNumberClientLockInitializer.ensureExists(clientTokenHash);
+        savedNumberClientLockRepository.lockByClientTokenHash(clientTokenHash);
+
+        List<SavedNumber> existing = savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(clientTokenHash);
+
+        Optional<SavedNumber> duplicate = existing.stream()
+                .filter(saved -> saved.getNumbers().equals(normalizedNumbers))
+                .findFirst();
+        if (duplicate.isPresent()) {
+            return new SaveNumberResult(toResponse(duplicate.get()), false);
+        }
+
+        if (existing.size() >= savedProperties.maxPerClient()) {
+            throw new ApiException(HttpStatus.CONFLICT, "SAVED_LIMIT_REACHED", "이 기기에서 저장 가능한 번호 개수를 초과했습니다.");
+        }
+
+        String source = request.source() == null || request.source().isBlank() ? "MANUAL" : request.source().trim();
+        String label = request.label() == null || request.label().isBlank() ? null : request.label().trim();
+        SavedNumber savedNumber = savedNumberRepository.save(new SavedNumber(
+                clientTokenHash,
+                normalizedNumbers,
+                label,
+                source,
+                OffsetDateTime.now(clock)
+        ));
+        return new SaveNumberResult(toResponse(savedNumber), true);
     }
 
     public void delete(String clientTokenHash, long id) {
         SavedNumber savedNumber = savedNumberRepository.findByIdAndClientTokenHash(id, clientTokenHash)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SAVED_NUMBER_NOT_FOUND", "저장된 번호를 찾을 수 없습니다."));
         savedNumberRepository.delete(savedNumber);
-    }
-
-    private SaveNumberResult createSavedNumber(String clientTokenHash,
-                                               CreateSavedNumberRequest request,
-                                               String normalizedNumbers) {
-        long currentCount = savedNumberRepository.countByClientTokenHash(clientTokenHash);
-        if (currentCount >= savedProperties.maxPerClient()) {
-            throw new ApiException(HttpStatus.CONFLICT, "SAVED_LIMIT_REACHED", "이 기기에서 저장 가능한 번호 개수를 초과했습니다.");
-        }
-
-        String source = request.source() == null || request.source().isBlank() ? "MANUAL" : request.source().trim();
-        String label = request.label() == null || request.label().isBlank() ? null : request.label().trim();
-        try {
-            SavedNumber savedNumber = savedNumberRepository.save(new SavedNumber(
-                    clientTokenHash,
-                    normalizedNumbers,
-                    label,
-                    source,
-                    OffsetDateTime.now(clock)
-            ));
-            return new SaveNumberResult(toResponse(savedNumber), true);
-        } catch (DataIntegrityViolationException ex) {
-            // 동시 저장 레이스로 unique 제약 위반 시 기존 행을 반환하여 멱등 처리
-            return savedNumberRepository.findByClientTokenHashAndNumbers(clientTokenHash, normalizedNumbers)
-                    .map(existing -> new SaveNumberResult(toResponse(existing), false))
-                    .orElseThrow(() -> ex);
-        }
     }
 
     private static int parseRound(String roundParam) {

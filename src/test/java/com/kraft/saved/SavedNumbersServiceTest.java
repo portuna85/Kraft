@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +32,12 @@ class SavedNumbersServiceTest {
 
     @Mock
     private SavedNumberRepository savedNumberRepository;
+
+    @Mock
+    private SavedNumberClientLockRepository savedNumberClientLockRepository;
+
+    @Mock
+    private SavedNumberClientLockInitializer savedNumberClientLockInitializer;
 
     @Mock
     private WinningNumberQueryService winningNumberQueryService;
@@ -65,16 +70,15 @@ class SavedNumbersServiceTest {
         lottoNumberCodec = new LottoNumberCodec();
         savedProperties = new SavedProperties(100);
         clock = Clock.fixed(Instant.parse("2026-06-13T10:00:00Z"), ZoneId.of("Asia/Seoul"));
-        service = new SavedNumbersService(savedNumberRepository, lottoNumberCodec, savedProperties, winningNumberQueryService, clock);
+        service = new SavedNumbersService(savedNumberRepository, savedNumberClientLockRepository,
+                savedNumberClientLockInitializer, lottoNumberCodec, savedProperties, winningNumberQueryService, clock);
     }
 
     @Test
     @DisplayName("새 번호 저장 시 생성됨을 반환한다")
     void save_newNumbers_returnsCreatedTrue() {
         String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
-        given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
-                .willReturn(Optional.empty());
-        given(savedNumberRepository.countByClientTokenHash(TOKEN_HASH)).willReturn(0L);
+        given(savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(TOKEN_HASH)).willReturn(List.of());
         given(savedNumberRepository.save(any(SavedNumber.class)))
                 .willAnswer(inv -> savedEntity(encoded, "즐겨찾기", "MANUAL"));
 
@@ -89,8 +93,8 @@ class SavedNumbersServiceTest {
     @DisplayName("이미 저장된 번호 재저장 시 생성되지 않았음을 반환한다")
     void save_duplicateNumbers_returnsCreatedFalse() {
         String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
-        given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
-                .willReturn(Optional.of(savedEntity(encoded, "기존", "MANUAL")));
+        given(savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(TOKEN_HASH))
+                .willReturn(List.of(savedEntity(encoded, "기존", "MANUAL")));
 
         SaveNumberResult result = service.save(TOKEN_HASH, new CreateSavedNumberRequest(VALID_NUMBERS, null, null));
 
@@ -100,10 +104,11 @@ class SavedNumbersServiceTest {
     @Test
     @DisplayName("저장 한도 초과 시 충돌 예외가 발생한다")
     void save_overLimit_throwsConflictApiException() {
-        String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
-        given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
-                .willReturn(Optional.empty());
-        given(savedNumberRepository.countByClientTokenHash(TOKEN_HASH)).willReturn(100L);
+        String otherEncoded = lottoNumberCodec.toStorageValue(List.of(1, 2, 3, 4, 5, 6));
+        List<SavedNumber> full = java.util.stream.IntStream.range(0, 100)
+                .mapToObj(i -> savedEntity(otherEncoded + i, null, "MANUAL"))
+                .toList();
+        given(savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(TOKEN_HASH)).willReturn(full);
 
         assertThatThrownBy(() ->
                 service.save(TOKEN_HASH, new CreateSavedNumberRequest(VALID_NUMBERS, null, null))
@@ -148,9 +153,7 @@ class SavedNumbersServiceTest {
     @DisplayName("출처가 없으면 수동 저장으로 처리한다")
     void save_nullSource_defaultsToManual() {
         String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
-        given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
-                .willReturn(Optional.empty());
-        given(savedNumberRepository.countByClientTokenHash(TOKEN_HASH)).willReturn(0L);
+        given(savedNumberRepository.findByClientTokenHashOrderByCreatedAtDesc(TOKEN_HASH)).willReturn(List.of());
         given(savedNumberRepository.save(any(SavedNumber.class)))
                 .willAnswer(inv -> savedEntity(encoded, null, "MANUAL"));
 
@@ -253,23 +256,5 @@ class SavedNumbersServiceTest {
         given(winningNumberQueryService.findLatest()).willReturn(Optional.of(draw));
 
         assertThat(service.compareWithRound(TOKEN_HASH, "latest")).isEmpty();
-    }
-
-    @Test
-    @DisplayName("동시 저장 경쟁으로 고유 제약 위반 시 기존 행을 반환하여 멱등 처리한다")
-    void save_concurrentInsertRace_returnsExistingWithCreatedFalse() {
-        String encoded = lottoNumberCodec.toStorageValue(VALID_NUMBERS);
-        SavedNumber concurrentEntity = savedEntity(encoded, null, "MANUAL");
-        given(savedNumberRepository.findByClientTokenHashAndNumbers(TOKEN_HASH, encoded))
-                .willReturn(Optional.empty())
-                .willReturn(Optional.of(concurrentEntity));
-        given(savedNumberRepository.countByClientTokenHash(TOKEN_HASH)).willReturn(0L);
-        given(savedNumberRepository.save(any(SavedNumber.class)))
-                .willThrow(new DataIntegrityViolationException("uk_saved_numbers"));
-
-        SaveNumberResult result = service.save(TOKEN_HASH, new CreateSavedNumberRequest(VALID_NUMBERS, null, null));
-
-        assertThat(result.created()).isFalse();
-        assertThat(result.savedNumber().numbers()).containsExactlyElementsOf(VALID_NUMBERS);
     }
 }

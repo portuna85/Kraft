@@ -63,7 +63,7 @@ public class WinningNumberCommandService {
 
         var existing = winningNumberRepository.findByRound(request.round());
         if (existing.isPresent()) {
-            return applyUpdate(existing.get(), request, normalized);
+            return applyUpdate(winningNumberRepository, existing.get(), request, normalized);
         }
 
         try {
@@ -71,25 +71,28 @@ public class WinningNumberCommandService {
             return new WinningNumberUpsertResult(response, true);
         } catch (DataIntegrityViolationException ex) {
             // 자동 수집 스케줄러와 수동 upsert가 같은 신규 회차를 거의 동시에 처리하면 uk_winning_numbers_round
-            // 유니크 제약 위반으로 여기에 도달한다. insertExecutor가 REQUIRES_NEW로 분리돼 있어 그
-            // 트랜잭션만 롤백되고(JPA 스펙상 제약 위반 후 영속성 컨텍스트는 더 이상 사용할 수 없다),
-            // 현재(이 메서드의) 트랜잭션은 깨끗한 상태로 동시 승자가 이미 insert한 행을 update로 재해석한다.
-            WinningNumber concurrent = winningNumberRepository.findByRound(request.round()).orElseThrow(() -> ex);
-            return applyUpdate(concurrent, request, normalized);
+            // 유니크 제약 위반으로 여기에 도달한다. MariaDB 기본 REPEATABLE READ에서는 이 메서드 맨 위의
+            // findByRound()가 이미 이 트랜잭션의 조회 스냅샷을 확정해 버려서, 같은 트랜잭션에서 다시
+            // findByRound()를 불러도 방금 경쟁에서 이긴 트랜잭션이 커밋한 행이 안 보일 수 있다(B3).
+            // 재조회와 그에 대한 update까지 전부 새 트랜잭션(REQUIRES_NEW)에서 수행해 최신 커밋 스냅샷을
+            // 보게 한다 — 재조회만 새 트랜잭션에서 하고 update는 이 트랜잭션에서 하면, merge가 이 트랜잭션의
+            // (역시 오래된) 스냅샷으로 그 행을 다시 못 찾아 같은 문제가 재발한다.
+            return insertExecutor.resolveConcurrentInsert(request.round(), request, normalized, ex);
         }
     }
 
-    private WinningNumberUpsertResult applyUpdate(WinningNumber existing, WinningNumberUpsertRequest request,
-                                                   java.util.List<Integer> normalized) {
+    static WinningNumberUpsertResult applyUpdate(WinningNumberRepository repository, WinningNumber existing,
+                                                  WinningNumberUpsertRequest request,
+                                                  java.util.List<Integer> normalized) {
         boolean changed = hasChanges(existing, request, normalized);
         if (changed) {
             updateExisting(existing, request, normalized);
         }
-        WinningNumberResponse response = WinningNumberResponse.from(winningNumberRepository.save(existing));
+        WinningNumberResponse response = WinningNumberResponse.from(repository.save(existing));
         return new WinningNumberUpsertResult(response, changed);
     }
 
-    private boolean hasChanges(WinningNumber existing, WinningNumberUpsertRequest request,
+    private static boolean hasChanges(WinningNumber existing, WinningNumberUpsertRequest request,
                                java.util.List<Integer> normalized) {
         return !existing.getDrawDate().equals(request.drawDate())
                 || !existing.getN1().equals(normalized.get(0))
@@ -106,7 +109,7 @@ public class WinningNumberCommandService {
                 || orZero(existing.getFirstAccumAmount()) != orZero(request.firstAccumAmount());
     }
 
-    private void updateExisting(WinningNumber existing,
+    private static void updateExisting(WinningNumber existing,
                                 WinningNumberUpsertRequest request,
                                 java.util.List<Integer> normalized) {
         fieldsFrom(request, normalized).applyUpdateTo(existing);
@@ -119,7 +122,7 @@ public class WinningNumberCommandService {
                 .build();
     }
 
-    private WinningNumber.Builder fieldsFrom(WinningNumberUpsertRequest request, java.util.List<Integer> normalized) {
+    private static WinningNumber.Builder fieldsFrom(WinningNumberUpsertRequest request, java.util.List<Integer> normalized) {
         return WinningNumber.builder()
                 .drawDate(request.drawDate())
                 .numbers(normalized.get(0), normalized.get(1), normalized.get(2),
