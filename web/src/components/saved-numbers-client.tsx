@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LottoBalls } from "@/components/lotto-balls";
 import { getDeviceToken } from "@/lib/device-token";
 import { browserFetch, BrowserApiError } from "@/lib/browser-api";
@@ -62,7 +62,7 @@ export function SavedNumbersClient({ latestRound }: Props) {
       });
   }, []);
 
-  function fetchMatches() {
+  const fetchMatches = useCallback(() => {
     if (items.length === 0) {
       return;
     }
@@ -88,12 +88,11 @@ export function SavedNumbersClient({ latestRound }: Props) {
         // "대조 결과 없음"처럼 보이지 않게 한다.
         setMatchState("error");
       });
-  }
+  }, [items, selectedRound]);
 
   useEffect(() => {
     fetchMatches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, selectedRound]);
+  }, [fetchMatches]);
 
   async function handleDelete(item: SavedNumber) {
     setItems((prev) => prev.filter((x) => x.id !== item.id));

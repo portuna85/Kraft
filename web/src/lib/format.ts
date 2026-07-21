@@ -31,7 +31,3 @@ export function formatDateTime(value: string): string {
 export function formatCurrency(value: number): string {
   return `${numberFormatter.format(value)}원`;
 }
-
-export function formatPlainNumber(value: number): string {
-  return numberFormatter.format(value);
-}

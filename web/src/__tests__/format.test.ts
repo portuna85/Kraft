@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCurrency, formatDateTime, formatDrawDate, formatPlainNumber } from "@/lib/format";
+import { formatCurrency, formatDateTime, formatDrawDate } from "@/lib/format";
 
 describe("통화 형식", () => {
   it("0원을 그대로 표기한다", () => {
@@ -41,15 +41,5 @@ describe("일시 형식", () => {
     expect(result).toContain("2026");
     expect(result).toContain("8");
     expect(result).toContain("00:30");
-  });
-});
-
-describe("일반 숫자 형식", () => {
-  it("천 단위를 콤마로 구분한다", () => {
-    expect(formatPlainNumber(1000)).toBe("1,000");
-  });
-
-  it("천 미만 값은 구분 기호 없이 그대로 둔다", () => {
-    expect(formatPlainNumber(45)).toBe("45");
   });
 });

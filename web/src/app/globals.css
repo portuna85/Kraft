@@ -2727,6 +2727,13 @@ form button,
   }
 }
 
+@media (max-width: 1023px) {
+  /* 하단 고정 광고(50px + close 버튼)가 마지막 콘텐츠를 가리지 않도록 여백 확보 */
+  .page {
+    padding-bottom: calc(var(--page-pad-bottom) + 50px + env(safe-area-inset-bottom));
+  }
+}
+
 /* ────────────────────────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

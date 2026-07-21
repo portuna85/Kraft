@@ -7,10 +7,6 @@ import { getLatestWinningNumber, getRoundFreshness, type RoundFreshness, type Wi
 import { formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
 
-// 루트 레이아웃이 CSP nonce를 위해 headers()를 호출해 전 페이지가 동적 렌더링되므로
-// 이 값은 Full Route Cache에 영향을 주지 않는다(문서화 목적으로 유지, 실제 캐시는 lib/api.ts의 fetch revalidate가 담당).
-export const revalidate = 60;
-
 // 루트 레이아웃의 title.template("%s | KRAFT Lotto")은 "/" 페이지에는 적용되지 않으므로
 // (검증됨: 다른 페이지는 템플릿이 적용되지만 홈은 적용 안 됨) 접미사를 직접 포함해야 한다.
 export async function generateMetadata(): Promise<Metadata> {

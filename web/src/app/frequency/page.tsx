@@ -6,10 +6,6 @@ import { JsonLdBreadcrumb } from "@/components/json-ld";
 import { getFrequencyStats, getPublicBaseUrl } from "@/lib/api";
 import logger from "@/lib/logger";
 
-// 루트 레이아웃이 CSP nonce를 위해 headers()를 호출해 전 페이지가 동적 렌더링되므로
-// 이 값은 Full Route Cache에 영향을 주지 않는다(문서화 목적으로 유지, 실제 캐시는 lib/api.ts의 fetch revalidate가 담당).
-export const revalidate = 1800;
-
 export const metadata: Metadata = {
   title: "출현 통계",
   description: "로또 6/45 모든 회차를 기준으로 번호별 출현 횟수와 비율을 확인할 수 있습니다.",
