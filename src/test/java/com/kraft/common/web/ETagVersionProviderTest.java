@@ -43,14 +43,6 @@ class ETagVersionProviderTest {
     }
 
     @Test
-    @DisplayName("과거 회차 상세 경로는 보정 반영을 위해 항상 폴백 이태그를 사용한다")
-    void historicalRoundPath_alwaysReturnsNullForMd5Fallback() {
-        ETagVersionProvider provider = providerWithLatestRound(1234);
-
-        assertThat(provider.etagForPath("/api/v1/rounds/5678")).isNull();
-    }
-
-    @Test
     @DisplayName("그 외 경로는 최신 회차 기반 이태그를 반환한다")
     void otherNonSpecialPath_stillReturnsMutableRoundEtag() {
         ETagVersionProvider provider = providerWithLatestRound(1234);

@@ -18,7 +18,6 @@ import org.springframework.context.annotation.Configuration;
 public class CacheConfig {
 
     public static final String ROUNDS_LATEST = "rounds.latest";
-    public static final String ROUNDS_LIST = "rounds.list";
     public static final String STATS_FREQUENCY = "stats.frequency";
     public static final String STATS_FREQUENCY_BY_LIMIT = "stats.frequency.by-limit";
     public static final String STATS_PATTERN = "stats.pattern";
@@ -28,7 +27,6 @@ public class CacheConfig {
     CacheManager cacheManager() {
         CaffeineCacheManager manager = new CaffeineCacheManager();
         manager.registerCustomCache(ROUNDS_LATEST, cache(5, TimeUnit.MINUTES, 1));
-        manager.registerCustomCache(ROUNDS_LIST, cache(1, TimeUnit.HOURS, 20));
         // stats.frequency: summary 테이블 기반 전체 빈도(getFrequencyStats, 키 없음).
         // stats.frequency.by-limit: 최근 N회차만 재계산하는 별도 의미의 빈도(getFrequencyStatsByLimit).
         // 이름이 비슷하지만 서로 다른 데이터를 담으므로 캐시를 분리해 혼동을 없앤다.

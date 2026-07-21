@@ -39,18 +39,14 @@ export function AdUnit({ unit, width, height, label = "광고", className }: AdU
 }
 
 type PageAdProps = {
-  slot: "rounds-list" | "rounds-detail" | "frequency";
+  slot: "frequency";
 };
 
 const AD_MOBILE: Record<PageAdProps["slot"], string> = {
-  "rounds-list": process.env.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST ?? "",
-  "rounds-detail": process.env.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL ?? "",
   frequency: process.env.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY ?? "",
 };
 
 const AD_DESKTOP: Record<PageAdProps["slot"], string> = {
-  "rounds-list": process.env.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST_DESKTOP ?? "",
-  "rounds-detail": process.env.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL_DESKTOP ?? "",
   frequency: process.env.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY_DESKTOP ?? "",
 };
 
@@ -120,14 +116,10 @@ export function AdSenseUnit({ slot, width, height, label = "광고", className }
 }
 
 const IN_ARTICLE_ADSENSE_MOBILE_ENV: Record<PageAdProps["slot"], string | undefined> = {
-  "rounds-list": process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST_MOBILE,
-  "rounds-detail": process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL_MOBILE,
   frequency: process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY_MOBILE,
 };
 
 const IN_ARTICLE_ADSENSE_DESKTOP_ENV: Record<PageAdProps["slot"], string | undefined> = {
-  "rounds-list": process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST,
-  "rounds-detail": process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL,
   frequency: process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY,
 };
 

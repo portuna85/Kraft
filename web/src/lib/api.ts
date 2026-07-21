@@ -1,12 +1,8 @@
 import {
   REVALIDATE_LATEST,
-  REVALIDATE_ROUNDS_LIST,
-  REVALIDATE_ROUND_DETAIL,
   REVALIDATE_STATS,
   TAG_ROUNDS_LATEST,
-  TAG_ROUNDS_LIST,
   TAG_STATS,
-  tagRoundDetail,
 } from "@/lib/revalidate";
 
 const backendBaseUrl = process.env.KRAFT_BACKEND_INTERNAL_URL ?? "http://backend:8080";
@@ -33,14 +29,6 @@ export type WinningNumber = {
   secondWinners: number;
   totalSales: number;
   firstAccumAmount: number;
-};
-
-export type WinningNumberList = {
-  items: WinningNumber[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
 };
 
 export type RecommendationResponse = {
@@ -119,18 +107,6 @@ export async function getRoundFreshness(): Promise<RoundFreshness> {
 export async function getPublicIncidents(): Promise<PublicIncident[]> {
   return fetchJson<PublicIncident[]>("/api/v1/status/incidents", {
     next: { revalidate: REVALIDATE_LATEST }
-  });
-}
-
-export async function getRounds(page = 0, size = 20): Promise<WinningNumberList> {
-  return fetchJson<WinningNumberList>(`/api/v1/rounds?page=${page}&size=${size}`, {
-    next: { revalidate: REVALIDATE_ROUNDS_LIST, tags: [TAG_ROUNDS_LIST] }
-  });
-}
-
-export async function getRound(round: number): Promise<WinningNumber> {
-  return fetchJson<WinningNumber>(`/api/v1/rounds/${round}`, {
-    next: { revalidate: REVALIDATE_ROUND_DETAIL, tags: [tagRoundDetail(round)] }
   });
 }
 

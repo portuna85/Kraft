@@ -23,4 +23,18 @@ class RoundsApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(jsonPath("$.numbers", hasSize(6)))
                 .andExpect(jsonPath("$.bonusNumber", is(7)));
     }
+
+    @Test
+    @DisplayName("공개 회차 목록 엔드포인트는 제거되어 404를 반환한다")
+    void roundsListEndpointIsRemoved() throws Exception {
+        mockMvc.perform(get("/api/v1/rounds"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("공개 회차 상세 엔드포인트는 제거되어 404를 반환한다")
+    void roundsByRoundEndpointIsRemoved() throws Exception {
+        mockMvc.perform(get("/api/v1/rounds/1"))
+                .andExpect(status().isNotFound());
+    }
 }

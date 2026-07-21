@@ -71,17 +71,9 @@ class RevalidateWebhookListenerTest {
     }
 
     @Test
-    @DisplayName("재검증 경로 목록은 최신 회차 별칭을 포함하지 않는다")
-    void revalidatePathsFor_doesNotIncludeLatest() {
-        assertThat(RevalidateWebhookListener.revalidatePathsFor(1200))
-                .containsExactly("/", "/rounds", "/frequency", "/stats", "/companion", "/rounds/1200")
-                .doesNotContain("/latest");
-    }
-
-    @Test
-    @DisplayName("재검증 태그 목록은 회차별 상세 태그를 포함한다")
-    void tagsFor_includesRoundDetailTag() {
-        assertThat(RevalidateWebhookListener.tagsFor(1200))
-                .containsExactly("rounds:latest", "rounds:list", "stats:all", "rounds:detail:1200");
+    @DisplayName("재검증 태그 목록은 최신 회차와 통계 태그만 포함한다")
+    void tagsFor_includesLatestAndStatsTags() {
+        assertThat(RevalidateWebhookListener.tagsFor())
+                .containsExactly("rounds:latest", "stats:all");
     }
 }

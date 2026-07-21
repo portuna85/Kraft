@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/latest",
-        destination: "/rounds",
+        destination: "/",
         permanent: true,
       },
     ];

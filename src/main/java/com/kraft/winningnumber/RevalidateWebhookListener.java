@@ -24,7 +24,7 @@ public class RevalidateWebhookListener {
 
     private static final Logger log = LoggerFactory.getLogger(RevalidateWebhookListener.class);
     private static final List<String> REVALIDATE_PATHS = List.of(
-            "/", "/rounds", "/frequency", "/stats", "/companion"
+            "/", "/frequency", "/stats", "/companion"
     );
 
     private final RevalidateProperties revalidateProperties;
@@ -51,31 +51,24 @@ public class RevalidateWebhookListener {
         if (!event.dataChanged() || !revalidateProperties.enabled()) {
             return;
         }
-        List<String> paths = revalidatePathsFor(event.round());
-        List<String> tags = tagsFor(event.round());
+        List<String> tags = tagsFor();
         try {
             String url = revalidateProperties.webUrl() + "/api/revalidate";
             restClient.post()
                     .uri(url)
                     .header("X-Revalidate-Secret", revalidateProperties.secret())
-                    .body(Map.of("paths", paths, "tags", tags))
+                    .body(Map.of("paths", REVALIDATE_PATHS, "tags", tags))
                     .retrieve()
                     .toBodilessEntity();
-            log.info("ISR revalidation 요청 완료: paths={} tags={}", paths, tags);
+            log.info("ISR revalidation 요청 완료: paths={} tags={}", REVALIDATE_PATHS, tags);
         } catch (Exception e) {
             revalidateFailureCounter.increment();
             log.warn("ISR revalidation 요청 실패 (무시): {}", e.getMessage());
         }
     }
 
-    static List<String> revalidatePathsFor(int round) {
-        List<String> paths = new java.util.ArrayList<>(REVALIDATE_PATHS);
-        paths.add("/rounds/" + round);
-        return List.copyOf(paths);
-    }
-
     // 프론트 web/src/lib/revalidate.ts의 TAG_* 상수와 이름이 일치해야 한다.
-    static List<String> tagsFor(int round) {
-        return List.of("rounds:latest", "rounds:list", "stats:all", "rounds:detail:" + round);
+    static List<String> tagsFor() {
+        return List.of("rounds:latest", "stats:all");
     }
 }

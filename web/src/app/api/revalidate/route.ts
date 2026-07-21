@@ -4,20 +4,17 @@ import { NextRequest } from "next/server";
 
 // backend RevalidateWebhookListener의 REVALIDATE_PATHS와 일치시킨다.
 // 화이트리스트 밖 경로는 무시해 임의 경로 재검증을 막는다(시크릿이 노출되더라도 방어심화).
-// FE-07 전환기: path 기반은 태그로 이전 중 — 1~2주 관찰 후 이 화이트리스트와 함께 제거 예정.
-const ALLOWED_PATHS = new Set(["/", "/rounds", "/frequency", "/stats", "/companion"]);
-const ALLOWED_PATH_PATTERNS = [/^\/rounds\/\d+$/];
+const ALLOWED_PATHS = new Set(["/", "/frequency", "/stats", "/companion"]);
 
 function isAllowedPath(path: string): boolean {
-  return ALLOWED_PATHS.has(path) || ALLOWED_PATH_PATTERNS.some((pattern) => pattern.test(path));
+  return ALLOWED_PATHS.has(path);
 }
 
 // backend RevalidateWebhookListener.tagsFor()의 태그 이름과 일치시킨다.
-const ALLOWED_TAGS = new Set(["rounds:latest", "rounds:list", "stats:all"]);
-const ALLOWED_TAG_PATTERNS = [/^rounds:detail:\d+$/];
+const ALLOWED_TAGS = new Set(["rounds:latest", "stats:all"]);
 
 function isAllowedTag(tag: string): boolean {
-  return ALLOWED_TAGS.has(tag) || ALLOWED_TAG_PATTERNS.some((pattern) => pattern.test(tag));
+  return ALLOWED_TAGS.has(tag);
 }
 
 export async function POST(req: NextRequest) {

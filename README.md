@@ -34,7 +34,7 @@
 
 ## 무엇을 하는 서비스인가
 
-- 최신 당첨 결과와 전체 회차 목록/검색, 회차 상세(번호 구성 분석 포함)
+- 최신 당첨 결과 조회
 - 통계 기반 번호 추천(제외 번호 지정, 공동 당첨 회피 옵션), 과거 1등 조합과 중복 검사
 - 번호별 출현 빈도, 홀짝/고저/합계 구간 패턴, 동반 출현 조합 통계
 - 브라우저 기기 토큰 기반 번호 저장·관리, 특정 회차 당첨 대조
@@ -155,8 +155,6 @@ docker compose up -d --build
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
 | GET | `/rounds/latest` | 최신 당첨 회차 |
-| GET | `/rounds/{round}` | 회차 상세 |
-| GET | `/rounds?page=&size=` | 회차 목록 |
 | GET | `/rounds/freshness` | 데이터 최신성 |
 | POST | `/numbers/recommend` | 추천 조합 생성 |
 | GET | `/numbers/check?numbers=` | 과거 1등 조합 여부 |

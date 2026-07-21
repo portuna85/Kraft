@@ -21,14 +21,20 @@ jobs:
           java-version: "25"
           distribution: temurin
           cache: gradle
-      - name: Build & test
-        run: ./gradlew test bootJar -PstrictCoverage=true --no-daemon
+      - name: Build, test & verify coverage
+        run: ./gradlew check bootJar -PstrictCoverage=true --no-daemon
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: backend-test-results
           path: build/reports/tests/
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: backend-coverage-report
+          path: build/reports/jacoco/
 
   web-build-test:
     name: Web Build & Test
@@ -195,21 +201,13 @@ jobs:
             KRAFT_PUBLIC_BASE_URL=${{ secrets.KRAFT_PUBLIC_BASE_URL }}
             NEXT_PUBLIC_NAVER_SITE_VERIFICATION=${{ secrets.NEXT_PUBLIC_NAVER_SITE_VERIFICATION }}
             NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${{ secrets.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }}
-            NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST=${{ secrets.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST }}
-            NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL=${{ secrets.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL }}
             NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY=${{ secrets.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY }}
-            NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST_DESKTOP=${{ secrets.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_LIST_DESKTOP }}
-            NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL_DESKTOP=${{ secrets.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_ROUNDS_DETAIL_DESKTOP }}
             NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY_DESKTOP=${{ secrets.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY_DESKTOP }}
             NEXT_PUBLIC_KAKAO_ADFIT_UNIT_STICKY=${{ secrets.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_STICKY }}
             NEXT_PUBLIC_AD_NETWORK=${{ vars.NEXT_PUBLIC_AD_NETWORK || 'adfit' }}
             NEXT_PUBLIC_ADSENSE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_ADSENSE_CLIENT_ID }}
             NEXT_PUBLIC_ADSENSE_UNIT_SIDEBAR=${{ secrets.NEXT_PUBLIC_ADSENSE_UNIT_SIDEBAR }}
-            NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST=${{ secrets.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST }}
-            NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL=${{ secrets.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL }}
             NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY=${{ secrets.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY }}
-            NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST_MOBILE=${{ secrets.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST_MOBILE }}
-            NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL_MOBILE=${{ secrets.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL_MOBILE }}
             NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY_MOBILE=${{ secrets.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY_MOBILE }}
           provenance: true
           sbom: true

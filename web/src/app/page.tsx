@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch {
     return {
       title: "KRAFT Lotto | 로또 6/45 결과와 번호 추천",
-      description: "로또 6/45 최신 당첨 번호 조회, 회차 검색, 번호 추천, 통계 분석 기능을 제공합니다.",
+      description: "로또 6/45 최신 당첨 번호 조회, 번호 추천, 통계 분석 기능을 제공합니다.",
       alternates: { canonical: "/" },
     };
   }
@@ -60,16 +60,16 @@ export default async function HomePage() {
       </section>
 
       <section className="grid grid-3 home-shortcuts">
-        <Link href="/rounds" className="stat-card stat-link">
-          <p className="eyebrow">결과 조회</p>
-          <h3>최신 결과</h3>
-          <span className="stat-link-cta">바로 보기</span>
-        </Link>
-
         <Link href="/recommend" className="stat-card stat-link">
           <p className="eyebrow">번호 추천</p>
           <h3>추천 조합</h3>
           <span className="stat-link-cta">추천 받기</span>
+        </Link>
+
+        <Link href="/saved" className="stat-card stat-link">
+          <p className="eyebrow">저장 번호</p>
+          <h3>내 번호 보관함</h3>
+          <span className="stat-link-cta">저장 목록 보기</span>
         </Link>
 
         <Link href="/frequency" className="stat-card stat-link">

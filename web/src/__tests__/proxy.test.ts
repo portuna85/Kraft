@@ -52,7 +52,7 @@ describe("CSP nonce 미들웨어", () => {
   describe("proxy", () => {
     it("응답에 CSP 헤더를 설정하고 요청에 x-nonce 헤더를 주입한다", async () => {
       const { proxy } = await import("@/proxy");
-      const req = new NextRequest("http://localhost/rounds");
+      const req = new NextRequest("http://localhost/");
 
       const response = proxy(req);
 

@@ -17,13 +17,13 @@ describe("광고 유닛", () => {
   });
 
   it("label을 지정하면 aria-label에 반영된다", () => {
-    render(<AdUnit unit="DAN-abc123" width={320} height={100} label="회차 목록 광고" />);
+    render(<AdUnit unit="DAN-abc123" width={320} height={100} label="빈도 통계 광고" />);
 
-    expect(screen.getByLabelText("회차 목록 광고")).toBeInTheDocument();
+    expect(screen.getByLabelText("빈도 통계 광고")).toBeInTheDocument();
   });
 
   it("모바일·데스크톱 유닛이 모두 없으면 아무것도 렌더링하지 않는다", () => {
-    const { container } = render(<PageAd slot="rounds-list" />);
+    const { container } = render(<PageAd slot="frequency" />);
 
     expect(container).toBeEmptyDOMElement();
   });
@@ -81,7 +81,7 @@ describe("본문 광고 (F4: 슬롯당 한 네트워크만)", () => {
     vi.resetModules();
     const { InArticleAd } = await import("@/components/ad-unit");
 
-    render(<InArticleAd slot="rounds-list" />);
+    render(<InArticleAd slot="frequency" />);
 
     expect(document.querySelector("ins.adsbygoogle")).not.toBeInTheDocument();
   });
@@ -91,12 +91,12 @@ describe("본문 광고 (F4: 슬롯당 한 네트워크만)", () => {
       ...originalEnv,
       NEXT_PUBLIC_AD_NETWORK: "adsense",
       NEXT_PUBLIC_ADSENSE_CLIENT_ID: "ca-pub-1234567890123456",
-      NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST_MOBILE: "2222222222",
+      NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY_MOBILE: "2222222222",
     };
     vi.resetModules();
     const { InArticleAd } = await import("@/components/ad-unit");
 
-    render(<InArticleAd slot="rounds-list" />);
+    render(<InArticleAd slot="frequency" />);
 
     expect(document.querySelector("ins.kakao_ad_area")).not.toBeInTheDocument();
     expect(document.querySelector("ins.adsbygoogle")).toBeInTheDocument();

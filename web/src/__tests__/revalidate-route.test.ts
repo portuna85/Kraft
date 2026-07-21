@@ -40,17 +40,17 @@ describe("revalidate 웹훅", () => {
 
   it("허용된 태그는 revalidateTag를 호출한다", async () => {
     const { POST } = await import("@/app/api/revalidate/route");
-    const response = await POST(request({ tags: ["rounds:latest", "rounds:detail:1200"] }));
+    const response = await POST(request({ tags: ["rounds:latest", "stats:all"] }));
 
     expect(response.status).toBe(200);
     expect(revalidateTag).toHaveBeenCalledWith("rounds:latest", "max");
-    expect(revalidateTag).toHaveBeenCalledWith("rounds:detail:1200", "max");
+    expect(revalidateTag).toHaveBeenCalledWith("stats:all", "max");
     expect(revalidateTag).toHaveBeenCalledTimes(2);
   });
 
   it("허용되지 않은 태그는 무시한다", async () => {
     const { POST } = await import("@/app/api/revalidate/route");
-    const response = await POST(request({ tags: ["not-a-real-tag", "rounds:detail:abc"] }));
+    const response = await POST(request({ tags: ["not-a-real-tag", "rounds:detail:1200"] }));
     const body = await response.json();
 
     expect(revalidateTag).not.toHaveBeenCalled();
@@ -59,11 +59,11 @@ describe("revalidate 웹훅", () => {
 
   it("path와 tag가 함께 오면 둘 다 처리한다(전환기 병행)", async () => {
     const { POST } = await import("@/app/api/revalidate/route");
-    const response = await POST(request({ paths: ["/rounds"], tags: ["stats:all"] }));
+    const response = await POST(request({ paths: ["/frequency"], tags: ["stats:all"] }));
     const body = await response.json();
 
-    expect(revalidatePath).toHaveBeenCalledWith("/rounds");
+    expect(revalidatePath).toHaveBeenCalledWith("/frequency");
     expect(revalidateTag).toHaveBeenCalledWith("stats:all", "max");
-    expect(body).toMatchObject({ revalidated: true, paths: ["/rounds"], tags: ["stats:all"] });
+    expect(body).toMatchObject({ revalidated: true, paths: ["/frequency"], tags: ["stats:all"] });
   });
 });

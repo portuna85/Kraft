@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,7 +34,8 @@ class GlobalErrorHandlingIntegrationTest extends BaseApiIntegrationTest {
     @Test
     @DisplayName("경로 변수 타입 불일치 시 400 오류를 반환한다")
     void pathVariableTypeMismatch_returns400() throws Exception {
-        mockMvc.perform(get("/api/v1/rounds/abc"))
+        mockMvc.perform(post("/ops/collect/abc")
+                        .header("X-Ops-Token", "test-ops-token"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code", is("INVALID_PARAMETER_TYPE")));
     }

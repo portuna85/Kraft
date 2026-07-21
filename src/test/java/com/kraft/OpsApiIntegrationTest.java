@@ -232,10 +232,8 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(jsonPath("$.numbers[0]", is(6)))
                 .andExpect(jsonPath("$.bonusNumber", is(10)));
 
-        mockMvc.perform(get("/api/v1/rounds/1201"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.round", is(1201)))
-                .andExpect(jsonPath("$.bonusNumber", is(10)));
+        var saved = winningNumberRepository.findByRound(1201).orElseThrow();
+        assertThat(saved.getBonusNumber()).isEqualTo(10);
     }
 
     @Test

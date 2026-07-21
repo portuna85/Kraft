@@ -3,8 +3,8 @@ package com.kraft;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,11 +24,9 @@ class CollectionApiIntegrationTest extends BaseApiIntegrationTest {
         org.assertj.core.api.Assertions.assertThat(winningNumberOperationLogRepository.findAll())
                 .hasSize(1);
 
-        mockMvc.perform(get("/api/v1/rounds/1201"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.round", is(1201)))
-                .andExpect(jsonPath("$.numbers[0]", is(5)))
-                .andExpect(jsonPath("$.bonusNumber", is(9)));
+        var saved = winningNumberRepository.findByRound(1201).orElseThrow();
+        assertThat(saved.getN1()).isEqualTo(5);
+        assertThat(saved.getBonusNumber()).isEqualTo(9);
     }
 
     @Test
@@ -40,10 +38,8 @@ class CollectionApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(jsonPath("$.round", is(1305)))
                 .andExpect(jsonPath("$.bonusNumber", is(9)));
 
-        mockMvc.perform(get("/api/v1/rounds/1305"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.round", is(1305)))
-                .andExpect(jsonPath("$.numbers[5]", is(44)));
+        var saved = winningNumberRepository.findByRound(1305).orElseThrow();
+        assertThat(saved.getN6()).isEqualTo(44);
     }
 
     @Test

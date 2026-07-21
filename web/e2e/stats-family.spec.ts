@@ -22,9 +22,3 @@ test("패턴 통계 페이지는 백엔드 응답이 없으면 폴백 문구를 
 
   await expect(page.getByRole("heading", { name: "통계를 준비 중입니다" })).toBeVisible();
 });
-
-test("회차 목록 페이지는 최신 회차·목록 조회가 모두 실패하면 에러 경계를 보여준다", async ({ page }) => {
-  await page.goto("/rounds");
-
-  await expect(page.getByText("페이지를 불러오지 못했습니다")).toBeVisible();
-});
