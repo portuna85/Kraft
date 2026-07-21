@@ -67,8 +67,8 @@ public class StatisticsSummaryRebuilder {
         this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
-    @CacheEvict(value = {CacheConfig.STATS_FREQUENCY, CacheConfig.STATS_PATTERN, CacheConfig.STATS_COMPANION},
-                allEntries = true)
+    @CacheEvict(value = {CacheConfig.STATS_FREQUENCY, CacheConfig.STATS_FREQUENCY_BY_LIMIT,
+                CacheConfig.STATS_PATTERN, CacheConfig.STATS_COMPANION}, allEntries = true)
     public void rebuildAllSummaries() {
         LockingTaskExecutor.TaskResult<Boolean> result;
         try {

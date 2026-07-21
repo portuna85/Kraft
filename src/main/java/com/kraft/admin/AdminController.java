@@ -6,6 +6,8 @@ import com.kraft.winningnumber.WinningNumberCollectionService;
 import com.kraft.winningnumber.WinningNumberListResponse;
 import com.kraft.winningnumber.WinningNumberQueryService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +23,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     private final WinningNumberQueryService queryService;
     private final WinningNumberCollectionService collectionService;
@@ -84,6 +88,7 @@ public class AdminController {
                 redirect.addFlashAttribute("success", resp.round() + "회차 기준 최신 상태 확인 완료");
             }
         } catch (Exception e) {
+            log.warn("관리자 수집 실패: round={}", round, e);
             redirect.addFlashAttribute("error", "수집 실패: " + e.getMessage());
         }
         return "redirect:/admin/rounds";

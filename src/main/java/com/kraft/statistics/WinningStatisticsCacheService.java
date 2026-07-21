@@ -72,7 +72,7 @@ public class WinningStatisticsCacheService {
         return toFrequencyResponse(latestRound(), frequencies);
     }
 
-    @Cacheable(value = CacheConfig.STATS_FREQUENCY, key = "#limit")
+    @Cacheable(value = CacheConfig.STATS_FREQUENCY_BY_LIMIT, key = "#limit")
     public FrequencyStatsResponse getFrequencyStatsByLimit(int limit) {
         List<WinningBallsOnly> rounds = winningNumberRepository
                 .findBallsByOrderByRoundDesc(PageRequest.of(0, limit));

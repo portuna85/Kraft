@@ -30,8 +30,9 @@ public class StatisticsReconciliationScheduler {
         this.summaryRebuilder = summaryRebuilder;
     }
 
-    // 자동 수집(일 07:00) 직후 여유를 두어 그 수집이 먼저 끝나도록 한다.
-    @Scheduled(cron = "0 30 7 * * SUN", zone = "Asia/Seoul")
+    // 자동 수집(일 07:00) 및 WinningNumberFreshnessScheduler(07:30) 다음 순서로 5분 스태거링해
+    // 세 스케줄러가 겹치지 않게 한다.
+    @Scheduled(cron = "0 35 7 * * SUN", zone = "Asia/Seoul")
     @SchedulerLock(name = "statistics-reconcile", lockAtMostFor = "PT15M", lockAtLeastFor = "PT1M")
     public void reconcileIfBehind() {
         int projected = frequencySummaryRepository.findMaxLastRound();

@@ -2,13 +2,8 @@ package com.kraft.statistics;
 
 import com.kraft.common.error.ApiException;
 import jakarta.validation.Valid;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,20 +24,15 @@ public class StatisticsApiController {
     }
 
     @GetMapping("/frequency")
-    public ResponseEntity<FrequencyStatsResponse> frequency(@RequestParam(required = false) Integer limit) {
-        FrequencyStatsResponse body;
+    public FrequencyStatsResponse frequency(@RequestParam(required = false) Integer limit) {
         if (limit == null) {
-            body = statisticsService.getFrequencyStats();
-        } else {
-            if (!ALLOWED_LIMITS.contains(limit)) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_LIMIT",
-                        "limit 허용값: 100, 200, 500");
-            }
-            body = statisticsService.getFrequencyStatsByLimit(limit);
+            return statisticsService.getFrequencyStats();
         }
-        return ResponseEntity.ok()
-                .cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS).cachePublic())
-                .body(body);
+        if (!ALLOWED_LIMITS.contains(limit)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_LIMIT",
+                    "limit 허용값: 100, 200, 500");
+        }
+        return statisticsService.getFrequencyStatsByLimit(limit);
     }
 
     @GetMapping("/patterns")
@@ -64,22 +54,6 @@ public class StatisticsApiController {
 
     @PostMapping("/analysis")
     public AnalysisResponse analysis(@Valid @RequestBody AnalysisRequest request) {
-        List<Integer> numbers = request.numbers();
-        validateNumbers(numbers);
-        return statisticsService.analyze(numbers);
-    }
-
-    private void validateNumbers(List<Integer> numbers) {
-        Set<Integer> seen = new HashSet<>();
-        for (Integer n : numbers) {
-            if (n == null || n < 1 || n > 45) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_NUMBER",
-                        "로또 번호는 1~45 사이여야 합니다: " + n);
-            }
-            if (!seen.add(n)) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "DUPLICATE_NUMBER",
-                        "중복 번호가 있습니다: " + n);
-            }
-        }
+        return statisticsService.analyze(request.numbers());
     }
 }
