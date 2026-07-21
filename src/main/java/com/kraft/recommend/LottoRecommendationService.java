@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.IntUnaryOperator;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,15 @@ public class LottoRecommendationService {
     // 다뤄 회차당 Set 객체 생성·해시 비용을 없앤다. historicalCombinations는 수천 개까지도
     // 늘 수 있어(1,200회 이상 누적) 효과가 누적된다.
     private volatile Set<Long> historicalCombinations = Set.of();
+
+    // 부분 Fisher-Yates 셔플의 난수 소스. 기본은 ThreadLocalRandom이지만, 경계 시나리오
+    // (충돌 상한 도달 등)를 확률에 기대지 않고 결정론적으로 재현하려면 테스트에서
+    // setRandomSource()로 고정된 시퀀스를 주입한다(패키지 프라이빗 — 같은 패키지 테스트 전용).
+    private IntUnaryOperator randomSource = ThreadLocalRandom.current()::nextInt;
+
+    void setRandomSource(IntUnaryOperator randomSource) {
+        this.randomSource = randomSource;
+    }
 
     public LottoRecommendationService(LottoNumberCodec lottoNumberCodec,
                                       WinningNumberRepository winningNumberRepository,
@@ -84,6 +94,14 @@ public class LottoRecommendationService {
         return mask;
     }
 
+    private static long excludedMaskOf(Set<Integer> excluded) {
+        long mask = 0L;
+        for (int n : excluded) {
+            mask |= 1L << (n - 1);
+        }
+        return mask;
+    }
+
     public RecommendNumbersResponse recommend(RecommendNumbersRequest request) {
         int count = request == null || request.count() == null ? 1 : request.count();
         boolean maximizePrize = request != null && Boolean.TRUE.equals(request.maximizePrize());
@@ -98,9 +116,15 @@ public class LottoRecommendationService {
 
         long available = 45L - excluded.size();
         long possible = combinations(available, 6);
-        if (count > possible) {
+        long excludedMask = excludedMaskOf(excluded);
+        long compatibleHistoricalCount = historicalCombinations.stream()
+                .filter(mask -> (mask & excludedMask) == 0L)
+                .count();
+        long allowedPossible = possible - compatibleHistoricalCount;
+        if (count > allowedPossible) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "INSUFFICIENT_UNIQUE_COMBINATIONS",
-                    "요청한 조합 수(" + count + ")가 가능한 고유 조합 수(" + possible + ")를 초과합니다.");
+                    "요청한 조합 수(" + count + ")가 역대 1등 조합을 제외하고 가능한 고유 조합 수("
+                            + allowedPossible + ")를 초과합니다.");
         }
 
         List<Integer> candidates = buildCandidates(excluded);
@@ -110,7 +134,7 @@ public class LottoRecommendationService {
         int maxAttempts = count * MAX_ATTEMPTS;
         while (recommendations.size() < count && attempts++ < maxAttempts) {
             List<Integer> candidate = maximizePrize ? generateBest(candidates) : generateOne(candidates);
-            if (seen.add(bitmaskOf(candidate))) {
+            if (candidate != null && seen.add(bitmaskOf(candidate))) {
                 recommendations.add(candidate);
             }
         }
@@ -127,6 +151,8 @@ public class LottoRecommendationService {
     /**
      * 후보 풀에서 비인기도 점수가 가장 높은 조합을 반환한다.
      * 공동 당첨자를 최소화해 개인 수령액을 최대화하는 목적.
+     * generateOne이 충돌 상한 도달로 null을 반환하면(과거 1등과의 충돌을 해소하지 못함)
+     * 그 시도는 후보 풀에서 제외한다 — 점수 비교 대상에 과거 1등 조합이 섞이면 안 된다.
      */
     private List<Integer> generateBest(List<Integer> candidates) {
         List<Integer> best = null;
@@ -134,6 +160,9 @@ public class LottoRecommendationService {
 
         for (int i = 0; i < PRIZE_CANDIDATE_POOL; i++) {
             List<Integer> candidate = generateOne(candidates);
+            if (candidate == null) {
+                continue;
+            }
             int score = combinationScorer.score(candidate);
             if (score > bestScore) {
                 bestScore = score;
@@ -163,13 +192,16 @@ public class LottoRecommendationService {
 
     // 부분 Fisher-Yates(k=6): 전체 ~45개 대신 앞 6개 위치만 셔플해 O(n) → O(k) 로 단축.
     // candidates 배열을 호출 간 재사용하므로 요청당 한 번만 빌드한다.
+    // MAX_ATTEMPTS 안에 과거 1등과 겹치지 않는 조합을 못 찾으면, 마지막 셔플 결과를
+    // 그대로 반환하지 않고 null을 돌려준다 — 과거 1등 조합이 추천으로 새어나가지 않도록
+    // 호출자(recommend())가 이 시도를 버리고 재시도하거나 최종적으로 명시적 오류를 낸다.
     private List<Integer> generateOne(List<Integer> candidates) {
         int n = candidates.size();
         Set<Long> snapshot = historicalCombinations;
 
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             for (int i = 0; i < 6; i++) {
-                int j = i + ThreadLocalRandom.current().nextInt(n - i);
+                int j = i + randomSource.applyAsInt(n - i);
                 int tmp = candidates.get(i);
                 candidates.set(i, candidates.get(j));
                 candidates.set(j, tmp);
@@ -179,6 +211,6 @@ public class LottoRecommendationService {
                 return result;
             }
         }
-        return lottoNumberCodec.normalize(candidates.subList(0, 6));
+        return null;
     }
 }

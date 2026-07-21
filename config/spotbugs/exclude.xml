@@ -25,4 +25,12 @@
     <Class name="com.kraft.common.web.RequestIdFilter"/>
     <Bug pattern="HRS_REQUEST_PARAMETER_TO_HTTP_HEADER"/>
   </Match>
+
+  <!-- @Async requires a non-final class for Spring's CGLIB proxy, so the constructor-throw
+       fix (making the class final) isn't available here; ThreadLocalRandom.current() in the
+       randomSource field initializer can't actually throw in practice. -->
+  <Match>
+    <Class name="com.kraft.recommend.LottoRecommendationService"/>
+    <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+  </Match>
 </FindBugsFilter>

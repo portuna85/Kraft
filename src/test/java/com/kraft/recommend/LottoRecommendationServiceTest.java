@@ -10,6 +10,8 @@ import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -261,6 +263,96 @@ class LottoRecommendationServiceTest {
             assertThat(service.isHistoricalFirstPrizeCombination(List.of(1, 2, 3, 4, 5, 6))).isTrue();
             assertThat(service.isHistoricalFirstPrizeCombination(List.of(7, 8, 9, 10, 11, 12))).isFalse();
             assertThat(service.isHistoricalFirstPrizeCombination(List.of(2, 3, 4, 5, 6, 7))).isFalse();
+        }
+    }
+
+    // ── R1: 과거 1등 배제를 시도 기반이 아닌 불변 조건으로 만든다 ──────────────────
+    // 무작위 시도 횟수에 기대지 않고, 산술적 경계 계산과 제어된 난수 주입으로
+    // "충돌 상한 도달 시에도 과거 1등 조합이 새어나가지 않는다"를 결정론적으로 증명한다.
+
+    @Nested
+    @DisplayName("R1: 충돌 상한 도달을 결정론적으로 검증")
+    class InvariantEnforcement {
+
+        @Test
+        @DisplayName("정확히 6개 남았고 그 조합이 과거 1등이면 즉시 조합 부족 오류가 발생한다")
+        void recommend_onlyRemainingComboIsHistorical_rejectsImmediately() {
+            // 39개 제외 → 후보 6개(1~6) → C(6,6)=1가지뿐이며 그 조합이 과거 1등
+            List<Integer> excluded = IntStream.rangeClosed(7, 45).boxed().collect(Collectors.toList());
+            given(winningNumberRepository.findAllBalls())
+                    .willReturn(List.of(ballsOnly(1, 1, 2, 3, 4, 5, 6)));
+            service.loadHistoricalCombinations();
+
+            assertThatThrownBy(() ->
+                    service.recommend(new RecommendNumbersRequest(1, excluded, false))
+            )
+                    .isInstanceOf(ApiException.class)
+                    .satisfies(ex -> {
+                        ApiException apiEx = (ApiException) ex;
+                        assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                        assertThat(apiEx.getCode()).isEqualTo("INSUFFICIENT_UNIQUE_COMBINATIONS");
+                    });
+        }
+
+        @Test
+        @DisplayName("난수 소스가 항상 같은 과거 1등 조합만 만들어내면 그 조합 대신 명시적 오류로 끝난다")
+        void recommend_randomSourceAlwaysHitsHistorical_throwsInsteadOfLeakingIt() {
+            // 38개 제외 → 후보 7개(1~7). randomSource가 항상 0을 반환하면(스왑 없음)
+            // 부분 Fisher-Yates는 매 시도 candidates의 앞 6개(1,2,3,4,5,6)만 반복 생성한다.
+            // 그 조합을 과거 1등으로 등록하면 — 후보 7개 중 다른 6가지 조합(allowedPossible=6)이
+            // 존재해 요청 단계 검사는 통과하지만, 이 난수 소스로는 절대 도달할 수 없다.
+            List<Integer> excluded = IntStream.rangeClosed(8, 45).boxed().collect(Collectors.toList());
+            given(winningNumberRepository.findAllBalls())
+                    .willReturn(List.of(ballsOnly(1, 1, 2, 3, 4, 5, 6)));
+            service.loadHistoricalCombinations();
+            service.setRandomSource(bound -> 0);
+
+            assertThatThrownBy(() ->
+                    service.recommend(new RecommendNumbersRequest(1, excluded, false))
+            )
+                    .isInstanceOf(ApiException.class)
+                    .satisfies(ex -> {
+                        ApiException apiEx = (ApiException) ex;
+                        assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                        assertThat(apiEx.getCode()).isEqualTo("INSUFFICIENT_UNIQUE_COMBINATIONS");
+                    });
+        }
+
+        @Test
+        @DisplayName("count=10에 제외 번호가 많고 과거 조합과 고충돌해도 항상 요청 개수만큼 유일하고 배제된 조합을 반환한다")
+        void recommend_highCollisionManyExclusions_stillSatisfiesInvariants() {
+            // 45 - 15(제외) = 30개 후보. 그중 5개를 과거 1등으로 등록해 충돌 밀도를 높인다.
+            List<Integer> excluded = IntStream.rangeClosed(1, 15).boxed().collect(Collectors.toList());
+            List<WinningBallsOnly> historical = List.of(
+                    ballsOnly(1, 16, 17, 18, 19, 20, 21),
+                    ballsOnly(2, 22, 23, 24, 25, 26, 27),
+                    ballsOnly(3, 28, 29, 30, 31, 32, 33),
+                    ballsOnly(4, 34, 35, 36, 37, 38, 39),
+                    ballsOnly(5, 40, 41, 42, 43, 44, 45)
+            );
+            given(winningNumberRepository.findAllBalls()).willReturn(historical);
+            service.loadHistoricalCombinations();
+
+            List<List<Integer>> combos = service.recommend(
+                    new RecommendNumbersRequest(10, excluded, false)).recommendations();
+
+            assertThat(combos).hasSize(10);
+            Set<Long> seenMasks = new HashSet<>();
+            List<List<Integer>> historicalCombos = List.of(
+                    List.of(16, 17, 18, 19, 20, 21),
+                    List.of(22, 23, 24, 25, 26, 27),
+                    List.of(28, 29, 30, 31, 32, 33),
+                    List.of(34, 35, 36, 37, 38, 39),
+                    List.of(40, 41, 42, 43, 44, 45)
+            );
+            for (List<Integer> combo : combos) {
+                assertThat(combo).hasSize(6).doesNotHaveDuplicates().isSorted();
+                assertThat(combo).doesNotContainAnyElementsOf(excluded);
+                assertThat(historicalCombos).doesNotContain(combo);
+                assertThat(seenMasks.add(combo.stream()
+                        .mapToLong(n -> 1L << (n - 1)).reduce(0L, (a, b) -> a | b)))
+                        .as("조합 간 중복 없음").isTrue();
+            }
         }
     }
 
