@@ -7,6 +7,9 @@ www.{$KRAFT_DOMAIN} {
 	header X-Content-Type-Options "nosniff"
 	header Referrer-Policy "strict-origin-when-cross-origin"
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
+	# 앱(web/backend)이 응답마다 자체 CSP를 설정하지만, Caddy가 직접 만드는 403(@blocked) 등에는
+	# 앱 헤더가 안 붙는다 — 그런 응답도 프레이밍 공격에서 방어되도록 최소 헤더를 여기서도 건다.
+	header X-Frame-Options "DENY"
 	encode zstd gzip
 
 	# route { } 로 감싸서 Caddy의 자동 specificity 정렬을 비활성화하고
@@ -72,7 +75,8 @@ www.{$KRAFT_DOMAIN} {
 	header X-Content-Type-Options "nosniff"
 	header Referrer-Policy "strict-origin-when-cross-origin"
 	header Permissions-Policy "geolocation=(), microphone=(), camera=()"
-	encode gzip
+	header X-Frame-Options "DENY"
+	encode zstd gzip
 
 	# 진단용 액세스 로그. remote_ip allowlist가 실제로 어떤 IP를 보는지 확인하기 위함
 	# (2026-06-23 인시던트: 자가 헬스체크/스모크 테스트가 막혀 원인 파악이 필요했음).
