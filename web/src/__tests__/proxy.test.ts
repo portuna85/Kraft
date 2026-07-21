@@ -22,7 +22,7 @@ describe("CSP nonce 미들웨어", () => {
 
   describe("buildCsp", () => {
     it("nonce를 script-src에 포함한 CSP 문자열을 생성한다", async () => {
-      process.env.NODE_ENV = "production";
+      process.env = { ...process.env, NODE_ENV: "production" };
       vi.resetModules();
       const { buildCsp } = await import("@/proxy");
 
@@ -33,7 +33,7 @@ describe("CSP nonce 미들웨어", () => {
     });
 
     it("프로덕션에서는 'unsafe-eval'을 포함하지 않는다", async () => {
-      process.env.NODE_ENV = "production";
+      process.env = { ...process.env, NODE_ENV: "production" };
       vi.resetModules();
       const { buildCsp } = await import("@/proxy");
 
@@ -41,7 +41,7 @@ describe("CSP nonce 미들웨어", () => {
     });
 
     it("개발 환경에서는 'unsafe-eval'을 포함한다", async () => {
-      process.env.NODE_ENV = "development";
+      process.env = { ...process.env, NODE_ENV: "development" };
       vi.resetModules();
       const { buildCsp } = await import("@/proxy");
 
