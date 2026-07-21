@@ -48,4 +48,39 @@ class RecommendApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code", is("VALIDATION_ERROR")));
     }
+
+    @Test
+    @DisplayName("응답에 strategy·algorithmVersion·historyThroughRound 메타데이터가 포함된다")
+    void recommendResponseIncludesAlgorithmMetadata() throws Exception {
+        mockMvc.perform(post("/api/v1/numbers/recommend")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"count":1,"reduceSharedWinnerRisk":false}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.strategy", is("random")))
+                .andExpect(jsonPath("$.algorithmVersion", is("uniform-random-v1")))
+                .andExpect(jsonPath("$.historyThroughRound", is(1200)));
+
+        mockMvc.perform(post("/api/v1/numbers/recommend")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"count":1,"reduceSharedWinnerRisk":true}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.strategy", is("reduce_shared_winner_risk")))
+                .andExpect(jsonPath("$.algorithmVersion", is("heuristic-v1")));
+    }
+
+    @Test
+    @DisplayName("구 필드명 maximizePrize를 보내도 reduceSharedWinnerRisk와 동일하게 동작한다(전환기 호환)")
+    void recommendAcceptsLegacyMaximizePrizeFieldName() throws Exception {
+        mockMvc.perform(post("/api/v1/numbers/recommend")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"count":1,"maximizePrize":true}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.strategy", is("reduce_shared_winner_risk")));
+    }
 }

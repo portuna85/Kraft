@@ -40,7 +40,7 @@ export default async function Image() {
         </div>
 
         <div style={{ display: "flex", fontSize: 48, fontWeight: 700, color: "#1d1a17", letterSpacing: -1, marginBottom: 10 }}>번호 추천</div>
-        <div style={{ display: "flex", fontSize: 22, color: "#5e564c", marginBottom: 40 }}>보안 난수로 생성하는 나만의 로또 조합</div>
+        <div style={{ display: "flex", fontSize: 22, color: "#5e564c", marginBottom: 40 }}>무작위로 생성하는 나만의 로또 조합</div>
 
         <div style={{ display: "flex", gap: 16 }}>
           {BALLS.map((ball, i) => (

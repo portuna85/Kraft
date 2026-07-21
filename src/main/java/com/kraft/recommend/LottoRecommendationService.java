@@ -7,6 +7,7 @@ import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumbersCollectedEvent;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
 import java.time.Clock;
 import java.time.Instant;
@@ -27,11 +28,16 @@ public class LottoRecommendationService {
 
     private static final int MAX_ATTEMPTS = 100;
     private static final int PRIZE_CANDIDATE_POOL = 50;
+    static final String STRATEGY_REDUCE_SHARED_WINNER_RISK = "reduce_shared_winner_risk";
+    static final String STRATEGY_RANDOM = "random";
+    private static final String RANDOM_ALGORITHM_VERSION = "uniform-random-v1";
 
     private final LottoNumberCodec lottoNumberCodec;
     private final WinningNumberRepository winningNumberRepository;
     private final CombinationScorer combinationScorer;
     private final Clock clock;
+    private final MeterRegistry meterRegistry;
+    private final Timer recommendTimer;
 
     // 조합 비트마스크(ball n → bit n-1)와 이력 완전성(회차 수·최신 반영 회차·최초 누락 회차)을
     // 한 번에 갱신되는 원자적 스냅샷으로 묶는다. 별개 필드로 뒀다면 refresh 도중 masks만
@@ -75,6 +81,10 @@ public class LottoRecommendationService {
         this.winningNumberRepository = winningNumberRepository;
         this.combinationScorer = combinationScorer;
         this.clock = clock;
+        this.meterRegistry = meterRegistry;
+        this.recommendTimer = Timer.builder("kraft_lotto_recommend_duration_seconds")
+                .description("추천 생성 1회 처리 시간(검증·재추첨 포함)")
+                .register(meterRegistry);
 
         Gauge.builder("kraft_lotto_history_ready", this, s -> s.historySnapshot.ready() ? 1d : 0d)
                 .description("추천 이력이 1회부터 최신 회차까지 빈틈없이 로드되어 배제 보장이 유효한지(1=준비됨)")
@@ -168,21 +178,32 @@ public class LottoRecommendationService {
     }
 
     public RecommendNumbersResponse recommend(RecommendNumbersRequest request) {
+        Timer.Sample sample = Timer.start(meterRegistry);
+        try {
+            return doRecommend(request);
+        } finally {
+            sample.stop(recommendTimer);
+        }
+    }
+
+    private RecommendNumbersResponse doRecommend(RecommendNumbersRequest request) {
         HistorySnapshot snapshot = historySnapshot;
         if (!snapshot.ready()) {
-            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "RECOMMENDATION_HISTORY_NOT_READY",
+            throw fail(HttpStatus.SERVICE_UNAVAILABLE, "RECOMMENDATION_HISTORY_NOT_READY",
                     "역대 1등 배제 이력이 아직 준비되지 않았습니다(회차 수 %d, 최초 누락 회차 %s)."
                             .formatted(snapshot.roundCount(), snapshot.firstMissingRound()));
         }
 
         int count = request == null || request.count() == null ? 1 : request.count();
-        boolean maximizePrize = request != null && Boolean.TRUE.equals(request.maximizePrize());
+        boolean reduceSharedWinnerRisk = request != null && Boolean.TRUE.equals(request.reduceSharedWinnerRisk());
+        String strategy = reduceSharedWinnerRisk ? STRATEGY_REDUCE_SHARED_WINNER_RISK : STRATEGY_RANDOM;
+        meterRegistry.counter("kraft_lotto_recommend_requests_total", "strategy", strategy).increment();
         Set<Integer> excluded = request == null || request.excludedNumbers() == null
                 ? Set.of()
                 : new HashSet<>(lottoNumberCodec.normalizeSubset(request.excludedNumbers()));
 
         if (45 - excluded.size() < 6) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "TOO_MANY_EXCLUSIONS",
+            throw fail(HttpStatus.BAD_REQUEST, "TOO_MANY_EXCLUSIONS",
                     "제외 번호를 적용한 뒤에도 최소 6개 번호가 남아야 합니다.");
         }
 
@@ -194,7 +215,7 @@ public class LottoRecommendationService {
                 .count();
         long allowedPossible = possible - compatibleHistoricalCount;
         if (count > allowedPossible) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "INSUFFICIENT_UNIQUE_COMBINATIONS",
+            throw fail(HttpStatus.BAD_REQUEST, "INSUFFICIENT_UNIQUE_COMBINATIONS",
                     "요청한 조합 수(" + count + ")가 역대 1등 조합을 제외하고 가능한 고유 조합 수("
                             + allowedPossible + ")를 초과합니다.");
         }
@@ -206,7 +227,7 @@ public class LottoRecommendationService {
         int maxAttempts = count * MAX_ATTEMPTS;
         Set<Long> historicalMasks = snapshot.masks();
         while (recommendations.size() < count && attempts++ < maxAttempts) {
-            List<Integer> candidate = maximizePrize
+            List<Integer> candidate = reduceSharedWinnerRisk
                     ? generateBest(candidates, historicalMasks)
                     : generateOne(candidates, historicalMasks);
             if (candidate != null && seen.add(bitmaskOf(candidate))) {
@@ -216,11 +237,18 @@ public class LottoRecommendationService {
         // 이론상 가능한 조합 수(possible) 안에서도, 역대 당첨 조합 회피와 중복 회피가 겹쳐
         // maxAttempts 안에 count만큼 못 채울 수 있다 — 부족분을 조용히 반환하지 않고 명시한다.
         if (recommendations.size() < count) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "INSUFFICIENT_UNIQUE_COMBINATIONS",
+            throw fail(HttpStatus.BAD_REQUEST, "INSUFFICIENT_UNIQUE_COMBINATIONS",
                     "생성 가능한 고유 조합이 부족합니다(생성 %d / 요청 %d)."
                             .formatted(recommendations.size(), count));
         }
-        return new RecommendNumbersResponse(recommendations);
+
+        String algorithmVersion = reduceSharedWinnerRisk ? CombinationScorer.VERSION : RANDOM_ALGORITHM_VERSION;
+        return new RecommendNumbersResponse(recommendations, strategy, algorithmVersion, snapshot.historyThroughRound());
+    }
+
+    private ApiException fail(HttpStatus status, String code, String message) {
+        meterRegistry.counter("kraft_lotto_recommend_failures_total", "code", code).increment();
+        return new ApiException(status, code, message);
     }
 
     /**
@@ -284,6 +312,7 @@ public class LottoRecommendationService {
             if (!historicalMasks.contains(bitmaskOf(result))) {
                 return result;
             }
+            meterRegistry.counter("kraft_lotto_recommend_historical_collisions_total").increment();
         }
         return null;
     }

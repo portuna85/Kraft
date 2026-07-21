@@ -64,7 +64,7 @@ export function RecommendClient() {
         body: JSON.stringify({
           count: reqCount,
           excludedNumbers: reqExcluded,
-          maximizePrize: reqMaximizePrize,
+          reduceSharedWinnerRisk: reqMaximizePrize,
         }),
       });
       if (seq !== fetchSeqRef.current) return;
@@ -94,7 +94,7 @@ export function RecommendClient() {
           body: JSON.stringify({
             count: DEFAULT_COUNT,
             excludedNumbers: [],
-            maximizePrize: DEFAULT_MAXIMIZE_PRIZE,
+            reduceSharedWinnerRisk: DEFAULT_MAXIMIZE_PRIZE,
           }),
         });
         if (seq !== fetchSeqRef.current) return;

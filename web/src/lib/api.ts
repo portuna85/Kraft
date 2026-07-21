@@ -33,6 +33,9 @@ export type WinningNumber = {
 
 export type RecommendationResponse = {
   recommendations: number[][];
+  strategy: "reduce_shared_winner_risk" | "random";
+  algorithmVersion: string;
+  historyThroughRound: number;
 };
 
 export type RoundFreshness = {

@@ -51,7 +51,7 @@ describe("번호 추천 화면", () => {
         body: JSON.stringify({
           count: 5,
           excludedNumbers: [],
-          maximizePrize: true,
+          reduceSharedWinnerRisk: true,
         }),
       }),
     );
@@ -197,7 +197,7 @@ describe("번호 추천 화면", () => {
         body: JSON.stringify({
           count: 7,
           excludedNumbers: [],
-          maximizePrize: false,
+          reduceSharedWinnerRisk: false,
         }),
       }),
     );
