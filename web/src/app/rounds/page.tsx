@@ -6,7 +6,7 @@ import { PrizeTable } from "@/components/prize-table";
 import { RoundSearchForm } from "@/components/round-search-form";
 import { DataFreshnessNote } from "@/components/data-freshness-note";
 import { JsonLdLottoRound } from "@/components/json-ld";
-import { getLatestWinningNumber, getPublicBaseUrl, getRounds, type WinningNumber } from "@/lib/api";
+import { getLatestWinningNumber, getPublicBaseUrl, getRoundFreshness, getRounds, type WinningNumber } from "@/lib/api";
 import { AdSenseSidebar, AdSenseUnit, PageAd } from "@/components/ad-unit";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
@@ -66,7 +66,7 @@ export default async function RoundsPage({ searchParams }: Props) {
   const userPage = Math.max(1, Number.parseInt(pageParam ?? "1", 10) || 1);
   const apiPage = userPage - 1;
 
-  const [latest, rounds] = await Promise.all([
+  const [latest, rounds, freshness] = await Promise.all([
     getLatestWinningNumber().catch((error) => {
       logger.warn({ err: error }, "최신 당첨번호 조회 실패");
       return null;
@@ -75,6 +75,7 @@ export default async function RoundsPage({ searchParams }: Props) {
       logger.warn({ err: error }, "회차 목록 조회 실패");
       return null;
     }),
+    getRoundFreshness().catch(() => null),
   ]);
 
   // 두 핵심 데이터가 모두 실패한 경우(전면 장애)만 페이지 실패로 처리한다.
@@ -110,7 +111,7 @@ export default async function RoundsPage({ searchParams }: Props) {
           </h1>
           <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
           <PrizeTable firstPrizeAmount={latest.firstPrizeAmount} secondPrize={latest.secondPrize} />
-          <DataFreshnessNote />
+          <DataFreshnessNote freshness={freshness} />
         </section>
       ) : (
         <section className="panel result-panel hero-panel">

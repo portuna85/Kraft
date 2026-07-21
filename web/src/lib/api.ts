@@ -10,7 +10,18 @@ import {
 } from "@/lib/revalidate";
 
 const backendBaseUrl = process.env.KRAFT_BACKEND_INTERNAL_URL ?? "http://backend:8080";
-const publicBaseUrl = process.env.KRAFT_PUBLIC_BASE_URL ?? "http://localhost";
+const publicBaseUrl = resolvePublicBaseUrl();
+
+function resolvePublicBaseUrl(): string {
+  const value = process.env.KRAFT_PUBLIC_BASE_URL;
+  if (value) return value;
+  // 프로덕션에서 미설정이면 metadataBase·OG·JSON-LD·sitemap·robots 전부가 조용히
+  // http://localhost로 새어나가므로, 조용한 폴백 대신 기동 시점에 크게 실패시킨다.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("KRAFT_PUBLIC_BASE_URL 환경변수가 설정되지 않았습니다.");
+  }
+  return "http://localhost";
+}
 
 export type WinningNumber = {
   round: number;

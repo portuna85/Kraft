@@ -1,8 +1,7 @@
-import { getRoundFreshness } from "@/lib/api";
+import type { RoundFreshness } from "@/lib/api";
 import { formatDrawDate } from "@/lib/format";
 
-export async function DataFreshnessNote() {
-  const freshness = await getRoundFreshness().catch(() => null);
+export function DataFreshnessNote({ freshness }: { freshness: RoundFreshness | null }) {
   if (!freshness) return null;
 
   return (

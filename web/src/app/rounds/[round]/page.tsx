@@ -5,9 +5,10 @@ import { notFound } from "next/navigation";
 import { LottoBalls } from "@/components/lotto-balls";
 import { PrizeTable } from "@/components/prize-table";
 import { JsonLdLottoRound } from "@/components/json-ld";
-import { BackendError, getLatestWinningNumber, getPublicBaseUrl, getRound, type AnalysisResponse } from "@/lib/api";
+import { BackendError, getLatestWinningNumber, getPublicBaseUrl, getRound } from "@/lib/api";
 import { analyzeNumbers } from "@/lib/analyze";
 import { AdSenseSidebar, AdSenseUnit, PageAd } from "@/components/ad-unit";
+import { AnalysisResult } from "@/components/analysis-result";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
 
@@ -54,19 +55,21 @@ export default async function RoundDetailPage({ params }: Props) {
     notFound();
   }
 
-  let latestRound = 0;
+  const [latest, roundResult] = await Promise.all([
+    getLatestWinningNumber().catch(() => null),
+    getRound(roundNumber).then(
+      (value) => ({ ok: true as const, value }),
+      (error) => ({ ok: false as const, error }),
+    ),
+  ]);
 
-  try {
-    const latest = await getLatestWinningNumber();
-    latestRound = latest.round;
-  } catch {
-    // ignore latest round fallback
-  }
+  const latestRound = latest?.round ?? 0;
 
   let data;
-  try {
-    data = await getRound(roundNumber);
-  } catch (error) {
+  if (roundResult.ok) {
+    data = roundResult.value;
+  } else {
+    const error = roundResult.error;
     // 존재하지 않는 회차(백엔드 404)는 진짜 404로, 백엔드 장애(5xx)나 네트워크 오류는
     // error.tsx(5xx)로 구분한다 — 이전에는 두 경우 모두 notFound()로 뭉뚱그려져
     // 백엔드 장애가 "없는 페이지"로 위장됐다.
@@ -111,7 +114,7 @@ export default async function RoundDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <RoundAnalysisSection analysis={analysis} />
+      <AnalysisResult analysis={analysis} title="당첨 번호 분석" />
 
       <PageAd slot="rounds-detail" />
       <AdSenseUnit
@@ -150,52 +153,6 @@ export default async function RoundDetailPage({ params }: Props) {
       </nav>
     </section>
       <AdSenseSidebar slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_SIDEBAR ?? ""} />
-    </div>
-  );
-}
-
-function RoundAnalysisSection({ analysis }: { analysis: AnalysisResponse }) {
-  return (
-    <div className="analysis-result">
-      <h2 className="section-title">당첨 번호 분석</h2>
-
-      <div className="result-grid">
-        <div className="result-cell">
-          <span className="result-label">홀수 / 짝수</span>
-          <span className="result-value">{analysis.oddCount} / {analysis.evenCount}</span>
-        </div>
-        <div className="result-cell">
-          <span className="result-label">저번호 / 고번호</span>
-          <span className="result-value">{analysis.lowCount} / {analysis.highCount}</span>
-        </div>
-        <div className="result-cell">
-          <span className="result-label">합계</span>
-          <span className="result-value">{analysis.sumOfNumbers}</span>
-          <span className="result-sub">{analysis.sumBucket} 구간</span>
-        </div>
-        <div className="result-cell">
-          <span className="result-label">연속 번호</span>
-          <span className="result-value">{analysis.consecutivePairCount}쌍</span>
-        </div>
-      </div>
-
-      <div>
-        <p className="section-title analysis-section-title">구간 분포</p>
-        <ul className="range-dist-list">
-          {analysis.rangeDistribution.map((range) => (
-            <li key={range.range} className="range-dist-item">
-              <span className="range-label">{range.range}</span>
-              <div className="bar-track">
-                <div
-                  className="bar-fill"
-                  style={{ width: `${Math.round((range.count / 6) * 100)}%` }}
-                />
-              </div>
-              <span className="range-count">{range.count}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }

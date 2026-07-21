@@ -25,6 +25,31 @@ describe("백엔드 내부 주소 기본값", () => {
   });
 });
 
+describe("공개 base URL 검증", () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+    vi.resetModules();
+  });
+
+  it("프로덕션에서 KRAFT_PUBLIC_BASE_URL이 없으면 모듈 로드 시 예외를 던진다", async () => {
+    process.env = { ...originalEnv, NODE_ENV: "production" };
+    delete process.env.KRAFT_PUBLIC_BASE_URL;
+    vi.resetModules();
+
+    await expect(import("@/lib/api")).rejects.toThrow("KRAFT_PUBLIC_BASE_URL");
+  });
+
+  it("프로덕션이어도 KRAFT_PUBLIC_BASE_URL이 있으면 정상 로드된다", async () => {
+    process.env = { ...originalEnv, NODE_ENV: "production", KRAFT_PUBLIC_BASE_URL: "https://kraft-lotto.example" };
+    vi.resetModules();
+
+    const { getPublicBaseUrl } = await import("@/lib/api");
+    expect(getPublicBaseUrl()).toBe("https://kraft-lotto.example");
+  });
+});
+
 describe("자료형 계약", () => {
   it("당첨 번호 타입이 블루프린트의 모든 필드를 포함한다", async () => {
     // Compile-time check via TypeScript — this test ensures the type is importable

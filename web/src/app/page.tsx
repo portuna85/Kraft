@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LottoBalls } from "@/components/lotto-balls";
 import { PrizeTable } from "@/components/prize-table";
 import { DataFreshnessNote } from "@/components/data-freshness-note";
-import { getLatestWinningNumber, type WinningNumber } from "@/lib/api";
+import { getLatestWinningNumber, getRoundFreshness, type RoundFreshness, type WinningNumber } from "@/lib/api";
 import { formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
 
@@ -40,8 +40,12 @@ export default async function HomePage() {
   // 장애를 인지하지 못하고 Caddy가 그 상태를 60초간 캐시한다. 여기서는 로그만 남기고
   // 에러를 그대로 던져 error.tsx(5xx)가 처리하게 한다.
   let latest: WinningNumber;
+  let freshness: RoundFreshness | null;
   try {
-    latest = await getLatestWinningNumber();
+    [latest, freshness] = await Promise.all([
+      getLatestWinningNumber(),
+      getRoundFreshness().catch(() => null),
+    ]);
   } catch (error) {
     logger.error({ err: error }, "최신 당첨번호 조회 실패 — 핵심 데이터 실패로 페이지 오류 처리");
     throw error;
@@ -56,7 +60,7 @@ export default async function HomePage() {
         </h1>
         <LottoBalls numbers={latest.numbers} bonusNumber={latest.bonusNumber} />
         <PrizeTable firstPrizeAmount={latest.firstPrizeAmount} secondPrize={latest.secondPrize} />
-        <DataFreshnessNote />
+        <DataFreshnessNote freshness={freshness} />
       </section>
 
       <section className="grid grid-3 home-shortcuts">

@@ -11,13 +11,13 @@ const opsAllowedHost = process.env.KRAFT_OPS_ALLOWED_HOST;
 // ISR 회복 대안: Caddy에 script-src 'unsafe-inline' 정적 CSP로 교체하는 방식이 있으나
 // 보안 트레이드오프로 보류. 현재는 Caddy에서 max-age=60 브라우저 SWR을 적용해
 // 재방문 비용을 낮추는 것으로 대체.
-function generateNonce(): string {
+export function generateNonce(): string {
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);
   return Buffer.from(array).toString("base64");
 }
 
-function buildCsp(nonce: string): string {
+export function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV !== "production";
   return [
     `default-src 'self'`,

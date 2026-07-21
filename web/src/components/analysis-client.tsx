@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type { AnalysisResponse } from "@/lib/api";
 import { analyzeNumbers } from "@/lib/analyze";
+import { AnalysisResult } from "@/components/analysis-result";
 
 export function AnalysisClient() {
   const [input, setInput] = useState("");
@@ -55,49 +56,7 @@ export function AnalysisClient() {
         </p>
       ) : null}
 
-      {result ? (
-        <div className="analysis-result">
-          <h2 className="section-title">분석 결과</h2>
-
-          <div className="result-grid">
-            <div className="result-cell">
-              <span className="result-label">홀수 / 짝수</span>
-              <span className="result-value">{result.oddCount} / {result.evenCount}</span>
-            </div>
-            <div className="result-cell">
-              <span className="result-label">저번호 / 고번호</span>
-              <span className="result-value">{result.lowCount} / {result.highCount}</span>
-            </div>
-            <div className="result-cell">
-              <span className="result-label">합계</span>
-              <span className="result-value">{result.sumOfNumbers}</span>
-              <span className="result-sub">{result.sumBucket} 구간</span>
-            </div>
-            <div className="result-cell">
-              <span className="result-label">연속 번호</span>
-              <span className="result-value">{result.consecutivePairCount}쌍</span>
-            </div>
-          </div>
-
-          <div>
-            <p className="section-title analysis-section-title">구간 분포</p>
-            <ul className="range-dist-list">
-              {result.rangeDistribution.map((range) => (
-                <li key={range.range} className="range-dist-item">
-                  <span className="range-label">{range.range}</span>
-                  <div className="bar-track">
-                    <div
-                      className="bar-fill"
-                      style={{ width: `${Math.round((range.count / 6) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="range-count">{range.count}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ) : null}
+      {result ? <AnalysisResult analysis={result} title="분석 결과" /> : null}
     </div>
   );
 }

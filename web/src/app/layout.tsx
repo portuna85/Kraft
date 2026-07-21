@@ -9,6 +9,9 @@ import { getPublicBaseUrl } from "@/lib/api";
 import { THEME_INIT_SCRIPT } from "@/lib/csp-inline-scripts";
 import "./globals.css";
 
+// next/font/google이 노출하는 Noto Sans/Serif KR의 subsets는 cyrillic/latin/latin-ext/
+// vietnamese뿐이고 "korean"은 존재하지 않는 옵션이다 — "_KR" 폰트는 subset과 무관하게
+// 한글 글리프를 항상 포함해 서빙되므로 별도로 지정할 필요가 없다.
 const notoSansKR = Noto_Sans_KR({
   subsets: ["latin"],
   weight: ["400", "700", "800"],
