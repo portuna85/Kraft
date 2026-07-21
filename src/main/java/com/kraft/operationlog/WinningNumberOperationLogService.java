@@ -16,6 +16,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Service
 @Transactional(readOnly = true)
@@ -46,6 +48,19 @@ public class WinningNumberOperationLogService {
                 truncate(MDC.get(RequestIdFilter.MDC_KEY), 100),
                 OffsetDateTime.now(clock)
         ));
+    }
+
+    /**
+     * OpsService.upsertWinningNumber()의 outer 트랜잭션이 실제로 커밋된 뒤에만 발화한다(B1).
+     * 여기서는 이미 outer 트랜잭션이 끝난 시점이라 REQUIRES_NEW와 동일하게 새 트랜잭션에서
+     * 커밋되지만, "커밋 전 성공 로그"라는 원래 문제(outer 롤백 시에도 로그가 남는 문제)는
+     * 더 이상 발생하지 않는다.
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onManualUpsertCommitted(WinningNumberManualUpsertEvent event) {
+        logSuccess(WinningNumberOperationType.MANUAL_UPSERT, event.round(), event.caller(),
+                "운영 수동 회차 저장에 성공했습니다.");
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

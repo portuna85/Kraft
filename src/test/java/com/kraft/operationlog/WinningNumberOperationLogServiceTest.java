@@ -12,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DisplayName("당첨 번호 운영 로그 서비스 — 공개 인시던트 집계 테스트")
@@ -88,6 +90,21 @@ class WinningNumberOperationLogServiceTest {
         assertThat(result).hasSize(20);
         assertThat(result.get(0).round()).isEqualTo(1300);
         assertThat(result.get(19).round()).isEqualTo(1281);
+    }
+
+    @Test
+    @DisplayName("수동 보정 커밋 이벤트를 받으면 MANUAL_UPSERT 성공 로그를 남긴다(B1)")
+    void onManualUpsertCommitted_recordsManualUpsertSuccessLog() {
+        service.onManualUpsertCommitted(new WinningNumberManualUpsertEvent(1201, "ops-api ip=1.2.3.4 requestId=abc"));
+
+        org.mockito.ArgumentCaptor<WinningNumberOperationLog> captor =
+                org.mockito.ArgumentCaptor.forClass(WinningNumberOperationLog.class);
+        verify(repository, times(1)).save(captor.capture());
+        WinningNumberOperationLog saved = captor.getValue();
+        assertThat(saved.getOperationType()).isEqualTo(WinningNumberOperationType.MANUAL_UPSERT);
+        assertThat(saved.getExecutionStatus()).isEqualTo(WinningNumberOperationStatus.SUCCESS);
+        assertThat(saved.getRound()).isEqualTo(1201);
+        assertThat(saved.getSourceDetail()).isEqualTo("ops-api ip=1.2.3.4 requestId=abc");
     }
 
     private static WinningNumberOperationLog log(WinningNumberOperationType type,

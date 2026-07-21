@@ -1,6 +1,7 @@
 package com.kraft.ops;
 
 import com.kraft.common.error.ApiException;
+import com.kraft.operationlog.WinningNumberManualUpsertEvent;
 import com.kraft.operationlog.WinningNumberOperationLogFilter;
 import com.kraft.operationlog.WinningNumberOperationLogPageResponse;
 import com.kraft.operationlog.WinningNumberOperationLogService;
@@ -28,8 +29,13 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+// class-level @Transactional(readOnly = true)를 두지 않는다. 예전에는 클래스 레벨에 있었는데,
+// collectLatestWinningNumber()/collectWinningNumber()에 메서드 애너테이션을 생략하는 것만으로는
+// "트랜잭션 밖에서 실행"이 되지 않는다 — Spring은 메서드 애너테이션이 없으면 클래스 레벨을
+// 그대로 상속하므로, 외부 HTTP 수집이 읽기 전용 트랜잭션 안에서 실행돼 DB 커넥션을 붙들고,
+// 그 안에서 호출되는 WinningNumberCommandService의 쓰기(REQUIRED)가 읽기 전용 트랜잭션에
+// 참여해 dirty checking/flush가 스킵될 위험이 있었다(B1). 조회 메서드에만 개별로 붙인다.
 @Service
-@Transactional(readOnly = true)
 public class OpsService {
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
@@ -59,6 +65,7 @@ public class OpsService {
         this.drawScheduleCalculator = drawScheduleCalculator;
     }
 
+    @Transactional(readOnly = true)
     public OpsSummaryResponse getSummary() {
 
         ZonedDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(KST);
@@ -85,6 +92,7 @@ public class OpsService {
         return response;
     }
 
+    @Transactional(readOnly = true)
     public WinningNumberOperationLogPageResponse getRecentOperationLogs(int page,
                                                                         int size,
                                                                         String operationType,
@@ -126,12 +134,9 @@ public class OpsService {
                 // 트랜잭션에 직접 발행해 커밋 후에 리스너가 실행되게 한다.
                 eventPublisher.publishEvent(new WinningNumbersCollectedEvent(response.round(), true));
             }
-            winningNumberOperationLogService.logSuccess(
-                    WinningNumberOperationType.MANUAL_UPSERT,
-                    response.round(),
-                    caller,
-                    "운영 수동 회차 저장에 성공했습니다."
-            );
+            // 성공 감사 로그도 이 트랜잭션이 실제로 커밋된 뒤에만 남겨야 한다(B1) — REQUIRES_NEW로
+            // 즉시 커밋하면 이 메서드의 트랜잭션이 나중에 실패해도 "성공" 로그가 이미 영구히 남는다.
+            eventPublisher.publishEvent(new WinningNumberManualUpsertEvent(response.round(), caller));
             log.info("운영 수동 회차 저장 완료: round={} changed={} caller={}", response.round(), result.changed(), caller);
             return response;
         } catch (RuntimeException exception) {
