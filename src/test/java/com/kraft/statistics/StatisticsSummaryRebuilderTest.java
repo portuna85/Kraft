@@ -91,6 +91,26 @@ class StatisticsSummaryRebuilderTest {
     }
 
     @Test
+    @DisplayName("원본 회차 데이터가 없으면 기존 summary를 그대로 두지 않고 비운다(T2)")
+    void rebuildAllSummaries_emptySource_clearsStaleExistingSummaries() {
+        // 회차가 있는 상태에서 한 번 만들어 둔 뒤
+        winningNumberRepository.save(round(1, 1, 2, 3, 4, 5, 6, 7));
+        summaryRebuilder.rebuildAllSummaries();
+        assertThat(frequencySummaryRepository.findAll()).hasSize(45);
+        assertThat(patternStatsSummaryRepository.findAll()).isNotEmpty();
+        assertThat(companionPairSummaryRepository.findAll()).isNotEmpty();
+
+        // 원본이 전부 삭제된 뒤(예: 복원/초기화) 다시 재계산하면, 이전 summary가 조용히
+        // 남아 있으면 안 되고 함께 비워져야 한다.
+        winningNumberRepository.deleteAll();
+        summaryRebuilder.rebuildAllSummaries();
+
+        assertThat(frequencySummaryRepository.findAll()).isEmpty();
+        assertThat(patternStatsSummaryRepository.findAll()).isEmpty();
+        assertThat(companionPairSummaryRepository.findAll()).isEmpty();
+    }
+
+    @Test
     @DisplayName("다른 인스턴스가 락을 보유 중이면 재생성을 건너뛰고 기존 데이터를 그대로 둔다")
     void rebuildAllSummaries_skipsWhenLockAlreadyHeld() {
         winningNumberRepository.save(round(1, 1, 2, 3, 4, 5, 6, 7));

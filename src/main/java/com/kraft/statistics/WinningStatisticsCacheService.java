@@ -5,7 +5,6 @@ import com.kraft.common.lotto.BallClassification;
 import com.kraft.common.lotto.SumBuckets;
 import com.kraft.recommend.LottoRecommendationService;
 import com.kraft.winningnumber.WinningBallsOnly;
-import com.kraft.winningnumber.WinningNumber;
 import com.kraft.winningnumber.WinningNumberRepository;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -60,8 +59,10 @@ public class WinningStatisticsCacheService {
     public FrequencyStatsResponse getFrequencyStats() {
         List<FrequencySummary> summaries = frequencySummaryRepository.findAllByOrderByBallNumberAsc();
 
-        if (summaries.isEmpty()) {
-            log.info("빈도 summary 없음 — 재계산 시작");
+        // rebuildFrequency()는 1~45번 전부에 대해 행을 만들므로, 정상 상태라면 항상 45개다.
+        // 45개가 아니면 완전히 비었을 때뿐 아니라 일부만 남은 부분 손상도 재계산 대상이다(T2).
+        if (summaries.size() != 45) {
+            log.info("빈도 summary 없음 또는 불완전(size={}) — 재계산 시작", summaries.size());
             rebuildSummariesIgnoringConcurrencyFailure();
             summaries = frequencySummaryRepository.findAllByOrderByBallNumberAsc();
         }
@@ -69,7 +70,7 @@ public class WinningStatisticsCacheService {
         List<BallFrequencyDto> frequencies = summaries.stream()
                 .map(s -> new BallFrequencyDto(s.getBallNumber(), s.getFrequency(), s.getLastRound()))
                 .toList();
-        return toFrequencyResponse(latestRound(), frequencies);
+        return toFrequencyResponse(sampleRoundCount(), frequencies);
     }
 
     @Cacheable(value = CacheConfig.STATS_FREQUENCY_BY_LIMIT, key = "#limit")
@@ -98,16 +99,19 @@ public class WinningStatisticsCacheService {
                     lastRoundMap.getOrDefault(ball, 0)
             ));
         }
-        return toFrequencyResponse(latestRound(), frequencies);
+        // limit 요청은 실제로 반환된 표본 크기(rounds.size())를 totalRounds로 쓴다. limit이
+        // 실제 저장된 회차 수보다 크면(예: 500회 요청인데 200회밖에 없음) rounds.size()가
+        // limit보다 작아지므로, latestRound나 요청 limit을 그대로 쓰면 백분율 분모가 틀린다.
+        return toFrequencyResponse(rounds.size(), frequencies);
     }
 
     private static final RankedCombinationDto EMPTY_RANKED_GROUP = new RankedCombinationDto(List.of(), false);
 
-    private FrequencyStatsResponse toFrequencyResponse(int latestRound, List<BallFrequencyDto> frequencies) {
+    private FrequencyStatsResponse toFrequencyResponse(int totalRounds, List<BallFrequencyDto> frequencies) {
         // 회차 데이터가 아직 없으면(초기 상태) summary가 45개 미만일 수 있다 — top/bottom 6을
         // 구성할 수 없으므로 빈 그룹으로 채운다.
         if (frequencies.size() < 6) {
-            return new FrequencyStatsResponse(latestRound, frequencies, EMPTY_RANKED_GROUP, EMPTY_RANKED_GROUP);
+            return new FrequencyStatsResponse(totalRounds, frequencies, EMPTY_RANKED_GROUP, EMPTY_RANKED_GROUP);
         }
         List<BallFrequencyDto> byFreqDesc = frequencies.stream()
                 .sorted(Comparator.comparingInt(BallFrequencyDto::frequency).reversed())
@@ -117,7 +121,7 @@ public class WinningStatisticsCacheService {
                 .toList();
         RankedCombinationDto topSix = rankedGroup(byFreqDesc.subList(0, 6));
         RankedCombinationDto bottomSix = rankedGroup(byFreqAsc.subList(0, 6));
-        return new FrequencyStatsResponse(latestRound, frequencies, topSix, bottomSix);
+        return new FrequencyStatsResponse(totalRounds, frequencies, topSix, bottomSix);
     }
 
     private RankedCombinationDto rankedGroup(List<BallFrequencyDto> six) {
@@ -144,7 +148,7 @@ public class WinningStatisticsCacheService {
         List<PatternBucketDto> sumBuckets = toPatternDto(
                 patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_SUM_BUCKET));
 
-        return new PatternStatsResponse(latestRound(), oddCounts, highCounts, sumBuckets);
+        return new PatternStatsResponse(sampleRoundCount(), oddCounts, highCounts, sumBuckets);
     }
 
     @Cacheable(CacheConfig.STATS_COMPANION)
@@ -162,7 +166,7 @@ public class WinningStatisticsCacheService {
         List<CompanionPairDto> topPairs = pairs.stream()
                 .map(p -> new CompanionPairDto(p.getBallA(), p.getBallB(), p.getCoCount()))
                 .toList();
-        return new CompanionStatsResponse(latestRound(), topPairs);
+        return new CompanionStatsResponse(sampleRoundCount(), topPairs);
     }
 
     @Cacheable(value = CacheConfig.STATS_COMPANION, key = "#ball")
@@ -180,7 +184,7 @@ public class WinningStatisticsCacheService {
         List<CompanionPairDto> topPairs = pairs.stream()
                 .map(p -> new CompanionPairDto(p.getBallA(), p.getBallB(), p.getCoCount()))
                 .toList();
-        return new CompanionStatsResponse(latestRound(), topPairs);
+        return new CompanionStatsResponse(sampleRoundCount(), topPairs);
     }
 
     public AnalysisResponse analyze(List<Integer> rawNumbers) {
@@ -222,9 +226,13 @@ public class WinningStatisticsCacheService {
     // 유틸리티
     // ──────────────────────────────────────────────
 
-    private int latestRound() {
-        return winningNumberRepository.findTopByOrderByRoundDesc()
-                .map(WinningNumber::getRound).orElse(0);
+    /**
+     * summary 기반(전체 이력) 응답의 totalRounds. summary는 winning_numbers 전체 행으로
+     * 만들어지므로, 실제 표본 수는 최신 회차 번호(latestRound)가 아니라 실제 저장된
+     * 회차 수(row count)다 — 중간 누락 회차가 있으면 두 값이 달라진다(T1).
+     */
+    private int sampleRoundCount() {
+        return (int) winningNumberRepository.count();
     }
 
     private static List<AnalysisResponse.RangeDistribution> computeRangeDistribution(List<Integer> numbers) {

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,10 +40,22 @@ class WinningStatisticsCacheServiceTest {
     @Autowired
     private CompanionPairSummaryRepository companionPairSummaryRepository;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @BeforeEach
     void setUp() {
+        // getFrequencyStats() 등은 @Cacheable이고 이 테스트 클래스의 모든 메서드가 같은
+        // Spring 컨텍스트(따라서 같은 캐시)를 공유하므로, 이전 테스트가 채워둔 캐시를 지우지
+        // 않으면 이번 테스트의 fixture 변경이 반영되지 않은 결과를 볼 수 있다.
+        cacheManager.getCacheNames().forEach(name -> {
+            var cache = cacheManager.getCache(name);
+            if (cache != null) {
+                cache.clear();
+            }
+        });
         frequencySummaryRepository.deleteAll();
         patternStatsSummaryRepository.deleteAll();
         companionPairSummaryRepository.deleteAll();
@@ -160,6 +173,23 @@ class WinningStatisticsCacheServiceTest {
     }
 
     @Test
+    @DisplayName("빈도 summary가 45개 미만으로 부분 손상돼도 완전히 재계산한다(T2)")
+    void getFrequencyStats_partiallyCorruptedSummary_triggersFullRebuild() {
+        summaryRebuilder.rebuildAllSummaries();
+        assertThat(frequencySummaryRepository.findAll()).hasSize(45);
+
+        // 45개 중 일부만 남기고 나머지를 지워 부분 손상 상태를 흉내낸다 — summaries가
+        // "비어있지 않음"에만 의존하는 예전 로직이라면 이 상태를 정상으로 오인한다.
+        List<FrequencySummary> all = frequencySummaryRepository.findAllByOrderByBallNumberAsc();
+        frequencySummaryRepository.deleteAllInBatch(all.subList(0, 10));
+        assertThat(frequencySummaryRepository.findAll()).hasSize(35);
+
+        FrequencyStatsResponse response = service.getFrequencyStats();
+
+        assertThat(response.frequencies()).hasSize(45);
+    }
+
+    @Test
     @DisplayName("회차 데이터가 전혀 없으면 topSix/bottomSix가 빈 그룹으로 채워지고 예외를 던지지 않는다")
     void getFrequencyStats_noWinningNumbers_returnsEmptyRankedGroups() {
         winningNumberRepository.deleteAll();
@@ -177,7 +207,9 @@ class WinningStatisticsCacheServiceTest {
     void getFrequencyStatsByLimit_aggregatesOnlyLatestLimitRounds() {
         FrequencyStatsResponse response = service.getFrequencyStatsByLimit(1);
 
-        assertThat(response.totalRounds()).isEqualTo(2);
+        // T1: totalRounds는 실제 반환된 표본 수(rounds.size()=1)여야 한다.
+        // limit=1을 요청했을 뿐 최신 회차 번호(2)를 totalRounds로 쓰면 안 된다.
+        assertThat(response.totalRounds()).isEqualTo(1);
         assertThat(response.frequencies()).hasSize(45);
 
         // limit=1이면 최신 회차(2: 1,2,10,20,30,45)만 집계 — 회차 1에만 있는 3,4,5,6은 포함되지 않는다
@@ -189,6 +221,27 @@ class WinningStatisticsCacheServiceTest {
                 assertThat(f.frequency()).isEqualTo(0);
             }
         });
+    }
+
+    @Test
+    @DisplayName("중간 회차가 누락돼 최신 회차 번호와 실제 저장 회차 수가 다르면 totalRounds는 실제 저장 수를 반환한다")
+    void getFrequencyStats_missingRoundInMiddle_totalRoundsReflectsActualCount() {
+        // setUp에서 이미 회차 1, 2가 저장돼 있다. 회차 5를 추가해 3·4가 누락된 상태를 만든다 —
+        // 최신 회차 번호는 5이지만 실제 저장된 회차 수는 3(1, 2, 5)이다.
+        winningNumberRepository.save(round(5, 7, 8, 9, 10, 11, 12, 13));
+
+        FrequencyStatsResponse response = service.getFrequencyStats();
+
+        assertThat(response.totalRounds()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("limit이 실제 저장된 회차 수보다 크면 totalRounds는 요청 limit이 아니라 실제 표본 수를 반환한다")
+    void getFrequencyStatsByLimit_limitExceedsAvailableRounds_totalRoundsReflectsActualCount() {
+        FrequencyStatsResponse response = service.getFrequencyStatsByLimit(500);
+
+        // 저장된 회차는 2개뿐이므로 500을 요청해도 실제 표본은 2다.
+        assertThat(response.totalRounds()).isEqualTo(2);
     }
 
     @Test

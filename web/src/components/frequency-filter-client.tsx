@@ -76,7 +76,9 @@ export function FrequencyFilterClient({ initial }: Props) {
   }
 
   const byNumber = [...stats.frequencies].sort((a, b) => a.ballNumber - b.ballNumber);
-  const sampleSize = activeLimit ?? stats.totalRounds;
+  // 요청한 limit(activeLimit)이 아니라 백엔드가 실제로 집계한 표본 수(stats.totalRounds)를
+  // 써야 한다 — limit이 실제 저장된 회차 수보다 크면 둘이 달라진다(T1).
+  const sampleSize = stats.totalRounds;
 
   return (
     <>
@@ -98,7 +100,7 @@ export function FrequencyFilterClient({ initial }: Props) {
       </div>
 
       <p className="freq-filter-desc" aria-live="polite">
-        {activeLimit === null ? `총 ${stats.totalRounds}회 전체 기준` : `최근 ${activeLimit}회 기준`}으로 각 번호가
+        {activeLimit === null ? `총 ${stats.totalRounds}회 전체 기준` : `최근 ${stats.totalRounds}회 기준`}으로 각 번호가
         당첨 번호에 포함된 누적 횟수를 보여줍니다.
         {filterState === "loading" && <span className="muted"> 불러오는 중...</span>}
         {filterState === "error" && (

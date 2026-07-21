@@ -97,9 +97,15 @@ public class StatisticsSummaryRebuilder {
         try {
             List<WinningBallsOnly> all = winningNumberRepository.findAllBalls();
             if (all.isEmpty()) {
-                log.info("No winning numbers found; skipping statistics summary rebuild");
+                // 원본이 비었는데 기존 summary를 그대로 두면(T2), 예를 들어 DB 초기화나 복원
+                // 직후 조회 API가 실제로는 존재하지 않는 이전 이력을 계속 정상 응답처럼 보여준다.
+                // 원본이 없다는 사실 자체를 반영해 summary도 원자적으로 비운다.
+                log.info("No winning numbers found; clearing statistics summaries");
+                frequencySummaryRepository.deleteAllInBatch();
+                patternStatsSummaryRepository.deleteAllInBatch();
+                companionPairSummaryRepository.deleteAllInBatch();
                 recordRebuildOutcome("empty");
-                return false;
+                return true;
             }
 
             log.info("Starting statistics summary rebuild: totalRounds={}", all.size());
