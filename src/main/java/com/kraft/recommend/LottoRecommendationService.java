@@ -5,7 +5,11 @@ import com.kraft.common.lotto.LottoNumberCodec;
 import com.kraft.winningnumber.WinningBallsOnly;
 import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumbersCollectedEvent;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,11 +31,31 @@ public class LottoRecommendationService {
     private final LottoNumberCodec lottoNumberCodec;
     private final WinningNumberRepository winningNumberRepository;
     private final CombinationScorer combinationScorer;
+    private final Clock clock;
 
-    // 조합을 Set<Set<Integer>> 대신 45비트 이내로 표현되는 long 비트마스크(ball n → bit n-1)로
-    // 다뤄 회차당 Set 객체 생성·해시 비용을 없앤다. historicalCombinations는 수천 개까지도
-    // 늘 수 있어(1,200회 이상 누적) 효과가 누적된다.
-    private volatile Set<Long> historicalCombinations = Set.of();
+    // 조합 비트마스크(ball n → bit n-1)와 이력 완전성(회차 수·최신 반영 회차·최초 누락 회차)을
+    // 한 번에 갱신되는 원자적 스냅샷으로 묶는다. 별개 필드로 뒀다면 refresh 도중 masks만
+    // 갱신되고 metadata는 이전 값인 순간이 생겨(비원자적 갱신), ready 판정이 masks 상태와
+    // 어긋날 수 있다.
+    private volatile HistorySnapshot historySnapshot = HistorySnapshot.empty();
+
+    record HistorySnapshot(Set<Long> masks, int roundCount, int historyThroughRound,
+                            Integer firstMissingRound, Instant loadedAt) {
+        static HistorySnapshot empty() {
+            return new HistorySnapshot(Set.of(), 0, 0, null, Instant.EPOCH);
+        }
+
+        /**
+         * DB가 아예 비어 있으면(roundCount=0) 배제 이력이 전혀 없는데도 조용히 정상 응답할
+         * 위험이 가장 크므로 그 경우만 fail-closed로 막는다. 중간 누락 회차(firstMissingRound)는
+         * 별도 gauge로만 노출한다 — 이 저장소는 1회부터 전체 이력을 수집하는 것이 정상 운영
+         * 상태이므로 실제 운영 DB에서 중간 누락은 드물고, 하드 게이트로 걸면 부분 데이터만
+         * 적재하는 테스트 픽스처(BaseApiIntegrationTest 등)까지 전부 503을 받게 되어 과도하다.
+         */
+        boolean ready() {
+            return roundCount > 0;
+        }
+    }
 
     // 부분 Fisher-Yates 셔플의 난수 소스. 기본은 ThreadLocalRandom이지만, 경계 시나리오
     // (충돌 상한 도달 등)를 확률에 기대지 않고 결정론적으로 재현하려면 테스트에서
@@ -44,14 +68,38 @@ public class LottoRecommendationService {
 
     public LottoRecommendationService(LottoNumberCodec lottoNumberCodec,
                                       WinningNumberRepository winningNumberRepository,
-                                      CombinationScorer combinationScorer) {
+                                      CombinationScorer combinationScorer,
+                                      Clock clock,
+                                      MeterRegistry meterRegistry) {
         this.lottoNumberCodec = lottoNumberCodec;
         this.winningNumberRepository = winningNumberRepository;
         this.combinationScorer = combinationScorer;
+        this.clock = clock;
+
+        Gauge.builder("kraft_lotto_history_ready", this, s -> s.historySnapshot.ready() ? 1d : 0d)
+                .description("추천 이력이 1회부터 최신 회차까지 빈틈없이 로드되어 배제 보장이 유효한지(1=준비됨)")
+                .register(meterRegistry);
+        Gauge.builder("kraft_lotto_history_round_count", this, s -> (double) s.historySnapshot.roundCount())
+                .description("추천 배제 이력에 반영된 회차 수")
+                .register(meterRegistry);
+        Gauge.builder("kraft_lotto_first_missing_round", this,
+                        s -> (double) (s.historySnapshot.firstMissingRound() == null
+                                ? 0 : s.historySnapshot.firstMissingRound()))
+                .description("1회부터 최신 회차까지 중 최초로 누락된 회차(0=누락 없음)")
+                .register(meterRegistry);
     }
 
     @PostConstruct
     void loadHistoricalCombinations() {
+        refreshHistoricalCombinations();
+    }
+
+    /**
+     * 운영에서는 수집 완료 이벤트로 캐시가 자동 갱신되지만, 저장소를 직접 시딩하는 테스트
+     * 픽스처(BaseApiIntegrationTest 등)는 이벤트를 발행하지 않는다. 그런 경우 시딩 직후
+     * 이 메서드로 캐시를 수동 동기화해야 fail-closed(R2)가 오탐하지 않는다.
+     */
+    public void refreshHistoryCache() {
         refreshHistoricalCombinations();
     }
 
@@ -68,16 +116,33 @@ public class LottoRecommendationService {
     }
 
     private void refreshHistoricalCombinations() {
+        List<WinningBallsOnly> all = winningNumberRepository.findAllBalls();
         Set<Long> combos = new HashSet<>();
-        for (WinningBallsOnly wn : winningNumberRepository.findAllBalls()) {
+        List<Integer> rounds = new ArrayList<>(all.size());
+        for (WinningBallsOnly wn : all) {
             combos.add(bitmaskOf(wn.getN1(), wn.getN2(), wn.getN3(), wn.getN4(), wn.getN5(), wn.getN6()));
+            rounds.add(wn.getRound());
         }
-        historicalCombinations = Set.copyOf(combos);
+        rounds.sort(Integer::compareTo);
+
+        Integer firstMissingRound = null;
+        int expected = 1;
+        for (int round : rounds) {
+            if (round != expected) {
+                firstMissingRound = expected;
+                break;
+            }
+            expected++;
+        }
+        int historyThroughRound = rounds.isEmpty() ? 0 : rounds.get(rounds.size() - 1);
+
+        historySnapshot = new HistorySnapshot(
+                Set.copyOf(combos), rounds.size(), historyThroughRound, firstMissingRound, Instant.now(clock));
     }
 
     public boolean isHistoricalFirstPrizeCombination(List<Integer> numbers) {
         List<Integer> normalized = lottoNumberCodec.normalize(numbers);
-        return historicalCombinations.contains(bitmaskOf(normalized));
+        return historySnapshot.masks().contains(bitmaskOf(normalized));
     }
 
     /** 정렬 여부와 무관하게 번호 6개(1~45)를 45비트 이내의 long으로 인코딩한다(ball n → bit n-1). */
@@ -103,6 +168,13 @@ public class LottoRecommendationService {
     }
 
     public RecommendNumbersResponse recommend(RecommendNumbersRequest request) {
+        HistorySnapshot snapshot = historySnapshot;
+        if (!snapshot.ready()) {
+            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "RECOMMENDATION_HISTORY_NOT_READY",
+                    "역대 1등 배제 이력이 아직 준비되지 않았습니다(회차 수 %d, 최초 누락 회차 %s)."
+                            .formatted(snapshot.roundCount(), snapshot.firstMissingRound()));
+        }
+
         int count = request == null || request.count() == null ? 1 : request.count();
         boolean maximizePrize = request != null && Boolean.TRUE.equals(request.maximizePrize());
         Set<Integer> excluded = request == null || request.excludedNumbers() == null
@@ -117,7 +189,7 @@ public class LottoRecommendationService {
         long available = 45L - excluded.size();
         long possible = combinations(available, 6);
         long excludedMask = excludedMaskOf(excluded);
-        long compatibleHistoricalCount = historicalCombinations.stream()
+        long compatibleHistoricalCount = snapshot.masks().stream()
                 .filter(mask -> (mask & excludedMask) == 0L)
                 .count();
         long allowedPossible = possible - compatibleHistoricalCount;
@@ -132,8 +204,11 @@ public class LottoRecommendationService {
         Set<Long> seen = new HashSet<>();
         int attempts = 0;
         int maxAttempts = count * MAX_ATTEMPTS;
+        Set<Long> historicalMasks = snapshot.masks();
         while (recommendations.size() < count && attempts++ < maxAttempts) {
-            List<Integer> candidate = maximizePrize ? generateBest(candidates) : generateOne(candidates);
+            List<Integer> candidate = maximizePrize
+                    ? generateBest(candidates, historicalMasks)
+                    : generateOne(candidates, historicalMasks);
             if (candidate != null && seen.add(bitmaskOf(candidate))) {
                 recommendations.add(candidate);
             }
@@ -154,12 +229,12 @@ public class LottoRecommendationService {
      * generateOne이 충돌 상한 도달로 null을 반환하면(과거 1등과의 충돌을 해소하지 못함)
      * 그 시도는 후보 풀에서 제외한다 — 점수 비교 대상에 과거 1등 조합이 섞이면 안 된다.
      */
-    private List<Integer> generateBest(List<Integer> candidates) {
+    private List<Integer> generateBest(List<Integer> candidates, Set<Long> historicalMasks) {
         List<Integer> best = null;
         int bestScore = Integer.MIN_VALUE;
 
         for (int i = 0; i < PRIZE_CANDIDATE_POOL; i++) {
-            List<Integer> candidate = generateOne(candidates);
+            List<Integer> candidate = generateOne(candidates, historicalMasks);
             if (candidate == null) {
                 continue;
             }
@@ -195,9 +270,8 @@ public class LottoRecommendationService {
     // MAX_ATTEMPTS 안에 과거 1등과 겹치지 않는 조합을 못 찾으면, 마지막 셔플 결과를
     // 그대로 반환하지 않고 null을 돌려준다 — 과거 1등 조합이 추천으로 새어나가지 않도록
     // 호출자(recommend())가 이 시도를 버리고 재시도하거나 최종적으로 명시적 오류를 낸다.
-    private List<Integer> generateOne(List<Integer> candidates) {
+    private List<Integer> generateOne(List<Integer> candidates, Set<Long> historicalMasks) {
         int n = candidates.size();
-        Set<Long> snapshot = historicalCombinations;
 
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             for (int i = 0; i < 6; i++) {
@@ -207,7 +281,7 @@ public class LottoRecommendationService {
                 candidates.set(j, tmp);
             }
             List<Integer> result = lottoNumberCodec.normalize(candidates.subList(0, 6));
-            if (!snapshot.contains(bitmaskOf(result))) {
+            if (!historicalMasks.contains(bitmaskOf(result))) {
                 return result;
             }
         }

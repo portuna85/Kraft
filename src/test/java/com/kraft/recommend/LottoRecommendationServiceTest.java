@@ -5,6 +5,8 @@ import com.kraft.common.lotto.LottoNumberCodec;
 import com.kraft.winningnumber.WinningBallsOnly;
 import com.kraft.winningnumber.WinningNumberRepository;
 import com.kraft.winningnumber.WinningNumbersCollectedEvent;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
@@ -43,6 +45,7 @@ class LottoRecommendationServiceTest {
 
     private LottoNumberCodec lottoNumberCodec;
     private LottoRecommendationService service;
+    private SimpleMeterRegistry meterRegistry;
 
     private static final OffsetDateTime NOW =
             OffsetDateTime.now(ZoneId.of("Asia/Seoul"));
@@ -62,8 +65,14 @@ class LottoRecommendationServiceTest {
     @BeforeEach
     void setUp() {
         lottoNumberCodec = new LottoNumberCodec();
-        given(winningNumberRepository.findAllBalls()).willReturn(List.of());
-        service = new LottoRecommendationService(lottoNumberCodec, winningNumberRepository, combinationScorer);
+        // 기본값은 회차 1만 등록된 "이력 준비 완료" 상태다(1회부터 연속, 누락 없음).
+        // 이력이 비어 있으면 R2 fail-closed 정책상 recommend()가 항상 503을 던지므로,
+        // 그 경로를 검증하는 InvariantEnforcement 테스트에서만 별도로 List.of()를 재설정한다.
+        given(winningNumberRepository.findAllBalls())
+                .willReturn(List.of(ballsOnly(1, 1, 2, 3, 4, 5, 6)));
+        meterRegistry = new SimpleMeterRegistry();
+        service = new LottoRecommendationService(lottoNumberCodec, winningNumberRepository, combinationScorer,
+                Clock.systemUTC(), meterRegistry);
         service.loadHistoricalCombinations();
     }
 
@@ -214,14 +223,15 @@ class LottoRecommendationServiceTest {
         @Test
         @DisplayName("역대 당첨 조합 로드 후 변경된 새 회차 이벤트를 받으면 갱신된다")
         void onCollected_dataChanged_refreshesHistoricalCombinations() {
-            // 초기: 빈 목록
+            // 초기: setUp 기본값(회차 1)만 등록된 상태에서도 정상 추천된다
             assertThat(service.recommend(new RecommendNumbersRequest(1, null, false))
                     .recommendations()).hasSize(1);
 
-            // 새 회차 수집
-            given(winningNumberRepository.findAllBalls()).willReturn(List.of(ballsOnly(1200, 3, 11, 19, 28, 34, 42)));
+            // 새 회차 수집 — 기존 회차 1 위에 이어지는 연속 회차(2)이므로 이력은 계속 ready 상태를 유지한다.
+            given(winningNumberRepository.findAllBalls())
+                    .willReturn(List.of(ballsOnly(1, 1, 2, 3, 4, 5, 6), ballsOnly(2, 3, 11, 19, 28, 34, 42)));
 
-            service.onCollected(new WinningNumbersCollectedEvent(1200, true));
+            service.onCollected(new WinningNumbersCollectedEvent(2, true));
 
             // 갱신 후 해당 조합 제외 확인 (반복 시도로 확률적 검증)
             for (int i = 0; i < 20; i++) {
@@ -263,6 +273,67 @@ class LottoRecommendationServiceTest {
             assertThat(service.isHistoricalFirstPrizeCombination(List.of(1, 2, 3, 4, 5, 6))).isTrue();
             assertThat(service.isHistoricalFirstPrizeCombination(List.of(7, 8, 9, 10, 11, 12))).isFalse();
             assertThat(service.isHistoricalFirstPrizeCombination(List.of(2, 3, 4, 5, 6, 7))).isFalse();
+        }
+    }
+
+    // ── R2: 이력이 준비되지 않았으면 핵심 약속을 하지 않는다(fail-closed) ───────────
+    // DB가 완전히 비어 있으면(배제 이력이 전혀 없음) 과거 1등 배제를 "확실히" 보장할 수
+    // 없으므로, 조용히 정상 응답하는 대신 503으로 거절한다. 중간 누락 회차는 gauge로만
+    // 노출한다 — 실 운영 DB는 1회부터 전체 이력을 수집하므로 드문 상황이고, 하드 게이트로
+    // 걸면 부분 데이터만 시딩하는 통합 테스트 픽스처까지 전부 막혀 과도하다.
+
+    @Nested
+    @DisplayName("R2: 이력 미준비 상태에서 fail-closed")
+    class HistoryReadiness {
+
+        @Test
+        @DisplayName("이력 DB가 비어 있으면 추천 요청은 503 RECOMMENDATION_HISTORY_NOT_READY로 거절된다")
+        void recommend_emptyHistory_throwsServiceUnavailable() {
+            given(winningNumberRepository.findAllBalls()).willReturn(List.of());
+            service.loadHistoricalCombinations();
+
+            assertThatThrownBy(() -> service.recommend(new RecommendNumbersRequest(1, null, false)))
+                    .isInstanceOf(ApiException.class)
+                    .satisfies(ex -> {
+                        ApiException apiEx = (ApiException) ex;
+                        assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+                        assertThat(apiEx.getCode()).isEqualTo("RECOMMENDATION_HISTORY_NOT_READY");
+                    });
+        }
+
+        @Test
+        @DisplayName("1회부터 최신 회차까지 중간에 누락된 회차가 있어도 추천은 계속 제공되지만 gauge에 반영된다")
+        void recommend_gapInHistory_stillServesButMetricReflectsGap() {
+            // 회차 1은 있지만 2가 누락되고 3부터 다시 있음 — firstMissingRound=2
+            given(winningNumberRepository.findAllBalls()).willReturn(List.of(
+                    ballsOnly(1, 1, 2, 3, 4, 5, 6),
+                    ballsOnly(3, 7, 8, 9, 10, 11, 12)
+            ));
+            service.loadHistoricalCombinations();
+
+            assertThat(service.recommend(new RecommendNumbersRequest(1, null, false))
+                    .recommendations()).hasSize(1);
+            assertThat(meterRegistry.get("kraft_lotto_first_missing_round").gauge().value()).isEqualTo(2d);
+            assertThat(meterRegistry.get("kraft_lotto_history_ready").gauge().value()).isEqualTo(1d);
+        }
+
+        @Test
+        @DisplayName("이력 DB가 비어 있으면 준비 상태 gauge가 0을 가리킨다")
+        void historyReadyGauge_reflectsEmptyHistory() {
+            given(winningNumberRepository.findAllBalls()).willReturn(List.of());
+            service.loadHistoricalCombinations();
+
+            assertThat(meterRegistry.get("kraft_lotto_history_ready").gauge().value()).isEqualTo(0d);
+            assertThat(meterRegistry.get("kraft_lotto_history_round_count").gauge().value()).isEqualTo(0d);
+        }
+
+        @Test
+        @DisplayName("이력이 비어 있어도 특정 조합의 과거 1등 여부 조회 자체는 계속 동작한다")
+        void isHistoricalFirstPrizeCombination_worksEvenWhenHistoryEmpty() {
+            given(winningNumberRepository.findAllBalls()).willReturn(List.of());
+            service.loadHistoricalCombinations();
+
+            assertThat(service.isHistoricalFirstPrizeCombination(List.of(1, 2, 3, 4, 5, 6))).isFalse();
         }
     }
 

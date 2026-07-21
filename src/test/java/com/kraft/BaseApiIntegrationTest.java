@@ -2,6 +2,7 @@ package com.kraft;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kraft.operationlog.WinningNumberOperationLogRepository;
+import com.kraft.recommend.LottoRecommendationService;
 import com.kraft.saved.SavedNumberRepository;
 import com.kraft.winningnumber.WinningNumber;
 import com.kraft.winningnumber.WinningNumberRepository;
@@ -34,6 +35,9 @@ abstract class BaseApiIntegrationTest {
 
     @Autowired
     protected WinningNumberOperationLogRepository winningNumberOperationLogRepository;
+
+    @Autowired
+    protected LottoRecommendationService lottoRecommendationService;
 
     @Autowired
     private CacheManager cacheManager;
@@ -69,6 +73,9 @@ abstract class BaseApiIntegrationTest {
                 0L, 0, 0L, 0L,
                 OffsetDateTime.now(ZoneId.of("Asia/Seoul"))
         ));
+        // 리포지토리 직접 시딩은 WinningNumbersCollectedEvent를 발행하지 않으므로,
+        // 추천 서비스의 이력 캐시를 수동으로 갱신해야 R2 fail-closed가 오탐하지 않는다.
+        lottoRecommendationService.refreshHistoryCache();
     }
 
     protected long extractId(String response) throws Exception {
