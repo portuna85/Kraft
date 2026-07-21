@@ -1,6 +1,7 @@
 package com.kraft.statistics;
 
 import com.kraft.common.config.CacheConfig;
+import com.kraft.common.lotto.BallClassification;
 import com.kraft.common.lotto.SumBuckets;
 import com.kraft.winningnumber.WinningBallsOnly;
 import com.kraft.winningnumber.WinningNumberRepository;
@@ -164,10 +165,10 @@ public class StatisticsSummaryRebuilder {
         for (WinningBallsOnly w : rounds) {
             List<Integer> balls = List.of(w.getN1(), w.getN2(), w.getN3(), w.getN4(), w.getN5(), w.getN6());
 
-            String oddKey = String.valueOf(balls.stream().filter(n -> n % 2 != 0).count());
+            String oddKey = String.valueOf(balls.stream().filter(BallClassification::isOdd).count());
             oddCountMap.merge(oddKey, 1, Integer::sum);
 
-            String highKey = String.valueOf(balls.stream().filter(n -> n >= 23).count());
+            String highKey = String.valueOf(balls.stream().filter(BallClassification::isHigh).count());
             highCountMap.merge(highKey, 1, Integer::sum);
 
             int sum = balls.stream().mapToInt(Integer::intValue).sum();

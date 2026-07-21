@@ -1,6 +1,7 @@
 package com.kraft.statistics;
 
 import com.kraft.common.config.CacheConfig;
+import com.kraft.common.lotto.BallClassification;
 import com.kraft.common.lotto.SumBuckets;
 import com.kraft.recommend.LottoRecommendationService;
 import com.kraft.winningnumber.WinningBallsOnly;
@@ -185,9 +186,9 @@ public class WinningStatisticsCacheService {
     public AnalysisResponse analyze(List<Integer> rawNumbers) {
         List<Integer> numbers = rawNumbers.stream().sorted().toList();
 
-        int oddCount = (int) numbers.stream().filter(n -> n % 2 != 0).count();
+        int oddCount = (int) numbers.stream().filter(BallClassification::isOdd).count();
         int evenCount = numbers.size() - oddCount;
-        int highCount = (int) numbers.stream().filter(n -> n >= 23).count();
+        int highCount = (int) numbers.stream().filter(BallClassification::isHigh).count();
         int lowCount = numbers.size() - highCount;
         int sum = numbers.stream().mapToInt(Integer::intValue).sum();
         String sumBucket = SumBuckets.bucketOf(sum);
