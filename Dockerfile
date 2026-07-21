@@ -10,6 +10,10 @@ RUN chmod +x gradlew && ./gradlew dependencies --no-daemon --quiet
 COPY src ./src
 RUN ./gradlew bootJar --no-daemon -x test
 
+# 레이어 추출 — 의존성(dependencies)은 build.gradle.kts가 안 바뀌는 한 그대로라 별도
+# 레이어로 캐시되고, 코드만 바뀐 빌드는 application 레이어만 재푸시하면 된다.
+RUN java -Djarmode=tools -jar build/libs/*.jar extract --layers --launcher --destination /workspace/extracted
+
 FROM eclipse-temurin:25-jre@sha256:5cf92df78f6dba978777d5cffa3c856e583f86814fde82a6c3534ccdfd794f2f
 WORKDIR /app
 
@@ -28,9 +32,14 @@ RUN apt-get update \
     && useradd --create-home --uid 10001 spring \
     && mkdir -p /app/logs \
     && chown -R spring:spring /app
-COPY --from=build /workspace/build/libs/*.jar app.jar
+
+# 변경 빈도가 낮은 레이어부터 복사 — 의존성 레이어는 build.gradle.kts가 그대로면 캐시 재사용된다.
+COPY --from=build /workspace/extracted/dependencies/ ./
+COPY --from=build /workspace/extracted/spring-boot-loader/ ./
+COPY --from=build /workspace/extracted/snapshot-dependencies/ ./
+COPY --from=build /workspace/extracted/application/ ./
 
 USER 10001:10001
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

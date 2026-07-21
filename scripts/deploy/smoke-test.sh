@@ -107,9 +107,8 @@ if command -v docker >/dev/null 2>&1 && docker inspect kraft-mariadb >/dev/null 
   if [[ -n "$expected_version" && "$applied_version" == "$expected_version" ]]; then
     echo "  OK  [flyway v$applied_version] Flyway 최신 버전 도달"
   else
-    # 2026-07-17: 운영 DB가 V10 미도달 상태로 관측되어(원인 미조사) 우선 경고로만
-    # 남긴다. 배포를 막는 게이트로 승격하려면 근본 원인 확인 후 FAIL로 되돌릴 것.
-    echo "  WARN[flyway applied=$applied_version expected=$expected_version] Flyway 최신 버전 미도달 — 배포는 막지 않음"
+    echo "  FAIL[flyway applied=$applied_version expected=$expected_version] Flyway 최신 버전 미도달" >&2
+    FAIL=1
   fi
 else
   echo "  SKIP[kraft-mariadb container not found] Flyway 버전 체크 — 배포 호스트 밖에서 실행 중으로 판단"

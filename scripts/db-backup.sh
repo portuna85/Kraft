@@ -50,6 +50,8 @@ if [[ -n "${BACKUP_REMOTE_DEST:-}" ]]; then
   else
     echo "==> [WARN] BACKUP_REMOTE_DEST가 설정됐지만 rclone이 설치되어 있지 않아 원격 사본을 건너뜁니다." >&2
   fi
+else
+  echo "==> [WARN] BACKUP_REMOTE_DEST 미설정 — 백업이 로컬(DB와 동일 호스트/볼륨)에만 저장됩니다. 단일 VM/디스크 장애 시 DB와 백업이 함께 유실될 수 있습니다." >&2
 fi
 
 # Prune old backups
