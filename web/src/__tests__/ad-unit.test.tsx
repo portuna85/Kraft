@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { AdSenseUnit, AdUnit, PageAd, StickyMobileAd } from "@/components/ad-unit";
 
@@ -62,6 +62,44 @@ describe("애드센스 유닛", () => {
 
     expect(document.querySelector("ins.adsbygoogle")).not.toBeInTheDocument();
     expect(screen.getByLabelText("광고")).toHaveStyle({ minWidth: "728px", minHeight: "90px" });
+  });
+});
+
+describe("본문 광고 (F4: 슬롯당 한 네트워크만)", () => {
+  // 슬롯별 env 매핑이 모듈 로드 시점에 한 번 계산되므로(빌드타임 치환과 동일한 전제),
+  // 값을 바꿔서 검증하려면 매번 모듈을 새로 import해야 한다.
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+    vi.resetModules();
+  });
+
+  it("NEXT_PUBLIC_AD_NETWORK 미설정 시 애드핏만 렌더한다(기본값)", async () => {
+    process.env = { ...originalEnv };
+    delete process.env.NEXT_PUBLIC_AD_NETWORK;
+    vi.resetModules();
+    const { InArticleAd } = await import("@/components/ad-unit");
+
+    render(<InArticleAd slot="rounds-list" />);
+
+    expect(document.querySelector("ins.adsbygoogle")).not.toBeInTheDocument();
+  });
+
+  it("NEXT_PUBLIC_AD_NETWORK=adsense면 애드센스만 렌더한다", async () => {
+    process.env = {
+      ...originalEnv,
+      NEXT_PUBLIC_AD_NETWORK: "adsense",
+      NEXT_PUBLIC_ADSENSE_CLIENT_ID: "ca-pub-1234567890123456",
+      NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST_MOBILE: "2222222222",
+    };
+    vi.resetModules();
+    const { InArticleAd } = await import("@/components/ad-unit");
+
+    render(<InArticleAd slot="rounds-list" />);
+
+    expect(document.querySelector("ins.kakao_ad_area")).not.toBeInTheDocument();
+    expect(document.querySelector("ins.adsbygoogle")).toBeInTheDocument();
   });
 });
 

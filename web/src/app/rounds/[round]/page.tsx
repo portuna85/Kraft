@@ -7,7 +7,7 @@ import { PrizeTable } from "@/components/prize-table";
 import { JsonLdLottoRound } from "@/components/json-ld";
 import { BackendError, getLatestWinningNumber, getPublicBaseUrl, getRound } from "@/lib/api";
 import { analyzeNumbers } from "@/lib/analyze";
-import { AdSenseSidebar, AdSenseUnit, PageAd } from "@/components/ad-unit";
+import { AdSenseSidebar, InArticleAd } from "@/components/ad-unit";
 import { AnalysisResult } from "@/components/analysis-result";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
@@ -112,19 +112,7 @@ export default async function RoundDetailPage({ params }: Props) {
 
       <AnalysisResult analysis={analysis} title="당첨 번호 분석" />
 
-      <PageAd slot="rounds-detail" />
-      <AdSenseUnit
-        slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL_MOBILE ?? ""}
-        width={300}
-        height={250}
-        className="ad-mobile"
-      />
-      <AdSenseUnit
-        slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL ?? ""}
-        width={728}
-        height={90}
-        className="ad-desktop"
-      />
+      <InArticleAd slot="rounds-detail" />
 
       <nav className="round-nav" aria-label="회차 이동">
         {hasPrev ? (

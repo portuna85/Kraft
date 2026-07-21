@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { FrequencyFilterClient } from "@/components/frequency-filter-client";
-import { AdSenseSidebar, AdSenseUnit, PageAd } from "@/components/ad-unit";
+import { AdSenseSidebar, InArticleAd } from "@/components/ad-unit";
 import { JsonLdBreadcrumb } from "@/components/json-ld";
 import { getFrequencyStats, getPublicBaseUrl } from "@/lib/api";
 import logger from "@/lib/logger";
@@ -32,19 +32,7 @@ export default async function FrequencyPage() {
         <p className="eyebrow">출현 통계</p>
         <h1 className="page-title">번호 출현 통계</h1>
         <FrequencyFilterClient initial={stats} />
-        <PageAd slot="frequency" />
-        <AdSenseUnit
-          slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY_MOBILE ?? ""}
-          width={300}
-          height={250}
-          className="ad-mobile"
-        />
-        <AdSenseUnit
-          slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY ?? ""}
-          width={728}
-          height={90}
-          className="ad-desktop"
-        />
+        <InArticleAd slot="frequency" />
       </section>
       <AdSenseSidebar slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_SIDEBAR ?? ""} />
     </div>

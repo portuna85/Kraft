@@ -119,6 +119,46 @@ export function AdSenseUnit({ slot, width, height, label = "광고", className }
   );
 }
 
+const IN_ARTICLE_ADSENSE_MOBILE_ENV: Record<PageAdProps["slot"], string | undefined> = {
+  "rounds-list": process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST_MOBILE,
+  "rounds-detail": process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL_MOBILE,
+  frequency: process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY_MOBILE,
+};
+
+const IN_ARTICLE_ADSENSE_DESKTOP_ENV: Record<PageAdProps["slot"], string | undefined> = {
+  "rounds-list": process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST,
+  "rounds-detail": process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_DETAIL,
+  frequency: process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY,
+};
+
+// F4: 같은 슬롯에 애드핏(PageAd)과 애드센스(AdSenseUnit)를 동시에 넣으면 페이지 무게·
+// 광고 밀도가 두 배가 된다. NEXT_PUBLIC_AD_NETWORK로 슬롯당 한 네트워크만 렌더한다
+// (기본값 "adfit" — 애드센스 승인 전까지의 기존 운영 상태를 그대로 유지).
+export function InArticleAd({ slot }: PageAdProps) {
+  const network = process.env.NEXT_PUBLIC_AD_NETWORK === "adsense" ? "adsense" : "adfit";
+
+  if (network === "adsense") {
+    return (
+      <>
+        <AdSenseUnit
+          slot={IN_ARTICLE_ADSENSE_MOBILE_ENV[slot] ?? ""}
+          width={300}
+          height={250}
+          className="ad-mobile"
+        />
+        <AdSenseUnit
+          slot={IN_ARTICLE_ADSENSE_DESKTOP_ENV[slot] ?? ""}
+          width={728}
+          height={90}
+          className="ad-desktop"
+        />
+      </>
+    );
+  }
+
+  return <PageAd slot={slot} />;
+}
+
 export function AdSenseSidebar({ slot }: { slot: string }) {
   return (
     <AdSenseUnit

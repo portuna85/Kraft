@@ -7,7 +7,7 @@ import { RoundSearchForm } from "@/components/round-search-form";
 import { DataFreshnessNote } from "@/components/data-freshness-note";
 import { JsonLdLottoRound } from "@/components/json-ld";
 import { getLatestWinningNumber, getPublicBaseUrl, getRoundFreshness, getRounds, type WinningNumber } from "@/lib/api";
-import { AdSenseSidebar, AdSenseUnit, PageAd } from "@/components/ad-unit";
+import { AdSenseSidebar, InArticleAd } from "@/components/ad-unit";
 import { formatCurrency, formatDrawDate } from "@/lib/format";
 import logger from "@/lib/logger";
 
@@ -187,19 +187,7 @@ export default async function RoundsPage({ searchParams }: Props) {
         )}
       </section>
 
-      <PageAd slot="rounds-list" />
-      <AdSenseUnit
-        slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST_MOBILE ?? ""}
-        width={300}
-        height={250}
-        className="ad-mobile"
-      />
-      <AdSenseUnit
-        slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_ROUNDS_LIST ?? ""}
-        width={728}
-        height={90}
-        className="ad-desktop"
-      />
+      <InArticleAd slot="rounds-list" />
     </div>
       <AdSenseSidebar slot={process.env.NEXT_PUBLIC_ADSENSE_UNIT_SIDEBAR ?? ""} />
     </div>
