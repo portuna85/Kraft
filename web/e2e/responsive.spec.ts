@@ -1,4 +1,28 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+// .site-header의 backdrop-filter가 자식 fixed 요소(.nav-backdrop/.nav-mobile-wrap)의
+// containing block이 되어 bottom:0/inset:0이 뷰포트가 아니라 헤더 자신의 높이 기준으로
+// 계산되던 버그가 있었다 — top==bottom이 되어 드로어가 찌그러졌다(npm run dev 육안 확인으로
+// 발견). #nav-mobile의 "보임" 여부만으로는 이 레이아웃 붕괴를 잡지 못하므로, 배경·패널의
+// 실제 bounding box가 뷰포트 전체를 덮는지 직접 검사한다.
+async function expectDrawerCoversViewport(page: Page) {
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error("viewport size unavailable");
+
+  const backdropBox = await page.locator(".nav-backdrop").boundingBox();
+  const wrapBox = await page.locator(".nav-mobile-wrap").boundingBox();
+  expect(backdropBox).not.toBeNull();
+  expect(wrapBox).not.toBeNull();
+
+  // 서브픽셀 반올림 오차 허용치
+  const TOLERANCE = 2;
+  expect(Math.abs(backdropBox!.y)).toBeLessThan(TOLERANCE);
+  expect(Math.abs(backdropBox!.y + backdropBox!.height - viewport.height)).toBeLessThan(TOLERANCE);
+
+  // 드로어 패널은 헤더 아래부터 시작해 뷰포트 하단까지 닿아야 한다
+  expect(wrapBox!.y).toBeGreaterThan(0);
+  expect(Math.abs(wrapBox!.y + wrapBox!.height - viewport.height)).toBeLessThan(TOLERANCE);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 가로 스크롤 없음 — 3개 대표 너비에서 확인
@@ -51,6 +75,16 @@ test.describe("모바일 내비게이션 드로어", () => {
     await page.getByRole("button", { name: "메뉴 열기" }).click();
     await expect(page.locator("#nav-mobile")).toBeVisible();
     await expect(page.getByRole("button", { name: "메뉴 닫기" })).toBeVisible();
+  });
+
+  test("드로어 배경·패널이 뷰포트 전체를 덮는다 (backdrop-filter containing block 회귀 방지)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "메뉴 열기" }).click();
+    await expect(page.locator("#nav-mobile")).toBeVisible();
+
+    await expectDrawerCoversViewport(page);
   });
 
   test("탈출 키로 드로어 닫힘", async ({ page }) => {
@@ -107,6 +141,16 @@ test.describe("태블릿 내비게이션 드로어", () => {
 
     await page.getByRole("button", { name: "메뉴 열기" }).click();
     await expect(page.locator("#nav-mobile")).toBeVisible();
+  });
+
+  test("드로어 배경·패널이 뷰포트 전체를 덮는다 (backdrop-filter containing block 회귀 방지)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "메뉴 열기" }).click();
+    await expect(page.locator("#nav-mobile")).toBeVisible();
+
+    await expectDrawerCoversViewport(page);
   });
 
   test("탈출 키로 드로어 닫힘", async ({ page }) => {
