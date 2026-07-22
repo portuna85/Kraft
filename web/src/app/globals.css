@@ -1742,7 +1742,9 @@ form button,
 }
 
 .balls {
-  --ball-size: clamp(24px, calc((100vw - 80px) / 9.2), 42px);
+  /* R-20: 뷰포트 폭 기반 매직 넘버(80/9.2) 대신 컨테이너 실폭 기준(cqw)으로 계산 —
+     --shell-gutter·--panel-pad가 바뀌어도 여기 상수를 손댈 필요가 없다. */
+  container-type: inline-size;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1757,8 +1759,9 @@ form button,
 
 .ball {
   flex-shrink: 0;
-  width: var(--ball-size);
-  height: var(--ball-size);
+  width: clamp(24px, 10.6cqw, 42px);
+  height: auto;
+  aspect-ratio: 1;
   font-size: clamp(0.56rem, 2.5vw, 0.9rem);
 }
 
@@ -1777,12 +1780,12 @@ form button,
 .recommend-card-info .balls {
   flex: 1 1 auto;
   min-width: 0;
-  --ball-size: clamp(20px, calc((100vw - 174px) / 6.9), 34px);
 }
 
 .recommend-card-info .ball {
-  width: var(--ball-size);
-  height: var(--ball-size);
+  width: clamp(20px, 11.2cqw, 34px);
+  height: auto;
+  aspect-ratio: 1;
   font-size: clamp(0.5rem, 2.1vw, 0.78rem);
 }
 
@@ -2006,7 +2009,6 @@ form button,
   }
 
   .balls {
-    --ball-size: unset;
     gap: 10px;
     flex-wrap: wrap;
     overflow: hidden;
@@ -2026,10 +2028,6 @@ form button,
     width: 32px;
     height: 32px;
     font-size: 0.78rem;
-  }
-
-  .recommend-card-info .balls {
-    --ball-size: unset;
   }
 
   .recommend-card-info .ball {
