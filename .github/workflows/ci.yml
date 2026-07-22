@@ -113,7 +113,8 @@ jobs:
             -v "$PWD/caddy:/etc/caddy" \
             -e KRAFT_DOMAIN=kraft.io.kr \
             -e KRAFT_ADMIN_DOMAIN=admin.kraft.io.kr \
-            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+            caddy:2-alpine@sha256:77c07d5ebfa5be9fd6c820d2094ae662c9e7eeb9bf98346b7f639900263ee2a2 \
+            caddy validate --config /etc/caddy/Caddyfile
 
   removed-feature-guard:
     name: Removed Feature Guard

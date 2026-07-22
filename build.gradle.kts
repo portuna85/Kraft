@@ -73,6 +73,14 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
+    // Mockito 5.x의 inline mock maker는 byte-buddy-agent를 self-attach하는데, 향후 JDK에서
+    // 이 방식이 기본 차단될 예정이라 경고가 발생한다(JEP 451). Mockito 공식 권장대로 agent를
+    // 명시적으로 등록해 self-attach를 피한다.
+    val mockitoAgentJar = configurations.testRuntimeClasspath.get().files
+        .firstOrNull { it.name.startsWith("mockito-core-") }
+    if (mockitoAgentJar != null) {
+        jvmArgs("-javaagent:${mockitoAgentJar.absolutePath}")
+    }
 }
 
 // ── JaCoCo ─────────────────────────────────────────────────────────────────
@@ -126,7 +134,7 @@ tasks.jacocoTestReport {
     classDirectories.setFrom(jacocoClassDirs())
 }
 
-val strictCoverage: String? by project
+val strictCoverage = project.findProperty("strictCoverage") as String?
 if (strictCoverage == "true") {
     tasks.jacocoTestCoverageVerification {
         dependsOn(tasks.jacocoTestReport)
