@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Noto_Sans_KR, Noto_Serif_KR, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { StickyMobileAd } from "@/components/ad-unit";
@@ -9,26 +9,34 @@ import { getPublicBaseUrl } from "@/lib/api";
 import { THEME_INIT_SCRIPT } from "@/lib/csp-inline-scripts";
 import "./globals.css";
 
-// next/font/google이 노출하는 Noto Sans/Serif KR의 subsets는 cyrillic/latin/latin-ext/
-// vietnamese뿐이고 "korean"은 존재하지 않는 옵션이다 — "_KR" 폰트는 subset과 무관하게
-// 한글 글리프를 항상 포함해 서빙되므로 별도로 지정할 필요가 없다.
-const notoSansKR = Noto_Sans_KR({
-  subsets: ["latin"],
-  weight: ["400", "700", "800"],
+// F1: next/font/google은 빌드마다 fonts.gstatic.com 네트워크가 필요해 production build의
+// 단일 실패 지점이었다. google/fonts 공식 저장소(OFL 라이선스)에서 받은 폰트를
+// scripts/fetch-fonts.mjs로 미리 weight별 static instance woff2로 만들어 커밋해두고
+// next/font/local로 자체 호스팅한다. 갱신 방법은 scripts/fetch-fonts.mjs 상단 주석 참고.
+const notoSansKR = localFont({
+  src: [
+    { path: "../../public/fonts/noto-sans-kr-400.woff2", weight: "400" },
+    { path: "../../public/fonts/noto-sans-kr-700.woff2", weight: "700" },
+    { path: "../../public/fonts/noto-sans-kr-800.woff2", weight: "800" },
+  ],
   display: "swap",
   variable: "--font-sans",
 });
 
-const notoSerifKR = Noto_Serif_KR({
-  subsets: ["latin"],
-  weight: ["500", "700"],
+const notoSerifKR = localFont({
+  src: [
+    { path: "../../public/fonts/noto-serif-kr-500.woff2", weight: "500" },
+    { path: "../../public/fonts/noto-serif-kr-700.woff2", weight: "700" },
+  ],
   display: "swap",
   variable: "--font-display",
 });
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["500", "700"],
+const spaceGrotesk = localFont({
+  src: [
+    { path: "../../public/fonts/space-grotesk-500.woff2", weight: "500" },
+    { path: "../../public/fonts/space-grotesk-700.woff2", weight: "700" },
+  ],
   display: "swap",
   variable: "--font-accent",
 });

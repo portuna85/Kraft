@@ -22,13 +22,12 @@ export async function getOgFontConfig(): Promise<FontConfig> {
   if (nodeCache) return { fonts: nodeCache, fontFamily: "Noto Sans KR, sans-serif" };
   try {
     const base = join(process.cwd(), "public", "fonts");
-    const [korean, latin] = await Promise.all([
-      readFile(join(base, "NotoSansKR-Bold-korean.woff")),
-      readFile(join(base, "NotoSansKR-Bold-latin.woff")),
-    ]);
+    // scripts/fetch-fonts.mjs가 만든 700 weight 파일 하나에 한글·라틴 글리프가 모두 포함돼
+    // 있어(F1) 예전처럼 korean/latin 두 파일을 따로 합칠 필요가 없다. next/og의 렌더러
+    // (satori/resvg)가 woff2를 지원하지 않아 이 용도에는 .woff를 쓴다.
+    const bold = await readFile(join(base, "noto-sans-kr-700.woff"));
     nodeCache = [
-      { name: "Noto Sans KR", data: korean.buffer as ArrayBuffer, weight: 700, style: "normal" },
-      { name: "Noto Sans KR", data: latin.buffer as ArrayBuffer, weight: 700, style: "normal" },
+      { name: "Noto Sans KR", data: bold.buffer as ArrayBuffer, weight: 700, style: "normal" },
     ];
     return { fonts: nodeCache, fontFamily: "Noto Sans KR, sans-serif" };
   } catch {
