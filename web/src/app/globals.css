@@ -998,7 +998,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   border-radius: 10px;
   background: var(--surface-card);
   color: var(--text);
-  font-size: 0.88rem;
+  font-size: 1rem;
 }
 
 .saved-round-custom-form {
@@ -1014,7 +1014,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   border-radius: 10px;
   background: var(--surface-card);
   color: var(--text);
-  font-size: 0.88rem;
+  font-size: 1rem;
 }
 
 .saved-match-error {
@@ -2329,7 +2329,7 @@ form button,
 
   .balls {
     --ball-size: unset;
-    gap: inherit;
+    gap: 10px;
     flex-wrap: wrap;
     overflow: hidden;
   }
@@ -2362,7 +2362,7 @@ form button,
 
   .frequency-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: inherit;
+    gap: 12px;
   }
 
   .companion-filter-balls {
@@ -2380,8 +2380,8 @@ form button,
 
   .pattern-item {
     grid-template-columns: 88px minmax(0, 1fr) 52px 52px;
-    gap: inherit;
-    padding: inherit;
+    gap: 10px;
+    padding: 7px 10px;
   }
 
   .pattern-key,
@@ -2391,7 +2391,7 @@ form button,
 
   .pattern-count,
   .pattern-pct {
-    text-align: inherit;
+    text-align: right;
   }
 
   .companion-item {
@@ -2426,20 +2426,20 @@ form button,
 
   .prize-table td,
   .prize-table th {
-    padding: inherit;
+    padding: 16px;
   }
 
   .prize-table-rank {
-    font-size: inherit;
+    font-size: 0.92rem;
   }
 
   .prize-table-amount {
-    font-size: inherit;
+    font-size: 1.25rem;
   }
 
   .status-incident-item {
     grid-template-columns: minmax(52px, auto) minmax(0, 1fr) auto;
-    align-items: initial;
+    align-items: center;
   }
 
   .status-incident-time {
@@ -2595,7 +2595,7 @@ form button,
   }
 
   .freq-summary {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .pattern-item {
@@ -2629,7 +2629,7 @@ form button,
   .ad-sidebar {
     display: flex;
     position: sticky;
-    top: 24px;
+    top: calc(var(--header-h) + env(safe-area-inset-top) + 24px);
   }
 }
 
