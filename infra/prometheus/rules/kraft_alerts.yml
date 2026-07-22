@@ -70,3 +70,110 @@ groups:
         annotations:
           summary: "외부 회차 수집이 반복 실패 중"
           description: "최근 1시간 동안 외부 회차 수집 실패가 3회 이상 발생함."
+
+  - name: kraft_recommend
+    rules:
+      - alert: KraftLottoHistoryNotReady
+        expr: kraft_lotto_history_ready{job="kraft-backend"} == 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "추천 이력 데이터가 준비되지 않음"
+          description: "kraft_lotto_history_ready가 10분 이상 0을 유지함. 추천 API가 503으로 거절 중일 수 있음."
+
+      - alert: KraftLottoRecommendHighErrorRate
+        expr: |
+          sum(rate(kraft_lotto_recommend_failures_total{job="kraft-backend"}[10m]))
+          / sum(rate(kraft_lotto_recommend_requests_total{job="kraft-backend"}[10m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "추천 API 실패율 5% 초과"
+          description: "최근 10분 추천 요청 대비 실패 비율이 5%를 넘는 상태가 5분 이상 지속됨."
+
+      - alert: KraftLottoRecommendHighCollisionRate
+        expr: rate(kraft_lotto_recommend_historical_collisions_total{job="kraft-backend"}[10m]) > 5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "추천 생성 시 과거 1등 충돌이 급증"
+          description: "과거 1등 조합과의 충돌율이 높음. 제외 번호 조건이 지나치게 좁을 가능성이 있음."
+
+      - alert: KraftLottoRevalidateFailing
+        expr: increase(kraft_lotto_revalidate_failures_total{job="kraft-backend"}[1h]) >= 5
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ISR revalidation 요청이 반복 실패 중"
+          description: "최근 1시간 동안 revalidation 요청 실패가 5회 이상 발생함. web 컨테이너 또는 revalidate secret 점검 필요."
+
+  - name: kraft_ops
+    rules:
+      - alert: KraftStatisticsSummaryRebuildFailing
+        expr: increase(statistics_summary_rebuild_total{job="kraft-backend",outcome="failure"}[1h]) >= 1
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "통계 summary 재구축이 실패함"
+          description: "최근 1시간 동안 summary rebuild가 실패로 기록됨."
+
+      - alert: KraftAdminLockoutSpike
+        expr: increase(kraft_admin_lockout_total{job="kraft-backend"}[15m]) >= 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "관리자 로그인 lockout이 급증"
+          description: "최근 15분 동안 lockout으로 거부된 로그인 시도가 3회 이상 발생함. brute-force 시도 가능성."
+
+      - alert: KraftBackupStale
+        expr: time() - kraft_backup_last_success_timestamp_seconds > 90000
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "DB 백업이 25시간 이상 성공하지 못함"
+          description: "kraft_backup_last_success_timestamp_seconds 기준 마지막 성공 백업이 25시간을 초과함."
+
+      - alert: NodeFilesystemLowSpace
+        expr: |
+          node_filesystem_avail_bytes{job="node-exporter",mountpoint="/"}
+          / node_filesystem_size_bytes{job="node-exporter",mountpoint="/"} < 0.1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "서버 디스크 여유 공간이 10% 미만"
+          description: "루트 파일시스템 여유 공간이 10% 미만인 상태가 15분 이상 지속됨."
+
+      - alert: CaddyDown
+        expr: up{job="caddy"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Caddy가 응답하지 않음"
+          description: "Caddy admin metrics endpoint가 2분 이상 scrape 실패."
+
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus self-scrape 실패"
+          description: "Prometheus 자체 /metrics가 2분 이상 응답하지 않음."
+
+      - alert: AlertmanagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alertmanager가 응답하지 않음"
+          description: "Alertmanager가 2분 이상 scrape 실패. 이 경보 자체가 전달되지 않을 수 있으니 별도 채널로 상태를 확인해야 함."
