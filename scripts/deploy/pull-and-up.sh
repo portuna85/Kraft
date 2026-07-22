@@ -31,6 +31,13 @@ echo "==> Recreating Caddy to guarantee fresh config..."
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --force-recreate --no-deps caddy
 sleep 2
 
+# alertmanager.yml(webhook 렌더링)과 prometheus.yml/rules(alert rule)도 같은 문제를 겪는다 —
+# render-alertmanager.sh가 파일을 새로 써도 이미 떠 있는 컨테이너는 기동 시 로드한 예전 설정을
+# 계속 메모리에 들고 있다. 예: webhook 값이 바뀌어도 재기동 전까지는 옛 값(더미 localhost 등)으로
+# 계속 전송을 시도한다. Caddy와 동일하게 매 배포마다 강제 재생성한다.
+echo "==> Recreating Alertmanager/Prometheus to guarantee fresh config..."
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --force-recreate --no-deps alertmanager prometheus
+
 echo "==> Fast local Caddy routing check (catches Caddyfile bugs before the slow external smoke test)..."
 bash scripts/deploy/check-caddy-routes.sh
 
