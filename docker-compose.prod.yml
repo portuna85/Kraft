@@ -197,6 +197,7 @@ services:
     networks:
       - edge
       - app
+      - monitoring
 
   prometheus:
     image: prom/prometheus:v3.4.0@sha256:78ed1f9050eb9eaf766af6e580230b1c4965728650e332cd1ee918c0c4699775
