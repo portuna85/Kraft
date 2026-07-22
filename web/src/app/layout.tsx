@@ -17,19 +17,18 @@ const notoSansKR = localFont({
   src: [
     { path: "../../public/fonts/noto-sans-kr-400.woff2", weight: "400" },
     { path: "../../public/fonts/noto-sans-kr-700.woff2", weight: "700" },
-    { path: "../../public/fonts/noto-sans-kr-800.woff2", weight: "800" },
   ],
   display: "swap",
   variable: "--font-sans",
 });
 
+// noto-serif-kr-700은 히어로 제목(.page-title/.result-title)에만 쓰이는 non-critical
+// 자산이라 preload에서 제외한다 — 크리티컬 렌더 패스를 본문 폰트(notoSansKR)에 집중시킨다.
 const notoSerifKR = localFont({
-  src: [
-    { path: "../../public/fonts/noto-serif-kr-500.woff2", weight: "500" },
-    { path: "../../public/fonts/noto-serif-kr-700.woff2", weight: "700" },
-  ],
+  src: [{ path: "../../public/fonts/noto-serif-kr-700.woff2", weight: "700" }],
   display: "swap",
   variable: "--font-display",
+  preload: false,
 });
 
 const spaceGrotesk = localFont({

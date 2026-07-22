@@ -30,6 +30,9 @@
   --panel-gap: 18px;
   --card-radius: 20px;
   --header-h: 68px;
+  --header-offset: calc(var(--header-h) + env(safe-area-inset-top));
+  --target-min: 44px;
+  --sticky-ad-h: calc(50px + env(safe-area-inset-bottom));
 }
 
 [data-theme="dark"] {
@@ -69,12 +72,14 @@
 html {
   font-family: var(--font-sans), "Pretendard", system-ui, sans-serif;
   overflow-x: clip;
+  scroll-padding-top: calc(var(--header-offset) + 8px);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background:
@@ -109,7 +114,7 @@ a {
   width: 100%;
   max-width: var(--shell-max);
   margin: 0 auto;
-  padding-inline: var(--shell-gutter);
+  padding-inline: max(var(--shell-gutter), env(safe-area-inset-left)) max(var(--shell-gutter), env(safe-area-inset-right));
   min-width: 0;
 }
 
@@ -470,10 +475,14 @@ button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-del
   box-shadow: 0 10px 24px rgba(141, 47, 16, 0.18);
 }
 
-.button:hover,
-button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-delete-btn):not(.recommend-save-btn):not(.freq-filter-tab):not(.link-button):not(.ball):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(141, 47, 16, 0.22);
+/* R-12: 장식성 hover(들뜨는 transform·shadow)는 fine pointer에서만 — 터치 기기에서
+   탭 후 hover가 "붙은 채" 남는 것을 막는다. */
+@media (hover: hover) and (pointer: fine) {
+  .button:hover,
+  button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-delete-btn):not(.recommend-save-btn):not(.freq-filter-tab):not(.link-button):not(.ball):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(141, 47, 16, 0.22);
+  }
 }
 
 .button.secondary {
@@ -527,13 +536,15 @@ button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-del
   color: inherit;
 }
 
-.stat-card:hover,
-.round-card:hover,
-.recommend-card:hover,
-.saved-item:hover {
-  transform: translateY(-2px);
-  border-color: rgba(201, 79, 36, 0.22);
-  box-shadow: 0 22px 42px rgba(64, 39, 22, 0.14);
+@media (hover: hover) and (pointer: fine) {
+  .stat-card:hover,
+  .round-card:hover,
+  .recommend-card:hover,
+  .saved-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(201, 79, 36, 0.22);
+    box-shadow: 0 22px 42px rgba(64, 39, 22, 0.14);
+  }
 }
 
 .stat-card h3,
@@ -576,6 +587,8 @@ button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-del
   padding: 2px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* R-11: 스크롤바를 숨기는 대신 잘림 단서를 준다 — 잘려도 티가 안 나는 문제 방지 */
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
 }
 
 .balls::-webkit-scrollbar {
@@ -614,7 +627,7 @@ button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-del
 
 .ball-separator {
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .prize-line {
@@ -622,6 +635,7 @@ button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-del
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
 }
 
 .prize-line::-webkit-scrollbar {
@@ -1136,9 +1150,11 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
-.freq-filter-tab:hover:not(:disabled) {
-  background: var(--surface-card);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .freq-filter-tab:hover:not(:disabled) {
+    background: var(--surface-card);
+    transform: translateY(-1px);
+  }
 }
 .freq-filter-tab.active {
   background: var(--accent);
@@ -1346,11 +1362,13 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   border-radius: 16px;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
-.companion-item:hover {
-  transform: translateX(2px);
-  border-color: rgba(201, 79, 36, 0.2);
-  background: var(--surface-card);
-  box-shadow: 0 4px 14px rgba(64, 39, 22, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .companion-item:hover {
+    transform: translateX(2px);
+    border-color: rgba(201, 79, 36, 0.2);
+    background: var(--surface-card);
+    box-shadow: 0 4px 14px rgba(64, 39, 22, 0.08);
+  }
 }
 .rank {
   font-family: var(--font-accent), var(--font-sans), sans-serif;
@@ -1488,7 +1506,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 }
 /* Noto Sans KR은 400/700/800만 임베드한다 — 600은 700으로 대체 렌더링되므로 일치시킨다. */
 .range-label { font-weight: 700; color: var(--muted); }
-.range-count { font-weight: 800; text-align: right; }
+.range-count { font-weight: 700; text-align: right; }
 .error { color: var(--accent); font-weight: 700; }
 
 /* ── Pagination ──────────────────────────────────────────────────── */
@@ -1687,6 +1705,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
 }
 
 .prize-table-wrap::-webkit-scrollbar {
@@ -1723,7 +1742,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 
 .prize-table-amount {
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--accent-strong);
 }
@@ -1961,12 +1980,14 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 
 .nav-mobile-wrap {
   position: fixed;
-  top: var(--header-h);
+  top: var(--header-offset);
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 19;
   padding: 0 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .nav-mobile {
@@ -2629,7 +2650,7 @@ form button,
   .ad-sidebar {
     display: flex;
     position: sticky;
-    top: calc(var(--header-h) + env(safe-area-inset-top) + 24px);
+    top: calc(var(--header-offset) + 24px);
   }
 }
 
@@ -2652,6 +2673,20 @@ form button,
   margin-top: 0;
 }
 
+/* R-06/R-15: InArticleAd/PageAd 컨테이너 폭 측정용 래퍼 — 포맷이 정해지기 전에도
+   자리를 예약해 mount 시 CLS가 생기지 않게 한다. 내부 .ad-unit의 margin-top과
+   중복되지 않도록 여기서 상단 여백을 갖고 내부는 0으로 둔다. */
+.ad-slot--article {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  margin-top: 24px;
+}
+
+.ad-slot--article .ad-unit {
+  margin-top: 0;
+}
+
 .ad-sticky-mobile {
   position: fixed;
   left: 0;
@@ -2662,6 +2697,7 @@ form button,
   justify-content: center;
   background: var(--surface, #fff);
   border-top: 1px solid var(--border, #e5e5e5);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .ad-sticky-mobile .ad-unit {
@@ -2683,6 +2719,13 @@ form button,
   padding: 4px;
 }
 
+/* 시각적 크기(작은 ✕)는 유지하되 히트 영역만 44px 근접까지 넓힌다 — 광고 오탭 방지 */
+.ad-sticky-mobile-close::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+}
+
 @media (min-width: 1024px) {
   .ad-sticky-mobile {
     display: none;
@@ -2690,9 +2733,22 @@ form button,
 }
 
 @media (max-width: 1023px) {
-  /* 하단 고정 광고(50px + close 버튼)가 마지막 콘텐츠를 가리지 않도록 여백 확보 */
-  .page {
-    padding-bottom: calc(var(--page-pad-bottom) + 50px + env(safe-area-inset-bottom));
+  /* 하단 고정 광고(50px + close 버튼)가 마지막 콘텐츠를 가리지 않도록 여백 확보.
+     광고가 없거나 닫힌 상태에서도 항상 여백을 예약하지 않도록 body.has-sticky-ad로 게이트한다. */
+  body.has-sticky-ad .page {
+    padding-bottom: calc(var(--page-pad-bottom) + var(--sticky-ad-h));
+  }
+}
+
+/* ── Touch targets (R-08) ─────────────────────────────────────────────────── */
+/* 데스크톱 밀도는 그대로 두고, 터치 입력 기기에서만 44px 근접 히트 영역을 보장한다. */
+@media (pointer: coarse) {
+  .saved-delete-btn,
+  .recommend-save-btn,
+  .freq-filter-tab,
+  .theme-toggle,
+  .nav-toggle {
+    min-height: var(--target-min);
   }
 }
 

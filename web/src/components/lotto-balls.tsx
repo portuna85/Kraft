@@ -7,7 +7,7 @@ type Props = {
 
 export function LottoBalls({ numbers, bonusNumber }: Props) {
   return (
-    <div className="balls">
+    <div className="balls" data-allow-overflow>
       {numbers.map((number) => (
         <span key={number} className={`ball ${ballColorClass(number)}`}>
           {number}

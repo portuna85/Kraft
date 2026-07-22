@@ -45,7 +45,7 @@ const FONTS = [
     family: "notosanskr",
     ttfName: "NotoSansKR[wght].ttf",
     outPrefix: "noto-sans-kr",
-    weights: [400, 700, 800],
+    weights: [400, 700],
     charset: KOREAN_CHARSET,
     // og-font-node.ts가 next/og ImageResponse에서 굵게(700) 쓰는데, 그 렌더러(satori/resvg)는
     // woff2를 지원하지 않는다 — 이 weight만 추가로 woff도 함께 만든다.
@@ -55,7 +55,7 @@ const FONTS = [
     family: "notoserifkr",
     ttfName: "NotoSerifKR[wght].ttf",
     outPrefix: "noto-serif-kr",
-    weights: [500, 700],
+    weights: [700],
     charset: KOREAN_CHARSET,
   },
   {

@@ -21,7 +21,7 @@ function PrizeRow({ rank, prizeAmount }: { rank: string; prizeAmount: number }) 
 
 export function PrizeTable({ firstPrizeAmount, secondPrize }: Props) {
   return (
-    <div className="prize-table-wrap">
+    <div className="prize-table-wrap" tabIndex={0} role="region" aria-label="당첨금 표" data-allow-overflow>
       <table className="prize-table">
         <caption className="sr-only">1등·2등 당첨금과 세후 예상 금액</caption>
         <tbody>
