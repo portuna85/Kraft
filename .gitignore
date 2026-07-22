@@ -65,6 +65,9 @@ web/coverage/
 ### Generated infra configs (rendered from .tmpl at deploy time) ###
 infra/alertmanager/alertmanager.yml
 
+### 배포 서버 로컬 상태 (known-good manifest, 커밋 대상 아님) ###
+/deploy/
+
 ### Logs ###
 logs/
 

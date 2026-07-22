@@ -116,18 +116,25 @@ jobs:
               fi
 
               echo "==> Caddyfile 롤백으로 해결 안 됨 — 이미지 롤백 진행" >&2
+              ROLLBACK_FAILED=0
               if [[ -n "$PREV_BACKEND" ]]; then
                 echo "롤백 backend → $PREV_BACKEND"
-                bash scripts/deploy/rollback.sh backend "$PREV_BACKEND" || true
+                bash scripts/deploy/rollback.sh backend "$PREV_BACKEND" || ROLLBACK_FAILED=1
               fi
               if [[ -n "$PREV_WEB" ]]; then
                 echo "롤백 web → $PREV_WEB"
-                bash scripts/deploy/rollback.sh web "$PREV_WEB" || true
+                bash scripts/deploy/rollback.sh web "$PREV_WEB" || ROLLBACK_FAILED=1
+              fi
+              if [[ "$ROLLBACK_FAILED" -eq 1 ]]; then
+                echo "==> [FAIL] 롤백 자체가 실패함 — 수동 개입 필요" >&2
+              else
+                echo "==> 롤백 완료 (이전 버전으로 복구됨)" >&2
               fi
               exit 1
             fi
 
             echo "==> [6/6] 배포 완료 (SHA: ${DEPLOY_SHA})"
+            bash scripts/deploy/save-known-good.sh
             docker logout ghcr.io
 
       - name: Notify failure

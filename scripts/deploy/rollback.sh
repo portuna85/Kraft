@@ -7,6 +7,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 ENV_FILE="${ENV_FILE:-.env.prod}"
 COMPOSE_FILE="$REPO_ROOT/docker-compose.prod.yml"
+MANIFEST="${KNOWN_GOOD_MANIFEST:-$REPO_ROOT/deploy/known-good.env}"
 
 SERVICE="${1:?Usage: rollback.sh <service> <image-ref>}"
 IMAGE_REF="${2:?Usage: rollback.sh <service> <image-ref>}"
@@ -21,18 +22,45 @@ IMAGE_REPO="${IMAGE_REF%:*}"
 
 case "$SERVICE" in
   backend)
-    export KRAFT_BACKEND_IMAGE_REF="$IMAGE_REPO"
-    export KRAFT_BACKEND_IMAGE_TAG="$IMAGE_TAG"
+    ENV_KEY_REF="KRAFT_BACKEND_IMAGE_REF"
+    ENV_KEY_TAG="KRAFT_BACKEND_IMAGE_TAG"
     ;;
   web)
-    export KRAFT_WEB_IMAGE_REF="$IMAGE_REPO"
-    export KRAFT_WEB_IMAGE_TAG="$IMAGE_TAG"
+    ENV_KEY_REF="KRAFT_WEB_IMAGE_REF"
+    ENV_KEY_TAG="KRAFT_WEB_IMAGE_TAG"
     ;;
   *)
     echo "Unknown service: $SERVICE (expected backend or web)" >&2
     exit 1
     ;;
 esac
+export "${ENV_KEY_REF}=$IMAGE_REPO"
+export "${ENV_KEY_TAG}=$IMAGE_TAG"
+
+# 컨테이너 재기동뿐 아니라 다음 재기동/재부팅 시점에도 이 버전이 유지되도록
+# git HEAD와 .env.prod 자체를 되돌린다. 그렇지 않으면 재기동 시 여전히 실패한
+# SHA/이미지 태그를 가리키는 상태로 남는다.
+if [[ -f "$MANIFEST" ]]; then
+  # shellcheck source=/dev/null
+  source "$MANIFEST"
+  if [[ -n "${KNOWN_GOOD_SHA:-}" ]]; then
+    echo "==> known-good SHA로 git HEAD 되돌림: $KNOWN_GOOD_SHA"
+    git -C "$REPO_ROOT" reset --hard "$KNOWN_GOOD_SHA"
+  fi
+else
+  echo "==> WARN: known-good manifest($MANIFEST) 없음 — git HEAD/.env.prod는 되돌리지 않고 컨테이너만 재기동합니다." >&2
+fi
+
+if [[ -f "$ENV_FILE" ]]; then
+  TMP_ENV="$(mktemp "$(dirname "$ENV_FILE")/.env.prod.rollback.XXXXXX")"
+  sed -E \
+    -e "s|^${ENV_KEY_REF}=.*|${ENV_KEY_REF}=${IMAGE_REPO}|" \
+    -e "s|^${ENV_KEY_TAG}=.*|${ENV_KEY_TAG}=${IMAGE_TAG}|" \
+    "$ENV_FILE" > "$TMP_ENV"
+  chmod 600 "$TMP_ENV"
+  mv "$TMP_ENV" "$ENV_FILE"
+  echo "==> $ENV_FILE의 ${ENV_KEY_REF}/${ENV_KEY_TAG}를 롤백 대상으로 갱신"
+fi
 
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" \
   up -d --no-deps "$SERVICE"

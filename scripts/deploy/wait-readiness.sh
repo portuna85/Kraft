@@ -26,9 +26,14 @@ wait_healthy() {
         return 0
         ;;
       none)
-        # Container is running but has no healthcheck — treat as ready.
-        echo "$name is running (no healthcheck, ${elapsed}s elapsed)"
-        return 0
+        # Container has no healthcheck — treat as ready only if it's actually running.
+        # An Exited container with no healthcheck would otherwise be misjudged as ready.
+        running=$(docker inspect --format='{{.State.Running}}' "$name" 2>/dev/null || echo "false")
+        if [[ "$running" == "true" ]]; then
+          echo "$name is running (no healthcheck, ${elapsed}s elapsed)"
+          return 0
+        fi
+        # not running yet (or exited) — fall through to the wait/timeout path below.
         ;;
       missing)
         # docker inspect failed: container does not exist yet.
