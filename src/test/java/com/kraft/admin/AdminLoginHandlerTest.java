@@ -1,6 +1,7 @@
 package com.kraft.admin;
 
 import com.kraft.common.web.ClientIpResolver;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,11 +37,13 @@ class AdminLoginHandlerTest {
     @Mock
     private HttpServletResponse response;
 
+    private SimpleMeterRegistry meterRegistry;
     private AdminLoginHandler handler;
 
     @BeforeEach
     void setUp() {
-        handler = new AdminLoginHandler(lockout, audit, ipResolver);
+        meterRegistry = new SimpleMeterRegistry();
+        handler = new AdminLoginHandler(lockout, audit, ipResolver, meterRegistry);
     }
 
     @Test
@@ -56,6 +59,7 @@ class AdminLoginHandlerTest {
         assertThat(auditUser.getValue()).hasSize(100);
         verify(lockout).recordFailure(auditUser.getValue(), "1.2.3.4");
         verify(response).sendRedirect("/admin/login?error");
+        assertThat(meterRegistry.get("kraft_admin_login_failures_total").counter().count()).isEqualTo(1.0);
     }
 
     @Test
@@ -69,5 +73,6 @@ class AdminLoginHandlerTest {
         verify(lockout, never()).recordFailure(anyString(), anyString());
         verify(audit, never()).record(any(), any(), any(), any(), any());
         verify(response).sendRedirect("/admin/login?error");
+        assertThat(meterRegistry.get("kraft_admin_login_failures_total").counter().count()).isZero();
     }
 }

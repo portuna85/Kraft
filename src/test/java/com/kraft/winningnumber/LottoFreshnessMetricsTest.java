@@ -15,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("로또 최신성 지표 단위 테스트")
@@ -65,5 +67,21 @@ class LottoFreshnessMetricsTest {
         assertThat(snapshot.latestRound()).isEqualTo(1200);
         assertThat(snapshot.expectedLatestRound()).isEqualTo(1201);
         assertThat(snapshot.staleDays()).isEqualTo(7);
+    }
+
+    @Test
+    @DisplayName("1초 이내 재호출은 캐시된 값을 반환하고 repository를 다시 조회하지 않는다")
+    void snapshot_reusesCachedValueWithinTtl() {
+        Clock clock = Clock.fixed(Instant.parse("2026-06-20T12:00:00Z"), ZoneId.of("Asia/Seoul"));
+        given(winningNumberRepository.findTopByOrderByRoundDesc()).willReturn(Optional.empty());
+
+        LottoFreshnessMetrics metrics = new LottoFreshnessMetrics(
+                new SimpleMeterRegistry(), winningNumberRepository, clock, drawScheduleCalculator);
+
+        metrics.snapshot();
+        metrics.snapshot();
+        metrics.snapshot();
+
+        verify(winningNumberRepository, times(1)).findTopByOrderByRoundDesc();
     }
 }

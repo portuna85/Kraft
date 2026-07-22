@@ -1,6 +1,8 @@
 package com.kraft.admin;
 
 import com.kraft.common.web.ClientIpResolver;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -16,12 +18,16 @@ public class AdminLoginHandler implements AuthenticationSuccessHandler, Authenti
     private final AdminLoginAttemptService lockout;
     private final AdminAuditLogService audit;
     private final ClientIpResolver ipResolver;
+    private final Counter loginFailureCounter;
 
     public AdminLoginHandler(AdminLoginAttemptService lockout, AdminAuditLogService audit,
-                             ClientIpResolver ipResolver) {
+                             ClientIpResolver ipResolver, MeterRegistry meterRegistry) {
         this.lockout = lockout;
         this.audit = audit;
         this.ipResolver = ipResolver;
+        this.loginFailureCounter = Counter.builder("kraft_admin_login_failures_total")
+                .description("관리자 로그인 실패 횟수")
+                .register(meterRegistry);
     }
 
     @Override
@@ -42,6 +48,7 @@ public class AdminLoginHandler implements AuthenticationSuccessHandler, Authenti
         if (username != null && !username.isEmpty()) {
             lockout.recordFailure(username, ip);
             audit.record(username, "LOGIN_FAILURE", null, ex.getMessage(), ip);
+            loginFailureCounter.increment();
         }
         res.sendRedirect("/admin/login?error");
     }

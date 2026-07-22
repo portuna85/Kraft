@@ -1,6 +1,7 @@
 package com.kraft.admin;
 
 import com.kraft.common.web.ClientIpResolver;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,15 +34,18 @@ public class AdminSecurityConfig {
     private final AdminLoginHandler loginHandler;
     private final AdminLoginAttemptService lockout;
     private final ClientIpResolver ipResolver;
+    private final MeterRegistry meterRegistry;
 
     public AdminSecurityConfig(AdminUserDetailsService userDetailsService,
                                AdminLoginHandler loginHandler,
                                AdminLoginAttemptService lockout,
-                               ClientIpResolver ipResolver) {
+                               ClientIpResolver ipResolver,
+                               MeterRegistry meterRegistry) {
         this.userDetailsService = userDetailsService;
         this.loginHandler = loginHandler;
         this.lockout = lockout;
         this.ipResolver = ipResolver;
+        this.meterRegistry = meterRegistry;
     }
 
     @Bean
@@ -70,7 +74,7 @@ public class AdminSecurityConfig {
         HttpSessionCsrfTokenRepository csrfTokenRepository = new HttpSessionCsrfTokenRepository();
         return http
                 .securityMatcher("/admin/**")
-                .addFilterBefore(new AdminLockoutFilter(lockout, ipResolver),
+                .addFilterBefore(new AdminLockoutFilter(lockout, ipResolver, meterRegistry),
                         UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(adminLoginCsrfRedirectFilter(csrfTokenRepository), CsrfFilter.class)
                 .authorizeHttpRequests(auth -> auth
