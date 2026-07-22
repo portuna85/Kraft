@@ -1,6 +1,7 @@
-// E2E 테스트는 prod와 동일한 `output: standalone` 산출물로 띄운다(Dockerfile과 동일 절차).
-// `next start`는 standalone 빌드와 호환되지 않으므로 .next/static, public을
-// .next/standalone 아래로 복사한 뒤 standalone server.js를 직접 실행한다.
+// F2: `npm start`와 E2E 모두 prod와 동일한 `output: standalone` 산출물로 띄운다
+// (Dockerfile과 동일 절차). `next start`는 standalone 빌드와 호환되지 않으므로
+// .next/static, public을 .next/standalone 아래로 복사한 뒤 standalone server.js를
+// 직접 실행한다. E2E는 playwright.config.ts의 webServer.env에서 PORT=3100을 명시한다.
 import { cpSync, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import path from "node:path";
@@ -19,7 +20,7 @@ cpSync(path.join(webDir, "public"), path.join(standaloneDir, "public"), { recurs
 
 const child = spawn(process.execPath, [path.join(standaloneDir, "server.js")], {
   stdio: "inherit",
-  env: { ...process.env, PORT: process.env.PORT ?? "3100" },
+  env: { ...process.env, PORT: process.env.PORT ?? "3000" },
 });
 
 child.on("exit", (code) => process.exit(code ?? 0));

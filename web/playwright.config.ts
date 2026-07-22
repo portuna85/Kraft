@@ -30,6 +30,9 @@ export default defineConfig({
       // 서버 컴포넌트 페이지는 이미 구현된 폴백 UI로 렌더링된다.
       KRAFT_BACKEND_INTERNAL_URL: "http://127.0.0.1:59999",
       KRAFT_PUBLIC_BASE_URL: "http://127.0.0.1:3100",
+      // scripts/start-standalone.mjs의 기본 포트(3000, npm start/Docker와 동일)에
+      // 의존하지 않도록 E2E 전용 포트를 명시한다.
+      PORT: "3100",
     },
   },
 });

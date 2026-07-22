@@ -5,14 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/start-standalone.mjs",
     "lint": "eslint src",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "e2e:serve": "node scripts/serve-standalone.mjs"
+    "e2e:serve": "node scripts/start-standalone.mjs"
   },
   "dependencies": {
     "next": "16.2.10",

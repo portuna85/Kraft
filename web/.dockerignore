@@ -3,3 +3,9 @@ node_modules
 npm-debug.log
 .env.local
 .env*.local
+e2e
+coverage
+test-results
+playwright-report
+logs
+*.log
