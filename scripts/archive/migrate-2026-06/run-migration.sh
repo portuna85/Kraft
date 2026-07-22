@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 # 운영 데이터 이전 마스터 스크립트 (Phase 5 §8.5)
 #
-# 사용법:
-#   1. cp scripts/migrate/env-migration.example.sh env-migration.sh
+# ARCHIVED — 2026-06 옛 시스템 → KRAFT 데이터 이전은 이미 완료됨.
+# 이 디렉터리의 스크립트는 그대로 재실행하지 말 것. 알려진 버그는
+# scripts/archive/migrate-2026-06/README.md 참고.
+#
+# 사용법(당시 기준, 참고용):
+#   1. cp scripts/archive/migrate-2026-06/env-migration.example.sh env-migration.sh
 #   2. vi env-migration.sh  (접속 정보 입력)
 #   3. source env-migration.sh
-#   4. bash scripts/migrate/run-migration.sh
+#   4. bash scripts/archive/migrate-2026-06/run-migration.sh
 #
 # 각 단계는 체크포인트 파일로 재시작을 지원한다.
-# 특정 단계부터 재개: RESUME_STEP=3 bash scripts/migrate/run-migration.sh
+# 특정 단계부터 재개: RESUME_STEP=3 bash scripts/archive/migrate-2026-06/run-migration.sh
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-SCRIPT_DIR="$REPO_ROOT/scripts/migrate"
+REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+SCRIPT_DIR="$REPO_ROOT/scripts/archive/migrate-2026-06"
 CHECKPOINT_DIR="${MIGRATE_DIR:-/tmp/kraft-migrate-$(date +%Y%m%d)}"
 RESUME_STEP="${RESUME_STEP:-1}"
 START_TIME=$(date +%s)

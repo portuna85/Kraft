@@ -72,7 +72,7 @@ infra/alertmanager/alertmanager.yml
 logs/
 
 ### Migration credentials (never commit) ###
-scripts/migrate/env-migration.sh
+scripts/archive/migrate-2026-06/env-migration.sh
 
 ### Local-only docs (never commit) ###
 docs/*.md
