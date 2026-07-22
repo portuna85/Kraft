@@ -1,19 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
-// SSR에서는 항상 false를 반환하고, 마운트 후 실제 뷰포트에 맞춰 갱신한다.
+// SSR/최초 렌더에서는 항상 false를 반환하고, 마운트 후 실제 뷰포트에 맞춰 갱신한다.
+// 이펙트 안에서 setState를 직접 호출하는 대신 useSyncExternalStore로 matchMedia를
+// 외부 저장소처럼 구독한다.
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    setMatches(mql.matches);
-
-    const listener = (event: MediaQueryListEvent) => setMatches(event.matches);
-    mql.addEventListener("change", listener);
-    return () => mql.removeEventListener("change", listener);
-  }, [query]);
-
-  return matches;
+  return useSyncExternalStore(
+    (onChange) => {
+      const mql = window.matchMedia(query);
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
 }

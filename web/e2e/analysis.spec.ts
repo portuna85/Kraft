@@ -18,7 +18,7 @@ test("번호가 6개가 아니면 에러 메시지를 보여준다", async ({ pa
   await page.getByPlaceholder("예: 3, 11, 19, 28, 34, 42").fill("1, 2, 3");
   await page.getByRole("button", { name: "분석하기" }).click();
 
-  await expect(page.getByText("번호 6개를 입력해 주세요.")).toBeVisible();
+  await expect(page.getByText("번호는 6개여야 합니다.")).toBeVisible();
 });
 
 test("중복된 번호를 입력하면 에러 메시지를 보여준다", async ({ page }) => {
@@ -27,5 +27,5 @@ test("중복된 번호를 입력하면 에러 메시지를 보여준다", async 
   await page.getByPlaceholder("예: 3, 11, 19, 28, 34, 42").fill("1, 1, 3, 4, 5, 6");
   await page.getByRole("button", { name: "분석하기" }).click();
 
-  await expect(page.getByText("중복된 번호가 있습니다.")).toBeVisible();
+  await expect(page.getByText("번호에 중복이 있습니다.")).toBeVisible();
 });

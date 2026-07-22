@@ -1,4 +1,5 @@
 import { buildWebsiteJsonLd } from "@/lib/csp-inline-scripts";
+import { serializeJsonLd } from "@/lib/json-ld-serialize";
 
 type BreadcrumbItem = { name: string; item?: string };
 
@@ -27,7 +28,7 @@ export function JsonLdBreadcrumb({ baseUrl, nonce, items }: JsonLdBreadcrumbProp
       type="application/ld+json"
       nonce={nonce}
       suppressHydrationWarning
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
     />
   );
 }
@@ -43,7 +44,7 @@ export function JsonLdWebSite({ baseUrl, nonce }: JsonLdWebSiteProps) {
       type="application/ld+json"
       nonce={nonce}
       suppressHydrationWarning
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(buildWebsiteJsonLd(baseUrl)) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildWebsiteJsonLd(baseUrl)) }}
     />
   );
 }

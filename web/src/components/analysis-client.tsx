@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import type { AnalysisResponse } from "@/lib/api";
 import { analyzeNumbers } from "@/lib/analyze";
 import { AnalysisResult } from "@/components/analysis-result";
+import { validateLottoNumbers } from "@/lib/lotto-validation";
 
 export function AnalysisClient() {
   const [input, setInput] = useState("");
@@ -15,24 +16,15 @@ export function AnalysisClient() {
     setError("");
     setResult(null);
 
-    const parts = input.split(",").map((value) => Number.parseInt(value.trim(), 10));
+    const parts = input.split(",").map((value) => value.trim());
+    const validation = validateLottoNumbers(parts);
 
-    if (parts.length !== 6 || parts.some(Number.isNaN)) {
-      setError("번호 6개를 입력해 주세요. 예: 3, 11, 19, 28, 34, 42");
+    if (!validation.ok) {
+      setError(validation.message);
       return;
     }
 
-    if (parts.some((n) => n < 1 || n > 45)) {
-      setError("번호는 1부터 45 사이여야 합니다.");
-      return;
-    }
-
-    if (new Set(parts).size !== parts.length) {
-      setError("중복된 번호가 있습니다.");
-      return;
-    }
-
-    setResult(analyzeNumbers(parts));
+    setResult(analyzeNumbers(validation.numbers));
   }
 
   return (

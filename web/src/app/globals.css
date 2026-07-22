@@ -960,7 +960,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   border-radius: 20px;
   font-size: 0.78rem;
   font-weight: 700;
-  background: var(--surface-bg);
+  background: var(--surface-card-sm);
   border: 1px solid var(--line);
   color: var(--text);
 }

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { FAQ_ITEMS, buildFaqPageJsonLd } from "@/lib/csp-inline-scripts";
 import { JsonLdBreadcrumb } from "@/components/json-ld";
 import { getPublicBaseUrl } from "@/lib/api";
+import { serializeJsonLd } from "@/lib/json-ld-serialize";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -328,7 +329,7 @@ export default async function InfoPage({ params }: Props) {
           type="application/ld+json"
           nonce={nonce}
           suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildFaqPageJsonLd()) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildFaqPageJsonLd()) }}
         />
       ) : null}
       {info.content}

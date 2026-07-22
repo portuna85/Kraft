@@ -17,8 +17,8 @@ test("동반 출현 페이지는 백엔드 응답이 없으면 에러 경계를 
   await expect(page.getByText("페이지를 불러오지 못했습니다")).toBeVisible();
 });
 
-test("패턴 통계 페이지는 백엔드 응답이 없으면 폴백 문구를 보여준다", async ({ page }) => {
+test("패턴 통계 페이지는 백엔드 응답이 없으면 에러 경계를 보여준다", async ({ page }) => {
   await page.goto("/stats");
 
-  await expect(page.getByRole("heading", { name: "통계를 준비 중입니다" })).toBeVisible();
+  await expect(page.getByText("페이지를 불러오지 못했습니다")).toBeVisible();
 });
