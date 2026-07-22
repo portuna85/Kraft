@@ -38,6 +38,26 @@ echo "==> Backing up $DB_NAME to $FILENAME"
 
 echo "==> Backup complete: $FILENAME ($(du -sh "$FILENAME" | cut -f1))"
 
+# node-exporter textfile collector로 백업 성공 시각/크기를 노출한다(Prometheus의
+# KraftBackupStale alert가 이 값을 참조). 디렉터리가 없으면(=collector 미설정) 조용히 건너뛴다.
+TEXTFILE_DIR="${NODE_EXPORTER_TEXTFILE_DIR:-/var/lib/node-exporter/textfile}"
+if [[ -d "$TEXTFILE_DIR" ]]; then
+  BACKUP_SIZE_BYTES=$(stat -c%s "$FILENAME" 2>/dev/null || stat -f%z "$FILENAME")
+  TMP_METRICS="$(mktemp "$TEXTFILE_DIR/.kraft_backup.XXXXXX")"
+  {
+    echo "# HELP kraft_backup_last_success_timestamp_seconds Unix time of the last successful DB backup"
+    echo "# TYPE kraft_backup_last_success_timestamp_seconds gauge"
+    echo "kraft_backup_last_success_timestamp_seconds $(date +%s)"
+    echo "# HELP kraft_backup_last_size_bytes Size of the last successful DB backup file in bytes"
+    echo "# TYPE kraft_backup_last_size_bytes gauge"
+    echo "kraft_backup_last_size_bytes $BACKUP_SIZE_BYTES"
+  } > "$TMP_METRICS"
+  mv "$TMP_METRICS" "$TEXTFILE_DIR/kraft_backup.prom"
+  echo "==> 백업 메트릭 기록: $TEXTFILE_DIR/kraft_backup.prom"
+else
+  echo "==> [WARN] $TEXTFILE_DIR 없음 — 백업 메트릭을 노출하지 않습니다(node-exporter textfile collector 미설정)." >&2
+fi
+
 # 단일 서버/볼륨 장애에 대비한 오프서버 사본. BACKUP_REMOTE_DEST(예: s3:my-bucket/kraft-backups/)가
 # 설정되어 있고 rclone이 설치돼 있을 때만 동작 — 기본값(미설정)이면 기존과 동일하게 로컬에만 보관한다.
 if [[ -n "${BACKUP_REMOTE_DEST:-}" ]]; then

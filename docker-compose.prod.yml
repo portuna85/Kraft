@@ -246,6 +246,7 @@ services:
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
     volumes:
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/etc/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     expose:
       - "3000"
@@ -306,8 +307,11 @@ services:
       - "--collector.diskstats"
       - "--collector.filesystem"
       - "--collector.netdev"
+      - "--collector.textfile"
+      - "--collector.textfile.directory=/textfile"
     volumes:
       - /:/host:ro
+      - /var/lib/node-exporter/textfile:/textfile:ro
     pid: host
     security_opt:
       - no-new-privileges:true
