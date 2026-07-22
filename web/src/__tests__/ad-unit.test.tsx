@@ -1,8 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { AdSenseUnit, AdUnit, PageAd, StickyMobileAd } from "@/components/ad-unit";
+import {
+  AdSenseSidebar,
+  AdSenseUnit,
+  AdUnit,
+  InArticleAd,
+  PageAd,
+  StickyMobileAd,
+} from "@/components/ad-unit";
 
-// matchMedia mock — PageAd/InArticleAd가 useMediaQuery(min-width:1024px)로 뷰포트를 판단한다.
+// matchMedia mock — StickyMobileAd/AdSenseSidebar가 useMediaQuery(min-width:1024px)로
+// "사이드바/하단바가 그 뷰포트에서 아예 노출되는가"를 판단한다(콘텐츠 컬럼 폭과 무관).
 function mockMatchMedia(matches: boolean) {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
@@ -20,12 +28,38 @@ function mockMatchMedia(matches: boolean) {
   });
 }
 
-describe("광고 유닛", () => {
-  beforeEach(() => {
-    mockMatchMedia(false); // 기본: 모바일(<1024px)
-  });
+// ResizeObserver mock — PageAd/InArticleAd는 뷰포트가 아니라 컨테이너 실측 폭
+// (useElementWidth)으로 포맷을 고른다(R-06: 사이드바 유무에 따라 실폭이 달라지는
+// 콘텐츠 컬럼 안에서는 뷰포트 판정만으로 728px 광고가 잘리는 구간이 생기기 때문).
+let mockContainerWidth = 0;
 
-  it("전달받은 unit·width·height로 ins 태그를 렌더링하고 정확한 크기를 예약한다", () => {
+class MockResizeObserver {
+  #callback: ResizeObserverCallback;
+  constructor(callback: ResizeObserverCallback) {
+    this.#callback = callback;
+  }
+  observe() {
+    this.#callback(
+      [{ contentRect: { width: mockContainerWidth } } as ResizeObserverEntry],
+      this as unknown as ResizeObserver,
+    );
+  }
+  unobserve() {}
+  disconnect() {}
+}
+
+beforeEach(() => {
+  vi.stubGlobal("ResizeObserver", MockResizeObserver);
+  mockContainerWidth = 0;
+  mockMatchMedia(false);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("광고 유닛", () => {
+  it("전달받은 unit·width·height로 ins 태그를 렌더링하고 폭은 컨테이너에 맞춘다", () => {
     render(<AdUnit unit="DAN-abc123" width={320} height={100} />);
 
     const ins = document.querySelector("ins.kakao_ad_area");
@@ -34,8 +68,9 @@ describe("광고 유닛", () => {
     expect(ins).toHaveAttribute("data-ad-width", "320");
     expect(ins).toHaveAttribute("data-ad-height", "100");
 
+    // R-06: 인라인 minWidth는 컨테이너보다 넓은 폭을 강제해 잘림을 유발하므로 제거했다.
     const container = screen.getByLabelText("광고");
-    expect(container).toHaveStyle({ minWidth: "320px", minHeight: "100px" });
+    expect(container).toHaveStyle({ maxWidth: "100%", minHeight: "100px" });
   });
 
   it("label을 지정하면 aria-label에 반영된다", () => {
@@ -51,7 +86,7 @@ describe("광고 유닛", () => {
   });
 });
 
-describe("PageAd 뷰포트별 단일 렌더 (F3)", () => {
+describe("PageAd 컨테이너 폭 기반 포맷 선택 (R-06)", () => {
   // 슬롯별 env 매핑이 모듈 로드 시점에 한 번 계산되므로(빌드타임 치환과 동일한 전제),
   // 값을 바꿔서 검증하려면 매번 모듈을 새로 import해야 한다.
   const originalEnv = { ...process.env };
@@ -61,8 +96,49 @@ describe("PageAd 뷰포트별 단일 렌더 (F3)", () => {
     vi.resetModules();
   });
 
-  it("모바일 뷰포트에서는 모바일 광고만 mount한다", async () => {
-    mockMatchMedia(false);
+  it("측정 전(마운트 직후)에는 자리만 예약하고 아무 포맷도 mount하지 않는다", async () => {
+    process.env = {
+      ...originalEnv,
+      NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY: "DAN-mobile",
+      NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY_DESKTOP: "DAN-desktop",
+    };
+    vi.resetModules();
+    // ResizeObserver.observe가 콜백을 동기 호출하지 않도록 잠시 no-op으로 교체
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    const { PageAd: FreshPageAd } = await import("@/components/ad-unit");
+
+    const { container } = render(<FreshPageAd slot="frequency" />);
+
+    expect(container.querySelector(".ad-mobile")).not.toBeInTheDocument();
+    expect(container.querySelector(".ad-desktop")).not.toBeInTheDocument();
+    expect(container.querySelector(".ad-slot--article")).toBeInTheDocument();
+  });
+
+  it("컨테이너 폭이 728px 이상이면 데스크톱 광고만 mount한다", async () => {
+    mockContainerWidth = 900;
+    process.env = {
+      ...originalEnv,
+      NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY: "DAN-mobile",
+      NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY_DESKTOP: "DAN-desktop",
+    };
+    vi.resetModules();
+    const { PageAd: FreshPageAd } = await import("@/components/ad-unit");
+
+    render(<FreshPageAd slot="frequency" />);
+
+    expect(document.querySelector(".ad-desktop")).toBeInTheDocument();
+    expect(document.querySelector(".ad-mobile")).not.toBeInTheDocument();
+  });
+
+  it("컨테이너 폭이 728px 미만·320px 이상이면 모바일 광고만 mount한다", async () => {
+    mockContainerWidth = 360;
     process.env = {
       ...originalEnv,
       NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY: "DAN-mobile",
@@ -77,8 +153,8 @@ describe("PageAd 뷰포트별 단일 렌더 (F3)", () => {
     expect(document.querySelector(".ad-desktop")).not.toBeInTheDocument();
   });
 
-  it("데스크톱 뷰포트에서는 데스크톱 광고만 mount한다", async () => {
-    mockMatchMedia(true);
+  it("컨테이너 폭이 320px 미만이면(R-06) 아무 포맷도 mount하지 않는다", async () => {
+    mockContainerWidth = 280;
     process.env = {
       ...originalEnv,
       NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY: "DAN-mobile",
@@ -89,8 +165,8 @@ describe("PageAd 뷰포트별 단일 렌더 (F3)", () => {
 
     render(<FreshPageAd slot="frequency" />);
 
-    expect(document.querySelector(".ad-desktop")).toBeInTheDocument();
     expect(document.querySelector(".ad-mobile")).not.toBeInTheDocument();
+    expect(document.querySelector(".ad-desktop")).not.toBeInTheDocument();
   });
 });
 
@@ -148,18 +224,12 @@ describe("애드센스 플레이스홀더 옵트인 (F3: NEXT_PUBLIC_ADSENSE_RES
 
     expect(document.querySelector("ins.adsbygoogle")).not.toBeInTheDocument();
     const placeholder = screen.getByLabelText("사이드바 광고");
-    expect(placeholder).toHaveStyle({ minWidth: "300px", minHeight: "600px" });
+    expect(placeholder).toHaveStyle({ maxWidth: "100%", minHeight: "600px" });
   });
 });
 
-describe("본문 광고 (F4: 슬롯당 한 네트워크만)", () => {
-  // 슬롯별 env 매핑이 모듈 로드 시점에 한 번 계산되므로(빌드타임 치환과 동일한 전제),
-  // 값을 바꿔서 검증하려면 매번 모듈을 새로 import해야 한다.
+describe("본문 광고 (F4: 슬롯당 한 네트워크만, R-06 컨테이너 폭 기반)", () => {
   const originalEnv = { ...process.env };
-
-  beforeEach(() => {
-    mockMatchMedia(false);
-  });
 
   afterEach(() => {
     process.env = { ...originalEnv };
@@ -167,17 +237,36 @@ describe("본문 광고 (F4: 슬롯당 한 네트워크만)", () => {
   });
 
   it("NEXT_PUBLIC_AD_NETWORK 미설정 시 애드핏만 렌더한다(기본값)", async () => {
+    mockContainerWidth = 900;
     process.env = { ...originalEnv };
     delete process.env.NEXT_PUBLIC_AD_NETWORK;
     vi.resetModules();
-    const { InArticleAd } = await import("@/components/ad-unit");
+    const { InArticleAd: FreshInArticleAd } = await import("@/components/ad-unit");
 
-    render(<InArticleAd slot="frequency" />);
+    render(<FreshInArticleAd slot="frequency" />);
 
     expect(document.querySelector("ins.adsbygoogle")).not.toBeInTheDocument();
   });
 
   it("NEXT_PUBLIC_AD_NETWORK=adsense면 애드센스만 렌더한다", async () => {
+    mockContainerWidth = 900;
+    process.env = {
+      ...originalEnv,
+      NEXT_PUBLIC_AD_NETWORK: "adsense",
+      NEXT_PUBLIC_ADSENSE_CLIENT_ID: "ca-pub-1234567890123456",
+      NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY: "3333333333",
+    };
+    vi.resetModules();
+    const { InArticleAd: FreshInArticleAd } = await import("@/components/ad-unit");
+
+    render(<FreshInArticleAd slot="frequency" />);
+
+    expect(document.querySelector("ins.kakao_ad_area")).not.toBeInTheDocument();
+    expect(document.querySelector("ins.adsbygoogle")).toBeInTheDocument();
+  });
+
+  it("애드센스 경로도 컨테이너 폭이 300px 미만이면 아무 포맷도 mount하지 않는다", async () => {
+    mockContainerWidth = 280;
     process.env = {
       ...originalEnv,
       NEXT_PUBLIC_AD_NETWORK: "adsense",
@@ -185,23 +274,48 @@ describe("본문 광고 (F4: 슬롯당 한 네트워크만)", () => {
       NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY_MOBILE: "2222222222",
     };
     vi.resetModules();
-    const { InArticleAd } = await import("@/components/ad-unit");
+    const { InArticleAd: FreshInArticleAd } = await import("@/components/ad-unit");
 
-    render(<InArticleAd slot="frequency" />);
+    render(<FreshInArticleAd slot="frequency" />);
 
-    expect(document.querySelector("ins.kakao_ad_area")).not.toBeInTheDocument();
-    expect(document.querySelector("ins.adsbygoogle")).toBeInTheDocument();
+    expect(document.querySelector("ins.adsbygoogle")).not.toBeInTheDocument();
+  });
+});
+
+describe("사이드바 광고 (R-15: 뷰포트 게이트)", () => {
+  const originalClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = originalClientId;
+  });
+
+  it("데스크톱 미만 뷰포트에서는 mount하지 않는다(adsbygoogle.push 낭비 요청 방지)", () => {
+    mockMatchMedia(false);
+    const { container } = render(<AdSenseSidebar slot="1234567890" />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("데스크톱 뷰포트에서는 mount한다", () => {
+    mockMatchMedia(true);
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = "ca-pub-1234567890123456";
+
+    render(<AdSenseSidebar slot="1234567890" />);
+
+    expect(screen.getByLabelText("사이드바 광고")).toBeInTheDocument();
   });
 });
 
 describe("모바일 하단 고정 배너", () => {
   it("unit이 비어있으면 아무것도 렌더링하지 않는다", () => {
+    mockMatchMedia(false);
     const { container } = render(<StickyMobileAd unit="" />);
 
     expect(container).toBeEmptyDOMElement();
   });
 
   it("unit이 있으면 광고와 닫기 버튼을 렌더링한다", () => {
+    mockMatchMedia(false);
     render(<StickyMobileAd unit="DAN-sticky123" />);
 
     const ins = document.querySelector("ins.kakao_ad_area");
@@ -211,9 +325,17 @@ describe("모바일 하단 고정 배너", () => {
   });
 
   it("닫기 버튼을 클릭하면 배너가 사라진다", () => {
+    mockMatchMedia(false);
     const { container } = render(<StickyMobileAd unit="DAN-sticky123" />);
 
     fireEvent.click(screen.getByLabelText("광고 닫기"));
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("데스크톱 뷰포트에서는 mount하지 않는다(R-15: CSS로만 숨기면 SDK 요청이 남음)", () => {
+    mockMatchMedia(true);
+    const { container } = render(<StickyMobileAd unit="DAN-sticky123" />);
 
     expect(container).toBeEmptyDOMElement();
   });

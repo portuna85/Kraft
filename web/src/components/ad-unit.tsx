@@ -3,9 +3,25 @@
 import { useEffect, useState } from "react";
 import Script from "next/script";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { useElementWidth } from "@/lib/use-element-width";
 
 // globals.css의 데스크톱 브레이크포인트(min-width: 1024px)와 동일하게 맞춘다.
+// StickyMobileAd·AdSenseSidebar처럼 뷰포트 자체로 표시 여부가 갈리는(사이드바 유무와
+// 무관한) 광고에만 쓴다. 콘텐츠 컬럼 안에 들어가는 InArticleAd는 뷰포트가 아니라
+// 실측 컨테이너 폭(useAdSlotFormat)으로 판정한다 — 사이드바가 있는 1024~1163px
+// 구간처럼 "데스크톱이지만 728px이 안 들어가는" 경우를 뷰포트 판정은 놓치기 때문.
 const DESKTOP_QUERY = "(min-width: 1024px)";
+
+// 728×90이 들어갈 폭인지, 모바일 포맷만 들어가는 폭인지, 아니면 광고 자체를
+// 생략해야 하는 폭인지를 컨테이너 실폭으로 판정한다. null = 아직 측정 전(마운트 전).
+type AdFormat = "desktop" | "mobile" | null;
+
+function useAdSlotFormat(mobileMinWidth: number) {
+  const [ref, width] = useElementWidth<HTMLDivElement>();
+  const format: AdFormat =
+    width === null ? null : width >= 728 ? "desktop" : width >= mobileMinWidth ? "mobile" : null;
+  return { ref, width, format };
+}
 
 type AdUnitProps = {
   unit: string;
@@ -21,7 +37,7 @@ export function AdUnit({ unit, width, height, label = "광고", className }: AdU
       className={`ad-unit${className ? ` ${className}` : ""}`}
       role="complementary"
       aria-label={label}
-      style={{ minWidth: width, minHeight: height }}
+      style={{ maxWidth: "100%", minHeight: height }}
     >
       <ins
         className="kakao_ad_area"
@@ -54,18 +70,24 @@ const AD_DESKTOP: Record<PageAdProps["slot"], string> = {
   frequency: process.env.NEXT_PUBLIC_KAKAO_ADFIT_UNIT_FREQUENCY_DESKTOP ?? "",
 };
 
+// R-06/R-15: 컨테이너 실폭에 맞는 포맷만 mount한다. 뷰포트 판정을 쓰면 사이드바가
+// 있는 1024~1163px 구간에서 728px 광고가 300px 컬럼 안에서 잘리는 문제가 생긴다.
 export function PageAd({ slot }: PageAdProps) {
   const mobile = AD_MOBILE[slot];
   const desktop = AD_DESKTOP[slot];
-  const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  const { ref, format } = useAdSlotFormat(320);
   if (!mobile && !desktop) return null;
 
-  // 뷰포트에 맞는 광고 하나만 mount한다 — 둘 다 mount하고 CSS로 숨기면 보이지 않는
-  // 쪽도 SDK 요청이 발생한다.
-  if (isDesktop) {
-    return desktop ? <AdUnit unit={desktop} width={728} height={90} className="ad-desktop" /> : null;
-  }
-  return mobile ? <AdUnit unit={mobile} width={320} height={100} className="ad-mobile" /> : null;
+  return (
+    <div ref={ref} className="ad-slot--article" style={{ minHeight: 100 }} aria-hidden={!format}>
+      {format === "desktop" && desktop && (
+        <AdUnit unit={desktop} width={728} height={90} className="ad-desktop" />
+      )}
+      {format === "mobile" && mobile && (
+        <AdUnit unit={mobile} width={320} height={100} className="ad-mobile" />
+      )}
+    </div>
+  );
 }
 
 type AdSenseUnitProps = {
@@ -103,13 +125,13 @@ export function AdSenseUnit({ slot, width, height, label = "광고", className }
       className={`ad-unit${className ? ` ${className}` : ""}`}
       role="complementary"
       aria-label={label}
-      style={{ minWidth: width, minHeight: height }}
+      style={{ maxWidth: "100%", minHeight: height }}
     >
       {enabled ? (
         <>
           <ins
             className="adsbygoogle"
-            style={{ display: "inline-block", width, height }}
+            style={{ display: "inline-block", width, height, maxWidth: "100%" }}
             data-ad-client={clientId}
             data-ad-slot={slot}
           />
@@ -134,50 +156,62 @@ const IN_ARTICLE_ADSENSE_DESKTOP_ENV: Record<PageAdProps["slot"], string | undef
   frequency: process.env.NEXT_PUBLIC_ADSENSE_UNIT_FREQUENCY,
 };
 
+// R-06: 애드센스 모바일 포맷(300×250)도 372px 미만 컨테이너에서는 잘리므로 동일하게
+// 컨테이너 실폭 기준으로 포맷을 고른다.
+function InArticleAdSense({ slot }: PageAdProps) {
+  const { ref, format } = useAdSlotFormat(300);
+  const desktopSlot = IN_ARTICLE_ADSENSE_DESKTOP_ENV[slot] ?? "";
+  const mobileSlot = IN_ARTICLE_ADSENSE_MOBILE_ENV[slot] ?? "";
+
+  return (
+    <div ref={ref} className="ad-slot--article" style={{ minHeight: 250 }} aria-hidden={!format}>
+      {format === "desktop" && (
+        <AdSenseUnit slot={desktopSlot} width={728} height={90} className="ad-desktop" />
+      )}
+      {format === "mobile" && (
+        <AdSenseUnit slot={mobileSlot} width={300} height={250} className="ad-mobile" />
+      )}
+    </div>
+  );
+}
+
 // F4: 같은 슬롯에 애드핏(PageAd)과 애드센스(AdSenseUnit)를 동시에 넣으면 페이지 무게·
 // 광고 밀도가 두 배가 된다. NEXT_PUBLIC_AD_NETWORK로 슬롯당 한 네트워크만 렌더한다
 // (기본값 "adfit" — 애드센스 승인 전까지의 기존 운영 상태를 그대로 유지).
 export function InArticleAd({ slot }: PageAdProps) {
   const network = process.env.NEXT_PUBLIC_AD_NETWORK === "adsense" ? "adsense" : "adfit";
-  const isDesktop = useMediaQuery(DESKTOP_QUERY);
 
   if (network === "adsense") {
-    return isDesktop ? (
-      <AdSenseUnit
-        slot={IN_ARTICLE_ADSENSE_DESKTOP_ENV[slot] ?? ""}
-        width={728}
-        height={90}
-        className="ad-desktop"
-      />
-    ) : (
-      <AdSenseUnit
-        slot={IN_ARTICLE_ADSENSE_MOBILE_ENV[slot] ?? ""}
-        width={300}
-        height={250}
-        className="ad-mobile"
-      />
-    );
+    return <InArticleAdSense slot={slot} />;
   }
 
   return <PageAd slot={slot} />;
 }
 
 export function AdSenseSidebar({ slot }: { slot: string }) {
-  return (
-    <AdSenseUnit
-      slot={slot}
-      width={300}
-      height={600}
-      label="사이드바 광고"
-      className="ad-sidebar"
-    />
-  );
+  // 사이드바는 컨테이너 폭이 아니라 뷰포트 자체로 노출 여부가 갈린다(≥1024px에서만
+  // display:flex, globals.css). 모바일에서 mount하면 adsbygoogle.push가 availableWidth=0
+  // 상태로 호출돼 낭비 요청·오류가 발생하므로 뷰포트 판정으로 아예 mount하지 않는다.
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
+  if (!isDesktop) return null;
+
+  return <AdSenseUnit slot={slot} width={300} height={600} label="사이드바 광고" className="ad-sidebar" />;
 }
 
 export function StickyMobileAd({ unit }: { unit: string }) {
   const [closed, setClosed] = useState(false);
+  // CSS로는 ≥1024px에서 display:none으로만 숨기므로, 게이트 없이는 데스크톱에서도
+  // 광고 유닛이 mount되어 숨겨진 채로 SDK 요청이 발생한다.
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
 
-  if (!unit || closed) return null;
+  useEffect(() => {
+    document.body.classList.toggle("has-sticky-ad", !isDesktop && !closed && Boolean(unit));
+    return () => {
+      document.body.classList.remove("has-sticky-ad");
+    };
+  }, [isDesktop, closed, unit]);
+
+  if (isDesktop || !unit || closed) return null;
 
   return (
     <div className="ad-sticky-mobile">
