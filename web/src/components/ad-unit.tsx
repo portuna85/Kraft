@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Script from "next/script";
+import { useMediaQuery } from "@/lib/use-media-query";
+
+// globals.css의 데스크톱 브레이크포인트(min-width: 1024px)와 동일하게 맞춘다.
+const DESKTOP_QUERY = "(min-width: 1024px)";
 
 type AdUnitProps = {
   unit: string;
@@ -53,13 +57,15 @@ const AD_DESKTOP: Record<PageAdProps["slot"], string> = {
 export function PageAd({ slot }: PageAdProps) {
   const mobile = AD_MOBILE[slot];
   const desktop = AD_DESKTOP[slot];
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
   if (!mobile && !desktop) return null;
-  return (
-    <>
-      {mobile && <AdUnit unit={mobile} width={320} height={100} className="ad-mobile" />}
-      {desktop && <AdUnit unit={desktop} width={728} height={90} className="ad-desktop" />}
-    </>
-  );
+
+  // 뷰포트에 맞는 광고 하나만 mount한다 — 둘 다 mount하고 CSS로 숨기면 보이지 않는
+  // 쪽도 SDK 요청이 발생한다.
+  if (isDesktop) {
+    return desktop ? <AdUnit unit={desktop} width={728} height={90} className="ad-desktop" /> : null;
+  }
+  return mobile ? <AdUnit unit={mobile} width={320} height={100} className="ad-mobile" /> : null;
 }
 
 type AdSenseUnitProps = {
@@ -70,9 +76,12 @@ type AdSenseUnitProps = {
   className?: string;
 };
 
-// 애드핏 PageAd와 달리 slot이 비어 있어도 null을 반환하지 않고 자리만 예약한 플레이스홀더를
-// 렌더한다. 애드센스 계정 승인 전이라 실 slot ID가 없는 기간에도 사이드바/레이아웃을
-// 로컬에서 CLS 없이 검증할 수 있어야 하기 때문이다.
+// F3: slot이 비어 있으면(애드센스 계정 승인 전 등) 기본적으로 아무것도 렌더하지 않는다
+// — 빈 자리를 예약하면 실제로 채워지지 않는 열이 운영 화면에 남는다. 로컬에서 CLS 없이
+// 사이드바/레이아웃을 미리 검증하고 싶을 때만 NEXT_PUBLIC_ADSENSE_RESERVE_PLACEHOLDER=true로
+// 켠다(운영 기본값은 off).
+const RESERVE_PLACEHOLDER = process.env.NEXT_PUBLIC_ADSENSE_RESERVE_PLACEHOLDER === "true";
+
 export function AdSenseUnit({ slot, width, height, label = "광고", className }: AdSenseUnitProps) {
   const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ?? "";
   const enabled = Boolean(clientId && slot);
@@ -86,6 +95,8 @@ export function AdSenseUnit({ slot, width, height, label = "광고", className }
       console.error("[AdSenseUnit] adsbygoogle push 실패", e);
     }
   }, [enabled]);
+
+  if (!enabled && !RESERVE_PLACEHOLDER) return null;
 
   return (
     <div
@@ -128,23 +139,23 @@ const IN_ARTICLE_ADSENSE_DESKTOP_ENV: Record<PageAdProps["slot"], string | undef
 // (기본값 "adfit" — 애드센스 승인 전까지의 기존 운영 상태를 그대로 유지).
 export function InArticleAd({ slot }: PageAdProps) {
   const network = process.env.NEXT_PUBLIC_AD_NETWORK === "adsense" ? "adsense" : "adfit";
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
 
   if (network === "adsense") {
-    return (
-      <>
-        <AdSenseUnit
-          slot={IN_ARTICLE_ADSENSE_MOBILE_ENV[slot] ?? ""}
-          width={300}
-          height={250}
-          className="ad-mobile"
-        />
-        <AdSenseUnit
-          slot={IN_ARTICLE_ADSENSE_DESKTOP_ENV[slot] ?? ""}
-          width={728}
-          height={90}
-          className="ad-desktop"
-        />
-      </>
+    return isDesktop ? (
+      <AdSenseUnit
+        slot={IN_ARTICLE_ADSENSE_DESKTOP_ENV[slot] ?? ""}
+        width={728}
+        height={90}
+        className="ad-desktop"
+      />
+    ) : (
+      <AdSenseUnit
+        slot={IN_ARTICLE_ADSENSE_MOBILE_ENV[slot] ?? ""}
+        width={300}
+        height={250}
+        className="ad-mobile"
+      />
     );
   }
 
