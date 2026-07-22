@@ -2425,8 +2425,10 @@ form button,
   .companion-item {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    flex-direction: row;
-    gap: inherit;
+    /* R-19: gap: inherit는 부모 .companion-list의 gap(6px)을 상속해 의도한 14px(:1358)과
+       달라지는 inherit 오용이었다 — 원래 값으로 명시. flex-direction은 .companion-item이
+       grid라 no-op이라 함께 정리한다. */
+    gap: 14px;
   }
 
   .pair-info {

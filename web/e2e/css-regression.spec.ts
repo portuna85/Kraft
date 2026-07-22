@@ -1,0 +1,165 @@
+import { test, expect } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+// R-19(globals.css 캐스케이드를 3중 구조 → 모바일 퍼스트 2벌로 재편) 작업의 안전망.
+// 실제 앱은 이 e2e 환경에 백엔드가 없어 홈/`/frequency` 등 데이터 페이지가 항상
+// error.tsx를 렌더하므로(§6-2), 그 페이지들의 실제 마크업을 통해 회귀를 잡을 수 없다.
+// 대신 globals.css 원본을 그대로 빈 페이지에 주입하고, 실제 컴포넌트와 동일한 부모-자식
+// 중첩 구조(예: .balls의 부모가 .panel인 것 — R-01 inherit 버그가 바로 이 중첩 때문에
+// 생겼었다)를 가진 최소 마크업으로 계산값을 스냅숏한다. 순수 CSS라 빌드 도구 없이도
+// 브라우저에 그대로 주입 가능하다.
+const CSS = readFileSync(path.join(__dirname, "../src/app/globals.css"), "utf8");
+
+// 실제 페이지에서의 부모-자식 관계를 그대로 재현한다 — 이 중첩이 어긋나면 gap/padding
+// 상속 계산이 실제와 달라져 테스트가 무의미해진다.
+const BODY = `
+<div class="panel result-panel hero-panel">
+  <div class="balls">
+    <span class="ball">1</span><span class="ball">2</span><span class="ball">3</span>
+    <span class="ball-separator">+</span><span class="ball bonus-ball">7</span>
+  </div>
+  <div class="prize-table-wrap">
+    <table class="prize-table"><tbody>
+      <tr>
+        <th class="prize-table-rank">1등 당첨금</th>
+        <td class="prize-table-amount">100</td>
+        <td class="prize-table-after-tax">
+          <span class="prize-table-after-tax-label">세후</span>
+          <span class="prize-table-after-tax-value">90</span>
+        </td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="frequency-grid">
+    <div class="frequency-item">1</div>
+  </div>
+</div>
+
+<ul class="pattern-list">
+  <li class="pattern-item">
+    <span class="pattern-key">k</span><span class="bar-track"></span>
+    <span class="pattern-count">1</span><span class="pattern-pct">1%</span>
+  </li>
+</ul>
+
+<ol class="companion-list">
+  <li class="companion-item"><span>1</span><span class="pair-info">a</span><span class="rank">1</span></li>
+</ol>
+
+<div class="page-with-sidebar">
+  <div class="ad-sidebar">sidebar</div>
+</div>
+`;
+
+type Snapshot = {
+  ballsGap: string | undefined;
+  prizeTdPadding: string | undefined;
+  rankFontSize: string | undefined;
+  amountFontSize: string | undefined;
+  fgGap: string | undefined;
+  piGap: string | undefined;
+  piPadding: string | undefined;
+  pcTextAlign: string | undefined;
+  ppTextAlign: string | undefined;
+  ciGap: string | undefined;
+};
+
+async function snapshot(page: import("@playwright/test").Page, width: number): Promise<Snapshot> {
+  await page.setViewportSize({ width, height: 900 });
+  await page.setContent(`<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body>${BODY}</body></html>`);
+  await page.addStyleTag({ content: CSS });
+
+  return page.evaluate(() => {
+    const cs = (sel: string) => {
+      const el = document.querySelector(sel);
+      return el ? getComputedStyle(el) : null;
+    };
+    const balls = cs(".result-panel .balls");
+    const td = cs(".prize-table td");
+    const rank = cs(".prize-table-rank");
+    const amount = cs(".prize-table-amount");
+    const fg = cs(".frequency-grid");
+    const pi = cs(".pattern-item");
+    const pc = cs(".pattern-count");
+    const pp = cs(".pattern-pct");
+    const ci = cs(".companion-item");
+    return {
+      ballsGap: balls?.columnGap,
+      prizeTdPadding: td?.padding,
+      rankFontSize: rank?.fontSize,
+      amountFontSize: amount?.fontSize,
+      fgGap: fg?.columnGap,
+      piGap: pi?.columnGap,
+      piPadding: pi?.padding,
+      pcTextAlign: pc?.textAlign,
+      ppTextAlign: pp?.textAlign,
+      ciGap: ci?.columnGap,
+    };
+  });
+}
+
+// 골든 마스터: R-19 착수 직전 실측값(390/768/1280px). .companion-item만 예외 —
+// ≥640px에서 gap: inherit로 부모 .companion-list의 gap(6px)을 잘못 상속하던 버그를
+// 이번 R-19 작업에서 함께 고치므로(의도한 14px), 여기는 "현재값"이 아니라 "고친 뒤
+// 값"을 기대치로 박아둔다. 즉 이 테스트는 R-19 작업 착수 시점엔 companion-item 항목만
+// 실패해야 정상이고, 작업 완료 후 전부 통과해야 한다.
+test.describe("globals.css 컴퓨티드 스타일 회귀 방지 (R-19 안전망)", () => {
+  test("390px(모바일)", async ({ page }) => {
+    const s = await snapshot(page, 390);
+    expect(s.ballsGap).toBe("6px");
+    expect(s.prizeTdPadding).toBe("12px 10px");
+    expect(s.fgGap).toBe("10px");
+    expect(s.piGap).toBe("12px");
+    expect(s.piPadding).toBe("12px");
+    expect(s.pcTextAlign).toBe("left");
+    expect(s.ppTextAlign).toBe("left");
+    // 모바일은 1열 스택 레이아웃이라 10px이 의도값(:2196) — 14px은 ≥640px의
+    // 3열 가로 레이아웃(:1358 기본 선언)에서만 적용된다.
+    expect(s.ciGap).toBe("10px");
+  });
+
+  test("768px(태블릿)", async ({ page }) => {
+    const s = await snapshot(page, 768);
+    expect(s.ballsGap).toBe("10px");
+    expect(s.prizeTdPadding).toBe("16px");
+    expect(s.rankFontSize).toBe("14.72px");
+    expect(s.amountFontSize).toBe("20px");
+    expect(s.fgGap).toBe("12px");
+    expect(s.piGap).toBe("10px");
+    expect(s.piPadding).toBe("7px 10px");
+    expect(s.pcTextAlign).toBe("right");
+    expect(s.ppTextAlign).toBe("right");
+    expect(s.ciGap).toBe("14px");
+  });
+
+  test("1280px(데스크톱)", async ({ page }) => {
+    const s = await snapshot(page, 1280);
+    expect(s.ballsGap).toBe("10px");
+    expect(s.prizeTdPadding).toBe("16px");
+    expect(s.rankFontSize).toBe("14.72px");
+    expect(s.amountFontSize).toBe("20px");
+    expect(s.fgGap).toBe("12px");
+    expect(s.piGap).toBe("10px");
+    expect(s.piPadding).toBe("7px 10px");
+    expect(s.pcTextAlign).toBe("right");
+    expect(s.ppTextAlign).toBe("right");
+    expect(s.ciGap).toBe("14px");
+  });
+
+  test("사이드바 광고 top이 헤더 높이만큼 오프셋된다 (1280px)", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.setContent(`<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body>${BODY}</body></html>`);
+    await page.addStyleTag({ content: CSS });
+
+    const top = await page.evaluate(() => {
+      const el = document.querySelector(".ad-sidebar");
+      return el ? getComputedStyle(el).top : null;
+    });
+    // --header-h(82px, ≥1024) + 24px. env(safe-area-inset-top)는 이 테스트 환경에서 0.
+    expect(top).toBe("106px");
+  });
+});
