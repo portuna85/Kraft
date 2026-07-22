@@ -1,3 +1,10 @@
+# Prometheus 전용 metrics 리스너. admin API(기본 127.0.0.1:2019, 인증 없이 전체 설정을
+# 읽고 바꿀 수 있음)는 loopback에만 묶어두고, 이 리스너는 metrics만 서빙해 app/monitoring
+# 네트워크의 다른 컨테이너에도 안전하게 노출한다. 호스트에는 포트를 publish하지 않는다.
+:2020 {
+	metrics
+}
+
 www.{$KRAFT_DOMAIN} {
 	redir https://{$KRAFT_DOMAIN}{uri} permanent
 }

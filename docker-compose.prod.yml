@@ -163,6 +163,8 @@ services:
       - "80:80"
       - "443:443"
       - "127.0.0.1:2019:2019"
+    expose:
+      - "2020"
     environment:
       KRAFT_DOMAIN: ${KRAFT_DOMAIN}
       KRAFT_ADMIN_DOMAIN: ${KRAFT_ADMIN_DOMAIN}
