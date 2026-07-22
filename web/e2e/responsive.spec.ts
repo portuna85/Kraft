@@ -13,12 +13,20 @@ for (const vp of VIEWPORTS) {
   test(`${vp.label} 뷰포트에서 가로 스크롤 없음`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto("/");
-    const ok = await page.evaluate(
-      () =>
-        document.documentElement.scrollWidth <=
-        document.documentElement.clientWidth,
+    // html/body의 overflow-x: clip은 루트 scrollWidth를 clientWidth로 수렴시켜
+    // 콘텐츠가 잘려도 통과해버린다(docs/improvement.md §6-1) — 요소 단위로 실제
+    // 뷰포트를 벗어나는 엘리먼트가 있는지 검사한다.
+    const overflowing = await page.evaluate(() =>
+      [...document.querySelectorAll("body *")]
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 && r.height === 0) return false;
+          return r.right > window.innerWidth + 1 || r.left < -1;
+        })
+        .filter((el) => !el.closest("[data-allow-overflow]"))
+        .map((el) => el.className || el.tagName),
     );
-    expect(ok).toBe(true);
+    expect(overflowing).toEqual([]);
   });
 }
 

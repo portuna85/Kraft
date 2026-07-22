@@ -1,8 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // 백엔드/DB 없이도 돌아가는 스모크 E2E. 클라이언트 컴포넌트(/recommend, /saved)는
-// 브라우저 fetch를 라우트 모킹으로 가로채 검증하고, 서버 컴포넌트 페이지(/, /rounds 등)는
-// 백엔드 fetch 실패 시 이미 구현된 폴백 UI(예: "준비 중입니다")로 렌더링된다.
+// 브라우저 fetch를 라우트 모킹으로 가로채 검증하고, 서버 컴포넌트 페이지(/, /frequency 등)는
+// 백엔드가 없다는 전제로 에러 경계(error.tsx)·폴백 UI가 정상 렌더되는지를 검증한다
+// (stats-family.spec.ts, status.spec.ts 등). responsive.spec.ts의 오버플로 검사도 현재
+// 이 상태(에러 화면) 기준이라는 한계가 있다 — docs/improvement.md §6-2, 백엔드 픽스처를
+// 도입해 정상 상태까지 커버하려면 테스트별로 백엔드 상태를 분리할 방법이 필요해 별도 작업으로 남겨둔다.
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -27,7 +30,6 @@ export default defineConfig({
     timeout: 60_000,
     env: {
       // 백엔드 없이도 빠르게 실패하도록 즉시 거부되는 루프백 포트를 가리킨다.
-      // 서버 컴포넌트 페이지는 이미 구현된 폴백 UI로 렌더링된다.
       KRAFT_BACKEND_INTERNAL_URL: "http://127.0.0.1:59999",
       KRAFT_PUBLIC_BASE_URL: "http://127.0.0.1:3100",
       // scripts/start-standalone.mjs의 기본 포트(3000, npm start/Docker와 동일)에
