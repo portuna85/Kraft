@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NavLinks } from "@/components/nav-links";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AccountMenu } from "@/components/community/account-menu";
 
 export function Header() {
   return (
@@ -11,6 +12,7 @@ export function Header() {
         </Link>
         <div className="header-actions">
           <NavLinks />
+          <AccountMenu />
           <ThemeToggle />
         </div>
       </div>

@@ -1,0 +1,56 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getCommunityPost } from "@/lib/community-api";
+import { BackendError } from "@/lib/api";
+import { PostOwnerActions } from "@/components/community/post-owner-actions";
+import { CommentSection } from "@/components/community/comment-section";
+
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const post = await getCommunityPost(Number(id));
+    return { title: post.title, alternates: { canonical: `/community/posts/${id}` } };
+  } catch {
+    return { title: "게시글" };
+  }
+}
+
+export default async function CommunityPostDetailPage({ params }: Props) {
+  const { id } = await params;
+  const postId = Number(id);
+  if (!Number.isInteger(postId) || postId <= 0) {
+    notFound();
+  }
+
+  let post;
+  try {
+    post = await getCommunityPost(postId);
+  } catch (error) {
+    if (error instanceof BackendError && error.status === 404) {
+      notFound();
+    }
+    throw error;
+  }
+
+  return (
+    <article className="panel community-post-detail">
+      <p className="eyebrow">커뮤니티</p>
+      <h1 className="page-title">{post.title}</h1>
+      <p className="community-post-meta">
+        <span>{post.authorNickname}</span>
+        <time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleString("ko-KR")}</time>
+      </p>
+      <div className="community-post-content">
+        {post.content.split("\n").map((line, index) => (
+          // 콘텐츠는 plain text 렌더링이 기본이다(§6 XSS 방어) — dangerouslySetInnerHTML 미사용.
+          <p key={index}>{line}</p>
+        ))}
+      </div>
+
+      <PostOwnerActions postId={post.id} ownerId={post.ownerId} />
+      <CommentSection postId={post.id} />
+    </article>
+  );
+}

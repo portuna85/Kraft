@@ -9,6 +9,7 @@ const primaryLinks = [
   { href: "/", label: "홈" },
   { href: "/recommend", label: "번호 추천" },
   { href: "/saved", label: "저장 번호" },
+  { href: "/community", label: "커뮤니티" },
 ];
 
 // 통계 3종 + 번호 분석은 데스크톱에서 "통계" 드롭다운으로 묶는다. 발견성을 위해

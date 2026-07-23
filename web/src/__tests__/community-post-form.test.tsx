@@ -1,0 +1,107 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { PostForm } from "@/components/community/post-form";
+
+const replace = vi.fn();
+const push = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace, push }),
+}));
+
+function mockFetch(handlers: {
+  session?: unknown;
+  onWrite?: (url: string, init?: RequestInit) => { status: number; body: unknown };
+}) {
+  return vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+    if (url.includes("/session")) {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(handlers.session),
+      });
+    }
+    const { status, body } = handlers.onWrite?.(url, init) ?? { status: 200, body: {} };
+    return Promise.resolve({
+      ok: status >= 200 && status < 300,
+      status,
+      json: () => Promise.resolve(body),
+    });
+  });
+}
+
+describe("커뮤니티 게시글 작성·수정 폼", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    replace.mockClear();
+    push.mockClear();
+  });
+
+  it("로그인하지 않은 사용자는 커뮤니티 목록으로 돌려보낸다", async () => {
+    global.fetch = mockFetch({ session: { loggedIn: false, userId: null, nickname: null } });
+
+    render(<PostForm mode="create" />);
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/community"));
+  });
+
+  it("게시글 수정 중 버전 충돌(409)이 나면 안내 메시지를 보여주고 입력값을 유지한다", async () => {
+    global.fetch = mockFetch({
+      session: { loggedIn: true, userId: 1, nickname: "글쓴이" },
+      onWrite: () => ({
+        status: 409,
+        body: { code: "COMMUNITY_POST_VERSION_CONFLICT", message: "충돌" },
+      }),
+    });
+
+    render(
+      <PostForm
+        mode="edit"
+        postId={1}
+        ownerId={1}
+        initialTitle="원래 제목"
+        initialContent="원래 내용"
+        initialVersion={0}
+      />
+    );
+
+    const titleInput = await screen.findByLabelText("제목");
+    fireEvent.change(titleInput, { target: { value: "수정된 제목" } });
+    fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/다른 곳에서 먼저 수정되었습니다/)).toBeInTheDocument();
+    });
+    expect(titleInput).toHaveValue("수정된 제목");
+  });
+
+  it("저장 중에는 버튼이 비활성화되어 중복 제출을 막는다", async () => {
+    let resolveWrite: (() => void) | undefined;
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/session")) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ loggedIn: true, userId: 1, nickname: "글쓴이" }),
+        });
+      }
+      return new Promise((resolve) => {
+        resolveWrite = () =>
+          resolve({ ok: true, status: 201, json: () => Promise.resolve({ id: 1 }) });
+      });
+    });
+
+    render(<PostForm mode="create" />);
+
+    fireEvent.change(await screen.findByLabelText("제목"), { target: { value: "제목" } });
+    fireEvent.change(screen.getByLabelText("내용"), { target: { value: "내용" } });
+
+    const submitButton = screen.getByRole("button", { name: "저장" });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "저장 중…" })).toBeDisabled());
+
+    resolveWrite?.();
+    await waitFor(() => expect(push).toHaveBeenCalled());
+  });
+});

@@ -76,6 +76,25 @@ const STATS_COMPANION = {
   topPairs: companionPairs(),
 };
 
+const COMMUNITY_POST = {
+  id: 1,
+  ownerId: 42,
+  authorNickname: "글쓴이",
+  title: "테스트 게시글",
+  content: "첫 번째 줄\n두 번째 줄",
+  version: 0,
+  createdAt: "2026-07-01T00:00:00Z",
+  updatedAt: "2026-07-01T00:00:00Z",
+};
+
+const COMMUNITY_POSTS_PAGE = {
+  items: [COMMUNITY_POST],
+  page: 0,
+  size: 20,
+  totalElements: 1,
+  totalPages: 1,
+};
+
 const ROUTES = {
   "/api/v1/rounds/latest": ROUNDS_LATEST,
   "/api/v1/rounds/freshness": ROUNDS_FRESHNESS,
@@ -83,6 +102,10 @@ const ROUTES = {
   "/api/v1/stats/frequency": STATS_FREQUENCY,
   "/api/v1/stats/patterns": STATS_PATTERNS,
   "/api/v1/stats/companion": STATS_COMPANION,
+  // §6-6/§4.4: 커뮤니티 공개 목록·상세 ISR이 사용자 세션 정보를 절대 embed하지 않는지
+  // 증명하는 e2e 전용 픽스처(community-privacy.spec.ts).
+  "/api/v1/community/posts": COMMUNITY_POSTS_PAGE,
+  "/api/v1/community/posts/1": COMMUNITY_POST,
 };
 
 const server = createServer((req, res) => {
