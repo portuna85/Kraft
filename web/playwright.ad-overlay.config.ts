@@ -1,0 +1,35 @@
+import { defineConfig, devices } from "@playwright/test";
+
+// §6-5: 하단 고정 광고(StickyMobileAd)가 CTA·푸터를 실제로 가리는지 검증하려면
+// NEXT_PUBLIC_KAKAO_ADFIT_UNIT_STICKY가 baked-in된 빌드가 필요하다(광고 env는 Next
+// 빌드 타임에 번들에 박힌다). 다른 두 e2e 트랙(playwright.config.ts, playwright.content.
+// config.ts)과 .next/standalone 산출물을 공유하면 서로 덮어써서 로컬에서 트랙을 번갈아
+// 돌릴 때 꼬이므로(§6-2에서 이미 겪은 문제), NEXT_DIST_DIR로 별도 산출물 디렉터리
+// (.next-ad-overlay)를 써서 완전히 분리했다. 백엔드는 필요 없다 — StickyMobileAd는
+// 루트 레이아웃에 있어 모든 라우트에서 백엔드 상태와 무관하게 mount된다.
+export default defineConfig({
+  testDir: "./e2e/ad-overlay",
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? "github" : "list",
+  use: {
+    baseURL: "http://127.0.0.1:3103",
+    trace: "retain-on-failure",
+  },
+  projects: [
+    { name: "Mobile Chrome", use: { ...devices["Pixel 5"] } },
+  ],
+  webServer: {
+    command: "npm run e2e:serve",
+    url: "http://127.0.0.1:3103",
+    reuseExistingServer: !process.env.CI,
+    timeout: 60_000,
+    env: {
+      NEXT_DIST_DIR: ".next-ad-overlay",
+      KRAFT_BACKEND_INTERNAL_URL: "http://127.0.0.1:59999",
+      KRAFT_PUBLIC_BASE_URL: "http://127.0.0.1:3103",
+      PORT: "3103",
+    },
+  },
+});

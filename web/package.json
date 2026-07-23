@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:content": "playwright test --config=playwright.content.config.ts",
+    "test:e2e:ad-overlay": "playwright test --config=playwright.ad-overlay.config.ts",
     "e2e:serve": "node scripts/start-standalone.mjs"
   },
   "dependencies": {

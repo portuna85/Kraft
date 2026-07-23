@@ -1,0 +1,99 @@
+import { test, expect } from "@playwright/test";
+
+// §6-5: 하단 고정 광고(StickyMobileAd)가 CTA·푸터를 실제로 가리는지 검증한다.
+// playwright.ad-overlay.config.ts 전용 — NEXT_PUBLIC_KAKAO_ADFIT_UNIT_STICKY가
+// baked-in된 빌드에서만 광고가 mount된다. 카카오 애드핏 스크립트가 실제로 로드되는지는
+// 검증 대상이 아니다(오프라인 CI에서 무관) — .ad-unit의 min-height로 예약된 자리
+// 자체가 CTA·푸터와 겹치지 않는지, 즉 R-09의 body.has-sticky-ad 조건부 여백이
+// 실제로 충분한지가 핵심이다.
+//
+// 처음엔 bounding box 겹침만 봤는데, 테스트 페이지(404·/info/faq)의 콘텐츠가 뷰포트를
+// 넉넉히 채우지 않아서 padding-bottom 예약을 일부러 없애도(회귀 재현) 통과해버리는 걸
+// 실제로 확인했다 — 콘텐츠 길이에 기대지 않도록 .page의 padding-bottom이 광고 실측
+// 높이 이상인지를 직접 단언한다.
+function isOverlapping(a: { x: number; y: number; width: number; height: number }, b: typeof a) {
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+test("body.has-sticky-ad일 때 .page 하단 여백이 '광고 없을 때 + 광고 실측 높이'만큼 늘어난다", async ({
+  page,
+}) => {
+  await page.goto("/this-page-does-not-exist");
+
+  const ad = page.locator(".ad-sticky-mobile");
+  await expect(ad).toBeVisible();
+  await expect(page.locator("body")).toHaveClass(/has-sticky-ad/);
+
+  const adBox = await ad.boundingBox();
+  expect(adBox).not.toBeNull();
+
+  // .page 자체의 기본 padding-bottom(예: 64px)이 광고 높이(≈51px)보다 이미 커서,
+  // "padding-bottom >= 광고 높이"만 보면 여백을 아예 안 늘려도 통과해버리는 걸 실제로
+  // 확인했다 — has-sticky-ad 클래스를 잠깐 떼서 "광고 없을 때" 기준값을 직접 재고,
+  // 그 대비 늘어난 양이 광고 높이 이상인지(델타)를 비교해야 실제로 의미가 있다.
+  const [withAd, withoutAd] = await page.evaluate(() => {
+    const pageEl = document.querySelector(".page") as HTMLElement;
+    const withAdValue = parseFloat(getComputedStyle(pageEl).paddingBottom);
+    document.body.classList.remove("has-sticky-ad");
+    const withoutAdValue = parseFloat(getComputedStyle(pageEl).paddingBottom);
+    document.body.classList.add("has-sticky-ad");
+    return [withAdValue, withoutAdValue];
+  });
+
+  expect(withAd - withoutAd).toBeGreaterThanOrEqual(adBox!.height - 1);
+});
+
+test("하단 고정 광고가 404 페이지의 CTA 버튼을 가리지 않는다 (짧은 뷰포트로 여유 없이 확인)", async ({
+  page,
+}) => {
+  // 이 프로젝트 e2e가 쓰는 최소 참조 뷰포트(320×568, responsive.spec.ts VIEWPORTS와
+  // 동일) — 처음엔 임의로 더 낮춘 390×500으로 돌렸다가, 스크롤 없이 최초 진입 시점의
+  // CTA가 뷰포트 아래쪽에 걸쳐 있어 고정 광고와 겹치는 걸 실제로 봤다. 이 문서가 다른
+  // 곳에서도 쓰는 568을 하한으로 삼는 게 실제 최소 지원 기기 기준에 맞다.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/this-page-does-not-exist");
+
+  const ad = page.locator(".ad-sticky-mobile");
+  await expect(ad).toBeVisible();
+
+  const adBox = await ad.boundingBox();
+  expect(adBox).not.toBeNull();
+
+  const cta = page.locator(".not-found-actions a");
+  const count = await cta.count();
+  expect(count).toBeGreaterThan(0);
+  for (let i = 0; i < count; i++) {
+    const box = await cta.nth(i).boundingBox();
+    expect(box).not.toBeNull();
+    expect(isOverlapping(adBox!, box!)).toBe(false);
+  }
+});
+
+test("하단 고정 광고가 푸터 내비게이션을 가리지 않는다 (페이지 끝까지 스크롤)", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/info/faq");
+
+  const ad = page.locator(".ad-sticky-mobile");
+  await expect(ad).toBeVisible();
+
+  await page.locator(".footer-nav").scrollIntoViewIfNeeded();
+  const adBox = await ad.boundingBox();
+  const footerLinks = page.locator(".footer-nav a");
+  const count = await footerLinks.count();
+  expect(count).toBeGreaterThan(0);
+  for (let i = 0; i < count; i++) {
+    const box = await footerLinks.nth(i).boundingBox();
+    expect(box).not.toBeNull();
+    expect(isOverlapping(adBox!, box!)).toBe(false);
+  }
+});
+
+test("닫기 버튼을 누르면 광고가 사라지고 body.has-sticky-ad도 해제된다", async ({ page }) => {
+  await page.goto("/this-page-does-not-exist");
+
+  await expect(page.locator(".ad-sticky-mobile")).toBeVisible();
+  await page.getByRole("button", { name: "광고 닫기" }).click();
+
+  await expect(page.locator(".ad-sticky-mobile")).not.toBeVisible();
+  await expect(page.locator("body")).not.toHaveClass(/has-sticky-ad/);
+});
