@@ -24,15 +24,19 @@
 .skeleton-caption { height: 14px; width: 80%; }
 
 .skeleton-balls {
+  /* R-18: 실제 .balls와 같은 컨테이너 쿼리 기준을 써서 로딩→콘텐츠 전환 시
+     공 크기가 갑자기 바뀌는 CLS를 없앤다. */
+  container-type: inline-size;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .skeleton-ball {
-  width: 46px;
-  height: 46px;
+  width: clamp(24px, 10.6cqw, 42px);
+  height: auto;
+  aspect-ratio: 1;
   border-radius: 50%;
   flex-shrink: 0;
   background: linear-gradient(

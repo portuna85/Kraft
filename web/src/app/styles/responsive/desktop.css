@@ -25,6 +25,9 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  /* R-25: 최소폭 합(148+240+320+148=856px)+칸 사이 gap이 1024px 패널 내폭(약 920px)과
+     10px 안팎 차이라 여유가 거의 없다 — --panel-pad·--shell-gutter나 이 minmax 값을
+     바꿀 땐 1024px에서 실제로 줄바꿈되지 않는지 확인할 것. */
   .recommend-form {
     grid-template-columns: minmax(148px, 0.75fr) minmax(240px, 1.15fr) minmax(320px, 1.35fr) 148px;
     align-items: end;

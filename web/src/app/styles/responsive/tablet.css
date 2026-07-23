@@ -84,6 +84,16 @@
     font-size: inherit;
   }
 
+  /* R-18: 스켈레톤도 같은 지점에서 같은 고정 크기로 전환해 CLS를 없앤다. */
+  .skeleton-balls {
+    gap: 10px;
+  }
+
+  .skeleton-ball {
+    width: 46px;
+    height: 46px;
+  }
+
   .ball-separator {
     font-size: inherit;
   }
