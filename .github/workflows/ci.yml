@@ -121,6 +121,42 @@ jobs:
           path: web/playwright-report/
           retention-days: 7
 
+  # §6-5: 하단 고정 광고가 CTA·푸터를 가리지 않는지 검증하려면 광고 env가 baked-in된
+  # 별도 빌드가 필요하다. NEXT_DIST_DIR로 산출물 디렉터리를 분리해 web-e2e/web-e2e-content
+  # 잡과 겹치지 않게 한다(어차피 잡마다 별도 체크아웃이라 로컬처럼 실제로 꼬일 일은 없지만,
+  # 스크립트 동작을 로컬과 동일하게 유지한다). 백엔드는 필요 없다 — 광고는 루트 레이아웃에
+  # 있어 모든 라우트에서 mount된다.
+  web-e2e-ad-overlay:
+    name: Web E2E Ad Overlay (§6-5)
+    runs-on: ubuntu-latest
+    needs: [web-build-test]
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+        env:
+          NEXT_DIST_DIR: .next-ad-overlay
+          NEXT_PUBLIC_KAKAO_ADFIT_UNIT_STICKY: DAN-ci-ad-overlay-test
+          KRAFT_BACKEND_INTERNAL_URL: http://127.0.0.1:59999
+          KRAFT_PUBLIC_BASE_URL: http://127.0.0.1:3103
+      - run: npm run test:e2e:ad-overlay
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report-ad-overlay
+          path: web/playwright-report/
+          retention-days: 7
+
   # runs fully parallel — Gradle dep cache is enough; compiled classes aren't shared between jobs anyway
   static-analysis:
     name: Static Analysis
