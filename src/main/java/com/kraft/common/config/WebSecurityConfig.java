@@ -28,8 +28,12 @@ public class WebSecurityConfig {
     // exist here. We configure the matcher to never match rather than calling
     // csrf.disable(), which is semantically equivalent but avoids static-analysis
     // false positives on the blanket-disable pattern.
+    //
+    // @Order(3): admin(@Order(1)) → community(@Order(2), CommunitySecurityConfig)보다
+    // 뒤로 밀려야 한다. 이 체인의 matcher("/api/**")가 "/api/v1/community/**"를 포함하므로,
+    // 순서가 community보다 앞서면 커뮤니티 인증이 무음으로 우회된다(§4.1).
     @Bean
-    @Order(2)
+    @Order(3)
     SecurityFilterChain publicApiFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/api/**", "/actuator/**", "/ops/**")

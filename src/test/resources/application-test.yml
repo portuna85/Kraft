@@ -17,6 +17,16 @@ spring:
   sql:
     init:
       mode: always
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
+          naver:
+            client-id: test-naver-client-id
+            client-secret: test-naver-client-secret
 
 logging:
   file:

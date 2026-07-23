@@ -15,13 +15,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * 커뮤니티 인증 체인(§7 1~2단계) 착수 전, 현재 보안 체인 순서(Admin=@Order(1),
- * Public=@Order(2))와 matcher 선점 상태를 고정하는 회귀 가드.
- *
- * 1단계에서 community 체인이 @Order(2)로 삽입되고 public 체인이 @Order(3)로
- * 재번호되면, communityPathIsNotYetClaimedByPublicChain()는 "community 경로가
- * community 체인에 도달"(예: 미인증 시 302 /oauth2/authorization/... 또는 401 JSON)을
- * 검증하도록 치환해야 한다.
+ * 보안 체인 순서(Admin=@Order(1), Community=@Order(2), Public=@Order(3))와 matcher
+ * 선점 상태를 고정하는 회귀 가드. community 체인이 public 체인보다 먼저 평가되지 않으면
+ * "/api/v1/community/**"가 public 체인의 넓은 "/api/**" matcher에 무음으로 선점당한다(§4.1).
  */
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
@@ -48,10 +44,19 @@ class SecurityChainOrderingTest {
     }
 
     @Test
-    @DisplayName("아직 community 체인이 없어 community 경로는 public 체인 matcher에 잡혀 404를 받는다")
-    void communityPathIsNotYetClaimedByPublicChain() throws Exception {
-        mockMvc.perform(get("/api/v1/community/ping"))
-                .andExpect(status().isNotFound())
+    @DisplayName("미인증 community 보호 경로는 public 체인이 아닌 community 체인에 도달해 401 JSON을 받는다")
+    void unauthenticatedCommunityPath_reachesCommunityChainNotPublicChain() throws Exception {
+        mockMvc.perform(get("/api/v1/community/posts"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("Content-Type", "application/json;charset=UTF-8"))
+                .andExpect(cookie().doesNotExist("JSESSIONID"));
+    }
+
+    @Test
+    @DisplayName("익명 요청으로 커뮤니티 세션 조회 시 세션 쿠키를 만들지 않고 로그인 안 됨 상태를 반환한다")
+    void anonymousSessionCheck_doesNotCreateSessionCookie() throws Exception {
+        mockMvc.perform(get("/api/v1/community/session"))
+                .andExpect(status().isOk())
                 .andExpect(cookie().doesNotExist("JSESSIONID"));
     }
 }
