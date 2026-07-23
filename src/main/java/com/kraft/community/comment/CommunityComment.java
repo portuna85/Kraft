@@ -90,4 +90,8 @@ public class CommunityComment {
     public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
+
+    void markDeleted() {
+        this.deleted = true;
+    }
 }

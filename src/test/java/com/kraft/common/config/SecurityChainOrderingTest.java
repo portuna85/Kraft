@@ -46,7 +46,9 @@ class SecurityChainOrderingTest {
     @Test
     @DisplayName("미인증 community 보호 경로는 public 체인이 아닌 community 체인에 도달해 401 JSON을 받는다")
     void unauthenticatedCommunityPath_reachesCommunityChainNotPublicChain() throws Exception {
-        mockMvc.perform(get("/api/v1/community/posts"))
+        // /api/v1/community/posts/**는 공개 조회로 permitAll이므로, 아직 인증이 필요한
+        // 임의의(향후 확장용) community 경로로 "community 체인 인증 요구" 자체를 검증한다.
+        mockMvc.perform(get("/api/v1/community/notifications"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().string("Content-Type", "application/json;charset=UTF-8"))
                 .andExpect(cookie().doesNotExist("JSESSIONID"));

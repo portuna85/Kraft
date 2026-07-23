@@ -1,11 +1,13 @@
 package com.kraft.common.config;
 
+import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
 @ConfigurationProperties(prefix = "kraft.community")
 public record CommunityProperties(
-        boolean enabled
+        boolean enabled,
+        @Min(1) int writeRateLimitPerMinute
 ) {
 }

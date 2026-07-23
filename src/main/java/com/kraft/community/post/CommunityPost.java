@@ -83,4 +83,10 @@ public class CommunityPost {
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    void update(String title, String content, OffsetDateTime updatedAt) {
+        this.title = title;
+        this.content = content;
+        this.updatedAt = updatedAt;
+    }
 }

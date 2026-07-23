@@ -1,12 +1,15 @@
 package com.kraft.community.auth;
 
+import com.kraft.common.config.CommunityProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
@@ -28,11 +31,14 @@ public class CommunitySecurityConfig {
 
     private final CommunityOAuth2UserService communityOAuth2UserService;
     private final CommunityAuthEntryPoint communityAuthEntryPoint;
+    private final CommunityProperties communityProperties;
 
     public CommunitySecurityConfig(CommunityOAuth2UserService communityOAuth2UserService,
-                                    CommunityAuthEntryPoint communityAuthEntryPoint) {
+                                    CommunityAuthEntryPoint communityAuthEntryPoint,
+                                    CommunityProperties communityProperties) {
         this.communityOAuth2UserService = communityOAuth2UserService;
         this.communityAuthEntryPoint = communityAuthEntryPoint;
+        this.communityProperties = communityProperties;
     }
 
     @Bean
@@ -44,7 +50,10 @@ public class CommunitySecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/community/session").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**", "/logout").permitAll()
+                        // 게시글/댓글 조회는 로그인 없이 공개, 쓰기(POST/PUT/DELETE)만 인증 요구.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/community/posts/**").permitAll()
                         .anyRequest().authenticated())
+                .addFilterAfter(new CommunityWriteRateLimitFilter(communityProperties), AuthorizationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(communityOAuth2UserService))
                         .successHandler(successHandler())
