@@ -33,6 +33,15 @@
   --header-offset: calc(var(--header-h) + env(safe-area-inset-top));
   --target-min: 44px;
   --sticky-ad-h: calc(50px + env(safe-area-inset-bottom));
+  /* R-24: 본문·라벨용 유동 타입 스케일. 기존에 가장 많이 쓰이던 정적 값을 각 토큰의
+     하한(320px 부근)으로 고정해 모바일 렌더 크기는 그대로 유지하면서, 넓은 화면에서는
+     완만하게 커지도록 했다 — clamp() 특성상 하한 아래로는 절대 내려가지 않는다.
+     제목류는 이미 자체 clamp()을 쓰므로 이 스케일 대상이 아니다. */
+  --fs-2xs: clamp(0.76rem, 0.72rem + 0.25vw, 0.82rem);
+  --fs-xs: clamp(0.78rem, 0.74rem + 0.25vw, 0.84rem);
+  --fs-sm: clamp(0.88rem, 0.83rem + 0.3vw, 0.94rem);
+  --fs-base: clamp(0.92rem, 0.87rem + 0.3vw, 0.98rem);
+  --fs-md: clamp(1.05rem, 0.99rem + 0.35vw, 1.12rem);
 }
 
 [data-theme="dark"] {
@@ -176,7 +185,7 @@ a {
   display: flex;
   gap: 10px;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
   align-items: center;
 }
 
@@ -328,7 +337,7 @@ a {
 
 .eyebrow {
   color: var(--accent-strong, #8d2f10);
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   font-family: var(--font-accent), var(--font-sans), sans-serif;
   letter-spacing: 0.08em;
@@ -558,7 +567,7 @@ button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-del
   display: grid;
   gap: 8px;
   color: var(--muted, #5e564c);
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
 }
 
 .recommend-toggle-control {
@@ -593,7 +602,7 @@ button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-del
 }
 
 .recommend-toggle-hint {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--muted, #5e564c);
   opacity: 0.84;
   line-height: 1.4;
@@ -693,7 +702,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   display: grid;
   gap: 8px;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
 }
 
 .ops-summary-grid {
@@ -746,7 +755,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   flex-shrink: 0;
   min-height: unset;
   padding: 5px 14px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   border-radius: 999px;
   background: transparent;
   color: var(--muted);
@@ -805,7 +814,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   align-items: center;
   padding: 2px 10px;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   background: var(--surface-card-sm);
   border: 1px solid var(--line);
@@ -819,7 +828,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 }
 
 .saved-draw-ref {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
 }
 
@@ -835,7 +844,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 
@@ -874,7 +883,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   margin: 18px 0 0;
   color: var(--accent-strong);
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
 }
 
 .link-button {
@@ -914,7 +923,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 
 .footer-copy {
   max-width: 70ch;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   margin: 0;
   line-height: 1.5;
 }
@@ -975,7 +984,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   cursor: default;
 }
 .freq-filter-desc {
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
   margin: 12px 0 0;
   line-height: 1.6;
@@ -991,7 +1000,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 
 .freq-rank-label {
   margin: 0;
-  font-size: 0.76rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
@@ -1033,7 +1042,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   line-height: 1.3;
 }
 .freq-pct {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
   text-align: center;
   line-height: 1.3;
@@ -1042,7 +1051,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 /* ── Stats / pattern page ────────────────────────────────────────── */
 .section-title {
   font-family: var(--font-display), "Noto Serif KR", serif;
-  font-size: 1.05rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0 0 14px;
@@ -1089,7 +1098,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 }
 .pattern-key {
   font-family: var(--font-accent), var(--font-sans), sans-serif;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -1139,11 +1148,11 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 
 .pair-count {
   font-family: var(--font-accent), var(--font-sans), sans-serif;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
 }
 .pair-pct {
-  font-size: 0.76rem;
+  font-size: var(--fs-2xs);
   color: var(--muted);
 }
 
@@ -1152,7 +1161,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   margin-top: 20px;
 }
 .companion-filter-label {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
@@ -1180,7 +1189,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   display: grid;
   gap: 8px;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
 }
 .analysis-result {
   padding: 24px;
@@ -1204,7 +1213,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   gap: 6px;
 }
 .result-label {
-  font-size: 0.76rem;
+  font-size: var(--fs-2xs);
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1265,7 +1274,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 
 .info-article h2 {
   font-family: var(--font-display), "Noto Serif KR", serif;
-  font-size: 1.05rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   margin: 0 0 8px;
   padding-bottom: 6px;
@@ -1536,7 +1545,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   grid-template-columns: 68px 1fr 24px;
   align-items: center;
   gap: 10px;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   min-width: 0;
 }
 
@@ -1655,7 +1664,7 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
 }
 
 .brand {
-  font-size: 1.05rem;
+  font-size: var(--fs-md);
   font-family: var(--font-accent), var(--font-sans), sans-serif;
   font-weight: 700;
   letter-spacing: -0.06em;
@@ -1772,7 +1781,7 @@ form button,
 .freq-rank-group .ball {
   width: 34px;
   height: 34px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
 }
 
 .recommend-card-info .balls {
@@ -1801,7 +1810,7 @@ form button,
 }
 
 .prize-table-amount {
-  font-size: 1.05rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--accent-strong);
@@ -1874,7 +1883,7 @@ form button,
 
 .rank {
   font-family: var(--font-accent), var(--font-sans), sans-serif;
-  font-size: 0.76rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   color: var(--muted);
   text-align: left;
@@ -1896,7 +1905,7 @@ form button,
 .saved-delete-btn {
   flex-shrink: 0;
   padding: 5px 10px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   border-radius: 10px;
   border: 1px solid var(--line, rgba(29, 26, 23, 0.14));
   background: transparent;
@@ -2031,7 +2040,7 @@ form button,
   .freq-rank-group .ball {
     width: 32px;
     height: 32px;
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
   }
 
   .recommend-card-info .ball {
@@ -2112,7 +2121,7 @@ form button,
   }
 
   .prize-table-rank {
-    font-size: 0.92rem;
+    font-size: var(--fs-base);
   }
 
   .prize-table-amount {

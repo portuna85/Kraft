@@ -126,7 +126,9 @@ test.describe("globals.css 컴퓨티드 스타일 회귀 방지 (R-19 안전망)
     const s = await snapshot(page, 768);
     expect(s.ballsGap).toBe("10px");
     expect(s.prizeTdPadding).toBe("16px");
-    expect(s.rankFontSize).toBe("14.72px");
+    // R-24: font-size가 --fs-base(clamp(0.92rem, 0.87rem + 0.3vw, 0.98rem))로
+    // 토큰화되면서 ≥640px에서는 상한(0.98rem=15.68px)에 항상 닿는다(의도된 변화).
+    expect(s.rankFontSize).toBe("15.68px");
     expect(s.amountFontSize).toBe("20px");
     expect(s.fgGap).toBe("12px");
     expect(s.piGap).toBe("10px");
@@ -140,7 +142,9 @@ test.describe("globals.css 컴퓨티드 스타일 회귀 방지 (R-19 안전망)
     const s = await snapshot(page, 1280);
     expect(s.ballsGap).toBe("10px");
     expect(s.prizeTdPadding).toBe("16px");
-    expect(s.rankFontSize).toBe("14.72px");
+    // R-24: font-size가 --fs-base(clamp(0.92rem, 0.87rem + 0.3vw, 0.98rem))로
+    // 토큰화되면서 ≥640px에서는 상한(0.98rem=15.68px)에 항상 닿는다(의도된 변화).
+    expect(s.rankFontSize).toBe("15.68px");
     expect(s.amountFontSize).toBe("20px");
     expect(s.fgGap).toBe("12px");
     expect(s.piGap).toBe("10px");
