@@ -7,7 +7,8 @@ import { gotoAndWaitForRealContent } from "../lib/goto-real-content";
 // 이 라우트들에서 항상 error.tsx만 검사해왔다 — 여기서는 실제 렌더된 콘텐츠를
 // 먼저 확인한 뒤 오버플로를 검사해, 픽스처가 깨져 조용히 에러 화면을 검사하게
 // 되는 상황(§6-2가 원래 겪었던 문제)을 재발 방지한다.
-const WIDTHS = [320, 768, 1024, 1280] as const;
+// §6-3: 639/1023 = 640/1024 브레이크포인트 바로 아래(경계 −1px) — 회귀를 가장 싸게 잡는 폭.
+const WIDTHS = [320, 639, 768, 1023, 1024, 1280] as const;
 
 for (const width of WIDTHS) {
   test.describe(`${width}px`, () => {

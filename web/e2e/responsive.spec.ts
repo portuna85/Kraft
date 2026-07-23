@@ -26,12 +26,15 @@ async function expectDrawerCoversViewport(page: Page) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 가로 스크롤 없음 — 3개 대표 너비에서 확인 (이 설정엔 백엔드가 없어 "/"는 error.tsx
-// 렌더 상태 기준 — 실콘텐츠 상태의 오버플로는 playwright.content.config.ts/§6-2 참고)
+// 가로 스크롤 없음 — 대표 너비 + 브레이크포인트 경계(§6-3: 639/1023 = 640/1024 바로
+// 아래)에서 확인 (이 설정엔 백엔드가 없어 "/"는 error.tsx 렌더 상태 기준 — 실콘텐츠
+// 상태의 오버플로는 playwright.content.config.ts/§6-2 참고)
 // ─────────────────────────────────────────────────────────────────────────────
 const VIEWPORTS = [
   { width: 320, height: 568, label: "320px" },
+  { width: 639, height: 900, label: "639px (태블릿 경계 −1px)" },
   { width: 768, height: 1024, label: "768px" },
+  { width: 1023, height: 900, label: "1023px (데스크톱 경계 −1px)" },
   { width: 1280, height: 800, label: "1280px" },
 ] as const;
 
@@ -42,6 +45,14 @@ for (const vp of VIEWPORTS) {
     await expectNoOverflow(page);
   });
 }
+
+// §6-3: 가로 모드(landscape) 1케이스 — R-10이 다룬 "가로 모드 드로어 잘림"과 별개로,
+// 셸 레벨에서도 짧은 높이(844×390)에서 오버플로가 없는지 확인한다.
+test("844×390(가로 모드)에서 가로 스크롤 없음", async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.goto("/");
+  await expectNoOverflow(page);
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // §6-3 라우트 확장 — 클라이언트 컴포넌트라 page.route 목으로 실제 콘텐츠를 렌더할 수
