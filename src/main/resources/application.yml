@@ -80,6 +80,8 @@ kraft:
     token: ${KRAFT_OPS_TOKEN:}
   saved:
     max-per-client: ${KRAFT_SAVED_MAX_PER_CLIENT:100}
+  community:
+    enabled: ${KRAFT_COMMUNITY_ENABLED:false}
   security:
     trusted-proxy-cidr: ${KRAFT_SECURITY_TRUSTED_PROXY_CIDR:172.28.0.0/16}
     rate-limit-per-minute: ${KRAFT_SECURITY_RATE_LIMIT_PER_MINUTE:120}
