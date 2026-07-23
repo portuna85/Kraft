@@ -27,6 +27,14 @@ for (const width of WIDTHS) {
       await expectNoOverflow(page);
     });
 
+    test("/frequency — 필터 전환 후 오버플로 없음", async ({ page }) => {
+      await gotoAndWaitForRealContent(page, "/frequency");
+      await page.getByRole("button", { name: "최근 100회" }).click();
+      await expect(page.getByRole("button", { name: "최근 100회" })).toHaveAttribute("aria-pressed", "true");
+      await expect(page.locator(".frequency-grid .frequency-item").first()).toBeVisible();
+      await expectNoOverflow(page);
+    });
+
     test("/stats — 패턴 통계 실렌더 후 오버플로 없음", async ({ page }) => {
       await gotoAndWaitForRealContent(page, "/stats");
       await expect(page.locator(".pattern-list").first()).toBeVisible();

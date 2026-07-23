@@ -1,4 +1,5 @@
-/* ── Desktop (min-width: 1024px) ── */
+/* ── Desktop (min-width: 1024px) ──
+   BP 변경 시 src/lib/breakpoints.ts(BP.desktop)도 함께 동기화할 것. */
 @media (min-width: 1024px) {
   :root {
     --shell-gutter: 24px;

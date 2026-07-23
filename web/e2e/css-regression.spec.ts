@@ -183,3 +183,19 @@ test.describe("globals.css 컴퓨티드 스타일 회귀 방지 (R-19 안전망)
     expect(top).toBe("106px");
   });
 });
+
+// R-21: 브레이크포인트 값이 src/lib/breakpoints.ts(BP)와 globals.css 양쪽에 문자열로
+// 흩어져 있어 CSS만 바꾸면 JS가 조용히 어긋날 수 있다. CSS가 실제로 쓰는 min-width
+// 리터럴 집합이 BP의 값과 정확히 일치하는지 빌드 없이 정적으로 검증한다.
+test("R-21: CSS의 min-width 브레이크포인트가 breakpoints.ts(BP)와 일치한다", async () => {
+  const { BP } = await import("../src/lib/breakpoints");
+  const literals = new Set(
+    [...CSS.matchAll(/@media\s*\(min-width:\s*(\d+)px\)/g)].map((m) => Number(m[1])),
+  );
+  expect(literals.size).toBeGreaterThan(0);
+  for (const value of literals) {
+    expect([BP.tablet, BP.desktop]).toContain(value);
+  }
+  expect(literals).toContain(BP.tablet);
+  expect(literals).toContain(BP.desktop);
+});

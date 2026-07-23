@@ -70,6 +70,7 @@
   inset: -12px;
 }
 
+/* BP 변경 시 src/lib/breakpoints.ts(BP.desktop)도 함께 동기화할 것. */
 @media (min-width: 1024px) {
   .ad-sticky-mobile {
     display: none;

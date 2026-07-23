@@ -69,6 +69,53 @@ test.describe("실제 콘텐츠가 채워진 라우트의 오버플로", () => {
       await expectNoOverflow(page);
     });
 
+    test(`/saved — 빈 상태 — ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.route("**/api/v1/saved", (route) =>
+        route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
+      );
+      await page.route("**/api/v1/saved/matches**", (route) =>
+        route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
+      );
+      await page.goto("/saved");
+      await expect(page.locator(".saved-empty-state")).toBeVisible();
+      await expectNoOverflow(page);
+    });
+
+    test(`/saved — 당첨 배지 — ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.route("**/api/v1/saved", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify([
+            { id: 1, numbers: [1, 2, 3, 4, 5, 6], label: "테스트 번호", source: "MANUAL", createdAt: "2026-01-01T00:00:00Z" },
+          ]),
+        }),
+      );
+      await page.route("**/api/v1/saved/matches**", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify([
+            {
+              savedNumber: { id: 1, numbers: [1, 2, 3, 4, 5, 6], label: "테스트 번호", source: "MANUAL", createdAt: "2026-01-01T00:00:00Z" },
+              round: 1200,
+              drawDate: "2026-07-18",
+              drawNumbers: [1, 2, 3, 4, 5, 6],
+              bonusNumber: 7,
+              matchedCount: 6,
+              bonusMatch: false,
+              prizeTier: "1등",
+            },
+          ]),
+        }),
+      );
+      await page.goto("/saved");
+      await expect(page.locator(".saved-prize-badge.prize-win")).toBeVisible();
+      await expectNoOverflow(page);
+    });
+
     test(`/recommend — ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
       await page.route("**/api/v1/numbers/recommend", (route) =>
@@ -86,6 +133,38 @@ test.describe("실제 콘텐츠가 채워진 라우트의 오버플로", () => {
       await page.goto("/recommend");
       await page.getByRole("button", { name: "추천받기" }).click();
       await expect(page.locator(".recommend-card").first()).toBeVisible();
+      await expectNoOverflow(page);
+    });
+
+    test(`/recommend — 10개 생성 — ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      const combos = Array.from({ length: 10 }, (_, i) => [i + 1, i + 2, i + 3, i + 4, i + 5, i + 6]);
+      await page.route("**/api/v1/numbers/recommend", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ recommendations: combos }),
+        }),
+      );
+      await page.goto("/recommend");
+      await page.getByLabel("조합 수").fill("10");
+      await page.getByRole("button", { name: "추천받기" }).click();
+      await expect(page.locator(".recommend-card")).toHaveCount(10);
+      await expectNoOverflow(page);
+    });
+
+    test(`/recommend — 검증 오류 메시지 — ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.route("**/api/v1/numbers/recommend", (route) =>
+        route.fulfill({
+          status: 400,
+          contentType: "application/json",
+          body: JSON.stringify({ message: "제외 번호가 너무 많아 조합을 생성할 수 없습니다." }),
+        }),
+      );
+      await page.goto("/recommend");
+      await page.getByRole("button", { name: "추천받기" }).click();
+      await expect(page.locator(".status-text")).toBeVisible();
       await expectNoOverflow(page);
     });
 

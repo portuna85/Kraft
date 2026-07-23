@@ -1,4 +1,5 @@
-/* ── Tablet (min-width: 640px) ── */
+/* ── Tablet (min-width: 640px) ──
+   BP 변경 시 src/lib/breakpoints.ts(BP.tablet)도 함께 동기화할 것. */
 @media (min-width: 640px) {
   :root {
     --shell-gutter: 20px;
