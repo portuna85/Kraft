@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { expectNoOverflow } from "./lib/expect-no-overflow";
 
 // .site-header의 backdrop-filter가 자식 fixed 요소(.nav-backdrop/.nav-mobile-wrap)의
 // containing block이 되어 bottom:0/inset:0이 뷰포트가 아니라 헤더 자신의 높이 기준으로
@@ -24,26 +25,9 @@ async function expectDrawerCoversViewport(page: Page) {
   expect(Math.abs(wrapBox!.y + wrapBox!.height - viewport.height)).toBeLessThan(TOLERANCE);
 }
 
-// html/body의 overflow-x: clip은 루트 scrollWidth를 clientWidth로 수렴시켜 콘텐츠가
-// 잘려도 통과해버린다(docs/improvement.md §6-1) — 요소 단위로 실제 뷰포트를 벗어나는
-// 엘리먼트가 있는지 검사한다.
-async function expectNoOverflow(page: Page) {
-  const overflowing = await page.evaluate(() =>
-    [...document.querySelectorAll("body *")]
-      .filter((el) => {
-        const r = el.getBoundingClientRect();
-        if (r.width === 0 && r.height === 0) return false;
-        return r.right > window.innerWidth + 1 || r.left < -1;
-      })
-      .filter((el) => !el.closest("[data-allow-overflow]"))
-      .map((el) => el.className || el.tagName),
-  );
-  expect(overflowing).toEqual([]);
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// 가로 스크롤 없음 — 3개 대표 너비에서 확인 (백엔드가 없는 e2e 환경이라 "/"는
-// error.tsx 렌더 상태 기준 — docs/improvement.md §6-2, 별도 작업으로 보류)
+// 가로 스크롤 없음 — 3개 대표 너비에서 확인 (이 설정엔 백엔드가 없어 "/"는 error.tsx
+// 렌더 상태 기준 — 실콘텐츠 상태의 오버플로는 playwright.content.config.ts/§6-2 참고)
 // ─────────────────────────────────────────────────────────────────────────────
 const VIEWPORTS = [
   { width: 320, height: 568, label: "320px" },
@@ -61,7 +45,8 @@ for (const vp of VIEWPORTS) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // §6-3 라우트 확장 — 클라이언트 컴포넌트라 page.route 목으로 실제 콘텐츠를 렌더할 수
-// 있는 라우트에 한해 오버플로 검사를 추가한다(서버컴포넌트 데이터 페이지는 §6-2 보류).
+// 있는 라우트. 서버컴포넌트 데이터 페이지(/, /frequency, /stats, /companion)의 실콘텐츠
+// 오버플로 검사는 e2e/content/overflow.spec.ts(§6-2 픽스처 백엔드)가 담당한다.
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe("실제 콘텐츠가 채워진 라우트의 오버플로", () => {
   for (const width of [320, 768]) {
