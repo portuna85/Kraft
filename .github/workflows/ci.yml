@@ -88,6 +88,39 @@ jobs:
           path: web/playwright-report/
           retention-days: 7
 
+  # §6-2: web-e2e와 별도 트랙 — 백엔드가 없다는 전제(web-e2e)가 아니라 픽스처 백엔드로
+  # 실제 콘텐츠가 렌더된 상태의 반응형 오버플로를 검증한다. web-e2e와 완전히 분리된
+  # Playwright 설정(playwright.content.config.ts, 앱/픽스처 포트도 다름)이라 서로 간섭하지 않는다.
+  web-e2e-content:
+    name: Web E2E Content (§6-2 픽스처 백엔드)
+    runs-on: ubuntu-latest
+    needs: [web-build-test]
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+        env:
+          KRAFT_BACKEND_INTERNAL_URL: http://127.0.0.1:4101
+          KRAFT_PUBLIC_BASE_URL: http://127.0.0.1:3101
+          NEXT_PUBLIC_UNDO_WINDOW_MS: "200"
+      - run: npm run test:e2e:content
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report-content
+          path: web/playwright-report/
+          retention-days: 7
+
   # runs fully parallel — Gradle dep cache is enough; compiled classes aren't shared between jobs anyway
   static-analysis:
     name: Static Analysis
