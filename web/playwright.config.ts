@@ -8,9 +8,9 @@ import { defineConfig, devices } from "@playwright/test";
 // 도입해 정상 상태까지 커버하려면 테스트별로 백엔드 상태를 분리할 방법이 필요해 별도 작업으로 남겨둔다.
 export default defineConfig({
   testDir: "./e2e",
-  // e2e/content/**은 §6-2 픽스처 백엔드 전제 스펙(playwright.content.config.ts 전용) —
-  // 이 설정(백엔드 없음 전제)으로 돌리면 항상 실패한다.
-  testIgnore: "content/**",
+  // e2e/content/**(§6-2, 픽스처 백엔드 전제)·e2e/ad-overlay/**(§6-5, 광고 env 빌드 전제)는
+  // 각각 전용 설정에서만 돌린다 — 이 설정(백엔드 없음, 광고 env 없음)으로 돌리면 항상 실패한다.
+  testIgnore: ["content/**", "ad-overlay/**"],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
