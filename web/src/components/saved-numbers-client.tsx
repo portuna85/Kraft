@@ -154,6 +154,7 @@ export function SavedNumbersClient({ latestRound }: Props) {
               <form onSubmit={applyCustomRound} className="saved-round-custom-form">
                 <input
                   type="number"
+                  inputMode="numeric"
                   min={1}
                   max={latestRound}
                   value={customRoundInput}

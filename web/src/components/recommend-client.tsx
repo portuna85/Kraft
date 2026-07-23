@@ -159,6 +159,7 @@ export function RecommendClient() {
           {TEXT.countLabel}
           <input
             type="number"
+            inputMode="numeric"
             min="1"
             max="10"
             value={count}

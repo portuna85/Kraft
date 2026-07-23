@@ -88,13 +88,17 @@ body {
     linear-gradient(180deg, var(--bg, #f6f1e8), var(--bg-strong, #efe5d2));
   color: var(--text, #1d1a17);
   font-family: var(--font-sans), "Pretendard", system-ui, sans-serif;
-  /* Noto Sans KR은 400/700/800만 임베드한다 — 500은 CSS 폰트 매칭 규칙상
-     항상 400으로 대체 렌더링되므로 실제 렌더링 값과 선언을 일치시킨다. */
+  /* Noto Sans KR은 400/700만 임베드한다 — 500은 CSS 폰트 매칭 규칙상 항상 400으로
+     대체 렌더링되므로 실제 렌더링 값과 선언을 일치시킨다. */
   font-weight: 400;
   letter-spacing: -0.01em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
+  /* R-22: 한글은 음절 단위로 아무 데서나 꺾이면 어색하다 — 어절 단위로 줄바꿈하고,
+     긴 토큰(URL 등)은 overflow-wrap으로 방어한다. */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 img,
@@ -453,7 +457,6 @@ button:not(.nav-stats-toggle):not(.nav-toggle):not(.theme-toggle):not(.saved-del
 }
 
 .stat-card {
-  min-height: 210px;
   gap: 8px;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
@@ -1736,11 +1739,6 @@ form button,
   max-width: none;
 }
 
-.companion-item {
-  align-items: stretch;
-  flex-direction: column;
-}
-
 .balls {
   /* R-20: 뷰포트 폭 기반 매직 넘버(80/9.2) 대신 컨테이너 실폭 기준(cqw)으로 계산 —
      --shell-gutter·--panel-pad가 바뀌어도 여기 상수를 손댈 필요가 없다. */
@@ -1952,6 +1950,12 @@ form button,
 
   .header-inner {
     gap: 24px;
+  }
+
+  /* R-25: 모바일 1열에서는 콘텐츠 대비 카드가 길어 빈 여백만 늘어나던 고정
+     min-height를 태블릿 이상에서만 적용한다. */
+  .stat-card {
+    min-height: 210px;
   }
 
   .brand {
