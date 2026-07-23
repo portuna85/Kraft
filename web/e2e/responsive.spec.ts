@@ -24,8 +24,26 @@ async function expectDrawerCoversViewport(page: Page) {
   expect(Math.abs(wrapBox!.y + wrapBox!.height - viewport.height)).toBeLessThan(TOLERANCE);
 }
 
+// html/body의 overflow-x: clip은 루트 scrollWidth를 clientWidth로 수렴시켜 콘텐츠가
+// 잘려도 통과해버린다(docs/improvement.md §6-1) — 요소 단위로 실제 뷰포트를 벗어나는
+// 엘리먼트가 있는지 검사한다.
+async function expectNoOverflow(page: Page) {
+  const overflowing = await page.evaluate(() =>
+    [...document.querySelectorAll("body *")]
+      .filter((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) return false;
+        return r.right > window.innerWidth + 1 || r.left < -1;
+      })
+      .filter((el) => !el.closest("[data-allow-overflow]"))
+      .map((el) => el.className || el.tagName),
+  );
+  expect(overflowing).toEqual([]);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// 가로 스크롤 없음 — 3개 대표 너비에서 확인
+// 가로 스크롤 없음 — 3개 대표 너비에서 확인 (백엔드가 없는 e2e 환경이라 "/"는
+// error.tsx 렌더 상태 기준 — docs/improvement.md §6-2, 별도 작업으로 보류)
 // ─────────────────────────────────────────────────────────────────────────────
 const VIEWPORTS = [
   { width: 320, height: 568, label: "320px" },
@@ -37,22 +55,56 @@ for (const vp of VIEWPORTS) {
   test(`${vp.label} 뷰포트에서 가로 스크롤 없음`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto("/");
-    // html/body의 overflow-x: clip은 루트 scrollWidth를 clientWidth로 수렴시켜
-    // 콘텐츠가 잘려도 통과해버린다(docs/improvement.md §6-1) — 요소 단위로 실제
-    // 뷰포트를 벗어나는 엘리먼트가 있는지 검사한다.
-    const overflowing = await page.evaluate(() =>
-      [...document.querySelectorAll("body *")]
-        .filter((el) => {
-          const r = el.getBoundingClientRect();
-          if (r.width === 0 && r.height === 0) return false;
-          return r.right > window.innerWidth + 1 || r.left < -1;
-        })
-        .filter((el) => !el.closest("[data-allow-overflow]"))
-        .map((el) => el.className || el.tagName),
-    );
-    expect(overflowing).toEqual([]);
+    await expectNoOverflow(page);
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// §6-3 라우트 확장 — 클라이언트 컴포넌트라 page.route 목으로 실제 콘텐츠를 렌더할 수
+// 있는 라우트에 한해 오버플로 검사를 추가한다(서버컴포넌트 데이터 페이지는 §6-2 보류).
+// ─────────────────────────────────────────────────────────────────────────────
+test.describe("실제 콘텐츠가 채워진 라우트의 오버플로", () => {
+  for (const width of [320, 768]) {
+    test(`/saved — ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.route("**/api/v1/saved", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify([
+            { id: 1, numbers: [1, 2, 3, 4, 5, 6], label: "테스트 번호", source: "MANUAL", createdAt: "2026-01-01T00:00:00Z" },
+          ]),
+        }),
+      );
+      await page.route("**/api/v1/saved/matches**", (route) =>
+        route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
+      );
+      await page.goto("/saved");
+      await expect(page.locator(".saved-item")).toHaveCount(1);
+      await expectNoOverflow(page);
+    });
+
+    test(`/recommend — ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.route("**/api/v1/numbers/recommend", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            recommendations: [
+              [1, 2, 3, 4, 5, 6],
+              [7, 8, 9, 10, 11, 12],
+            ],
+          }),
+        }),
+      );
+      await page.goto("/recommend");
+      await page.getByRole("button", { name: "추천받기" }).click();
+      await expect(page.locator(".recommend-card").first()).toBeVisible();
+      await expectNoOverflow(page);
+    });
+  }
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 모바일 네비게이션 드로어
@@ -175,5 +227,25 @@ test.describe("데스크톱 내비게이션", () => {
 
     await expect(page.locator(".nav-desktop")).toBeVisible();
     await expect(page.getByRole("button", { name: "메뉴 열기" })).toBeHidden();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// R-08: 터치 기기(pointer: coarse)에서 상시 노출 컨트롤의 히트 영역이 --target-min
+// (44px) 이상인지 확인. Mobile Chrome/Tablet 프로젝트에서만 의미가 있다 — 데스크톱
+// (pointer: fine)에서는 44px을 강제하지 않는 게 의도이므로 그 프로젝트에서는 skip.
+// ─────────────────────────────────────────────────────────────────────────────
+test.describe("터치 타깃 최소 크기", () => {
+  test("nav-toggle·theme-toggle이 44px 이상이다", async ({ page }) => {
+    await page.goto("/");
+
+    const isCoarse = await page.evaluate(() => window.matchMedia("(pointer: coarse)").matches);
+    test.skip(!isCoarse, "pointer: fine 프로젝트에는 해당 없음");
+
+    for (const selector of [".nav-toggle", ".theme-toggle"]) {
+      const box = await page.locator(selector).boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+    }
   });
 });
