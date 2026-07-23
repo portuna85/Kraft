@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Script from "next/script";
+import { BP } from "@/lib/breakpoints";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { useElementWidth } from "@/lib/use-element-width";
 
-// globals.css의 데스크톱 브레이크포인트(min-width: 1024px)와 동일하게 맞춘다.
-// StickyMobileAd·AdSenseSidebar처럼 뷰포트 자체로 표시 여부가 갈리는(사이드바 유무와
-// 무관한) 광고에만 쓴다. 콘텐츠 컬럼 안에 들어가는 InArticleAd는 뷰포트가 아니라
-// 실측 컨테이너 폭(useAdSlotFormat)으로 판정한다 — 사이드바가 있는 1024~1163px
-// 구간처럼 "데스크톱이지만 728px이 안 들어가는" 경우를 뷰포트 판정은 놓치기 때문.
-const DESKTOP_QUERY = "(min-width: 1024px)";
+// globals.css의 데스크톱 브레이크포인트와 동일하게 맞춘다. StickyMobileAd·AdSenseSidebar처럼
+// 뷰포트 자체로 표시 여부가 갈리는(사이드바 유무와 무관한) 광고에만 쓴다. 콘텐츠 컬럼
+// 안에 들어가는 InArticleAd는 뷰포트가 아니라 실측 컨테이너 폭(useAdSlotFormat)으로
+// 판정한다 — 사이드바가 있는 1024~1163px 구간처럼 "데스크톱이지만 728px이 안 들어가는"
+// 경우를 뷰포트 판정은 놓치기 때문.
+const DESKTOP_QUERY = `(min-width: ${BP.desktop}px)`;
 
 // 728×90이 들어갈 폭인지, 모바일 포맷만 들어가는 폭인지, 아니면 광고 자체를
 // 생략해야 하는 폭인지를 컨테이너 실폭으로 판정한다. null = 아직 측정 전(마운트 전).

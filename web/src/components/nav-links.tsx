@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BP } from "@/lib/breakpoints";
 
 const primaryLinks = [
   { href: "/", label: "홈" },
@@ -109,7 +110,7 @@ export function NavLinks() {
   }, [open]);
 
   useEffect(() => {
-    const mq = window.matchMedia("(min-width:1024px)");
+    const mq = window.matchMedia(`(min-width: ${BP.desktop}px)`);
     const onResize = (e: MediaQueryListEvent) => {
       if (e.matches) setOpen(false);
     };
@@ -143,7 +144,17 @@ export function NavLinks() {
       <nav className="nav nav-desktop" aria-label="주요 메뉴">
         {desktopItems}
 
-        <div className="nav-stats-group" ref={statsGroupRef}>
+        <div
+          className="nav-stats-group"
+          ref={statsGroupRef}
+          onBlur={(event) => {
+            // R-25: Tab으로 그룹 밖으로 포커스가 이동하면(마우스 클릭·Escape 외의 경로)
+            // 열린 채 남지 않도록 닫는다.
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+              setStatsOpen(false);
+            }
+          }}
+        >
           <button
             ref={statsToggleRef}
             type="button"
