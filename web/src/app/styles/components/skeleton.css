@@ -1,0 +1,51 @@
+/* ── Skeleton loading ────────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-line {
+  background: linear-gradient(
+    90deg,
+    var(--bg-strong) 25%,
+    var(--shimmer-highlight) 50%,
+    var(--bg-strong) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+  display: block;
+}
+
+.skeleton-eyebrow { height: 14px; width: 60px; }
+.skeleton-h1      { height: 52px; width: 55%; }
+.skeleton-h2      { height: 32px; width: 50%; }
+.skeleton-body    { height: 18px; width: 100%; }
+.skeleton-caption { height: 14px; width: 80%; }
+
+.skeleton-balls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.skeleton-ball {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(
+    90deg,
+    var(--bg-strong) 25%,
+    var(--shimmer-highlight) 50%,
+    var(--bg-strong) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-ball-sm {
+  width: 34px;
+  height: 34px;
+}

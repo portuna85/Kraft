@@ -1,0 +1,211 @@
+/* ── Analysis page ───────────────────────────────────────────────── */
+.analysis-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+.analysis-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: var(--fs-base);
+}
+.analysis-result {
+  padding: 24px;
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  display: grid;
+  gap: 18px;
+}
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.result-cell {
+  padding: 16px 18px;
+  background: var(--surface-card-sm);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: grid;
+  gap: 6px;
+}
+.result-label {
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  /* Noto Sans KR은 400/700만 임베드한다 — 600은 700으로 대체 렌더링되므로 일치시킨다. */
+  font-weight: 700;
+}
+.result-value {
+  font-family: var(--font-accent), var(--font-sans), sans-serif;
+  font-size: 1.15rem;
+  /* Space Grotesk는 500/700만 임베드한다 — 800은 700으로 대체 렌더링되므로 일치시킨다. */
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.result-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.range-dist-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+/* Noto Sans KR은 400/700만 임베드한다 — 600은 700으로 대체 렌더링되므로 일치시킨다. */
+.range-label { font-weight: 700; color: var(--muted); }
+.range-count { font-weight: 700; text-align: right; }
+.error { color: var(--accent); font-weight: 700; }
+
+
+/* 404 not-found */
+.not-found {
+  min-height: 40vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.not-found-title {
+  font-family: var(--font-display), "Noto Serif KR", serif;
+  font-size: clamp(3rem, 8vw, 6rem);
+}
+
+.not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+/* Info pages */
+.info-article {
+  margin-top: 24px;
+  display: grid;
+  gap: 20px;
+}
+
+.info-article h2 {
+  font-family: var(--font-display), "Noto Serif KR", serif;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.info-article h3 {
+  font-family: var(--font-display), "Noto Serif KR", serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.info-article p {
+  margin: 0;
+  line-height: 1.75;
+}
+
+.info-article ul {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 8px;
+  line-height: 1.7;
+}
+
+.info-article li {
+  color: var(--muted);
+}
+
+.faq-item {
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 22px;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.faq-item:hover {
+  background: var(--surface-strong);
+  border-color: rgba(201, 79, 36, 0.15);
+}
+
+.contact-box {
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: grid;
+  gap: 8px;
+}
+
+.notice-box {
+  background: rgba(201, 79, 36, 0.05);
+  border: 1.5px solid var(--accent-strong);
+  border-radius: 16px;
+  padding: 18px 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.prize-table-wrap {
+  width: 100%;
+  margin-top: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+}
+
+.prize-table-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+.prize-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.prize-table td,
+.prize-table th {
+  padding: 16px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-accent), var(--font-sans), sans-serif;
+  white-space: nowrap;
+}
+
+.prize-table tr:last-child td,
+.prize-table tr:last-child th {
+  border-bottom: none;
+}
+
+.prize-table-after-tax {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.prize-table-after-tax-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.prize-table-after-tax-value {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text);
+}

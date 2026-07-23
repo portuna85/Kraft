@@ -1,0 +1,240 @@
+/* ── Tablet (min-width: 640px) ── */
+@media (min-width: 640px) {
+  :root {
+    --shell-gutter: 20px;
+    --page-pad-top: 48px;
+    --page-pad-bottom: 76px;
+    --panel-pad: 24px;
+    --header-h: 76px;
+  }
+
+  .header-inner {
+    gap: 24px;
+  }
+
+  /* R-25: 모바일 1열에서는 콘텐츠 대비 카드가 길어 빈 여백만 늘어나던 고정
+     min-height를 태블릿 이상에서만 적용한다. */
+  .stat-card {
+    min-height: 210px;
+  }
+
+  .brand {
+    font-size: 1.4rem;
+  }
+
+  .header-actions {
+    gap: 16px;
+  }
+
+  .theme-toggle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .hero-panel {
+    padding-block: 30px;
+  }
+
+  .grid-3,
+  .recommend-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analysis-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .recommend-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ops-manual-form,
+  .ops-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ops-inline {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .button,
+  form button,
+  .ops-actions > button {
+    width: auto;
+  }
+
+  .not-found-actions .button {
+    width: auto;
+  }
+
+  .freq-filter-tabs {
+    display: flex;
+    gap: 4px;
+  }
+
+  .balls {
+    gap: 10px;
+    flex-wrap: wrap;
+    overflow: hidden;
+  }
+
+  .ball {
+    width: 46px;
+    height: 46px;
+    font-size: inherit;
+  }
+
+  .ball-separator {
+    font-size: inherit;
+  }
+
+  .freq-rank-group .ball {
+    width: 32px;
+    height: 32px;
+    font-size: var(--fs-xs);
+  }
+
+  .recommend-card-info .ball {
+    width: 46px;
+    height: 46px;
+    font-size: inherit;
+  }
+
+  .frequency-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .companion-filter-balls {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .freq-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .freq-rank-group {
+    padding: 14px 16px;
+  }
+
+  .pattern-item {
+    grid-template-columns: 88px minmax(0, 1fr) 52px 52px;
+    gap: 10px;
+    padding: 7px 10px;
+  }
+
+  .pattern-key,
+  .bar-track {
+    grid-column: auto;
+  }
+
+  .pattern-count,
+  .pattern-pct {
+    text-align: right;
+  }
+
+  .companion-item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    /* R-19: gap: inherit는 부모 .companion-list의 gap(6px)을 상속해 의도한 14px(:1358)과
+       달라지는 inherit 오용이었다 — 원래 값으로 명시. flex-direction은 .companion-item이
+       grid라 no-op이라 함께 정리한다. */
+    gap: 14px;
+  }
+
+  .pair-info {
+    align-items: center;
+  }
+
+  .rank {
+    text-align: right;
+  }
+
+  .saved-item-row,
+  .saved-match-info {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .saved-item-row .balls {
+    width: auto;
+    flex-basis: auto;
+  }
+
+  .saved-delete-btn {
+    align-self: auto;
+  }
+
+  .prize-table td,
+  .prize-table th {
+    padding: 16px;
+  }
+
+  .prize-table-rank {
+    font-size: var(--fs-base);
+  }
+
+  .prize-table-amount {
+    font-size: 1.25rem;
+  }
+
+  .status-incident-item {
+    grid-template-columns: minmax(52px, auto) minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .status-incident-time {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .footer-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 16px;
+  }
+
+  .page-title {
+    font-size: clamp(1.45rem, 4vw, 2.4rem);
+  }
+
+  .result-title {
+    font-size: clamp(1.35rem, 3vw, 1.9rem);
+  }
+
+  .page-subtitle,
+  .footer-copy {
+    max-width: 560px;
+  }
+
+  /* drawer — tablet: full-width below header */
+  .nav-mobile-wrap {
+    padding: 0;
+  }
+
+  .nav-mobile {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    padding: 12px 16px 20px;
+    gap: 2px;
+  }
+
+  .nav-mobile a {
+    padding: 12px 8px;
+    border-radius: 10px;
+    border-bottom: 1px solid var(--line);
+    min-height: 40px;
+    font-size: 1rem;
+  }
+
+  .nav-mobile a:last-child {
+    border-bottom: none;
+  }
+
+  .nav-mobile a[aria-current="page"] {
+    color: var(--text);
+    font-weight: 700;
+    background: var(--nav-active-bg);
+  }
+}

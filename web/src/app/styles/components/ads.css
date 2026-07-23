@@ -1,0 +1,97 @@
+/* ── Ad unit ───────────────────────────────────────────────────────────────── */
+
+.ad-unit {
+  display: flex;
+  justify-content: center;
+  min-height: 100px;
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.ad-desktop {
+  display: none;
+}
+
+.ad-sidebar {
+  display: none;
+  margin-top: 0;
+}
+
+/* R-06/R-15: InArticleAd/PageAd 컨테이너 폭 측정용 래퍼 — 포맷이 정해지기 전에도
+   자리를 예약해 mount 시 CLS가 생기지 않게 한다. 내부 .ad-unit의 margin-top과
+   중복되지 않도록 여기서 상단 여백을 갖고 내부는 0으로 둔다. */
+.ad-slot--article {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  margin-top: 24px;
+}
+
+.ad-slot--article .ad-unit {
+  margin-top: 0;
+}
+
+.ad-sticky-mobile {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  background: var(--surface, #fff);
+  border-top: 1px solid var(--border, #e5e5e5);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.ad-sticky-mobile .ad-unit {
+  margin-top: 0;
+  min-height: 50px;
+}
+
+.ad-sticky-mobile-close {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  z-index: 1;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--text-muted, #999);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* 시각적 크기(작은 ✕)는 유지하되 히트 영역만 44px 근접까지 넓힌다 — 광고 오탭 방지 */
+.ad-sticky-mobile-close::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+}
+
+@media (min-width: 1024px) {
+  .ad-sticky-mobile {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  /* 하단 고정 광고(50px + close 버튼)가 마지막 콘텐츠를 가리지 않도록 여백 확보.
+     광고가 없거나 닫힌 상태에서도 항상 여백을 예약하지 않도록 body.has-sticky-ad로 게이트한다. */
+  body.has-sticky-ad .page {
+    padding-bottom: calc(var(--page-pad-bottom) + var(--sticky-ad-h));
+  }
+}
+
+/* ── Touch targets (R-08) ─────────────────────────────────────────────────── */
+/* 데스크톱 밀도는 그대로 두고, 터치 입력 기기에서만 44px 근접 히트 영역을 보장한다. */
+@media (pointer: coarse) {
+  .saved-delete-btn,
+  .recommend-save-btn,
+  .freq-filter-tab,
+  .theme-toggle,
+  .nav-toggle {
+    min-height: var(--target-min);
+  }
+}

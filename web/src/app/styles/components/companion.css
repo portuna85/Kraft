@@ -1,0 +1,62 @@
+/* ── Companion page ──────────────────────────────────────────────── */
+.companion-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: grid;
+  gap: 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .companion-item:hover {
+    transform: translateX(2px);
+    border-color: rgba(201, 79, 36, 0.2);
+    background: var(--surface-card);
+    box-shadow: 0 4px 14px rgba(64, 39, 22, 0.08);
+  }
+}
+
+.pair-balls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.pair-sep {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pair-count {
+  font-family: var(--font-accent), var(--font-sans), sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.pair-pct {
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+}
+
+/* ── Companion filter ────────────────────────────────────────────── */
+.companion-filter {
+  margin-top: 20px;
+}
+.companion-filter-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 10px;
+}
+
+
+.companion-filter-balls .ball:hover {
+  opacity: 0.85;
+}
+.ball-selected {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent);
+}

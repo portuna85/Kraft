@@ -1,0 +1,112 @@
+/* ── Desktop (min-width: 1024px) ── */
+@media (min-width: 1024px) {
+  :root {
+    --shell-gutter: 24px;
+    --page-pad-top: 56px;
+    --page-pad-bottom: 84px;
+    --panel-pad: 28px;
+    --panel-gap: 24px;
+    --card-radius: 24px;
+    --header-h: 82px;
+  }
+
+  .nav-desktop { display: flex; }
+  .nav-toggle  { display: none; }
+
+  .home-shortcuts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .recommend-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .recommend-form {
+    grid-template-columns: minmax(148px, 0.75fr) minmax(240px, 1.15fr) minmax(320px, 1.35fr) 148px;
+    align-items: end;
+  }
+
+  .recommend-form label {
+    align-content: start;
+  }
+
+  .recommend-toggle {
+    min-height: 96px;
+    padding: 16px 18px;
+  }
+
+  .recommend-form > button {
+    min-height: 96px;
+  }
+
+  .ops-manual-form,
+  .ops-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .analysis-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .ball {
+    width: 50px;
+    height: 50px;
+  }
+
+  .freq-rank-group .ball {
+    width: 40px;
+    height: 40px;
+    font-size: inherit;
+  }
+
+  .frequency-grid {
+    grid-template-columns: repeat(9, 1fr);
+    gap: 12px;
+  }
+
+  .companion-filter-balls {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+  }
+
+  .freq-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pattern-item {
+    grid-template-columns: 72px 1fr 44px 44px;
+  }
+
+  .footer-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .saved-empty-state {
+    padding: 28px 24px;
+    font-size: 0.96rem;
+  }
+
+  .ad-mobile {
+    display: none;
+  }
+
+  .ad-desktop {
+    display: flex;
+  }
+
+  .page-with-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    align-items: start;
+    gap: 32px;
+  }
+
+  .ad-sidebar {
+    display: flex;
+    position: sticky;
+    top: calc(var(--header-offset) + 24px);
+  }
+}

@@ -9,7 +9,23 @@ import path from "node:path";
 // 중첩 구조(예: .balls의 부모가 .panel인 것 — R-01 inherit 버그가 바로 이 중첩 때문에
 // 생겼었다)를 가진 최소 마크업으로 계산값을 스냅숏한다. 순수 CSS라 빌드 도구 없이도
 // 브라우저에 그대로 주입 가능하다.
-const CSS = readFileSync(path.join(__dirname, "../src/app/globals.css"), "utf8");
+//
+// R-19 파일 분할 이후 globals.css는 @import만 나열한 매니페스트라, page.addStyleTag로
+// 빈 페이지(about:blank 기반 page.setContent)에 그대로 넣으면 상대 경로 @import를
+// 해석할 기반 URL이 없어 실패한다 — 매니페스트를 직접 읽어 각 @import 대상을
+// 순서대로 이어붙인다(Next 빌드가 하는 일을 테스트에서도 그대로 재현).
+function loadGlobalsCss(): string {
+  const appDir = path.join(__dirname, "../src/app");
+  const manifest = readFileSync(path.join(appDir, "globals.css"), "utf8");
+  const importRe = /@import\s+"([^"]+)";/g;
+  let combined = "";
+  let m: RegExpExecArray | null;
+  while ((m = importRe.exec(manifest))) {
+    combined += readFileSync(path.join(appDir, m[1]), "utf8") + "\n";
+  }
+  return combined;
+}
+const CSS = loadGlobalsCss();
 
 // 실제 페이지에서의 부모-자식 관계를 그대로 재현한다 — 이 중첩이 어긋나면 gap/padding
 // 상속 계산이 실제와 달라져 테스트가 무의미해진다.
