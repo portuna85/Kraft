@@ -49,6 +49,7 @@ bin/
 !.env.local.example
 !.env.prod.example
 !.env.homeserver.example
+secret/
 node_modules/
 .next/
 # §6-5(playwright.ad-overlay.config.ts)처럼 NEXT_DIST_DIR로 분리한 대체 빌드 산출물
@@ -81,4 +82,5 @@ scripts/archive/migrate-2026-06/env-migration.sh
 
 ### Local-only docs (never commit) ###
 docs/*.md
+docs/**/*.md
 !docs/api.md
