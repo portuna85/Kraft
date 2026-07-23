@@ -1,6 +1,9 @@
 package com.kraft.community.auth;
 
 import com.kraft.common.config.CommunityProperties;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,12 +12,14 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 /**
@@ -32,13 +37,16 @@ public class CommunitySecurityConfig {
     private final CommunityOAuth2UserService communityOAuth2UserService;
     private final CommunityAuthEntryPoint communityAuthEntryPoint;
     private final CommunityProperties communityProperties;
+    private final MeterRegistry meterRegistry;
 
     public CommunitySecurityConfig(CommunityOAuth2UserService communityOAuth2UserService,
                                     CommunityAuthEntryPoint communityAuthEntryPoint,
-                                    CommunityProperties communityProperties) {
+                                    CommunityProperties communityProperties,
+                                    MeterRegistry meterRegistry) {
         this.communityOAuth2UserService = communityOAuth2UserService;
         this.communityAuthEntryPoint = communityAuthEntryPoint;
         this.communityProperties = communityProperties;
+        this.meterRegistry = meterRegistry;
     }
 
     @Bean
@@ -67,9 +75,24 @@ public class CommunitySecurityConfig {
                         .csrfTokenRepository(csrfTokenRepository)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(communityAuthEntryPoint))
+                        .authenticationEntryPoint(communityAuthEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .build();
+    }
+
+    // CSRF 거부율 관측(§7 5단계: "409/CSRF 거부율" 메트릭). CsrfException 외의 접근 거부는
+    // 카운트 없이 그대로 403으로 내려보낸다.
+    private AccessDeniedHandler accessDeniedHandler() {
+        Counter csrfRejectedCounter = Counter.builder("kraft_community_csrf_rejected_total")
+                .description("커뮤니티 체인에서 CSRF 토큰 불일치로 거부된 요청 수")
+                .register(meterRegistry);
+        return (request, response, accessDeniedException) -> {
+            if (accessDeniedException instanceof CsrfException) {
+                csrfRejectedCounter.increment();
+            }
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+        };
     }
 
     private AuthenticationSuccessHandler successHandler() {

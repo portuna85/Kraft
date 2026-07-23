@@ -57,6 +57,30 @@ www.{$KRAFT_DOMAIN} {
 			}
 		}
 
+		# 커뮤니티 OAuth2 로그인 플로우(CommunitySecurityConfig)는 Spring Security가 직접
+		# 서빙한다 — Next.js에는 이 경로들이 없다. catch-all(web:3000)로 새면 전부 404다.
+		@community_auth path /oauth2/* /login* /logout
+		handle @community_auth {
+			header Cache-Control "no-store"
+			reverse_proxy backend:8080 {
+				header_up X-Real-IP {remote_host}
+				transport http {
+					dial_timeout 3s
+					response_header_timeout 5s
+				}
+			}
+		}
+
+		# 개인화·상태변경 페이지는 catch-all의 60s 공개 캐시에서 제외한다(§4.4) —
+		# 글쓰기·수정 화면은 로그인 사용자 전용이며 폼 상태가 캐시되면 안 된다.
+		@community_no_cache path /community/write /community/posts/*/edit
+		handle @community_no_cache {
+			header Cache-Control "no-store"
+			reverse_proxy web:3000 {
+				header_up X-Real-IP {remote_host}
+			}
+		}
+
 		handle {
 			# 모든 페이지 경로: 브라우저 SWR 60s+300s.
 			# nonce 기반 CSP 때문에 HTML+CSP 헤더가 함께 캐시돼야 안전하므로

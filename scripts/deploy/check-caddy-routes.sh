@@ -35,6 +35,8 @@ check_status "public domain /ops blocked"           "$KRAFT_DOMAIN"       "/ops/
 check_status "admin domain /actuator blocked"       "$KRAFT_ADMIN_DOMAIN" "/actuator/health" "403"
 check_status "admin domain /admin/login reachable"  "$KRAFT_ADMIN_DOMAIN" "/admin/login"     "200"
 check_status "admin domain /ops-api routes to backend /ops" "$KRAFT_ADMIN_DOMAIN" "/ops-api/summary" "401"
+check_status "public domain /api/v1/community/session routes to backend" "$KRAFT_DOMAIN" "/api/v1/community/session" "200"
+check_status "public domain /oauth2/authorization/google routes to backend (not Next.js 404)" "$KRAFT_DOMAIN" "/oauth2/authorization/google" "302"
 
 if [[ $FAIL -ne 0 ]]; then
   echo "==> Caddy local routing check FAILED — Caddyfile is misconfigured" >&2

@@ -2,6 +2,8 @@ package com.kraft.community.auth;
 
 import com.kraft.community.user.CommunityUser;
 import com.kraft.community.user.CommunityUserRepository;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,25 +24,43 @@ public class CommunityOAuth2UserService extends DefaultOAuth2UserService {
 
     private final CommunityUserRepository communityUserRepository;
     private final Clock clock;
+    private final MeterRegistry meterRegistry;
 
-    public CommunityOAuth2UserService(CommunityUserRepository communityUserRepository, Clock clock) {
+    public CommunityOAuth2UserService(CommunityUserRepository communityUserRepository, Clock clock,
+                                       MeterRegistry meterRegistry) {
         this.communityUserRepository = communityUserRepository;
         this.clock = clock;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User oAuth2User = super.loadUser(userRequest);
-        if (oAuth2User == null) {
-            throw new OAuth2AuthenticationException("OAuth2 사용자 정보를 가져오지 못했습니다.");
-        }
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        CommunityOAuthAttributes attributes = CommunityOAuthAttributes.of(registrationId, oAuth2User.getAttributes());
+        try {
+            OAuth2User oAuth2User = super.loadUser(userRequest);
+            if (oAuth2User == null) {
+                throw new OAuth2AuthenticationException("OAuth2 사용자 정보를 가져오지 못했습니다.");
+            }
+            CommunityOAuthAttributes attributes =
+                    CommunityOAuthAttributes.of(registrationId, oAuth2User.getAttributes());
 
-        CommunityUser user = upsert(attributes);
+            CommunityUser user = upsert(attributes);
 
-        return new CommunityPrincipal(user.getId(), user.getNickname(), attributes.nameAttributeKey(),
-                oAuth2User.getAttributes());
+            loginCounter(registrationId, "success").increment();
+            return new CommunityPrincipal(user.getId(), user.getNickname(), attributes.nameAttributeKey(),
+                    oAuth2User.getAttributes());
+        } catch (RuntimeException failure) {
+            loginCounter(registrationId, "failure").increment();
+            throw failure;
+        }
+    }
+
+    private Counter loginCounter(String provider, String outcome) {
+        return Counter.builder("kraft_community_oauth_login_total")
+                .description("커뮤니티 OAuth2 로그인 시도 결과")
+                .tag("provider", provider)
+                .tag("outcome", outcome)
+                .register(meterRegistry);
     }
 
     @Transactional

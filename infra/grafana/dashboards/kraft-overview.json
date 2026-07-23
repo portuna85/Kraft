@@ -112,6 +112,41 @@
         { "expr": "time() - kraft_backup_last_success_timestamp_seconds", "refId": "A" }
       ],
       "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 8,
+      "title": "커뮤니티 OAuth 로그인 (provider/결과별)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "expr": "sum(rate(kraft_community_oauth_login_total{job=\"kraft-backend\"}[5m])) by (provider, outcome)",
+          "refId": "A",
+          "legendFormat": "{{provider}}/{{outcome}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "id": 9,
+      "title": "커뮤니티 쓰기 거부 (CSRF·버전 충돌)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "targets": [
+        {
+          "expr": "sum(rate(kraft_community_csrf_rejected_total{job=\"kraft-backend\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "CSRF 거부"
+        },
+        {
+          "expr": "sum(rate(kraft_community_post_version_conflict_total{job=\"kraft-backend\"}[5m]))",
+          "refId": "B",
+          "legendFormat": "버전 충돌(409)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
     }
   ]
 }

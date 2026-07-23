@@ -1,6 +1,8 @@
 package com.kraft.community.post;
 
 import com.kraft.common.error.ApiException;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import org.springframework.data.domain.PageRequest;
@@ -17,10 +19,15 @@ public class CommunityPostService {
 
     private final CommunityPostRepository communityPostRepository;
     private final Clock clock;
+    private final Counter versionConflictCounter;
 
-    public CommunityPostService(CommunityPostRepository communityPostRepository, Clock clock) {
+    public CommunityPostService(CommunityPostRepository communityPostRepository, Clock clock,
+                                 MeterRegistry meterRegistry) {
         this.communityPostRepository = communityPostRepository;
         this.clock = clock;
+        this.versionConflictCounter = Counter.builder("kraft_community_post_version_conflict_total")
+                .description("게시글 낙관적 잠금 버전 충돌(409)로 거부된 수정 요청 수")
+                .register(meterRegistry);
     }
 
     @Transactional
@@ -50,6 +57,7 @@ public class CommunityPostService {
         CommunityPost post = get(postId);
         requireOwner(post, ownerId);
         if (post.getVersion() != request.expectedVersion()) {
+            versionConflictCounter.increment();
             throw new ApiException(HttpStatus.CONFLICT, "COMMUNITY_POST_VERSION_CONFLICT",
                     "다른 곳에서 먼저 수정되었습니다. 새로고침 후 다시 시도하세요.");
         }
@@ -59,6 +67,7 @@ public class CommunityPostService {
         } catch (ObjectOptimisticLockingFailureException raceLostAfterCheck) {
             // 버전 사전 검증 이후에도 동시 수정이 끼어든 경우(§6 개선②) — 광역 예외 대신
             // 이 리소스에 특정된 409로 변환한다.
+            versionConflictCounter.increment();
             throw new ApiException(HttpStatus.CONFLICT, "COMMUNITY_POST_VERSION_CONFLICT",
                     "다른 곳에서 먼저 수정되었습니다. 새로고침 후 다시 시도하세요.", raceLostAfterCheck);
         }

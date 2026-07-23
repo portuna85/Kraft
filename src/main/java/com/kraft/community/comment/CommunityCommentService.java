@@ -3,6 +3,8 @@ package com.kraft.community.comment;
 import com.kraft.common.error.ApiException;
 import com.kraft.community.post.CommunityPost;
 import com.kraft.community.post.CommunityPostRepository;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -21,13 +23,18 @@ public class CommunityCommentService {
     private final CommunityCommentRepository communityCommentRepository;
     private final CommunityPostRepository communityPostRepository;
     private final Clock clock;
+    private final Counter tombstoneCounter;
 
     public CommunityCommentService(CommunityCommentRepository communityCommentRepository,
                                     CommunityPostRepository communityPostRepository,
-                                    Clock clock) {
+                                    Clock clock,
+                                    MeterRegistry meterRegistry) {
         this.communityCommentRepository = communityCommentRepository;
         this.communityPostRepository = communityPostRepository;
         this.clock = clock;
+        this.tombstoneCounter = Counter.builder("kraft_community_comment_tombstoned_total")
+                .description("tombstone 처리(삭제)된 댓글 누적 수")
+                .register(meterRegistry);
     }
 
     @Transactional(readOnly = true)
@@ -80,5 +87,6 @@ public class CommunityCommentService {
         }
         comment.markDeleted();
         communityCommentRepository.save(comment);
+        tombstoneCounter.increment();
     }
 }
