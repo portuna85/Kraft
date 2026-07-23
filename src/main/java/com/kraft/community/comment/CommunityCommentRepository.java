@@ -18,4 +18,10 @@ public interface CommunityCommentRepository extends JpaRepository<CommunityComme
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from CommunityComment c where c.id = :id")
     Optional<CommunityComment> findByIdForUpdate(@Param("id") Long id);
+
+    // targetPage 계산용 — 해당 게시글의 상위 댓글(parentId is null) 중 id가 :id 이하인 개수.
+    // id는 IDENTITY PK라 생성 순서와 단조 증가가 일치하므로 createdAt 대신 사용해도 안전하다.
+    @Query("select count(c) from CommunityComment c "
+            + "where c.postId = :postId and c.parentId is null and c.id <= :id")
+    long countTopLevelUpToId(@Param("postId") Long postId, @Param("id") Long id);
 }

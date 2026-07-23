@@ -49,7 +49,7 @@ export default async function CommunityPostDetailPage({ params }: Props) {
         ))}
       </div>
 
-      <PostOwnerActions postId={post.id} ownerId={post.ownerId} />
+      <PostOwnerActions postId={post.id} ownerId={post.ownerId} version={post.version} />
       <CommentSection postId={post.id} />
     </article>
   );

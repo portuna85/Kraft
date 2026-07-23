@@ -92,9 +92,132 @@ class CommunityPostCommentApiTest {
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(delete("/api/v1/community/posts/" + postId)
+                        .param("expectedVersion", "0")
                         .with(asUser(other))
                         .with(csrf()))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 시 버전이 다르면 409를 반환하고 게시글을 보존한다")
+    void deletingPost_withStaleVersion_returnsConflictAndKeepsPost() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+
+        mockMvc.perform(delete("/api/v1/community/posts/" + postId)
+                        .param("expectedVersion", "999")
+                        .with(asUser(owner))
+                        .with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("COMMUNITY_POST_VERSION_CONFLICT"));
+
+        mockMvc.perform(get("/api/v1/community/posts/" + postId))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("작성자는 정상적으로 게시글을 수정하고 삭제할 수 있다")
+    void owner_canUpdateAndDeletePostSuccessfully() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+
+        mockMvc.perform(put("/api/v1/community/posts/" + postId)
+                        .with(asUser(owner))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new UpdatePostRequest("새 제목", "새 내용", 0L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("새 제목"))
+                .andExpect(jsonPath("$.version").value(1));
+
+        mockMvc.perform(delete("/api/v1/community/posts/" + postId)
+                        .param("expectedVersion", "1")
+                        .with(asUser(owner))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/v1/community/posts/" + postId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("CSRF 토큰 없이 보내는 쓰기 요청은 403으로 거부된다")
+    void writeRequestWithoutCsrfToken_isForbidden() throws Exception {
+        mockMvc.perform(post("/api/v1/community/posts")
+                        .with(asUser(owner))
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreatePostRequest("제목", "내용"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("본인 댓글이 아니면 삭제가 403으로 거부된다")
+    void nonOwner_cannotDeleteComment() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+        long commentId = createComment(owner, postId, "댓글", null);
+
+        mockMvc.perform(delete("/api/v1/community/comments/" + commentId)
+                        .with(asUser(other))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("삭제된(tombstone) 댓글에는 답글을 달 수 없다")
+    void replyToDeletedComment_isRejected() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+        long commentId = createComment(owner, postId, "댓글", null);
+
+        mockMvc.perform(delete("/api/v1/community/comments/" + commentId)
+                        .with(asUser(owner))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(post("/api/v1/community/posts/" + postId + "/comments")
+                        .with(asUser(other))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreateCommentRequest("답글", commentId))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMUNITY_COMMENT_PARENT_DELETED"));
+    }
+
+    @Test
+    @DisplayName("삭제된 댓글 응답에는 작성자 ID가 노출되지 않는다")
+    void tombstonedComment_hidesOwnerId() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+        long commentId = createComment(owner, postId, "댓글", null);
+
+        mockMvc.perform(delete("/api/v1/community/comments/" + commentId)
+                        .with(asUser(owner))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/v1/community/posts/" + postId + "/comments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].ownerId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("댓글 작성 응답은 목록 상 위치를 targetPage로 알려준다")
+    void creatingComment_returnsTargetPage() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+
+        String body = mockMvc.perform(post("/api/v1/community/posts/" + postId + "/comments")
+                        .with(asUser(owner))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreateCommentRequest("첫 댓글", null))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.targetPage").value(0))
+                .andReturn().getResponse().getContentAsString();
+        long topLevelId = objectMapper.readTree(body).get("id").asLong();
+
+        mockMvc.perform(post("/api/v1/community/posts/" + postId + "/comments")
+                        .with(asUser(other))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreateCommentRequest("답글", topLevelId))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.targetPage").value(0));
     }
 
     @Test

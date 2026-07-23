@@ -58,8 +58,8 @@ export async function updatePost(
   });
 }
 
-export async function deletePost(id: number): Promise<void> {
-  await browserFetch<void>(`/api/v1/community/posts/${id}`, {
+export async function deletePost(id: number, expectedVersion: number): Promise<void> {
+  await browserFetch<void>(`/api/v1/community/posts/${id}?expectedVersion=${expectedVersion}`, {
     method: "DELETE",
     headers: writeHeaders(),
   });

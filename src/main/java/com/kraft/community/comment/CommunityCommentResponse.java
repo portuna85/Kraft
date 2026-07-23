@@ -10,24 +10,33 @@ public record CommunityCommentResponse(
         String authorNickname,
         String content,
         boolean deleted,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        Integer targetPage
 ) {
 
     private static final String TOMBSTONE_CONTENT = "삭제된 댓글입니다.";
     private static final String TOMBSTONE_AUTHOR = "(삭제됨)";
 
-    // tombstone된 댓글은 행은 유지하되 프런트에는 마스킹된 값만 노출한다(§3-3) —
-    // ownerId는 소유권 판정용으로 남겨두되, 개인 식별 가능한 닉네임/본문은 감춘다.
+    // tombstone된 댓글은 행은 유지하되 프런트에는 마스킹된 값만 노출한다(§3-3) — 삭제된
+    // 댓글은 소유권 판정 UI 자체를 프런트에서 숨기므로(항상 액션 버튼 비노출) ownerId도
+    // 함께 감춘다(Blitz의 "authorUserId를 노출하지 않는다"와 동일 수준의 정보 최소화).
     public static CommunityCommentResponse from(CommunityComment comment) {
+        return from(comment, null);
+    }
+
+    // targetPage는 작성 직후 응답에만 채운다(§6) — 목록 조회 응답에서는 항목마다 계산할
+    // 이유가 없어 null로 둔다.
+    public static CommunityCommentResponse from(CommunityComment comment, Integer targetPage) {
         boolean deleted = comment.isDeleted();
         return new CommunityCommentResponse(
                 comment.getId(),
                 comment.getPostId(),
                 comment.getParentId(),
-                comment.getOwnerId(),
+                deleted ? null : comment.getOwnerId(),
                 deleted ? TOMBSTONE_AUTHOR : comment.getAuthorNameSnapshot(),
                 deleted ? TOMBSTONE_CONTENT : comment.getContent(),
                 deleted,
-                comment.getCreatedAt());
+                comment.getCreatedAt(),
+                targetPage);
     }
 }

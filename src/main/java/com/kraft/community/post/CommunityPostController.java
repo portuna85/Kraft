@@ -75,8 +75,9 @@ public class CommunityPostController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal CommunityPrincipal principal,
-            @PathVariable Long id) {
-        communityPostService.delete(principal.getUserId(), id);
+            @PathVariable Long id,
+            @RequestParam long expectedVersion) {
+        communityPostService.delete(principal.getUserId(), id, expectedVersion);
         return ResponseEntity.noContent().build();
     }
 }

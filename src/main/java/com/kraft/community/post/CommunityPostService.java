@@ -74,9 +74,14 @@ public class CommunityPostService {
     }
 
     @Transactional
-    public void delete(Long ownerId, Long postId) {
+    public void delete(Long ownerId, Long postId, long expectedVersion) {
         CommunityPost post = get(postId);
         requireOwner(post, ownerId);
+        if (post.getVersion() != expectedVersion) {
+            versionConflictCounter.increment();
+            throw new ApiException(HttpStatus.CONFLICT, "COMMUNITY_POST_VERSION_CONFLICT",
+                    "다른 곳에서 먼저 수정되었습니다. 새로고침 후 다시 시도하세요.");
+        }
         communityPostRepository.delete(post);
     }
 

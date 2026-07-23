@@ -38,9 +38,10 @@ public class CommunityCommentController {
             @AuthenticationPrincipal CommunityPrincipal principal,
             @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequest request) {
-        CommunityComment comment = communityCommentService.create(
+        CommunityCommentCreationResult result = communityCommentService.create(
                 principal.getUserId(), principal.getNickname(), postId, request);
-        return ResponseEntity.status(201).body(CommunityCommentResponse.from(comment));
+        return ResponseEntity.status(201)
+                .body(CommunityCommentResponse.from(result.comment(), result.targetPage()));
     }
 
     @DeleteMapping("/api/v1/community/comments/{id}")
