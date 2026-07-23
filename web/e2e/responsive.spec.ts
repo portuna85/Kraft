@@ -88,6 +88,53 @@ test.describe("실제 콘텐츠가 채워진 라우트의 오버플로", () => {
       await expect(page.locator(".recommend-card").first()).toBeVisible();
       await expectNoOverflow(page);
     });
+
+    // /analysis는 순수 클라이언트 계산(analyzeNumbers, 백엔드 미의존)이라
+    // page.route 없이도 실제 결과 콘텐츠를 렌더할 수 있다.
+    test(`/analysis — ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/analysis");
+      await page.getByPlaceholder("예: 3, 11, 19, 28, 34, 42").fill("1, 2, 3, 4, 5, 6");
+      await page.getByRole("button", { name: "분석하기" }).click();
+      await expect(page.getByRole("heading", { name: "분석 결과" })).toBeVisible();
+      await expectNoOverflow(page);
+    });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// §6-3 — 백엔드 미의존 정적 라우트(에러 경계 포함)의 오버플로. not-found·error는
+// 액션 버튼이 뷰포트 안에 온전히 들어오는지까지 확인한다(문서가 원한 "고정 오버레이가
+// CTA를 안 가리는지"의 전제 조건 — 광고 오버레이 자체는 광고 env가 항상 비어 있어
+// §6-2/§6-5에서 확인한 제약대로 이 환경에서는 검증 불가).
+// ─────────────────────────────────────────────────────────────────────────────
+test.describe("정적 라우트·에러 경계 오버플로", () => {
+  for (const width of [320, 768]) {
+    test(`/info/faq — ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/info/faq");
+      await expect(page.getByRole("heading", { name: "자주 묻는 질문" })).toBeVisible();
+      await expectNoOverflow(page);
+    });
+
+    test(`404 — ${width}px, 액션 버튼이 뷰포트 안에 있다`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/this-page-does-not-exist");
+      const cta = page.getByRole("link", { name: "홈으로 이동" });
+      await expect(cta).toBeVisible();
+      await expect(cta).toBeInViewport();
+      await expectNoOverflow(page);
+    });
+
+    test(`에러 경계(error.tsx) — ${width}px, 액션 버튼이 뷰포트 안에 있다`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      // 이 설정엔 백엔드가 없어 "/"는 항상 error.tsx를 렌더한다(파일 상단 주석 참고).
+      await page.goto("/");
+      const cta = page.getByRole("button", { name: "다시 불러오기" });
+      await expect(cta).toBeVisible();
+      await expect(cta).toBeInViewport();
+      await expectNoOverflow(page);
+    });
   }
 });
 
