@@ -60,7 +60,7 @@ class RecommendApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.strategy", is("random")))
                 .andExpect(jsonPath("$.algorithmVersion", is("uniform-random-v1")))
-                .andExpect(jsonPath("$.historyThroughRound", is(1200)));
+                .andExpect(jsonPath("$.historyThroughRound", is(2)));
 
         mockMvc.perform(post("/api/v1/numbers/recommend")
                         .contentType(MediaType.APPLICATION_JSON)

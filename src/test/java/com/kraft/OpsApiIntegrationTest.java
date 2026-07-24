@@ -39,7 +39,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("정상")))
                 .andExpect(jsonPath("$.timezone", is("Asia/Seoul")))
-                .andExpect(jsonPath("$.latestRound", is(1200)));
+                .andExpect(jsonPath("$.latestRound", is(2)));
     }
 
     @Test
@@ -60,7 +60,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "round": 1201,
+                                  "round": 3,
                                   "drawDate": "2026-06-20",
                                   "numbers": [5, 12, 18, 27, 36, 44],
                                   "bonusNumber": 9,
@@ -84,7 +84,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(jsonPath("$.items", hasSize(1)))
                 .andExpect(jsonPath("$.items[0].operationType", is("MANUAL_UPSERT")))
                 .andExpect(jsonPath("$.items[0].executionStatus", is("SUCCESS")))
-                .andExpect(jsonPath("$.items[0].round", is(1201)))
+                .andExpect(jsonPath("$.items[0].round", is(3)))
                 .andExpect(jsonPath("$.items[0].requestId", is(requestId)))
                 .andExpect(jsonPath("$.page", is(0)))
                 .andExpect(jsonPath("$.size", is(10)))
@@ -99,7 +99,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "round": 1201,
+                                  "round": 3,
                                   "drawDate": "2026-06-20",
                                   "numbers": [5, 12, 18, 27, 36, 44],
                                   "bonusNumber": 9,
@@ -116,12 +116,12 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                         .header("X-Ops-Token", "test-ops-token")
                         .param("operationType", "external_collect")
                         .param("executionStatus", "success")
-                        .param("round", "1202"))
+                        .param("round", "4"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items", hasSize(1)))
                 .andExpect(jsonPath("$.items[0].operationType", is("EXTERNAL_COLLECT")))
                 .andExpect(jsonPath("$.items[0].executionStatus", is("SUCCESS")))
-                .andExpect(jsonPath("$.items[0].round", is(1202)))
+                .andExpect(jsonPath("$.items[0].round", is(4)))
                 .andExpect(jsonPath("$.totalElements", is(1)));
     }
 
@@ -151,7 +151,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "round": 1201,
+                                  "round": 3,
                                   "drawDate": "2026-06-20",
                                   "numbers": [5, 12, 18, 27, 36, 44],
                                   "bonusNumber": 9,
@@ -201,7 +201,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "round": 1201,
+                                  "round": 3,
                                   "drawDate": "2026-06-20",
                                   "numbers": [5, 12, 18, 27, 36, 44],
                                   "bonusNumber": 9,
@@ -209,7 +209,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.round", is(1201)))
+                .andExpect(jsonPath("$.round", is(3)))
                 .andExpect(jsonPath("$.bonusNumber", is(9)));
 
         org.assertj.core.api.Assertions.assertThat(winningNumberOperationLogRepository.findAll())
@@ -220,7 +220,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "round": 1201,
+                                  "round": 3,
                                   "drawDate": "2026-06-20",
                                   "numbers": [6, 13, 19, 28, 37, 45],
                                   "bonusNumber": 10,
@@ -228,11 +228,11 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.round", is(1201)))
+                .andExpect(jsonPath("$.round", is(3)))
                 .andExpect(jsonPath("$.numbers[0]", is(6)))
                 .andExpect(jsonPath("$.bonusNumber", is(10)));
 
-        var saved = winningNumberRepository.findByRound(1201).orElseThrow();
+        var saved = winningNumberRepository.findByRound(3).orElseThrow();
         assertThat(saved.getBonusNumber()).isEqualTo(10);
     }
 
@@ -244,7 +244,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "round": 1201,
+                                  "round": 3,
                                   "drawDate": "2026-06-20",
                                   "numbers": [5, 12, 18, 27, 36, 44],
                                   "bonusNumber": 9,
@@ -254,7 +254,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
                 .andExpect(status().isOk());
 
         assertThat(applicationEvents.stream(WinningNumbersCollectedEvent.class))
-                .anyMatch(event -> event.round() == 1201 && event.dataChanged());
+                .anyMatch(event -> event.round() == 3 && event.dataChanged());
     }
 
     @Test
@@ -262,7 +262,7 @@ class OpsApiIntegrationTest extends BaseApiIntegrationTest {
     void opsRoundUpsert_whenUnchanged_doesNotPublishEvent() throws Exception {
         String payload = """
                 {
-                  "round": 1201,
+                  "round": 3,
                   "drawDate": "2026-06-20",
                   "numbers": [5, 12, 18, 27, 36, 44],
                   "bonusNumber": 9,

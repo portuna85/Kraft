@@ -140,3 +140,4 @@ kraft:
   retention:
     operation-log-days: ${KRAFT_RETENTION_OPERATION_LOG_DAYS:30}
     admin-audit-log-days: ${KRAFT_RETENTION_ADMIN_AUDIT_LOG_DAYS:90}
+    saved-number-lock-orphan-days: ${KRAFT_RETENTION_SAVED_NUMBER_LOCK_ORPHAN_DAYS:30}

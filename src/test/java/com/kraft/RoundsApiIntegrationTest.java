@@ -19,7 +19,7 @@ class RoundsApiIntegrationTest extends BaseApiIntegrationTest {
         mockMvc.perform(get("/api/v1/rounds/latest"))
                 .andExpect(status().isOk())
                 .andExpect(header().exists("X-Request-Id"))
-                .andExpect(jsonPath("$.round", is(1200)))
+                .andExpect(jsonPath("$.round", is(2)))
                 .andExpect(jsonPath("$.numbers", hasSize(6)))
                 .andExpect(jsonPath("$.bonusNumber", is(7)));
     }

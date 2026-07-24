@@ -11,6 +11,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -29,6 +31,10 @@ public class WinningStatisticsCacheService {
     static final String TYPE_ODD_COUNT = "ODD_COUNT";
     static final String TYPE_HIGH_COUNT = "HIGH_COUNT";
     static final String TYPE_SUM_BUCKET = "SUM_BUCKET";
+
+    // 홀수 개수·고번호 개수 버킷은 0~6개(6개 번호 중 몇 개가 조건을 만족하는지) 총 7가지다.
+    private static final Set<String> ODD_COUNT_KEYS = Set.of("0", "1", "2", "3", "4", "5", "6");
+    private static final Set<String> HIGH_COUNT_KEYS = Set.of("0", "1", "2", "3", "4", "5", "6");
 
     private final WinningNumberRepository winningNumberRepository;
     private final FrequencySummaryRepository frequencySummaryRepository;
@@ -136,19 +142,24 @@ public class WinningStatisticsCacheService {
     @Cacheable(CacheConfig.STATS_PATTERN)
     public PatternStatsResponse getPatternStats() {
         List<PatternStatsSummary> oddRows = patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_ODD_COUNT);
-        if (oddRows.isEmpty()) {
-            log.info("패턴 summary 없음 — 재계산 시작");
+        List<PatternStatsSummary> highRows = patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_HIGH_COUNT);
+        List<PatternStatsSummary> sumRows = patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_SUM_BUCKET);
+
+        // 예전에는 oddRows가 비었을 때만 재계산했다 — HIGH_COUNT·SUM_BUCKET 버킷이 일부만
+        // 누락된 부분 손상은 놓쳤다(T3). 세 버킷 타입 모두 개수와 키 집합이 기대값과
+        // 정확히 일치하는지 확인한다.
+        if (!hasAllKeys(oddRows, ODD_COUNT_KEYS)
+                || !hasAllKeys(highRows, HIGH_COUNT_KEYS)
+                || !hasAllKeys(sumRows, SumBuckets.ALL_KEYS)) {
+            log.info("패턴 summary 불완전(odd={}, high={}, sum={}) — 재계산 시작",
+                    oddRows.size(), highRows.size(), sumRows.size());
             rebuildSummariesIgnoringConcurrencyFailure();
             oddRows = patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_ODD_COUNT);
+            highRows = patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_HIGH_COUNT);
+            sumRows = patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_SUM_BUCKET);
         }
 
-        List<PatternBucketDto> oddCounts = toPatternDto(oddRows);
-        List<PatternBucketDto> highCounts = toPatternDto(
-                patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_HIGH_COUNT));
-        List<PatternBucketDto> sumBuckets = toPatternDto(
-                patternStatsSummaryRepository.findByStatTypeOrderByBucketKeyAsc(TYPE_SUM_BUCKET));
-
-        return new PatternStatsResponse(sampleRoundCount(), oddCounts, highCounts, sumBuckets);
+        return new PatternStatsResponse(sampleRoundCount(), toPatternDto(oddRows), toPatternDto(highRows), toPatternDto(sumRows));
     }
 
     @Cacheable(CacheConfig.STATS_COMPANION)
@@ -156,8 +167,10 @@ public class WinningStatisticsCacheService {
         List<CompanionPairSummary> pairs = companionPairSummaryRepository
                 .findAllByOrderByCoCountDescBallAAscBallBAsc(PageRequest.of(0, COMPANION_TOP_LIMIT));
 
-        if (pairs.isEmpty()) {
-            log.info("동반 summary 없음 — 재계산 시작");
+        // 예전에는 pairs가 비었을 때만 재계산했다 — 990쌍(45C2) 중 일부만 누락된 부분 손상은
+        // 놓쳤다(T4). 전체 테이블 행 수를 기준으로 완전성을 확인한다.
+        if (companionPairSummaryRepository.count() != COMPANION_TOP_LIMIT) {
+            log.info("동반 summary 불완전(count={}) — 재계산 시작", companionPairSummaryRepository.count());
             rebuildSummariesIgnoringConcurrencyFailure();
             pairs = companionPairSummaryRepository
                     .findAllByOrderByCoCountDescBallAAscBallBAsc(PageRequest.of(0, COMPANION_TOP_LIMIT));
@@ -171,20 +184,27 @@ public class WinningStatisticsCacheService {
 
     @Cacheable(value = CacheConfig.STATS_COMPANION, key = "#ball")
     public CompanionStatsResponse getCompanionStatsByBall(int ball) {
+        // per-ball 결과 크기(최대 44)가 아니라 전체 테이블 행 수(990)로 완전성을 판단한다 —
+        // 특정 번호의 결과만 보면 항상 44개 이하가 정상이라 완전성 판단 기준이 될 수 없다(T4).
+        if (companionPairSummaryRepository.count() != COMPANION_TOP_LIMIT) {
+            log.info("동반 summary 불완전(count={}) — 재계산 시작", companionPairSummaryRepository.count());
+            rebuildSummariesIgnoringConcurrencyFailure();
+        }
+
         List<CompanionPairSummary> pairs = companionPairSummaryRepository
                 .findByBallAOrBallBOrderByCoCountDescBallAAscBallBAsc(ball, ball);
-
-        if (pairs.isEmpty() && companionPairSummaryRepository.count() == 0) {
-            log.info("동반 summary 없음 — 재계산 시작");
-            rebuildSummariesIgnoringConcurrencyFailure();
-            pairs = companionPairSummaryRepository
-                    .findByBallAOrBallBOrderByCoCountDescBallAAscBallBAsc(ball, ball);
-        }
 
         List<CompanionPairDto> topPairs = pairs.stream()
                 .map(p -> new CompanionPairDto(p.getBallA(), p.getBallB(), p.getCoCount()))
                 .toList();
         return new CompanionStatsResponse(sampleRoundCount(), topPairs);
+    }
+
+    private static boolean hasAllKeys(List<PatternStatsSummary> rows, Set<String> expectedKeys) {
+        if (rows.size() != expectedKeys.size()) {
+            return false;
+        }
+        return rows.stream().map(PatternStatsSummary::getBucketKey).collect(Collectors.toSet()).equals(expectedKeys);
     }
 
     public AnalysisResponse analyze(List<Integer> rawNumbers) {

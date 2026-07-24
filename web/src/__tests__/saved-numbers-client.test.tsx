@@ -44,7 +44,7 @@ describe("저장 번호 화면", () => {
     expect(options.length).toBeLessThanOrEqual(21);
   });
 
-  it("대조 결과 조회가 실패해도 이전 결과를 유지하고 재시도 버튼을 보여준다", async () => {
+  it("회차를 바꾸면 이전 회차의 대조 결과를 즉시 비우고 로딩 문구를 보여준다", async () => {
     let matchCallCount = 0;
     global.fetch = mockFetch((url) => {
       if (url.includes("/matches")) {
@@ -80,12 +80,17 @@ describe("저장 번호 화면", () => {
     // 회차를 바꿔 매치 요청이 실패하게 만든다
     fireEvent.change(screen.getByLabelText("대조할 회차"), { target: { value: "1229" } });
 
+    // 새 요청이 끝나기 전이라도 이전 회차의 당첨 배지는 즉시 사라지고 로딩 문구가 보여야 한다
+    // (새 회차 결과로 오인되는 것을 방지 — P1-06).
+    expect(screen.queryByText("1등")).not.toBeInTheDocument();
+    expect(screen.getByText("대조 결과를 불러오는 중입니다.")).toBeInTheDocument();
+
     await waitFor(() => {
       expect(screen.getByText(/대조 결과를 불러오지 못했습니다/)).toBeInTheDocument();
     });
 
-    // 이전 성공 결과(1등)는 그대로 남아 있어야 한다
-    expect(screen.getByText("1등")).toBeInTheDocument();
+    // 실패 후에도 이전 성공 결과(1등)를 되살리지 않는다 — 오해를 남기지 않기 위함.
+    expect(screen.queryByText("1등")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
   });
 

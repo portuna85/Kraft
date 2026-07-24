@@ -1,5 +1,7 @@
 package com.kraft.saved;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,13 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class SavedNumberClientLockInitializer {
 
     private final SavedNumberClientLockRepository repository;
+    private final Clock clock;
 
-    public SavedNumberClientLockInitializer(SavedNumberClientLockRepository repository) {
+    public SavedNumberClientLockInitializer(SavedNumberClientLockRepository repository, Clock clock) {
         this.repository = repository;
+        this.clock = clock;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void ensureExists(String clientTokenHash) {
-        repository.ensureLockRowExists(clientTokenHash);
+        repository.ensureLockRowExists(clientTokenHash, OffsetDateTime.now(clock));
     }
 }

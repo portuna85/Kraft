@@ -26,7 +26,7 @@ public class LottoFreshnessMetrics {
     private final WinningNumberRepository winningNumberRepository;
     private final Clock clock;
     private final LottoDrawScheduleCalculator drawScheduleCalculator;
-    private volatile FreshnessSnapshot cached = new FreshnessSnapshot(0d, 0d, 0d);
+    private volatile FreshnessSnapshot cached = new FreshnessSnapshot(0d, 0d, 0d, 0d);
     private volatile Instant cachedAt = Instant.EPOCH;
 
     public LottoFreshnessMetrics(MeterRegistry registry,
@@ -46,6 +46,10 @@ public class LottoFreshnessMetrics {
         Gauge.builder("kraft_lotto_data_stale_days", this, LottoFreshnessMetrics::staleDays)
                 .description("기대 추첨일 대비 최신 저장 데이터의 지연 일수")
                 .register(registry);
+        Gauge.builder("kraft_lotto_winning_data_present", this, LottoFreshnessMetrics::dataPresent)
+                .description("당첨번호 DB에 회차 데이터가 하나라도 있는지(1=있음) — 비어 있으면 "
+                        + "stale_days가 0으로 나와 '최신 상태'처럼 보이는 것과 구분하기 위한 별도 신호")
+                .register(registry);
     }
 
     private double latestRound() {
@@ -60,6 +64,10 @@ public class LottoFreshnessMetrics {
         return snapshot().staleDays();
     }
 
+    private double dataPresent() {
+        return snapshot().dataPresent();
+    }
+
     synchronized FreshnessSnapshot snapshot() {
         Instant now = Instant.now(clock);
         if (Duration.between(cachedAt, now).compareTo(SNAPSHOT_TTL) < 0) {
@@ -70,7 +78,7 @@ public class LottoFreshnessMetrics {
         Optional<WinningNumber> latest = winningNumberRepository.findTopByOrderByRoundDesc();
         FreshnessSnapshot snapshot;
         if (latest.isEmpty()) {
-            snapshot = new FreshnessSnapshot(0d, 0d, 0d);
+            snapshot = new FreshnessSnapshot(0d, 0d, 0d, 0d);
         } else {
             WinningNumber winningNumber = latest.orElseThrow();
             long weeksBehind = Math.max(0, ChronoUnit.WEEKS.between(winningNumber.getDrawDate(), expected));
@@ -78,7 +86,8 @@ public class LottoFreshnessMetrics {
             snapshot = new FreshnessSnapshot(
                     winningNumber.getRound(),
                     winningNumber.getRound() + weeksBehind,
-                    staleDays
+                    staleDays,
+                    1d
             );
         }
         cached = snapshot;
@@ -91,6 +100,6 @@ public class LottoFreshnessMetrics {
         return drawScheduleCalculator.expectedLatestDrawDate(now);
     }
 
-    record FreshnessSnapshot(double latestRound, double expectedLatestRound, double staleDays) {
+    record FreshnessSnapshot(double latestRound, double expectedLatestRound, double staleDays, double dataPresent) {
     }
 }

@@ -27,7 +27,7 @@ class WinningNumberAutoCollectSchedulerTest {
     void collectLatestAutomatically_fourWeekGap_requestsFiveRounds() {
         ExternalLottoProperties properties = new ExternalLottoProperties("https://example.com/{round}", null, null, null);
         scheduler = new WinningNumberAutoCollectScheduler(properties, collectionService, freshnessMetrics);
-        given(freshnessMetrics.snapshot()).willReturn(new LottoFreshnessMetrics.FreshnessSnapshot(1196, 1200, 28));
+        given(freshnessMetrics.snapshot()).willReturn(new LottoFreshnessMetrics.FreshnessSnapshot(1196, 1200, 28, 1));
         given(collectionService.collectUpToLatest(5)).willReturn(java.util.List.of());
 
         scheduler.collectLatestAutomatically();
@@ -40,7 +40,7 @@ class WinningNumberAutoCollectSchedulerTest {
     void collectLatestAutomatically_alreadyUpToDate_clampsToOne() {
         ExternalLottoProperties properties = new ExternalLottoProperties("https://example.com/{round}", null, null, null);
         scheduler = new WinningNumberAutoCollectScheduler(properties, collectionService, freshnessMetrics);
-        given(freshnessMetrics.snapshot()).willReturn(new LottoFreshnessMetrics.FreshnessSnapshot(1200, 1200, 0));
+        given(freshnessMetrics.snapshot()).willReturn(new LottoFreshnessMetrics.FreshnessSnapshot(1200, 1200, 0, 1));
         given(collectionService.collectUpToLatest(1)).willReturn(java.util.List.of());
 
         scheduler.collectLatestAutomatically();

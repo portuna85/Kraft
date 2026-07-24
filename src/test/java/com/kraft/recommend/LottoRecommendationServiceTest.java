@@ -302,8 +302,8 @@ class LottoRecommendationServiceTest {
         }
 
         @Test
-        @DisplayName("1회부터 최신 회차까지 중간에 누락된 회차가 있어도 추천은 계속 제공되지만 gauge에 반영된다")
-        void recommend_gapInHistory_stillServesButMetricReflectsGap() {
+        @DisplayName("1회부터 최신 회차까지 중간에 누락된 회차가 있으면 추천은 503으로 거절되지만 데이터는 존재함이 gauge에 반영된다")
+        void recommend_gapInHistory_isRejectedAsNotReady() {
             // 회차 1은 있지만 2가 누락되고 3부터 다시 있음 — firstMissingRound=2
             given(winningNumberRepository.findAllBalls()).willReturn(List.of(
                     ballsOnly(1, 1, 2, 3, 4, 5, 6),
@@ -311,20 +311,43 @@ class LottoRecommendationServiceTest {
             ));
             service.loadHistoricalCombinations();
 
-            assertThat(service.recommend(new RecommendNumbersRequest(1, null, false))
-                    .recommendations()).hasSize(1);
+            assertThatThrownBy(() -> service.recommend(new RecommendNumbersRequest(1, null, false)))
+                    .isInstanceOf(ApiException.class)
+                    .satisfies(ex -> {
+                        ApiException apiEx = (ApiException) ex;
+                        assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+                        assertThat(apiEx.getCode()).isEqualTo("RECOMMENDATION_HISTORY_NOT_READY");
+                    });
             assertThat(meterRegistry.get("kraft_lotto_first_missing_round").gauge().value()).isEqualTo(2d);
-            assertThat(meterRegistry.get("kraft_lotto_history_ready").gauge().value()).isEqualTo(1d);
+            assertThat(meterRegistry.get("kraft_lotto_history_ready").gauge().value()).isEqualTo(0d);
+            assertThat(meterRegistry.get("kraft_lotto_history_data_present").gauge().value()).isEqualTo(1d);
         }
 
         @Test
-        @DisplayName("이력 DB가 비어 있으면 준비 상태 gauge가 0을 가리킨다")
+        @DisplayName("1회부터 최신 회차까지 빈틈이 없으면 추천이 정상 제공되고 준비 상태 gauge가 모두 1을 가리킨다")
+        void recommend_continuousHistory_isReadyAndServes() {
+            given(winningNumberRepository.findAllBalls()).willReturn(List.of(
+                    ballsOnly(1, 1, 2, 3, 4, 5, 6),
+                    ballsOnly(2, 7, 8, 9, 10, 11, 12)
+            ));
+            service.loadHistoricalCombinations();
+
+            assertThat(service.recommend(new RecommendNumbersRequest(1, null, false))
+                    .recommendations()).hasSize(1);
+            assertThat(meterRegistry.get("kraft_lotto_first_missing_round").gauge().value()).isEqualTo(0d);
+            assertThat(meterRegistry.get("kraft_lotto_history_ready").gauge().value()).isEqualTo(1d);
+            assertThat(meterRegistry.get("kraft_lotto_history_data_present").gauge().value()).isEqualTo(1d);
+        }
+
+        @Test
+        @DisplayName("이력 DB가 비어 있으면 준비 상태·데이터 존재 gauge가 모두 0을 가리킨다")
         void historyReadyGauge_reflectsEmptyHistory() {
             given(winningNumberRepository.findAllBalls()).willReturn(List.of());
             service.loadHistoricalCombinations();
 
             assertThat(meterRegistry.get("kraft_lotto_history_ready").gauge().value()).isEqualTo(0d);
             assertThat(meterRegistry.get("kraft_lotto_history_round_count").gauge().value()).isEqualTo(0d);
+            assertThat(meterRegistry.get("kraft_lotto_history_data_present").gauge().value()).isEqualTo(0d);
         }
 
         @Test

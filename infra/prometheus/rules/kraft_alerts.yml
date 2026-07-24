@@ -53,6 +53,15 @@ groups:
           summary: "KRAFT Lotto 데이터가 최신 회차보다 지연됨"
           description: "kraft_lotto_data_stale_days가 1일 이상 지속됨. 최신 회차={{ $labels.instance }}, 자동 수집 또는 외부 소스 점검 필요."
 
+      - alert: KraftLottoWinningDataMissing
+        expr: kraft_lotto_winning_data_present{job="kraft-backend"} == 0
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "로또 당첨번호 DB가 완전히 비어 있음"
+          description: "kraft_lotto_winning_data_present가 15분 이상 0을 유지함. staleDays가 0으로 나와 겉으로는 최신처럼 보이므로 이 지표로만 감지된다 — 초기 시딩 실패 또는 DB 손상 가능성."
+
       - alert: KraftLottoStatisticsLagging
         expr: kraft_lotto_latest_round{job="kraft-backend"} - kraft_lotto_statistics_projected_round{job="kraft-backend"} >= 1
         for: 6h
@@ -80,7 +89,7 @@ groups:
           severity: critical
         annotations:
           summary: "추천 이력 데이터가 준비되지 않음"
-          description: "kraft_lotto_history_ready가 10분 이상 0을 유지함. 추천 API가 503으로 거절 중일 수 있음."
+          description: "kraft_lotto_history_ready가 10분 이상 0을 유지함. 추천 API가 503으로 거절 중일 수 있음. kraft_lotto_history_data_present가 0이면 이력이 완전히 비어 있는 것이고, 1이면 1회부터 최신까지 중간에 누락된 회차가 있는 것이다."
 
       - alert: KraftLottoRecommendHighErrorRate
         expr: |

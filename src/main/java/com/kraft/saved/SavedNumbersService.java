@@ -99,6 +99,10 @@ public class SavedNumbersService {
         return new SaveNumberResult(toResponse(savedNumber), true);
     }
 
+    // saved_number_client_locks 행은 의도적으로 여기서 지우지 않는다 — 클라이언트가 방금
+    // 저장번호를 모두 지웠어도 곧 다시 저장할 수 있으므로, 마지막 저장번호 삭제 직후 잠금
+    // 행까지 없애면 다음 저장 때 재생성 비용만 늘어난다. 고아 잠금 정리는 전적으로
+    // SavedNumberClientLockCleanupScheduler(P1-06)가 보관기간을 두고 담당한다.
     public void delete(String clientTokenHash, long id) {
         SavedNumber savedNumber = savedNumberRepository.findByIdAndClientTokenHash(id, clientTokenHash)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "SAVED_NUMBER_NOT_FOUND", "저장된 번호를 찾을 수 없습니다."));

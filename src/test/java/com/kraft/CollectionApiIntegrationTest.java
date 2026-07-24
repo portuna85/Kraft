@@ -18,13 +18,13 @@ class CollectionApiIntegrationTest extends BaseApiIntegrationTest {
         mockMvc.perform(post("/ops/collect/latest")
                         .header("X-Ops-Token", "test-ops-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.round", is(1201)))
+                .andExpect(jsonPath("$.round", is(3)))
                 .andExpect(jsonPath("$.bonusNumber", is(9)));
 
         org.assertj.core.api.Assertions.assertThat(winningNumberOperationLogRepository.findAll())
                 .hasSize(1);
 
-        var saved = winningNumberRepository.findByRound(1201).orElseThrow();
+        var saved = winningNumberRepository.findByRound(3).orElseThrow();
         assertThat(saved.getN1()).isEqualTo(5);
         assertThat(saved.getBonusNumber()).isEqualTo(9);
     }

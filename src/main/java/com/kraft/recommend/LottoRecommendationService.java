@@ -52,14 +52,14 @@ public class LottoRecommendationService {
         }
 
         /**
-         * DB가 아예 비어 있으면(roundCount=0) 배제 이력이 전혀 없는데도 조용히 정상 응답할
-         * 위험이 가장 크므로 그 경우만 fail-closed로 막는다. 중간 누락 회차(firstMissingRound)는
-         * 별도 gauge로만 노출한다 — 이 저장소는 1회부터 전체 이력을 수집하는 것이 정상 운영
-         * 상태이므로 실제 운영 DB에서 중간 누락은 드물고, 하드 게이트로 걸면 부분 데이터만
-         * 적재하는 테스트 픽스처(BaseApiIntegrationTest 등)까지 전부 503을 받게 되어 과도하다.
+         * 1회부터 최신 회차까지 빈틈없이 로드돼야 배제 이력을 신뢰할 수 있다(P1-05) — 중간
+         * 누락 회차가 있으면 그 회차의 1등 조합이 배제 목록에서 빠져 있을 수 있으므로, DB가
+         * 비어 있는 경우(roundCount=0)뿐 아니라 연속성이 깨진 경우(firstMissingRound!=null)도
+         * fail-closed로 막는다. 테스트 픽스처(BaseApiIntegrationTest 등)는 이 정책에 맞춰
+         * 회차를 1부터 연속으로 시딩해야 한다.
          */
         boolean ready() {
-            return roundCount > 0;
+            return roundCount > 0 && firstMissingRound == null;
         }
     }
 
@@ -88,6 +88,11 @@ public class LottoRecommendationService {
 
         Gauge.builder("kraft_lotto_history_ready", this, s -> s.historySnapshot.ready() ? 1d : 0d)
                 .description("추천 이력이 1회부터 최신 회차까지 빈틈없이 로드되어 배제 보장이 유효한지(1=준비됨)")
+                .register(meterRegistry);
+        Gauge.builder("kraft_lotto_history_data_present", this,
+                        s -> s.historySnapshot.roundCount() > 0 ? 1d : 0d)
+                .description("추천 이력 DB에 회차 데이터가 하나라도 있는지(1=있음, roundCount>0 여부만 반영, "
+                        + "연속성은 무관 — ready=0이 '완전히 빔'인지 '중간 누락'인지 구분하는 용도)")
                 .register(meterRegistry);
         Gauge.builder("kraft_lotto_history_round_count", this, s -> (double) s.historySnapshot.roundCount())
                 .description("추천 배제 이력에 반영된 회차 수")

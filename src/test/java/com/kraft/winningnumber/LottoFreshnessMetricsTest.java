@@ -41,6 +41,7 @@ class LottoFreshnessMetricsTest {
         assertThat(snapshot.latestRound()).isZero();
         assertThat(snapshot.expectedLatestRound()).isZero();
         assertThat(snapshot.staleDays()).isZero();
+        assertThat(snapshot.dataPresent()).isZero();
     }
 
     @Test
@@ -67,6 +68,21 @@ class LottoFreshnessMetricsTest {
         assertThat(snapshot.latestRound()).isEqualTo(1200);
         assertThat(snapshot.expectedLatestRound()).isEqualTo(1201);
         assertThat(snapshot.staleDays()).isEqualTo(7);
+        assertThat(snapshot.dataPresent()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("kraft_lotto_winning_data_present gauge는 데이터 유무를 그대로 반영한다")
+    void winningDataPresentGauge_reflectsRepositoryState() {
+        Clock clock = Clock.fixed(Instant.parse("2026-06-20T12:00:00Z"), ZoneId.of("Asia/Seoul"));
+        given(winningNumberRepository.findTopByOrderByRoundDesc()).willReturn(Optional.empty());
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
+        LottoFreshnessMetrics metrics = new LottoFreshnessMetrics(
+                meterRegistry, winningNumberRepository, clock, drawScheduleCalculator);
+        metrics.snapshot();
+
+        assertThat(meterRegistry.get("kraft_lotto_winning_data_present").gauge().value()).isZero();
     }
 
     @Test

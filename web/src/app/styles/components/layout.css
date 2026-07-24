@@ -717,6 +717,12 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible {
   color: var(--muted);
 }
 
+.saved-match-loading {
+  flex-basis: 100%;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .status-text {
   margin: 18px 0 0;
   color: var(--accent-strong);

@@ -24,7 +24,7 @@ type SavedNumberMatchResult = {
   prizeTier: string;
 };
 
-type MatchState = "idle" | "success" | "error";
+type MatchState = "idle" | "loading" | "success" | "error";
 
 function isWin(prizeTier: string): boolean {
   return prizeTier !== "낙첨";
@@ -110,13 +110,22 @@ export function SavedNumbersClient({ latestRound }: Props) {
     }
   }
 
+  // 회차 변경 즉시(사용자 조작 시점에) 이전 회차의 대조 결과를 비우고 로딩 상태로
+  // 전환한다(P1-06) — 그러지 않으면 새 회차를 fetch하는 동안 이전 회차의 당첨 배지가
+  // 그대로 보여서 사용자가 새 회차 결과로 오인할 수 있다.
+  function changeSelectedRound(round: string) {
+    setMatchMap(new Map());
+    setMatchState("loading");
+    setSelectedRound(round);
+  }
+
   function applyCustomRound(event: React.FormEvent) {
     event.preventDefault();
     const round = Number.parseInt(customRoundInput.trim(), 10);
     if (Number.isNaN(round) || round < 1 || round > latestRound) {
       return;
     }
-    setSelectedRound(String(round));
+    changeSelectedRound(String(round));
     setCustomRoundInput("");
   }
 
@@ -141,7 +150,7 @@ export function SavedNumbersClient({ latestRound }: Props) {
                 대조할 회차
                 <select
                   value={selectedRound}
-                  onChange={(event) => setSelectedRound(event.target.value)}
+                  onChange={(event) => changeSelectedRound(event.target.value)}
                 >
                   <option value="latest">최신 회차</option>
                   {recentRoundOptions.map((round) => (
@@ -166,7 +175,11 @@ export function SavedNumbersClient({ latestRound }: Props) {
                   적용
                 </button>
               </form>
-              {matchState === "error" ? (
+              {matchState === "loading" ? (
+                <p className="saved-match-loading" aria-live="polite">
+                  대조 결과를 불러오는 중입니다.
+                </p>
+              ) : matchState === "error" ? (
                 <p className="saved-match-error" aria-live="polite">
                   대조 결과를 불러오지 못했습니다.{" "}
                   <button type="button" className="button secondary" onClick={fetchMatches}>

@@ -87,6 +87,9 @@ class SavedNumbersServiceTest {
         assertThat(result.created()).isTrue();
         assertThat(result.savedNumber().numbers()).containsExactlyElementsOf(VALID_NUMBERS);
         verify(savedNumberRepository).save(any(SavedNumber.class));
+        // 잠금 행 생성·최근 사용 시각 갱신(P1-06)은 SavedNumberClientLockInitializer 내부로
+        // 위임됐으므로, 저장 흐름이 그 위임 호출을 여전히 하는지만 확인한다.
+        verify(savedNumberClientLockInitializer).ensureExists(TOKEN_HASH);
     }
 
     @Test

@@ -88,7 +88,7 @@ class SavedApiIntegrationTest extends BaseApiIntegrationTest {
         mockMvc.perform(get("/api/v1/saved/matches").header("X-Device-Token", deviceToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].round", is(1200)))
+                .andExpect(jsonPath("$[0].round", is(2)))
                 .andExpect(jsonPath("$[0].matchedCount", is(6)))
                 .andExpect(jsonPath("$[0].prizeTier", is("1등")));
     }
@@ -106,9 +106,9 @@ class SavedApiIntegrationTest extends BaseApiIntegrationTest {
                                 """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/v1/saved/matches").param("round", "1199").header("X-Device-Token", deviceToken))
+        mockMvc.perform(get("/api/v1/saved/matches").param("round", "1").header("X-Device-Token", deviceToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].round", is(1199)))
+                .andExpect(jsonPath("$[0].round", is(1)))
                 .andExpect(jsonPath("$[0].matchedCount", is(6)));
     }
 

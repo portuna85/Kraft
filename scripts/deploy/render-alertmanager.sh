@@ -8,6 +8,19 @@ REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 TMPL="$REPO_ROOT/infra/alertmanager/alertmanager.yml.tmpl"
 OUT="$REPO_ROOT/infra/alertmanager/alertmanager.yml"
 
+# OUT은 .gitignore 대상이라 clean clone에는 존재하지 않는다. 이 스크립트보다 먼저
+# `docker compose up`을 실행하면 Docker가 bind-mount 대상을 디렉터리로 자동 생성해버려서,
+# 이후 여기서 envsubst로 쓰려고 하면 "Is a directory" 오류로 조용히 실패한다 — 원인을
+# 바로 알 수 있도록 여기서 먼저 감지하고 복구 방법을 안내한다.
+if [[ -d "$OUT" ]]; then
+  echo "ERROR: $OUT exists as a DIRECTORY, not a file." >&2
+  echo "Docker likely auto-created it as a bind-mount target before this script ran" >&2
+  echo "(e.g. 'docker compose up' ran before this render). Fix:" >&2
+  echo "  rmdir \"$OUT\"" >&2
+  echo "then re-run this script before 'docker compose up'." >&2
+  exit 1
+fi
+
 if [[ -z "${ALERTMANAGER_DISCORD_WEBHOOK_URL:-}" ]]; then
   if [[ "${ALERTING_DISABLED:-false}" != "true" ]]; then
     echo "ERROR: ALERTMANAGER_DISCORD_WEBHOOK_URL not set. Set it, or set ALERTING_DISABLED=true to explicitly opt out (로컬/스테이징 전용)." >&2
