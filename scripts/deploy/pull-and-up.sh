@@ -17,7 +17,15 @@ echo "==> Pulling images..."
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" pull --quiet
 
 echo "==> Starting services (no-deps rolling update)..."
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans
+# compose는 web의 depends_on: backend: condition: service_healthy 때문에 backend가
+# unhealthy면 이 명령 자체가 실패하고 즉시 return한다 — 이 시점에 실패하면
+# wait-readiness.sh의 진단 로그(타임아웃 시 docker logs)는 실행될 기회조차 없으므로
+# 여기서 직접 backend 로그를 남겨야 진짜 실패 원인(예외 스택트레이스)을 알 수 있다.
+if ! docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --remove-orphans; then
+  echo "==> [DEBUG] 'docker compose up' 실패 — backend 컨테이너 로그 (최근 150줄):" >&2
+  docker logs kraft-backend --tail 150 2>&1 || true
+  exit 1
+fi
 
 # Compose only recreates a container when its own config (image/env/etc.) changes —
 # it cannot detect content changes inside a bind-mounted file like Caddyfile, so a
