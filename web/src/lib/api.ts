@@ -12,8 +12,13 @@ function resolvePublicBaseUrl(): string {
   const value = process.env.KRAFT_PUBLIC_BASE_URL;
   if (value) return value;
   // 프로덕션에서 미설정이면 metadataBase·OG·JSON-LD·sitemap·robots 전부가 조용히
-  // http://localhost로 새어나가므로, 조용한 폴백 대신 기동 시점에 크게 실패시킨다.
-  if (process.env.NODE_ENV === "production") {
+  // http://localhost로 새어나가므로, 조용한 폴백 대신 기동 시점에 크게 실패시킨다 —
+  // 단, 이 모듈이 여러 클라이언트 컴포넌트에서 import돼 번들러가 공용 청크로 묶으면
+  // 브라우저에서도 이 파일이 평가된다. KRAFT_PUBLIC_BASE_URL은 NEXT_PUBLIC_ 접두사가
+  // 없어 클라이언트 번들에는 항상 undefined이므로, 서버 쪽 배포 오류를 잡으려던
+  // 이 체크가 브라우저에서 매번 던지는 사고가 난다(§ad-overlay e2e 회귀). 서버에서
+  // 평가될 때만 이 검증을 적용한다.
+  if (typeof window === "undefined" && process.env.NODE_ENV === "production") {
     throw new Error("KRAFT_PUBLIC_BASE_URL 환경변수가 설정되지 않았습니다.");
   }
   return "http://localhost";

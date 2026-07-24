@@ -1,3 +1,11 @@
+// @vitest-environment node
+//
+// lib/api.ts의 프로덕션 KRAFT_PUBLIC_BASE_URL 미설정 예외는 서버 실행 컨텍스트
+// (typeof window === "undefined")에서만 던지도록 만들었다(§ad-overlay e2e 회귀 —
+// 이 모듈이 클라이언트 번들에 섞여 들어가면 브라우저에서 항상 undefined인
+// KRAFT_PUBLIC_BASE_URL 때문에 매번 던져버렸다). 기본 jsdom 환경은 전역 window를
+// 정의해 이 파일 전체를 "브라우저"로 착각하게 만들므로, 실제 서버 실행을 흉내 내려면
+// 이 테스트 파일만 node 환경으로 강제해야 한다.
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 
 describe("백엔드 내부 주소 기본값", () => {
