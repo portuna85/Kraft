@@ -27,15 +27,17 @@ check_status() {
 }
 
 check_header_contains() {
-  local desc="$1" url="$2" header_name="$3" expected="$4"
+  local desc="$1" url="$2" header_name="$3" expected="$4" max_attempts="${5:-3}"
   local headers value attempt
   # 컨테이너 재기동 직후 첫 요청은 콜드스타트(ISR 리빌드 등)로 일시적으로 헤더가
   # 빠질 수 있다 — check_status와 동일하게 재시도해 그 순간을 배포 실패로 오판하지 않는다.
-  for attempt in 1 2 3; do
+  # 홈(/)처럼 웹 컨테이너가 백엔드로 SSR fetch를 하는 경로는 재기동 직후 그 fetch
+  # 자체가 몇 차례 더 실패할 수 있어 호출부에서 더 긴 재시도 예산을 넘길 수 있다.
+  for attempt in $(seq 1 "$max_attempts"); do
     headers=$(curl -sSI --max-time 10 "$url" 2>/dev/null || true)
     value=$(printf '%s\n' "$headers" | awk -F': ' -v key="$header_name" 'tolower($1) == tolower(key) {print $2}' | tr -d '\r')
     [[ -n "$value" && ( -z "$expected" || "$value" == *"$expected"* ) ]] && break
-    [[ "$attempt" -lt 3 ]] && sleep 2
+    [[ "$attempt" -lt "$max_attempts" ]] && sleep 3
   done
   if [[ -z "$value" ]]; then
     echo "  FAIL[missing header '$header_name'] $desc ($url)" >&2
@@ -49,12 +51,12 @@ check_header_contains() {
 }
 
 check_body_matches() {
-  local desc="$1" url="$2" pattern="$3"
+  local desc="$1" url="$2" pattern="$3" max_attempts="${4:-3}"
   local body attempt
-  for attempt in 1 2 3; do
+  for attempt in $(seq 1 "$max_attempts"); do
     body=$(curl -sS --max-time 10 "$url" 2>/dev/null || true)
     echo "$body" | grep -Eq "$pattern" && break
-    [[ "$attempt" -lt 3 ]] && sleep 2
+    [[ "$attempt" -lt "$max_attempts" ]] && sleep 3
   done
   if echo "$body" | grep -Eq "$pattern"; then
     echo "  OK  [body match] $desc"
@@ -75,9 +77,14 @@ check_header_contains "GET /api/v1/stats/frequency exposes X-Request-Id" "$API/s
 check_header_contains "GET /api/v1/rounds/latest exposes Cache-Control" "$API/rounds/latest" "Cache-Control" "max-age=60"
 
 # 홈이 CSP nonce 헤더를 반환하는지, 최신 회차가 실제 렌더링되는지.
-check_header_contains "홈이 CSP 헤더를 반환" "$BASE/" "Content-Security-Policy" "nonce-"
+# 홈은 서버 컴포넌트에서 backend로 SSR fetch(AbortSignal.timeout 5s)를 하는데, web
+# 컨테이너 재기동 직후에는 그 fetch가 몇 차례 더 실패해 error.tsx(5xx, 의도된 동작 —
+# page.tsx의 "실패를 숨기지 않는다" 주석 참고)로 떨어질 수 있다. 다른 체크보다 훨씬
+# 긴 재시도 예산(최대 20회 × 3초 ≈ 60초)을 줘서 그 콜드스타트 구간을 배포 실패로
+# 오판하지 않게 한다 — 2026-07-24 CD가 이 두 체크의 일시적 실패로 4연속 롤백됨.
+check_header_contains "홈이 CSP 헤더를 반환" "$BASE/" "Content-Security-Policy" "nonce-" 20
 # Next.js 하이드레이션이 숫자와 "회" 사이에 <!-- --> 주석을 삽입할 수 있어 옵셔널로 허용.
-check_body_matches "홈 최신 회차 렌더링" "$BASE/" '[0-9]{3,4}(<!-- -->)?회 당첨 결과'
+check_body_matches "홈 최신 회차 렌더링" "$BASE/" '[0-9]{3,4}(<!-- -->)?회 당첨 결과' 20
 
 # Removed paths (blueprint 17) must be 404.
 check_status "GET /api/v1/push/token -> 404" "$API/push/token" "404"
