@@ -5,10 +5,10 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,9 +64,13 @@ public class CommunityPostService {
         post.update(request.title(), request.content(), OffsetDateTime.now(clock));
         try {
             return communityPostRepository.saveAndFlush(post);
-        } catch (ObjectOptimisticLockingFailureException raceLostAfterCheck) {
+        } catch (DataAccessException raceLostAfterCheck) {
             // 버전 사전 검증 이후에도 동시 수정이 끼어든 경우(§6 개선②) — 광역 예외 대신
-            // 이 리소스에 특정된 409로 변환한다.
+            // 이 리소스에 특정된 409로 변환한다. Hibernate의 자체 행 수 검증은
+            // ObjectOptimisticLockingFailureException으로 오지만, 실 MariaDB에서는 드라이버가
+            // "Record has changed since last read"(1020)를 먼저 던져 JpaSystemException으로도
+            // 온다는 사실을 Testcontainers 동시성 테스트로 확인했다 — 두 경로 모두 이 시점에서는
+            // 버전 경합 외의 원인이 있을 수 없으므로 DataAccessException을 폭넓게 잡는다.
             versionConflictCounter.increment();
             throw new ApiException(HttpStatus.CONFLICT, "COMMUNITY_POST_VERSION_CONFLICT",
                     "다른 곳에서 먼저 수정되었습니다. 새로고침 후 다시 시도하세요.", raceLostAfterCheck);
@@ -82,7 +86,16 @@ public class CommunityPostService {
             throw new ApiException(HttpStatus.CONFLICT, "COMMUNITY_POST_VERSION_CONFLICT",
                     "다른 곳에서 먼저 수정되었습니다. 새로고침 후 다시 시도하세요.");
         }
-        communityPostRepository.delete(post);
+        try {
+            communityPostRepository.delete(post);
+            communityPostRepository.flush();
+        } catch (DataAccessException raceLostAfterCheck) {
+            // update()와 동일한 이유(§6 개선②, §P1-04) — 버전 사전 검증 이후 삭제 flush
+            // 시점에 끼어든 동시 수정/삭제 경합을 광역 500 대신 이 리소스에 특정된 409로 변환한다.
+            versionConflictCounter.increment();
+            throw new ApiException(HttpStatus.CONFLICT, "COMMUNITY_POST_VERSION_CONFLICT",
+                    "다른 곳에서 먼저 수정되었습니다. 새로고침 후 다시 시도하세요.", raceLostAfterCheck);
+        }
     }
 
     private void requireOwner(CommunityPost post, Long ownerId) {

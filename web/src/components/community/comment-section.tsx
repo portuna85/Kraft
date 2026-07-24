@@ -8,10 +8,14 @@ import {
   getCommunitySession,
   type CommunitySession,
 } from "@/lib/community-client";
+import { BrowserApiError } from "@/lib/browser-api";
 import type { CommunityComment } from "@/lib/community-api";
 
 export function CommentSection({ postId }: { postId: number }) {
-  const [comments, setComments] = useState<CommunityComment[]>([]);
+  const [topLevel, setTopLevel] = useState<CommunityComment[]>([]);
+  const [totalTopLevelComments, setTotalTopLevelComments] = useState(0);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [session, setSession] = useState<CommunitySession | null>(null);
   const [content, setContent] = useState("");
   const [replyTo, setReplyTo] = useState<number | null>(null);
@@ -20,14 +24,23 @@ export function CommentSection({ postId }: { postId: number }) {
   // 목록 재조회 race 방지 — 오래된 응답이 최신 상태를 덮어쓰지 않도록 요청 시퀀스를 비교한다.
   const fetchSeqRef = useRef(0);
 
-  const loadComments = () => {
+  const loadComments = (targetPage = 0) => {
     const seq = ++fetchSeqRef.current;
-    fetchCommunityComments(postId)
+    fetchCommunityComments(postId, targetPage)
       .then((result) => {
-        if (seq === fetchSeqRef.current) setComments(result.items);
+        if (seq !== fetchSeqRef.current) return;
+        setTopLevel(result.topLevel);
+        setTotalTopLevelComments(result.totalTopLevelComments);
+        setPage(result.page);
+        setTotalPages(result.totalPages);
       })
-      .catch(() => {
-        if (seq === fetchSeqRef.current) setError("댓글을 불러오지 못했습니다.");
+      .catch((fetchError) => {
+        if (seq !== fetchSeqRef.current) return;
+        setError(
+          fetchError instanceof BrowserApiError
+            ? fetchError.message
+            : "댓글을 불러오지 못했습니다."
+        );
       });
   };
 
@@ -35,7 +48,7 @@ export function CommentSection({ postId }: { postId: number }) {
     loadComments();
     getCommunitySession()
       .then(setSession)
-      .catch(() => setSession({ loggedIn: false, userId: null, nickname: null }));
+      .catch(() => setSession({ loggedIn: false, userId: null, nickname: null, activeProviders: [] }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
@@ -45,10 +58,10 @@ export function CommentSection({ postId }: { postId: number }) {
     setSubmitting(true);
     setError(null);
     try {
-      await createComment(postId, content.trim(), replyTo);
+      const created = await createComment(postId, content.trim(), replyTo);
       setContent("");
       setReplyTo(null);
-      loadComments();
+      loadComments(created.targetPage ?? 0);
     } catch {
       setError("댓글 작성에 실패했습니다.");
     } finally {
@@ -60,42 +73,68 @@ export function CommentSection({ postId }: { postId: number }) {
     if (!window.confirm("댓글을 삭제할까요?")) return;
     try {
       await deleteComment(commentId);
-      loadComments();
+      loadComments(page);
     } catch {
       setError("댓글 삭제에 실패했습니다.");
     }
   };
 
-  return (
-    <section className="community-comment-section" aria-label="댓글">
-      <h2>댓글 {comments.length}개</h2>
-      {error && <p role="alert">{error}</p>}
-
-      <ul className="community-comment-list">
-        {comments.map((comment) => (
-          <li
-            key={comment.id}
-            className={`community-comment${comment.parentId ? " is-reply" : ""}`}
-          >
-            <span className="community-comment-author">{comment.authorNickname}</span>
-            <p>{comment.content}</p>
-            {!comment.deleted && session?.loggedIn && (
-              <div className="community-comment-actions">
-                {!comment.parentId && (
-                  <button type="button" onClick={() => setReplyTo(comment.id)}>
-                    답글
-                  </button>
-                )}
-                {session.userId === comment.ownerId && (
-                  <button type="button" onClick={() => handleDelete(comment.id)}>
+  const renderComment = (comment: CommunityComment) => (
+    <li key={comment.id} className="community-comment">
+      <span className="community-comment-author">{comment.authorNickname}</span>
+      <p>{comment.content}</p>
+      {!comment.deleted && session?.loggedIn && (
+        <div className="community-comment-actions">
+          <button type="button" onClick={() => setReplyTo(comment.id)}>
+            답글
+          </button>
+          {session.userId === comment.ownerId && (
+            <button type="button" onClick={() => handleDelete(comment.id)}>
+              삭제
+            </button>
+          )}
+        </div>
+      )}
+      {comment.replies.length > 0 && (
+        <ul className="community-comment-replies">
+          {comment.replies.map((reply) => (
+            <li key={reply.id} className="community-comment is-reply">
+              <span className="community-comment-author">{reply.authorNickname}</span>
+              <p>{reply.content}</p>
+              {!reply.deleted && session?.loggedIn && session.userId === reply.ownerId && (
+                <div className="community-comment-actions">
+                  <button type="button" onClick={() => handleDelete(reply.id)}>
                     삭제
                   </button>
-                )}
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+
+  return (
+    <section className="community-comment-section" aria-label="댓글">
+      <h2>댓글 {totalTopLevelComments}개</h2>
+      {error && <p role="alert">{error}</p>}
+
+      <ul className="community-comment-list">{topLevel.map(renderComment)}</ul>
+
+      {totalPages > 1 && (
+        <nav className="community-comment-pagination" aria-label="댓글 페이지">
+          <button type="button" disabled={page <= 0} onClick={() => loadComments(page - 1)}>
+            이전
+          </button>
+          <span>
+            {page + 1} / {totalPages}
+          </span>
+          <button type="button" disabled={page >= totalPages - 1} onClick={() => loadComments(page + 1)}>
+            다음
+          </button>
+        </nav>
+      )}
 
       {session?.loggedIn ? (
         <form onSubmit={handleSubmit} className="community-comment-form">

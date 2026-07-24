@@ -1,8 +1,10 @@
 package com.kraft.community.auth;
 
+import java.util.List;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,13 +18,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/community/session")
 public class CommunitySessionController {
 
+    private static final List<String> KNOWN_PROVIDERS = List.of("google", "naver");
+
+    private final ClientRegistrationRepository clientRegistrationRepository;
+
+    public CommunitySessionController(ClientRegistrationRepository clientRegistrationRepository) {
+        this.clientRegistrationRepository = clientRegistrationRepository;
+    }
+
     @GetMapping
     public ResponseEntity<CommunitySessionResponse> session(@AuthenticationPrincipal CommunityPrincipal principal) {
+        List<String> activeProviders = activeProviders();
         CommunitySessionResponse body = principal == null
-                ? CommunitySessionResponse.anonymous()
-                : CommunitySessionResponse.of(principal);
+                ? CommunitySessionResponse.anonymous(activeProviders)
+                : CommunitySessionResponse.of(principal, activeProviders);
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())
                 .body(body);
+    }
+
+    private List<String> activeProviders() {
+        return KNOWN_PROVIDERS.stream()
+                .filter(id -> clientRegistrationRepository.findByRegistrationId(id) != null)
+                .toList();
     }
 }

@@ -1,12 +1,14 @@
 package com.kraft.community.auth;
 
-public record CommunitySessionResponse(boolean loggedIn, Long userId, String nickname) {
+import java.util.List;
 
-    public static CommunitySessionResponse anonymous() {
-        return new CommunitySessionResponse(false, null, null);
+public record CommunitySessionResponse(boolean loggedIn, Long userId, String nickname, List<String> activeProviders) {
+
+    public static CommunitySessionResponse anonymous(List<String> activeProviders) {
+        return new CommunitySessionResponse(false, null, null, activeProviders);
     }
 
-    public static CommunitySessionResponse of(CommunityPrincipal principal) {
-        return new CommunitySessionResponse(true, principal.getUserId(), principal.getNickname());
+    public static CommunitySessionResponse of(CommunityPrincipal principal, List<String> activeProviders) {
+        return new CommunitySessionResponse(true, principal.getUserId(), principal.getNickname(), activeProviders);
     }
 }

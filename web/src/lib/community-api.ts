@@ -21,11 +21,13 @@ export type CommunityComment = {
   id: number;
   postId: number;
   parentId: number | null;
-  ownerId: number;
+  ownerId: number | null;
   authorNickname: string;
   content: string;
   deleted: boolean;
   createdAt: string;
+  targetPage: number | null;
+  replies: CommunityComment[];
 };
 
 export type PageResponse<T> = {
@@ -35,6 +37,19 @@ export type PageResponse<T> = {
   totalElements: number;
   totalPages: number;
 };
+
+// 댓글 목록 응답은 상위 댓글 페이지 + 각 상위 댓글에 중첩된 답글 형태다(PageResponse<T>와
+// 달리 items가 아닌 topLevel, totalElements가 아닌 totalTopLevelComments — 답글은 페이징
+// 집계에서 제외된다). 백엔드 CommunityCommentPageResponse와 1:1 대응.
+export type CommunityCommentPage = {
+  topLevel: CommunityComment[];
+  totalTopLevelComments: number;
+  page: number;
+  size: number;
+  totalPages: number;
+};
+
+export const DEFAULT_COMMENT_PAGE_SIZE = 50;
 
 async function fetchCommunityJson<T>(path: string): Promise<T> {
   const signal = AbortSignal.timeout(5000);
@@ -70,9 +85,9 @@ export async function getCommunityPost(id: number): Promise<CommunityPost> {
 export async function getCommunityComments(
   postId: number,
   page = 0,
-  size = 50
-): Promise<PageResponse<CommunityComment>> {
-  return fetchCommunityJson<PageResponse<CommunityComment>>(
+  size = DEFAULT_COMMENT_PAGE_SIZE
+): Promise<CommunityCommentPage> {
+  return fetchCommunityJson<CommunityCommentPage>(
     `/api/v1/community/posts/${postId}/comments?page=${page}&size=${size}`
   );
 }

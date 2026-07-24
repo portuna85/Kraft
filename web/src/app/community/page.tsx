@@ -13,7 +13,9 @@ type Props = { searchParams: Promise<{ page?: string }> };
 export default async function CommunityPage({ searchParams }: Props) {
   const { page: pageParam } = await searchParams;
   const page = Math.max(0, Number(pageParam ?? 0) || 0);
-  const result = await getCommunityPosts(page).catch(() => null);
+  // 백엔드 오류를 "게시글 없음"으로 감추지 않는다(§P1-03) — 실패는 최상위 error.tsx
+  // 경계로 넘겨 재시도 UI를 보여주고, 정상 응답이 실제로 비어 있을 때만 빈 상태 문구를 쓴다.
+  const result = await getCommunityPosts(page);
 
   return (
     <section className="panel">
@@ -23,7 +25,7 @@ export default async function CommunityPage({ searchParams }: Props) {
         글쓰기
       </Link>
 
-      {!result || result.items.length === 0 ? (
+      {result.items.length === 0 ? (
         <p>등록된 게시글이 없습니다.</p>
       ) : (
         <>

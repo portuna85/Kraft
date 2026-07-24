@@ -1,13 +1,17 @@
 package com.kraft.community.auth;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.kraft.common.config.CommunityProperties;
+import com.kraft.common.error.ApiErrorResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,10 +35,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class CommunityWriteRateLimitFilter extends OncePerRequestFilter {
 
     private static final Set<String> WRITE_METHODS = Set.of("POST", "PUT", "DELETE");
-    private static final String RATE_LIMIT_EXCEEDED_BODY =
-            """
-            {"status":429,"error":"Too Many Requests","code":"COMMUNITY_WRITE_RATE_LIMIT_EXCEEDED",\
-            "message":"작성 요청이 너무 많습니다. 잠시 후 다시 시도하세요."}""";
+
+    // CommunityAuthEntryPoint/CommunitySecurityConfig와 동일한 이유로 앱 전역 ObjectMapper
+    // 빈에 의존하지 않고 로컬 인스턴스를 쓴다.
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private final Cache<Long, AtomicInteger> counters;
     private final CommunityProperties communityProperties;
@@ -67,8 +71,16 @@ public class CommunityWriteRateLimitFilter extends OncePerRequestFilter {
         if (current > limit) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
             response.setIntHeader("Retry-After", 60);
-            response.getWriter().write(RATE_LIMIT_EXCEEDED_BODY);
+            ApiErrorResponse body = new ApiErrorResponse(
+                    Instant.now(),
+                    HttpStatus.TOO_MANY_REQUESTS.value(),
+                    HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                    "COMMUNITY_WRITE_RATE_LIMIT_EXCEEDED",
+                    "작성 요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+                    request.getRequestURI());
+            OBJECT_MAPPER.writeValue(response.getWriter(), body);
             return;
         }
 

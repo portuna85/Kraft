@@ -37,7 +37,15 @@ import org.springframework.transaction.annotation.Transactional;
  * Blitz 71건의 테스트가 보호하던 행위(익명 무세션 조회, 소유권 판정, 낙관적 잠금 409,
  * 1단계 대댓글 강제, tombstone)를 Kraft 커뮤니티 API에 대한 e2e 성격의 검증으로 옮긴다.
  */
-@SpringBootTest(classes = Application.class)
+@SpringBootTest(
+        classes = Application.class,
+        // 페이징 테스트가 한 게시글에 50개 넘는 댓글을 빠르게 생성하므로 기본
+        // write-rate-limit(분당 20건)과 IP 기반 공개 rate-limit(분당 120건)을 모두 완화한다 —
+        // MockMvc 요청은 전부 127.0.0.1에서 오므로 후자를 안 올리면 다른 테스트까지 429로 막힌다.
+        properties = {
+            "kraft.community.write-rate-limit-per-minute=2000",
+            "kraft.security.rate-limit-per-minute=2000"
+        })
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
@@ -140,13 +148,17 @@ class CommunityPostCommentApiTest {
     }
 
     @Test
-    @DisplayName("CSRF 토큰 없이 보내는 쓰기 요청은 403으로 거부된다")
+    @DisplayName("CSRF 토큰 없이 보내는 쓰기 요청은 403 JSON으로 거부된다")
     void writeRequestWithoutCsrfToken_isForbidden() throws Exception {
         mockMvc.perform(post("/api/v1/community/posts")
                         .with(asUser(owner))
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(new CreatePostRequest("제목", "내용"))))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(header().string("Content-Type", "application/json;charset=UTF-8"))
+                .andExpect(jsonPath("$.code").value("COMMUNITY_CSRF_REJECTED"))
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.path").value("/api/v1/community/posts"));
     }
 
     @Test
@@ -194,7 +206,7 @@ class CommunityPostCommentApiTest {
 
         mockMvc.perform(get("/api/v1/community/posts/" + postId + "/comments"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[0].ownerId").doesNotExist());
+                .andExpect(jsonPath("$.topLevel[0].ownerId").doesNotExist());
     }
 
     @Test
@@ -219,6 +231,56 @@ class CommunityPostCommentApiTest {
                         .content(objectMapper.writeValueAsString(new CreateCommentRequest("답글", topLevelId))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.targetPage").value(0));
+    }
+
+    @Test
+    @DisplayName("상위 댓글이 50개를 넘는 시점에 작성하면 targetPage가 다음 페이지를 가리킨다")
+    void creatingComment_returnsSecondTargetPageAfter50Comments() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+        for (int i = 0; i < 60; i++) {
+            createComment(owner, postId, "댓글 " + i, null);
+        }
+
+        mockMvc.perform(post("/api/v1/community/posts/" + postId + "/comments")
+                        .with(asUser(owner))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreateCommentRequest("61번째 댓글", null))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.targetPage").value(1));
+    }
+
+    @Test
+    @DisplayName("상위 댓글이 50개를 초과하면 2페이지에서 51번째 댓글부터 보인다")
+    void commentList_pagesBeyondFirst50TopLevelComments() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+        for (int i = 0; i < 55; i++) {
+            createComment(owner, postId, "댓글 " + i, null);
+        }
+
+        mockMvc.perform(get("/api/v1/community/posts/" + postId + "/comments").param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalTopLevelComments").value(55))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.topLevel.length()").value(5))
+                .andExpect(jsonPath("$.topLevel[0].content").value("댓글 50"));
+    }
+
+    @Test
+    @DisplayName("답글은 상위 댓글 페이지 집계에서 제외되고 상위 댓글에 중첩되어 내려온다")
+    void commentList_nestsRepliesUnderTopLevelAndExcludesFromCount() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+        long topLevelId = createComment(owner, postId, "상위 댓글", null);
+        createComment(other, postId, "답글1", topLevelId);
+        createComment(other, postId, "답글2", topLevelId);
+
+        mockMvc.perform(get("/api/v1/community/posts/" + postId + "/comments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalTopLevelComments").value(1))
+                .andExpect(jsonPath("$.topLevel.length()").value(1))
+                .andExpect(jsonPath("$.topLevel[0].replies.length()").value(2))
+                .andExpect(jsonPath("$.topLevel[0].replies[0].content").value("답글1"))
+                .andExpect(jsonPath("$.topLevel[0].replies[1].content").value("답글2"));
     }
 
     @Test
@@ -264,9 +326,9 @@ class CommunityPostCommentApiTest {
 
         mockMvc.perform(get("/api/v1/community/posts/" + postId + "/comments"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.items[0].deleted").value(true))
-                .andExpect(jsonPath("$.items[0].content").value("삭제된 댓글입니다."));
+                .andExpect(jsonPath("$.totalTopLevelComments").value(1))
+                .andExpect(jsonPath("$.topLevel[0].deleted").value(true))
+                .andExpect(jsonPath("$.topLevel[0].content").value("삭제된 댓글입니다."));
     }
 
     @Test

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.kraft.Application;
@@ -72,5 +73,13 @@ class CommunityOAuthRegistrationConfigTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location",
                         startsWith("https://nid.naver.com/oauth2.0/authorize?")));
+    }
+
+    @Test
+    @DisplayName("두 provider가 모두 활성화되면 세션 응답의 activeProviders에 google과 naver가 모두 담긴다")
+    void sessionResponse_listsBothActiveProviders() throws Exception {
+        mockMvc.perform(get("/api/v1/community/session"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activeProviders", org.hamcrest.Matchers.containsInAnyOrder("google", "naver")));
     }
 }

@@ -7,6 +7,9 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,9 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommunityCommentService {
 
     private static final int MAX_PAGE_SIZE = 100;
-    // 댓글 목록 컨트롤러의 기본 페이지 크기(size=50)와 맞춰야 targetPage가 실제 목록 조회와
-    // 어긋나지 않는다 — 프런트가 이 값과 다른 size로 목록을 조회하면 targetPage는 참고용이 된다.
-    private static final int TARGET_PAGE_SIZE = 50;
+    // 댓글 목록 컨트롤러의 기본 페이지 크기와 targetPage 계산이 항상 같은 값을 쓰도록
+    // 단일 소스로 공유한다(컨트롤러의 @RequestParam 기본값도 이 상수를 참조).
+    public static final int DEFAULT_PAGE_SIZE = 50;
 
     private final CommunityCommentRepository communityCommentRepository;
     private final CommunityPostRepository communityPostRepository;
@@ -41,11 +44,18 @@ public class CommunityCommentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<CommunityComment> list(Long postId, int page, int size) {
+    public CommunityCommentListResult list(Long postId, int page, int size) {
         int clampedPage = Math.max(0, page);
         int clampedSize = Math.min(Math.max(1, size), MAX_PAGE_SIZE);
-        return communityCommentRepository.findByPostId(postId,
+        Page<CommunityComment> topLevel = communityCommentRepository.findByPostIdAndParentIdIsNull(postId,
                 PageRequest.of(clampedPage, clampedSize, Sort.by(Sort.Direction.ASC, "createdAt", "id")));
+        List<Long> parentIds = topLevel.getContent().stream().map(CommunityComment::getId).toList();
+        List<CommunityComment> replies = parentIds.isEmpty()
+                ? List.of()
+                : communityCommentRepository.findByPostIdAndParentIdIn(postId, parentIds);
+        Map<Long, List<CommunityComment>> repliesByParentId = replies.stream()
+                .collect(Collectors.groupingBy(CommunityComment::getParentId));
+        return new CommunityCommentListResult(topLevel, repliesByParentId);
     }
 
     @Transactional
@@ -90,7 +100,7 @@ public class CommunityCommentService {
         // 기준으로 계산한다(§6: "mutation 후 target page 계산" — Blitz의 동일 의도 이식).
         Long anchorId = parent != null ? parent.getId() : saved.getId();
         long countUpToAnchor = communityCommentRepository.countTopLevelUpToId(postId, anchorId);
-        int targetPage = (int) ((Math.max(1, countUpToAnchor) - 1) / TARGET_PAGE_SIZE);
+        int targetPage = (int) ((Math.max(1, countUpToAnchor) - 1) / DEFAULT_PAGE_SIZE);
 
         return new CommunityCommentCreationResult(saved, targetPage);
     }

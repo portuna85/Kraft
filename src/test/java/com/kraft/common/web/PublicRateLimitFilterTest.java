@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
@@ -42,7 +43,11 @@ class PublicRateLimitFilterTest {
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().string("Retry-After", "60"))
                 .andExpect(header().string("X-RateLimit-Limit", "1"))
-                .andExpect(header().string("X-RateLimit-Remaining", "0"));
+                .andExpect(header().string("X-RateLimit-Remaining", "0"))
+                .andExpect(header().string("Content-Type", "application/json;charset=UTF-8"))
+                .andExpect(jsonPath("$.status").value(429))
+                .andExpect(jsonPath("$.code").value("RATE_LIMIT_EXCEEDED"))
+                .andExpect(jsonPath("$.path").value("/api/v1/stats/frequency"));
     }
 
     @Test

@@ -5,6 +5,7 @@ import { getCommunitySession, loginUrl, logout, type CommunitySession } from "@/
 
 export function AccountMenu() {
   const [session, setSession] = useState<CommunitySession | null>(null);
+  const [logoutError, setLogoutError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -13,7 +14,7 @@ export function AccountMenu() {
         if (!cancelled) setSession(result);
       })
       .catch(() => {
-        if (!cancelled) setSession({ loggedIn: false, userId: null, nickname: null });
+        if (!cancelled) setSession({ loggedIn: false, userId: null, nickname: null, activeProviders: [] });
       });
     return () => {
       cancelled = true;
@@ -25,28 +26,38 @@ export function AccountMenu() {
   }
 
   if (!session.loggedIn) {
+    const providers = session.activeProviders;
+    if (providers.length === 0) {
+      return null;
+    }
+    const providerLabel = (provider: "google" | "naver") =>
+      provider === "google" ? "Google 로그인" : "Naver 로그인";
     return (
       <div className="account-menu">
-        {/* 좁은 화면에서는 두 provider 링크를 나란히 둘 자리가 없어 Google 로그인으로
-            압축한다(NavLinks의 nav-desktop/nav-mobile 이중 렌더링과 같은 CSS 토글 방식). */}
-        <a href={loginUrl("google")} className="account-login-link account-login-compact">
+        {/* 좁은 화면에서는 여러 provider 링크를 나란히 둘 자리가 없어 첫 번째 활성
+            provider로 압축한다(NavLinks의 nav-desktop/nav-mobile 이중 렌더링과 같은 CSS 토글 방식). */}
+        <a href={loginUrl(providers[0])} className="account-login-link account-login-compact">
           로그인
         </a>
         <span className="account-login-full">
-          <a href={loginUrl("google")} className="account-login-link">
-            Google 로그인
-          </a>
-          <a href={loginUrl("naver")} className="account-login-link">
-            Naver 로그인
-          </a>
+          {providers.map((provider) => (
+            <a key={provider} href={loginUrl(provider)} className="account-login-link">
+              {providerLabel(provider)}
+            </a>
+          ))}
         </span>
       </div>
     );
   }
 
   const handleLogout = async () => {
-    await logout();
-    window.location.reload();
+    setLogoutError(false);
+    const ok = await logout();
+    if (ok) {
+      window.location.reload();
+    } else {
+      setLogoutError(true);
+    }
   };
 
   return (
@@ -55,6 +66,7 @@ export function AccountMenu() {
       <button type="button" className="account-logout-button" onClick={handleLogout}>
         로그아웃
       </button>
+      {logoutError && <p role="alert">로그아웃에 실패했습니다. 다시 시도해 주세요.</p>}
     </div>
   );
 }

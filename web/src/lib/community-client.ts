@@ -1,10 +1,17 @@
 import { browserFetch } from "@/lib/browser-api";
-import type { CommunityComment, CommunityPost, PageResponse } from "@/lib/community-api";
+import {
+  DEFAULT_COMMENT_PAGE_SIZE,
+  type CommunityComment,
+  type CommunityCommentPage,
+  type CommunityPost,
+  type PageResponse,
+} from "@/lib/community-api";
 
 export type CommunitySession = {
   loggedIn: boolean;
   userId: number | null;
   nickname: string | null;
+  activeProviders: ("google" | "naver")[];
 };
 
 // CookieCsrfTokenRepository(double-submit, §4.3 ADR-0002)가 발급하는 쿠키를 읽어
@@ -33,8 +40,9 @@ export function loginUrl(provider: "google" | "naver"): string {
   return `/oauth2/authorization/${provider}`;
 }
 
-export async function logout(): Promise<void> {
-  await fetch("/logout", { method: "POST", headers: writeHeaders() });
+export async function logout(): Promise<boolean> {
+  const response = await fetch("/logout", { method: "POST", headers: writeHeaders() });
+  return response.ok;
 }
 
 export async function createPost(title: string, content: string): Promise<CommunityPost> {
@@ -67,10 +75,11 @@ export async function deletePost(id: number, expectedVersion: number): Promise<v
 
 export async function fetchCommunityComments(
   postId: number,
-  page = 0
-): Promise<PageResponse<CommunityComment>> {
-  return browserFetch<PageResponse<CommunityComment>>(
-    `/api/v1/community/posts/${postId}/comments?page=${page}&size=50`,
+  page = 0,
+  size = DEFAULT_COMMENT_PAGE_SIZE
+): Promise<CommunityCommentPage> {
+  return browserFetch<CommunityCommentPage>(
+    `/api/v1/community/posts/${postId}/comments?page=${page}&size=${size}`,
     { cache: "no-store" }
   );
 }

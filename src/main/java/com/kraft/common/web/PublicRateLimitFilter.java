@@ -1,6 +1,9 @@
 package com.kraft.common.web;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.kraft.common.config.SecurityProperties;
+import com.kraft.common.error.ApiErrorResponse;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
@@ -8,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
@@ -34,10 +38,10 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(PublicRateLimitFilter.class);
     private static final int WINDOW_SECONDS = 60;
-    private static final String RATE_LIMIT_EXCEEDED_BODY =
-            """
-            {"status":429,"error":"Too Many Requests","code":"RATE_LIMIT_EXCEEDED",\
-            "message":"요청 횟수가 너무 많습니다. 잠시 후 다시 시도하세요."}""";
+
+    // 커뮤니티 체인의 CommunityAuthEntryPoint/CommunitySecurityConfig와 동일한 이유로
+    // 앱 전역 ObjectMapper 빈에 의존하지 않고 로컬 인스턴스를 쓴다.
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private final SecurityProperties securityProperties;
     private final ClientIpResolver clientIpResolver;
@@ -93,8 +97,16 @@ public class PublicRateLimitFilter extends OncePerRequestFilter {
                     .increment();
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
             response.setIntHeader("Retry-After", WINDOW_SECONDS);
-            response.getWriter().write(RATE_LIMIT_EXCEEDED_BODY);
+            ApiErrorResponse body = new ApiErrorResponse(
+                    Instant.now(),
+                    HttpStatus.TOO_MANY_REQUESTS.value(),
+                    HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                    "RATE_LIMIT_EXCEEDED",
+                    "요청 횟수가 너무 많습니다. 잠시 후 다시 시도하세요.",
+                    path);
+            OBJECT_MAPPER.writeValue(response.getWriter(), body);
             return;
         }
 

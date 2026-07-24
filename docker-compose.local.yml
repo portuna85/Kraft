@@ -6,6 +6,8 @@ services:
   backend:
     ports:
       - "8080:8080"
+    # OAuth 로그인을 로컬에서 켜려면 SPRING_PROFILES_ACTIVE와 4개 client id/secret 변수를
+    # .env에서 설정한다(docker-compose.yml의 backend-common-env가 이미 전달함) — .env.example 참고.
     environment:
       KRAFT_PUBLIC_BASE_URL: ${KRAFT_PUBLIC_BASE_URL:-http://localhost}
 
