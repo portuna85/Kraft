@@ -10,19 +10,20 @@ import org.springframework.http.HttpStatus;
  */
 public final class CommunityOAuthAttributes {
 
+    private static final int MAX_PROVIDER_ID_LENGTH = 190;
+    private static final int MAX_NICKNAME_LENGTH = 100;
+    private static final int MAX_PROFILE_IMAGE_URL_LENGTH = 500;
+
     private final String provider;
     private final String providerId;
     private final String nickname;
     private final String profileImageUrl;
-    private final String nameAttributeKey;
 
-    private CommunityOAuthAttributes(String provider, String providerId, String nickname, String profileImageUrl,
-                                      String nameAttributeKey) {
+    private CommunityOAuthAttributes(String provider, String providerId, String nickname, String profileImageUrl) {
         this.provider = provider;
         this.providerId = providerId;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
-        this.nameAttributeKey = nameAttributeKey;
     }
 
     public static CommunityOAuthAttributes of(String registrationId, Map<String, Object> attributes) {
@@ -38,11 +39,13 @@ public final class CommunityOAuthAttributes {
         String providerId = stripToNull(asString(attributes.get("sub")));
         String nickname = stripToNull(asString(attributes.get("name")));
         String profileImageUrl = stripToNull(asString(attributes.get("picture")));
-        if (providerId == null || nickname == null) {
+        if (providerId == null || providerId.length() > MAX_PROVIDER_ID_LENGTH
+                || nickname == null || nickname.length() > MAX_NICKNAME_LENGTH
+                || exceedsLength(profileImageUrl, MAX_PROFILE_IMAGE_URL_LENGTH)) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "OAUTH_ATTRIBUTE_MISSING",
-                    "Google 인증 응답에서 필수 정보를 확인할 수 없습니다.");
+                    "Google 인증 응답의 사용자 정보가 올바르지 않습니다.");
         }
-        return new CommunityOAuthAttributes("google", providerId, nickname, profileImageUrl, "sub");
+        return new CommunityOAuthAttributes("google", providerId, nickname, profileImageUrl);
     }
 
     @SuppressWarnings("unchecked")
@@ -56,15 +59,19 @@ public final class CommunityOAuthAttributes {
         String providerId = stripToNull(asString(response.get("id")));
         String nickname = stripToNull(asString(response.get("nickname")));
         String profileImageUrl = stripToNull(asString(response.get("profile_image")));
-        if (providerId == null || providerId.length() > 190) {
+        if (providerId == null || providerId.length() > MAX_PROVIDER_ID_LENGTH) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "OAUTH_ATTRIBUTE_MISSING",
                     "Naver 인증 응답에서 사용자 식별자를 확인할 수 없습니다.");
         }
-        if (nickname == null) {
+        if (nickname == null || nickname.length() > MAX_NICKNAME_LENGTH) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "OAUTH_ATTRIBUTE_MISSING",
-                    "Naver 인증 응답에서 닉네임을 확인할 수 없습니다.");
+                    "Naver 인증 응답의 닉네임이 올바르지 않습니다.");
         }
-        return new CommunityOAuthAttributes("naver", providerId, nickname, profileImageUrl, "response");
+        if (exceedsLength(profileImageUrl, MAX_PROFILE_IMAGE_URL_LENGTH)) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "OAUTH_ATTRIBUTE_MISSING",
+                    "Naver 인증 응답의 프로필 이미지 URL이 올바르지 않습니다.");
+        }
+        return new CommunityOAuthAttributes("naver", providerId, nickname, profileImageUrl);
     }
 
     private static String asString(Object value) {
@@ -77,6 +84,10 @@ public final class CommunityOAuthAttributes {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private static boolean exceedsLength(String value, int maxLength) {
+        return value != null && value.length() > maxLength;
     }
 
     public String provider() {
@@ -93,9 +104,5 @@ public final class CommunityOAuthAttributes {
 
     public String profileImageUrl() {
         return profileImageUrl;
-    }
-
-    public String nameAttributeKey() {
-        return nameAttributeKey;
     }
 }

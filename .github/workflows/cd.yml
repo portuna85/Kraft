@@ -55,8 +55,8 @@ jobs:
           KRAFT_ADMIN_BOOTSTRAP_PASSWORD: ${{ secrets.KRAFT_ADMIN_BOOTSTRAP_PASSWORD }}
           # 외부 API
           KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE: ${{ secrets.KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE }}
-          # 커뮤니티 OAuth2 — 비어 있으면 Spring Boot OAuth2ClientProperties 검증이
-          # 기동 자체를 막는다(2026-07-24: 이 4개가 없어서 배포가 계속 실패했음)
+          # 커뮤니티 OAuth2 — provider별 ID/secret을 모두 넣으면 활성화되고, 모두 비우면
+          # 비활성화된다. 한쪽만 설정된 경우 validate-env.sh가 기동 전에 배포를 차단한다.
           KRAFT_COMMUNITY_GOOGLE_CLIENT_ID: ${{ secrets.KRAFT_COMMUNITY_GOOGLE_CLIENT_ID }}
           KRAFT_COMMUNITY_GOOGLE_CLIENT_SECRET: ${{ secrets.KRAFT_COMMUNITY_GOOGLE_CLIENT_SECRET }}
           KRAFT_COMMUNITY_NAVER_CLIENT_ID: ${{ secrets.KRAFT_COMMUNITY_NAVER_CLIENT_ID }}

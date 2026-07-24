@@ -58,7 +58,7 @@ public class RequestIdFilter extends OncePerRequestFilter {
     private void logRequest(HttpServletRequest request, HttpServletResponse response, long elapsedMs) {
         int status = response.getStatus();
         String method = request.getMethod();
-        String path = buildPath(request);
+        String path = requestPath(request);
         // MDC에 이미 채워둔 resolved 클라이언트 IP를 그대로 쓴다 — request.getRemoteAddr()는
         // 리버스 프록시(Caddy) 뒤에서는 항상 프록시 컨테이너 IP라 로그 분석 시 혼동을 준다.
         String remote = MDC.get(MDC_CLIENT_IP);
@@ -75,9 +75,9 @@ public class RequestIdFilter extends OncePerRequestFilter {
         }
     }
 
-    private String buildPath(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        String query = request.getQueryString();
-        return (query != null && !query.isBlank()) ? uri + "?" + query : uri;
+    static String requestPath(HttpServletRequest request) {
+        // OAuth callback query에는 일회용 authorization code와 state가 포함된다.
+        // 모든 엔드포인트에서 query string을 제외해 인증 정보와 사용자 입력이 로그에 남지 않게 한다.
+        return request.getRequestURI();
     }
 }

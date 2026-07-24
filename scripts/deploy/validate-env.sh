@@ -46,6 +46,29 @@ for var in "${OPTIONAL_VARS[@]}"; do
   fi
 done
 
+validate_oauth_pair() {
+  local provider="$1"
+  local client_id_var="$2"
+  local client_secret_var="$3"
+  local client_id="${!client_id_var:-}"
+  local client_secret="${!client_secret_var:-}"
+
+  if [[ -n "$client_id" && -z "$client_secret" ]]; then
+    echo "ERROR: $provider OAuth client ID is set but client secret is missing: $client_secret_var" >&2
+    error=1
+  elif [[ -z "$client_id" && -n "$client_secret" ]]; then
+    echo "ERROR: $provider OAuth client secret is set but client ID is missing: $client_id_var" >&2
+    error=1
+  fi
+}
+
+# OAuth provider는 선택 사항이지만, 활성화할 때는 ID와 secret이 반드시 한 쌍이어야 한다.
+# 부분 설정을 허용하면 Spring Boot가 등록 검증 중 실패해 전체 서비스가 기동하지 못한다.
+validate_oauth_pair "Google" \
+  KRAFT_COMMUNITY_GOOGLE_CLIENT_ID KRAFT_COMMUNITY_GOOGLE_CLIENT_SECRET
+validate_oauth_pair "Naver" \
+  KRAFT_COMMUNITY_NAVER_CLIENT_ID KRAFT_COMMUNITY_NAVER_CLIENT_SECRET
+
 if [[ "${KRAFT_ADMIN_ALLOWED_CIDR:-}" == *"0.0.0.0/0"* && "${KRAFT_ALLOW_WORLD_OPEN_ADMIN:-}" != "true" ]]; then
   echo "ERROR: KRAFT_ADMIN_ALLOWED_CIDR가 전체 개방(0.0.0.0/0)입니다. 의도라면 KRAFT_ALLOW_WORLD_OPEN_ADMIN=true를 명시하세요." >&2
   error=1

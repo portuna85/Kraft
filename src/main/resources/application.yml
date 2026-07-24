@@ -55,7 +55,8 @@ spring:
             # openid 스코프를 넣지 않는다 — 포함 시 Spring Security가 OIDC 플로우(OidcUserService)로
             # 전환해 아래 CommunityOAuth2UserService(plain OAuth2UserService)가 호출되지 않는다.
             # Naver와 동일한 커스텀 서비스로 처리하기 위해 의도적으로 plain OAuth2를 유지한다.
-            scope: profile, email
+            # 커뮤니티는 표시 이름만 사용하며 이메일은 수집·저장하지 않는다.
+            scope: profile
 ---
 spring:
   config:
@@ -71,7 +72,8 @@ spring:
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             redirect-uri: "{baseUrl}/{action}/oauth2/code/{registrationId}"
-            scope: name, email, profile_image
+            # Naver 명세상 scope는 내부 구분값이라 전송할 필요가 없다. 제공 정보는 개발자
+            # 콘솔에서 별명만 허용하며, 애플리케이션은 이메일·회원이름을 수집하지 않는다.
         provider:
           naver:
             authorization-uri: https://nid.naver.com/oauth2.0/authorize
