@@ -1,0 +1,34 @@
+# 로컬 개발용 동일 출처(same-origin) Caddy 구성(§4.5). 운영 Caddyfile을 TLS/도메인
+# 분기 없이 단순화한 버전 — web:3000과 backend:8080을 http://localhost 하나의 origin으로
+# 묶어야 OAuth2 로그인 콜백의 세션 쿠키가 브라우저에 정상적으로 저장된다.
+# `web/src/lib/backend-proxy.ts`(Next 라우트 핸들러 경유 프록시)는 Set-Cookie를 전달하지
+# 않아 로컬에서 OAuth 로그인을 재현할 수 없다 — 이 Caddy 구성이 그 표준 대체 경로다.
+#
+# 실행: docker compose -f docker-compose.yml -f docker-compose.local.yml up
+# 접속: http://localhost
+#
+# Google/Naver OAuth 콘솔의 개발용 클라이언트에 아래 redirect URI를 등록해야 한다(수동 1회):
+#   http://localhost/login/oauth2/code/google
+#   http://localhost/login/oauth2/code/naver
+{
+	auto_https off
+}
+
+:80 {
+	route {
+		handle /api/v1/* {
+			reverse_proxy backend:8080
+		}
+
+		# 커뮤니티 OAuth2 로그인 플로우는 Spring Security가 직접 서빙한다 — Next.js에는
+		# 이 경로들이 없다(운영 Caddyfile과 동일 규칙).
+		@community_auth path /oauth2/* /login* /logout
+		handle @community_auth {
+			reverse_proxy backend:8080
+		}
+
+		handle {
+			reverse_proxy web:3000
+		}
+	}
+}

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -267,6 +268,105 @@ class CommunityPostCommentApiTest {
                 .andExpect(jsonPath("$.items[0].deleted").value(true))
                 .andExpect(jsonPath("$.items[0].content").value("삭제된 댓글입니다."));
     }
+
+    @Test
+    @DisplayName("게시글 생성 응답은 Location과 ETag 헤더를 포함한다")
+    void creatingPost_returnsLocationAndETagHeaders() throws Exception {
+        mockMvc.perform(post("/api/v1/community/posts")
+                        .with(asUser(owner))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreatePostRequest("제목", "내용"))))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/api/v1/community/posts/")))
+                .andExpect(header().string("ETag", "\"0\""));
+    }
+
+    @Test
+    @DisplayName("게시글 상세 조회 응답은 ETag 헤더를 포함한다")
+    void postDetail_returnsETagHeader() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+
+        mockMvc.perform(get("/api/v1/community/posts/" + postId))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("ETag"));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글을 조회하면 404를 반환한다")
+    void detailOfMissingPost_returns404() throws Exception {
+        mockMvc.perform(get("/api/v1/community/posts/999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("COMMUNITY_POST_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("게시글 목록 size는 최대 50으로 클램프된다")
+    void postList_clampsSizeTo50() throws Exception {
+        mockMvc.perform(get("/api/v1/community/posts").param("size", "999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(50));
+    }
+
+    @Test
+    @DisplayName("댓글 목록 size는 최대 100으로 클램프된다")
+    void commentList_clampsSizeTo100() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+
+        mockMvc.perform(get("/api/v1/community/posts/" + postId + "/comments").param("size", "9999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(100));
+    }
+
+    @Test
+    @DisplayName("CSRF 토큰 없이 보내는 댓글 작성 요청은 403으로 거부된다")
+    void creatingCommentWithoutCsrfToken_isForbidden() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+
+        mockMvc.perform(post("/api/v1/community/posts/" + postId + "/comments")
+                        .with(asUser(owner))
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreateCommentRequest("댓글", null))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("다른 게시글의 댓글을 부모로 지정하면 400을 반환한다")
+    void replyToParentFromDifferentPost_returns400() throws Exception {
+        long postId1 = createPost(owner, "제목1", "내용1");
+        long postId2 = createPost(owner, "제목2", "내용2");
+        long commentIdOnPost1 = createComment(owner, postId1, "댓글", null);
+
+        mockMvc.perform(post("/api/v1/community/posts/" + postId2 + "/comments")
+                        .with(asUser(other))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreateCommentRequest("답글", commentIdOnPost1))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMUNITY_COMMENT_PARENT_MISMATCH"));
+    }
+
+    @Test
+    @DisplayName("댓글 작성 성공 응답은 전체 필드를 올바르게 채운다")
+    void creatingComment_returnsFullResponseBody() throws Exception {
+        long postId = createPost(owner, "제목", "내용");
+
+        mockMvc.perform(post("/api/v1/community/posts/" + postId + "/comments")
+                        .with(asUser(owner))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(new CreateCommentRequest("첫 댓글", null))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.postId").value(postId))
+                .andExpect(jsonPath("$.parentId").doesNotExist())
+                .andExpect(jsonPath("$.authorNickname").value(owner.getNickname()))
+                .andExpect(jsonPath("$.content").value("첫 댓글"))
+                .andExpect(jsonPath("$.deleted").value(false));
+    }
+
+    // 게시글 삭제 시 댓글 cascade 삭제는 DB의 ON DELETE CASCADE(V16)에 의존한다 — 테스트
+    // 프로필은 Flyway 없이 Hibernate ddl-auto=create-drop으로 스키마를 생성해 FK 제약이
+    // 재현되지 않으므로, 이 시나리오는 Testcontainers 기반 CommunityCommentCascadeDeleteTest에서 검증한다.
 
     private long createPost(CommunityUser author, String title, String content) throws Exception {
         String body = mockMvc.perform(post("/api/v1/community/posts")

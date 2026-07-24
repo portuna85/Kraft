@@ -7,7 +7,6 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "kraft.community")
 public record CommunityProperties(
-        boolean enabled,
         @Min(1) int writeRateLimitPerMinute
 ) {
 }

@@ -6,7 +6,27 @@ services:
   backend:
     ports:
       - "8080:8080"
+    environment:
+      KRAFT_PUBLIC_BASE_URL: ${KRAFT_PUBLIC_BASE_URL:-http://localhost}
 
   web:
     ports:
       - "3000:3000"
+    environment:
+      KRAFT_PUBLIC_BASE_URL: ${KRAFT_PUBLIC_BASE_URL:-http://localhost}
+
+  # 로컬 OAuth2 로그인 개발용 동일 출처(same-origin) 진입점(§4.5). backend:8080/web:3000을
+  # http://localhost 하나로 묶는다 — Next 라우트 핸들러 프록시(backend-proxy.ts)는
+  # Set-Cookie를 전달하지 않아 이 경로로는 세션 쿠키가 확정적으로 소실되기 때문이다.
+  caddy:
+    image: caddy:2-alpine@sha256:77c07d5ebfa5be9fd6c820d2094ae662c9e7eeb9bf98346b7f639900263ee2a2
+    container_name: kraft-caddy-local
+    depends_on:
+      backend:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    volumes:
+      - ./caddy/Caddyfile.local:/etc/caddy/Caddyfile:ro
