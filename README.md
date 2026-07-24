@@ -1,228 +1,339 @@
-# 🎰 KRAFT Lotto
+# KRAFT Lotto
 
-로또 6/45 당첨 결과, 통계, 번호 추천, 저장 번호 관리를 제공하는 서비스
+KRAFT Lotto는 로또 6/45 당첨 데이터 조회와 통계, 번호 추천, 저장 번호 확인, OAuth2 커뮤니티를 한곳에서 제공하는 웹 서비스입니다.
 
-[![Java](https://img.shields.io/badge/Java-25-orange?logo=openjdk&logoColor=white)](#기술-스택)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?logo=springboot&logoColor=white)](#기술-스택)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs&logoColor=white)](#기술-스택)
-[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](#기술-스택)
-[![MariaDB](https://img.shields.io/badge/MariaDB-11.7-003545?logo=mariadb&logoColor=white)](#기술-스택)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](#기술-스택)
+[![Java](https://img.shields.io/badge/Java-25-orange?logo=openjdk&logoColor=white)](#기술-구성)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?logo=springboot&logoColor=white)](#기술-구성)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.11-black?logo=nextdotjs&logoColor=white)](#기술-구성)
+[![React](https://img.shields.io/badge/React-19.2.7-149ECA?logo=react&logoColor=white)](#기술-구성)
+[![MariaDB](https://img.shields.io/badge/MariaDB-11.7-003545?logo=mariadb&logoColor=white)](#기술-구성)
 
-**운영 사이트:** [kraft.io.kr](https://kraft.io.kr/)
+- 운영 서비스: [https://kraft.io.kr](https://kraft.io.kr/)
+- 운영 기준 커밋: `c9686b3a10e3`
+- 통합 기술 문서: [`docs/improvement.md`](docs/improvement.md)
 
-백엔드는 Spring Boot(Java 25), 프론트엔드는 Next.js App Router(React 19)로 만들어졌고, Docker Compose + Caddy + MariaDB 조합으로 배포됩니다.
+Google·Naver 로그인부터 세션 유지, 게시글·댓글·답글 작성, 수정·삭제, 로그아웃까지 실제 브라우저 사용자 흐름을 검증했습니다.
 
----
+> 번호 추천은 통계적 참고 기능입니다. 모든 로또 6/45 조합의 1등 당첨 확률은 동일하며, 서비스는 당첨을 보장하지 않습니다.
 
-## 목차
+## 제공 기능
 
-- [무엇을 하는 서비스인가](#무엇을-하는-서비스인가)
-- [기술 스택](#기술-스택)
-- [아키텍처](#아키텍처)
-- [저장소 구조](#저장소-구조)
-- [로컬에서 실행하기](#로컬에서-실행하기)
-- [환경 파일](#환경-파일)
-- [API 개요](#api-개요)
-- [데이터 수집 흐름](#데이터-수집-흐름)
-- [테스트](#테스트)
-- [CI/CD](#cicd)
-- [운영 배포](#운영-배포)
-- [문제 해결](#문제-해결)
+### 로또 데이터
 
----
+- 최신·과거 당첨 회차와 데이터 신선도 조회
+- 번호별 빈도, 홀짝·고저·합계 구간, 동반 출현 통계
+- 제외 번호와 공동 당첨 위험 완화 옵션을 반영한 조합 추천
+- 과거 1등 조합과 추천 조합의 중복 검사
+- 익명 기기 토큰 기반 번호 저장과 회차별 당첨 결과 확인
+- 공개 서비스 상태와 최근 수집·보정 이력 제공
 
-## 무엇을 하는 서비스인가
+### 커뮤니티
 
-- 최신 당첨 결과 조회
-- 통계 기반 번호 추천(제외 번호 지정, 공동 당첨 회피 옵션), 과거 1등 조합과 중복 검사
-- 번호별 출현 빈도, 홀짝/고저/합계 구간 패턴, 동반 출현 조합 통계
-- 브라우저 기기 토큰 기반 번호 저장·관리, 특정 회차 당첨 대조
-- 데이터 최신성과 최근 수집/보정 이력을 보여주는 공개 상태 페이지
-- 회차 수동 입력, 외부 수집 트리거, 감사 로그를 갖춘 운영/관리자 화면
+- Google·Naver OAuth2 로그인
+- 게시글 작성, 조회, 수정, 삭제
+- 댓글과 한 단계 답글
+- 답글이 있는 댓글을 문맥 보존 상태로 삭제하는 tombstone 정책
+- CSRF 보호, 작성자 권한 검사, 신고 제한
 
-> 번호 추천은 통계적 참고용이며 당첨을 보장하지 않습니다.
+### 운영
 
-## 기술 스택
+- 최신 회차 자동 수집과 수동 백필
+- 통계 요약 재계산과 데이터 reconciliation
+- 감사 로그와 운영 API
+- Prometheus, Grafana, Alertmanager 관측
+- 배포 후 API·페이지·OAuth redirect 스모크 테스트
+- 이미지 취약점 검사, SBOM, provenance, CodeQL
 
-| 영역 | 구성 |
+## 기술 구성
+
+| 영역 | 기술 |
 | --- | --- |
-| **백엔드** | Java 25, Spring Boot 4.1(Web/Validation/Data JPA/Security/Actuator/Thymeleaf), MariaDB 11.7(Flyway 마이그레이션), H2(로컬/테스트), Caffeine 캐시, ShedLock(스케줄러 중복 실행 방지), Resilience4j 서킷브레이커(외부 API 격리) |
-| **프론트엔드** | Next.js 16(App Router), React 19, TypeScript, Server Components + ISR, 요청별 CSP nonce |
-| **테스트/품질** | JUnit 5 + Testcontainers(MariaDB), JaCoCo, Checkstyle, SpotBugs / Vitest + Testing Library, Playwright / CodeQL, Trivy, Dependabot |
-| **인프라** | Docker Compose, Caddy(에지 라우팅·TLS), Prometheus + Grafana + Alertmanager, GHCR |
+| 백엔드 | Java 25, Spring Boot 4.1.0, Spring Security, OAuth2 Client, Spring Data JPA, Validation, Actuator, Thymeleaf |
+| 데이터 | MariaDB 11.7, Flyway V1~V17, H2, Caffeine |
+| 복원력 | Virtual Threads, ShedLock, Resilience4j, 트랜잭션 이벤트 |
+| 프런트엔드 | Next.js 16.2.11 App Router, React 19.2.7, TypeScript 6.0.3, ISR, CSP nonce |
+| 테스트 | JUnit 5, Testcontainers, JaCoCo, Checkstyle, SpotBugs, Vitest, Testing Library, Playwright |
+| 인프라 | Docker Compose, Caddy, Prometheus, Grafana, Alertmanager, GHCR |
+| 자동화 | GitHub Actions, CodeQL, Dependabot, Trivy, SBOM·provenance |
 
-## 아키텍처
+## 서비스 구조
 
 ```mermaid
 flowchart LR
-    Browser -- HTTPS --> Caddy
-
-    subgraph app[app 네트워크 internal]
-        Caddy -->|"/api/v1/*"| Backend[Spring Boot :8080]
-        Caddy -->|"페이지 · 정적자산"| Web[Next.js :3000]
-        Backend --> DB[(MariaDB)]
-        Backend -- "커밋 후 웹훅" --> Web
-    end
-
-    subgraph mon[monitoring 네트워크 internal]
-        Prometheus --> Backend
-        Grafana --> Prometheus
-        Alertmanager --> Prometheus
-    end
-
-    Backend -.-> External[외부 로또 데이터 소스]
+    User["브라우저"] -->|"HTTPS"| Edge["Caddy"]
+    Edge -->|"페이지 · 정적 자산"| Web["Next.js :3000"]
+    Edge -->|"/api/v1/* · OAuth"| API["Spring Boot :8080"]
+    API --> DB[("MariaDB")]
+    API -->|"커밋 후 revalidate"| Web
+    API -.->|"선택적 회차 수집"| External["외부 로또 데이터"]
+    Prometheus --> API
+    Grafana --> Prometheus
+    Prometheus --> Alertmanager
 ```
 
-공개 도메인에서 Caddy는 `/api/v1/*`를 백엔드로 직결하고 나머지 페이지 요청은 Next.js로 보냅니다. `/admin*`, `/ops*`, `/actuator*`는 공개 도메인에서 403으로 차단되며, 별도 관리자 도메인에서만(IP allowlist 적용 가능) 접근할 수 있습니다. 운영 compose는 `app`/`monitoring` 네트워크를 `internal: true`로 분리해 Caddy만 외부에 노출합니다.
+Caddy만 외부 요청을 받습니다. 페이지와 정적 자산은 Next.js로, `/api/v1/*`, `/oauth2/*`, `/login/*`, `/logout`은 Spring Boot로 전달합니다. 관리자·운영·Actuator 경로는 공개 도메인에서 차단하며, 관리자 도메인과 IP allowlist로 별도 보호합니다.
 
-## 저장소 구조
+### 요청과 데이터 흐름
+
+1. 자동 수집기가 최신 당첨 회차를 확인하고 실패 시 제한적으로 재시도합니다.
+2. 수집과 수동 보정은 idempotent upsert와 동시성 가드를 통과합니다.
+3. 커밋 후 통계 요약을 갱신하고 관련 Next.js ISR 경로를 무효화합니다.
+4. reconciliation이 원본 회차와 통계 요약의 최신 상태를 비교해 지연을 복구합니다.
+5. 운영 로그와 감사 로그는 보존 기간에 따라 정리됩니다.
+
+## 보안 모델
+
+Spring Security는 범위가 좁은 체인부터 다음 순서로 적용됩니다.
+
+1. 로컬 H2 콘솔: 로컬 프로필 전용
+2. 관리자: `/admin/**`, 세션 로그인, CSRF, 동시 세션 1개
+3. 커뮤니티: `/api/v1/community/**`, OAuth2 세션, double-submit CSRF
+4. 공개·운영 API: `/api/**`, `/actuator/**`, `/ops/**`, stateless
+
+운영 커뮤니티 쿠키에는 `Secure`, `HttpOnly`, `SameSite=Lax`, host-only 속성을 적용합니다. 세션에는 OAuth 공급자의 토큰이나 원본 프로필을 보관하지 않고 내부 사용자 ID만 유지합니다. 개인화 응답은 `private, no-store`이며 공개 ISR HTML에는 사용자 상태를 포함하지 않습니다.
+
+상태 변경 요청은 `XSRF-TOKEN` 쿠키 값을 `X-XSRF-TOKEN` 헤더로 전송해야 합니다. 미인증 요청은 `401`, CSRF 검증 실패는 `403`으로 구분합니다.
+
+## 저장소 구성
 
 ```text
 src/main/java/com/kraft/
-  admin/          관리자 콘솔(로그인, 회차 수집/백필, 감사 로그, 로그인 잠금)
-  common/         설정, 전역 예외 처리, 로또 번호 유틸, 필터/IP 판별/ETag
-  ops/            /ops/** 운영 API, 공개 상태 요약
-  operationlog/   수집/보정 이력, 공개 인시던트 피드, 보관 정리 스케줄러
-  recommend/      추천 스코어링, 과거 당첨 조합 검사
+  admin/          관리자 로그인, 회차 수집, 백필, 감사 로그
+  common/         설정, 보안, 오류 계약, 공통 로또 규칙
+  community/      OAuth2, 사용자, 게시글, 댓글
+  operationlog/   수집·보정 이력과 공개 인시던트
+  ops/            운영 API와 서비스 상태
+  recommend/      번호 추천과 과거 당첨 조합 배제
   saved/          기기 토큰 기반 저장 번호
-  statistics/     빈도·패턴·동반출현 요약, 재계산, 조합 분석
-  winningnumber/  회차 조회, 외부 수집, 자동수집·신선도 스케줄러, ISR 리밸리데이션
+  statistics/     통계 계산과 요약
+  winningnumber/  회차 조회, 외부 수집, 자동 수집
 
-web/src/
-  app/            페이지, 라우트 핸들러, 특수 파일(robots/sitemap/OG)
-  components/     UI 컴포넌트
-  lib/            API 클라이언트, 분석, 검증, 기기 토큰 등 유틸
+src/main/resources/
+  db/migration/   Flyway V1~V17
+  templates/      관리자 Thymeleaf 화면
 
-caddy/            라우팅, 보안 헤더, 캐시 정책
-infra/            Prometheus/Grafana/Alertmanager 설정
-scripts/          로컬 실행, 배포, 서버 초기화, DB 백업/복구
+web/
+  src/app/        Next.js 페이지와 Route Handler
+  src/components/ 화면 구성과 클라이언트 상태
+  src/lib/        API, 검증, 분석, CSRF, 로깅
+  e2e/            기본·콘텐츠·광고 Playwright 테스트
+
+caddy/            운영·로컬 동일 출처 라우팅
+infra/            모니터링과 경보 설정
+scripts/          개발, 검증, 배포, 롤백, 백업·복구
+docs/             통합 기술 문서와 개선 로드맵
 ```
 
-## 로컬에서 실행하기
+## 로컬 실행
 
-> 요구 사항: JDK 25, Node.js 24+, npm, (선택) Docker.
+### 준비 사항
 
-**백엔드만 — H2 메모리 DB, 가장 빠름**
+- JDK 25
+- Node.js 24 이상과 npm
+- Docker Desktop 또는 Docker Engine
+- Bash 스크립트 실행이 필요한 경우 Git Bash 또는 WSL
+
+### H2 백엔드
 
 ```powershell
 .\scripts\dev-backend.ps1
 ```
 
-`.env.local`이 없으면 `.env.local.example`에서 자동 생성됩니다. http://localhost:8080 , 관리자 로그인은 `/admin/login`(로컬 기본 계정 `admin`/`admin` — 실제 환경에서 재사용 금지).
+첫 실행에서는 `.env.local.example`을 `.env.local`로 복사하고 종료합니다. 생성된 환경 파일을 검토한 다음 같은 명령을 다시 실행합니다.
 
-**프론트엔드**
+- 백엔드: <http://localhost:8080>
+- H2 콘솔: <http://localhost:8080/h2-console>
+- 로컬 관리자 기본값: `admin` / `admin`
+
+기본 관리자 계정은 로컬 개발 전용입니다.
+
+### Next.js
+
+백엔드를 먼저 실행한 뒤 다른 PowerShell에서 시작합니다.
 
 ```powershell
 .\scripts\dev-web.ps1
 ```
 
-`web/.env.local`이 없으면 `web/.env.local.example`에서 자동 생성되고 백엔드를 `localhost:8080`으로 가리킵니다. http://localhost:3000
+- 프런트엔드: <http://localhost:3000>
+- 기본 백엔드 주소: `http://localhost:8080`
 
-**MariaDB로 개발하고 싶다면**
+### MariaDB 개발 모드
 
 ```powershell
 .\scripts\dev-db.ps1
+.\scripts\dev-backend.ps1 -MariaDB
 ```
 
-`.env.local`의 MariaDB 섹션 주석을 해제하면 H2 대신 사용됩니다.
+두 번째 명령을 실행하기 전에 `.env.local`의 MariaDB 설정을 활성화합니다.
 
-**전체 스택(Docker)**
+### 전체 Docker Compose
 
 ```powershell
-copy .env.example .env
+Copy-Item .env.example .env
+```
+
+`.env`에 DB 비밀번호, Ops 토큰, revalidate secret, Grafana 비밀번호를 설정합니다. 그다음 Git Bash 또는 WSL에서 로컬용 Alertmanager 설정을 만들고 서비스를 시작합니다.
+
+```bash
+ALERTING_DISABLED=true bash scripts/deploy/render-alertmanager.sh
 docker compose up -d --build
 ```
 
-`docker-compose.yml`은 기본적으로 모든 포트를 `127.0.0.1`에만 바인딩합니다. 다른 기기에서 접속하려면 `docker-compose.local.yml`을 함께 적용하세요.
+`ALERTING_DISABLED=true`는 로컬·스테이징에서만 사용합니다. 운영에서는 실제 경보 webhook을 설정해야 합니다.
+
+`infra/alertmanager/alertmanager.yml`은 Git에 커밋되지 않으므로(clean clone에는 없음), 렌더 스크립트보다 `docker compose up`을 먼저 실행하면 Docker가 그 경로를 빈 디렉터리로 자동 생성해버려 이후 렌더가 "Is a directory" 오류로 실패합니다. 이 경우 `rmdir infra/alertmanager/alertmanager.yml` 실행 후 렌더 스크립트를 다시 실행하세요.
+
+`scripts/deploy/up-full-stack.sh`는 렌더→(Caddy 포함) 기동→smoke test를 한 번에 실행하는 로컬 전용 편의 스크립트입니다. smoke test는 Caddy가 만드는 단일 진입점(`http://localhost`)을 전제로 하므로 아래 OAuth2 로컬 설정과 같은 `docker-compose.local.yml` 조합으로 띄웁니다 — clean clone 직후 전체 스택이 정상 동작하는지 한 번에 확인하고 싶을 때 씁니다.
+
+## OAuth2 로컬 설정
+
+공급자 callback과 세션 쿠키를 운영과 같은 동일 출처 구조로 시험하려면 로컬 Caddy를 사용합니다.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+```
+
+접속 주소는 반드시 <http://localhost>를 사용합니다. `.env`에 사용할 공급자의 ID와 secret을 넣고 해당 Spring profile을 활성화합니다.
+
+```dotenv
+SPRING_PROFILES_ACTIVE=local,community-google-oauth,community-naver-oauth
+KRAFT_COMMUNITY_GOOGLE_CLIENT_ID=
+KRAFT_COMMUNITY_GOOGLE_CLIENT_SECRET=
+KRAFT_COMMUNITY_NAVER_CLIENT_ID=
+KRAFT_COMMUNITY_NAVER_CLIENT_SECRET=
+```
+
+공급자 콘솔에 등록할 callback은 다음과 같습니다.
+
+```text
+http://localhost/login/oauth2/code/google
+http://localhost/login/oauth2/code/naver
+```
+
+운영에서는 같은 경로의 `https://kraft.io.kr` 주소를 등록합니다. Google은 공개 프로필 범위만 사용하고, Naver 사용자 별칭은 `nickname`만 저장합니다. ID와 secret은 반드시 한 쌍으로 설정하며 저장소에 커밋하지 않습니다.
+
+## 주요 API
+
+### 공개·개인 API
+
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| `GET` | `/api/v1/rounds/latest` | 최신 당첨 회차 |
+| `GET` | `/api/v1/rounds/freshness` | 데이터 신선도 |
+| `POST` | `/api/v1/numbers/recommend` | 추천 조합 생성 |
+| `GET` | `/api/v1/numbers/check` | 과거 1등 조합 검사 |
+| `GET` | `/api/v1/stats/frequency` | 번호별 빈도 |
+| `GET` | `/api/v1/stats/patterns` | 홀짝·고저·합계 패턴 |
+| `GET` | `/api/v1/stats/companion` | 동반 출현 통계 |
+| `POST` | `/api/v1/stats/analysis` | 여섯 번호 조합 분석 |
+| `GET`, `POST`, `DELETE` | `/api/v1/saved/**` | 저장 번호 관리 |
+| `GET` | `/api/v1/status`, `/api/v1/status/incidents` | 서비스 상태와 공개 이력 |
+
+저장 번호 API는 인증 계정 대신 익명 기기 토큰을 사용합니다.
+
+### 커뮤니티 API
+
+| Method | Endpoint | 접근 조건 |
+| --- | --- | --- |
+| `GET` | `/api/v1/community/session` | 선택적 세션 |
+| `GET` | `/api/v1/community/posts`, `/posts/{id}` | 공개 |
+| `POST`, `PUT`, `DELETE` | `/api/v1/community/posts/**` | OAuth2 세션 + CSRF |
+| `GET` | `/api/v1/community/posts/{id}/comments` | 공개 |
+| `POST` | `/api/v1/community/posts/{id}/comments` | OAuth2 세션 + CSRF |
+| `DELETE` | `/api/v1/community/comments/{id}` | OAuth2 세션 + CSRF |
+
+`/ops/**`는 `X-Ops-Token`이 필요합니다. `/admin/**`은 별도 관리자 도메인의 세션 인증과 IP allowlist를 사용합니다.
 
 ## 환경 파일
 
 | 파일 | 용도 |
 | --- | --- |
-| `.env.local.example` | 백엔드를 로컬에서 직접 실행할 때(H2 기본) |
-| `.env.example` | 로컬 Docker Compose |
-| `.env.prod.example` | 운영 배포(CD가 GitHub Secrets로 렌더링) |
-| `web/.env.local.example` | 프론트를 단독 `npm run dev`로 실행할 때 |
-| `web/.env.example` | 프론트 Docker 빌드 |
+| `.env.local.example` | Spring Boot 직접 실행 |
+| `.env.example` | 기본·로컬 Docker Compose |
+| `.env.prod.example` | 운영 CD 환경 렌더링 |
+| `web/.env.local.example` | Next.js 직접 실행 |
+| `web/.env.example` | Next.js 컨테이너와 빌드 |
 
-주요 변수는 각 example 파일의 주석을 참고하세요 — 외부 수집 URL, Ops 토큰, revalidate secret, 관리자 CIDR, rate limit 설정 등이 있습니다. 외부 수집 URL이 비어 있으면 수집 기능은 자동으로 비활성화됩니다.
+실제 `.env*`, OAuth secret, DB 비밀번호, Ops 토큰은 커밋하지 않습니다.
 
-## API 개요
+## 검증
 
-공개 API는 `/api/v1/*`(stateless, 세션 없음)입니다.
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| GET | `/rounds/latest` | 최신 당첨 회차 |
-| GET | `/rounds/freshness` | 데이터 최신성 |
-| POST | `/numbers/recommend` | 추천 조합 생성 |
-| GET | `/numbers/check?numbers=` | 과거 1등 조합 여부 |
-| GET | `/stats/frequency`, `/stats/patterns`, `/stats/companion` | 통계 |
-| POST | `/stats/analysis` | 번호 6개 조합 분석 |
-| GET/POST/DELETE | `/saved`, `/saved/{id}` | 저장 번호(`X-Device-Token` 필요) |
-| GET | `/saved/matches?round=` | 저장 번호 당첨 대조 |
-| GET | `/status`, `/status/incidents` | 서비스 상태, 공개 이력 |
-
-운영 API(`/ops/*`)는 `X-Ops-Token` 헤더가 필요하고, 관리자 화면(`/admin/*`)은 Thymeleaf 기반 세션 로그인으로 보호됩니다. 두 경로 모두 운영 환경에서는 별도 관리자 도메인 + IP allowlist로 한 번 더 보호됩니다.
-
-## 데이터 수집 흐름
-
-1. 매주 토요일 밤 자동 수집을 시도하고, 실패하면 짧은 간격으로 재시도하며 회차 지연 정도(gap)에 따라 자동으로 여러 회차를 따라잡습니다.
-2. 수집 성공 시 트랜잭션 커밋 이후 통계 요약을 갱신하고, 뒤처짐이 감지되면 재조정 스케줄러가 자동으로 전체 재계산합니다.
-3. Next.js에는 웹훅으로 on-demand 재검증을 요청해 캐시된 페이지를 최신 상태로 되돌립니다.
-4. 회차 수동 보정(운영 화면)도 자동 수집과 동일한 이벤트 경로를 타므로 통계·캐시·ETag가 함께 갱신됩니다.
-5. 오래된 운영/감사 로그는 매일 배치로 정리됩니다.
-
-## 테스트
+### 백엔드
 
 ```powershell
-# 백엔드
-.\gradlew.bat test bootJar
-.\gradlew.bat check -PstrictStatic=true    # Checkstyle + SpotBugs, 반드시 커밋 전 실행
-
-# 프론트엔드
-cd web
-npm ci
-npm run lint
-npx tsc --noEmit
-npm test
-npm run build
-npm run test:e2e
+.\gradlew.bat clean check bootJar `
+  -PstrictStatic=true `
+  -PstrictCoverage=true `
+  --console=plain
 ```
 
-백엔드는 패키지별 JaCoCo 커버리지 게이트가 있고, `FlywayMigrationTest`는 Testcontainers로 실제 MariaDB에 마이그레이션을 적용해 엔티티-스키마 정합성을 검증합니다(Docker 필요). 프론트는 Vitest 커버리지 게이트와 Playwright E2E(Desktop/Mobile/Tablet 3개 프로젝트)가 있습니다.
+현재 기준은 70 suites, 394 tests, 실패·오류·skip 0입니다. JaCoCo 실측은 line 88.43%, branch 78.30%, method 92.86%, class 98.84%입니다.
+
+### 프런트엔드
+
+```powershell
+Set-Location web
+npm ci
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm run build
+npm run test:e2e
+npm run test:e2e:content
+```
+
+Vitest는 145개 테스트를 실행합니다. 현재 커버리지는 statements 71.74%, branches 68.41%, functions 68.10%, lines 73.76%입니다.
+
+고정 광고 오버레이는 별도 build 디렉터리와 환경값으로 검증합니다.
+
+```powershell
+$env:NEXT_DIST_DIR = ".next-ad-overlay"
+$env:NEXT_PUBLIC_KAKAO_ADFIT_UNIT_STICKY = "DAN-local-overlay-test"
+npm run build
+npm run test:e2e:ad-overlay
+Remove-Item Env:NEXT_DIST_DIR
+Remove-Item Env:NEXT_PUBLIC_KAKAO_ADFIT_UNIT_STICKY
+```
 
 ## CI/CD
 
 | 워크플로 | 역할 |
 | --- | --- |
-| `ci.yml` | 백엔드/프론트 빌드·테스트, 정적 분석, Playwright E2E, Caddy 설정 검증, 이미지 publish(SBOM/provenance), Trivy 스캔 |
-| `cd.yml` | CI 성공 후 SSH로 배포, readiness/smoke 테스트, 실패 시 자동 rollback |
-| `codeql.yml` | 주간 정적 보안 분석 |
-| `pr.yml` | PR 대상 의존성 취약점 스캔 |
+| `ci.yml` | 백엔드·프런트 빌드와 테스트, 정적 분석, E2E, Caddy 검증, 이미지 게시·스캔 |
+| `pr.yml` | PR 의존성 취약점 검사 |
+| `codeql.yml` | Java와 JavaScript/TypeScript CodeQL |
+| `cd.yml` | 성공한 `main` CI의 정확한 SHA 배포와 실패 시 rollback |
 
-> 1인 개발 프로젝트라 PR 없이 `main`에 직접 커밋·푸시합니다.
+배포 파이프라인은 필수 환경값과 OAuth 자격 증명 쌍을 검증하고, GHCR 이미지 digest로 서비스를 기동합니다. readiness, 핵심 API와 페이지, Google·Naver 로그인 redirect, Flyway 버전을 확인하며 실패 시 이전 이미지로 되돌립니다.
 
-## 운영 배포
+현재 운영 기준 실행은 [CI 30083045641](https://github.com/portuna85/Kraft/actions/runs/30083045641), [CodeQL 30083045646](https://github.com/portuna85/Kraft/actions/runs/30083045646), [CD 30083324962](https://github.com/portuna85/Kraft/actions/runs/30083324962)입니다.
+
+## 운영 명령
 
 ```bash
-sudo bash scripts/server/init-ubuntu.sh   # 서버 최초 초기화
-docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+# 운영 환경 렌더링과 검증
+bash scripts/deploy/render-env.sh .env.prod.example .env.prod
+set -a
+source .env.prod
+set +a
+bash scripts/deploy/validate-env.sh
+
+# 백업과 복구 훈련
+bash scripts/db-backup.sh
+bash scripts/db-restore-drill.sh
+
+# 배포 후 스모크 테스트
+bash scripts/deploy/smoke-test.sh
 ```
 
-`scripts/deploy/`에 검증·렌더링·배포·롤백 스크립트가 있고, `scripts/db-backup.sh` / `db-restore-drill.sh`로 백업과 복구 드릴을 실행할 수 있습니다. Prometheus/Grafana/Alertmanager로 백엔드 다운, 5xx 비율, 응답 지연, 데이터 최신성 지연 등을 감시합니다.
+`scripts/archive/migrate-2026-06/`는 완료된 일회성 데이터 이전 기록입니다. 현재 운영 도구로 재사용하지 않으며, 남은 주의사항은 통합 기술 문서에 기록되어 있습니다.
 
-## 문제 해결
+## 문서 정책
 
-| 증상 | 확인 |
-| --- | --- |
-| 프론트에서 데이터를 못 불러옴 | `web/.env.local`의 `KRAFT_BACKEND_INTERNAL_URL`이 실제 백엔드 주소를 가리키는지 |
-| `/ops` 호출이 503 | `KRAFT_OPS_TOKEN`이 비어 있으면 비활성화됨 |
-| 외부 수집이 503 | `KRAFT_EXTERNAL_LOTTO_URL_TEMPLATE` 설정 여부 |
-| Docker 백엔드가 DB 연결 실패 | `.env`의 DB 비밀번호 값들이 일치하는지 |
-| 다른 기기에서 로컬 스택 접속 불가 | `docker-compose.local.yml`을 함께 적용했는지 |
+프로젝트 Markdown 문서는 이 README와 [`docs/improvement.md`](docs/improvement.md) 두 개만 유지합니다.
 
----
+- `README.md`: 서비스 소개, 실행, API, 검증, 배포의 시작점
+- `docs/improvement.md`: 상세 설계 결정, OAuth 설정, 운영 런북, 구현 이력, 우선순위별 개선 과제
 
-**KRAFT Lotto** · [kraft.io.kr](https://kraft.io.kr/)
+`docs/**/*.md`는 현재 `.gitignore` 정책상 로컬 전용입니다. 문서를 원격 저장소에서 공동 관리하려면 추적 정책을 별도로 변경해야 합니다.
