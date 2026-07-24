@@ -12,6 +12,13 @@ REQUIRED_VARS=(
   KRAFT_PUBLIC_BASE_URL
   GRAFANA_ADMIN_PASSWORD
   KRAFT_ADMIN_ALLOWED_CIDR
+  # Spring Boot의 OAuth2ClientProperties가 기동 시 이 값들을 강제 검증한다(빈 값이면
+  # "Client id of registration 'google' must not be empty"로 컨테이너 자체가 뜨지 않음)
+  # — 2026-07-24: GH Secrets에 없어서 커뮤니티 OAuth 커밋 이후 배포가 계속 실패했음.
+  KRAFT_COMMUNITY_GOOGLE_CLIENT_ID
+  KRAFT_COMMUNITY_GOOGLE_CLIENT_SECRET
+  KRAFT_COMMUNITY_NAVER_CLIENT_ID
+  KRAFT_COMMUNITY_NAVER_CLIENT_SECRET
 )
 
 OPTIONAL_VARS=(
