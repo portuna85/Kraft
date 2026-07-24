@@ -25,7 +25,7 @@ OPTIONAL_VARS=(
   KRAFT_SECURITY_RATE_LIMIT_MAX_KEYS
   KRAFT_SAVED_MAX_PER_CLIENT
   # 비어 있으면 해당 provider의 커뮤니티 로그인만 비활성화되고 나머지 앱은 정상 기동한다
-  # (application.yml의 on-property 조건부 등록 + CommunityOAuth2FallbackConfig, 2026-07-24).
+  # (application.yml의 provider별 profile 등록 + CommunityOAuth2FallbackConfig, 2026-07-24).
   KRAFT_COMMUNITY_GOOGLE_CLIENT_ID
   KRAFT_COMMUNITY_GOOGLE_CLIENT_SECRET
   KRAFT_COMMUNITY_NAVER_CLIENT_ID
