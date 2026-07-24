@@ -77,6 +77,14 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    # .env.community-oauth-flags에 KRAFT_COMMUNITY_{GOOGLE,NAVER}_OAUTH_ENABLED 줄이
+    # 있을 때만(render-env.sh가 client-id가 실제로 채워졌을 때만 이 줄을 추가) application.yml의
+    # on-property 조건부 OAuth2 등록 문서가 활성화된다 — environment: 블록의 ${VAR:-}처럼
+    # 빈 문자열을 강제로 채우면 안 되므로 env_file로 "줄이 아예 없으면 컨테이너 환경변수도
+    # 없음"을 보존한다. .env.prod 전체가 아니라 이 전용 파일만 읽어 backend가 필요 없는
+    # 다른 시크릿(MARIADB_ROOT_PASSWORD 등)이 새어 들어가지 않게 한다.
+    env_file:
+      - .env.community-oauth-flags
     environment:
       <<: *backend-common-env
       SPRING_PROFILES_ACTIVE: prod
