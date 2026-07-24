@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ProdSessionCookieConfigTest {
 
     @Test
-    @DisplayName("application-prod.yml은 세션 쿠키를 secure·same-site=strict·http-only로 강화한다")
+    @DisplayName("application-prod.yml은 OAuth callback 호환 secure·same-site=lax·http-only 쿠키를 사용한다")
     void applicationProdYml_hardensSessionCookieAttributes() {
         Map<String, Object> yaml = loadYaml("/application-prod.yml");
 
@@ -27,7 +27,7 @@ class ProdSessionCookieConfigTest {
         Map<?, ?> cookie = (Map<?, ?>) session.get("cookie");
 
         assertThat(cookie.get("secure")).isEqualTo(true);
-        assertThat(cookie.get("same-site")).isEqualTo("strict");
+        assertThat(cookie.get("same-site")).isEqualTo("lax");
         assertThat(cookie.get("http-only")).isEqualTo(true);
     }
 

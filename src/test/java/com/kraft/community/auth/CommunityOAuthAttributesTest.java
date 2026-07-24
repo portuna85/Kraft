@@ -26,7 +26,6 @@ class CommunityOAuthAttributesTest {
         assertThat(result.providerId()).isEqualTo("google-sub-1");
         assertThat(result.nickname()).isEqualTo("구글사용자");
         assertThat(result.profileImageUrl()).isEqualTo("https://example.com/pic.jpg");
-        assertThat(result.nameAttributeKey()).isEqualTo("sub");
     }
 
     @Test
@@ -44,7 +43,6 @@ class CommunityOAuthAttributesTest {
         assertThat(result.providerId()).isEqualTo("naver-id-1");
         assertThat(result.nickname()).isEqualTo("네이버사용자");
         assertThat(result.profileImageUrl()).isEqualTo("https://example.com/naver.jpg");
-        assertThat(result.nameAttributeKey()).isEqualTo("response");
     }
 
     @Test
@@ -107,6 +105,46 @@ class CommunityOAuthAttributesTest {
         Map<String, Object> attributes = Map.of("response", response);
 
         assertThatThrownBy(() -> CommunityOAuthAttributes.of("naver", attributes))
+                .isInstanceOf(ApiException.class)
+                .hasFieldOrPropertyWithValue("code", "OAUTH_ATTRIBUTE_MISSING");
+    }
+
+    @Test
+    @DisplayName("Google 응답의 식별자·닉네임·프로필 URL이 DB 길이를 초과하면 거부한다")
+    void rejectsOverlongGoogleAttributes() {
+        assertThatThrownBy(() -> CommunityOAuthAttributes.of("google", Map.of(
+                "sub", "x".repeat(191),
+                "name", "구글사용자")))
+                .isInstanceOf(ApiException.class)
+                .hasFieldOrPropertyWithValue("code", "OAUTH_ATTRIBUTE_MISSING");
+
+        assertThatThrownBy(() -> CommunityOAuthAttributes.of("google", Map.of(
+                "sub", "google-sub-3",
+                "name", "가".repeat(101))))
+                .isInstanceOf(ApiException.class)
+                .hasFieldOrPropertyWithValue("code", "OAUTH_ATTRIBUTE_MISSING");
+
+        assertThatThrownBy(() -> CommunityOAuthAttributes.of("google", Map.of(
+                "sub", "google-sub-4",
+                "name", "구글사용자",
+                "picture", "x".repeat(501))))
+                .isInstanceOf(ApiException.class)
+                .hasFieldOrPropertyWithValue("code", "OAUTH_ATTRIBUTE_MISSING");
+    }
+
+    @Test
+    @DisplayName("Naver 응답의 닉네임·프로필 URL이 DB 길이를 초과하면 거부한다")
+    void rejectsOverlongNaverProfileAttributes() {
+        assertThatThrownBy(() -> CommunityOAuthAttributes.of("naver", Map.of("response", Map.of(
+                "id", "naver-id-4",
+                "nickname", "가".repeat(101)))))
+                .isInstanceOf(ApiException.class)
+                .hasFieldOrPropertyWithValue("code", "OAUTH_ATTRIBUTE_MISSING");
+
+        assertThatThrownBy(() -> CommunityOAuthAttributes.of("naver", Map.of("response", Map.of(
+                "id", "naver-id-5",
+                "nickname", "네이버사용자",
+                "profile_image", "x".repeat(501)))))
                 .isInstanceOf(ApiException.class)
                 .hasFieldOrPropertyWithValue("code", "OAUTH_ATTRIBUTE_MISSING");
     }

@@ -392,8 +392,7 @@ class CommunityPostCommentApiTest {
     }
 
     private RequestPostProcessor asUser(CommunityUser user) {
-        CommunityPrincipal principal = new CommunityPrincipal(user.getId(), user.getNickname(), "sub",
-                java.util.Map.of("sub", "test"));
+        CommunityPrincipal principal = new CommunityPrincipal(user.getId(), user.getNickname());
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 principal, null, principal.getAuthorities());
         return authentication(authentication);

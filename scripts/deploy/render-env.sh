@@ -41,10 +41,10 @@ envsubst "$substitution_list" < "$TEMPLATE" > "$OUTPUT"
 # 블록처럼 ${VAR:-}로 빈 문자열을 강제로 채우면 on-property가 "존재하지만 빈 문자열"을
 # 여전히 활성으로 판정해 목적을 못 이룬다. 이 줄이 없으면 컨테이너 환경변수 자체가 생기지 않는다.
 : > "$OAUTH_FLAGS_OUTPUT"
-if [[ -n "${KRAFT_COMMUNITY_GOOGLE_CLIENT_ID:-}" ]]; then
+if [[ -n "${KRAFT_COMMUNITY_GOOGLE_CLIENT_ID:-}" && -n "${KRAFT_COMMUNITY_GOOGLE_CLIENT_SECRET:-}" ]]; then
   echo "KRAFT_COMMUNITY_GOOGLE_OAUTH_ENABLED=true" >> "$OAUTH_FLAGS_OUTPUT"
 fi
-if [[ -n "${KRAFT_COMMUNITY_NAVER_CLIENT_ID:-}" ]]; then
+if [[ -n "${KRAFT_COMMUNITY_NAVER_CLIENT_ID:-}" && -n "${KRAFT_COMMUNITY_NAVER_CLIENT_SECRET:-}" ]]; then
   echo "KRAFT_COMMUNITY_NAVER_OAUTH_ENABLED=true" >> "$OAUTH_FLAGS_OUTPUT"
 fi
 chmod 600 "$OAUTH_FLAGS_OUTPUT"

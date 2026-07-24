@@ -8,22 +8,19 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 /**
- * DB 사용자 ID 중심의 세션 principal. Blitz의 SessionUser에 대응하며, OAuth 원본
- * attributes(Naver의 중첩 "response" 맵 포함)는 그대로 보존해 name attribute key
- * 검증(getName())이 깨지지 않게 한다.
+ * DB 사용자 ID 중심의 세션 principal. OAuth provider의 원본 응답은 토큰·프로필 정보 등
+ * 세션에 불필요한 값을 포함할 수 있으므로 보존하지 않고 내부 사용자 ID만 노출한다.
  */
 public class CommunityPrincipal implements OAuth2User {
 
     private final Long userId;
     private final String nickname;
-    private final String nameAttributeKey;
     private final Map<String, Object> attributes;
 
-    public CommunityPrincipal(Long userId, String nickname, String nameAttributeKey, Map<String, Object> attributes) {
+    public CommunityPrincipal(Long userId, String nickname) {
         this.userId = userId;
         this.nickname = nickname;
-        this.nameAttributeKey = nameAttributeKey;
-        this.attributes = attributes;
+        this.attributes = Map.of("userId", userId);
     }
 
     @Override
@@ -47,9 +44,5 @@ public class CommunityPrincipal implements OAuth2User {
 
     public String getNickname() {
         return nickname;
-    }
-
-    public String getNameAttributeKey() {
-        return nameAttributeKey;
     }
 }

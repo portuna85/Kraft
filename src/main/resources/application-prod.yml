@@ -2,10 +2,11 @@ server:
   servlet:
     session:
       cookie:
-        # 관리자 콘솔(폼 로그인)만 세션 쿠키를 사용한다(/api/**는 STATELESS) — HTTPS로만
-        # 전송되고 크로스사이트 요청에는 실리지 않도록 명시적으로 강화한다.
+        # OAuth2 authorization callback은 외부 provider에서 돌아오는 top-level GET이므로
+        # SameSite=Strict이면 기존 세션의 state를 복원하지 못한다. Lax는 이 왕복을 허용하면서
+        # cross-site subrequest에는 쿠키를 보내지 않으며, 쓰기 요청은 CSRF 토큰으로 보호한다.
         secure: true
-        same-site: strict
+        same-site: lax
         http-only: true
 
 spring:

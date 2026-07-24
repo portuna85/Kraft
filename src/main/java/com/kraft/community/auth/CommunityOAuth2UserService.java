@@ -47,8 +47,7 @@ public class CommunityOAuth2UserService extends DefaultOAuth2UserService {
             CommunityUser user = upsert(attributes);
 
             loginCounter(registrationId, "success").increment();
-            return new CommunityPrincipal(user.getId(), user.getNickname(), attributes.nameAttributeKey(),
-                    oAuth2User.getAttributes());
+            return new CommunityPrincipal(user.getId(), user.getNickname());
         } catch (RuntimeException failure) {
             loginCounter(registrationId, "failure").increment();
             throw failure;
