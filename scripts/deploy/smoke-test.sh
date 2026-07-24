@@ -28,9 +28,15 @@ check_status() {
 
 check_header_contains() {
   local desc="$1" url="$2" header_name="$3" expected="$4"
-  local headers value
-  headers=$(curl -sSI --max-time 10 "$url" 2>/dev/null || true)
-  value=$(printf '%s\n' "$headers" | awk -F': ' -v key="$header_name" 'tolower($1) == tolower(key) {print $2}' | tr -d '\r')
+  local headers value attempt
+  # 컨테이너 재기동 직후 첫 요청은 콜드스타트(ISR 리빌드 등)로 일시적으로 헤더가
+  # 빠질 수 있다 — check_status와 동일하게 재시도해 그 순간을 배포 실패로 오판하지 않는다.
+  for attempt in 1 2 3; do
+    headers=$(curl -sSI --max-time 10 "$url" 2>/dev/null || true)
+    value=$(printf '%s\n' "$headers" | awk -F': ' -v key="$header_name" 'tolower($1) == tolower(key) {print $2}' | tr -d '\r')
+    [[ -n "$value" && ( -z "$expected" || "$value" == *"$expected"* ) ]] && break
+    [[ "$attempt" -lt 3 ]] && sleep 2
+  done
   if [[ -z "$value" ]]; then
     echo "  FAIL[missing header '$header_name'] $desc ($url)" >&2
     FAIL=1
@@ -44,8 +50,12 @@ check_header_contains() {
 
 check_body_matches() {
   local desc="$1" url="$2" pattern="$3"
-  local body
-  body=$(curl -sS --max-time 10 "$url" 2>/dev/null || true)
+  local body attempt
+  for attempt in 1 2 3; do
+    body=$(curl -sS --max-time 10 "$url" 2>/dev/null || true)
+    echo "$body" | grep -Eq "$pattern" && break
+    [[ "$attempt" -lt 3 ]] && sleep 2
+  done
   if echo "$body" | grep -Eq "$pattern"; then
     echo "  OK  [body match] $desc"
   else
