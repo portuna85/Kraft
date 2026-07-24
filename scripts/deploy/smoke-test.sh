@@ -26,22 +26,6 @@ check_status() {
   fi
 }
 
-check_status_not() {
-  local desc="$1" url="$2" unexpected="$3"
-  local actual attempt
-  for attempt in 1 2 3; do
-    actual=$(curl -o /dev/null -sS -w "%{http_code}" --max-time 10 "$url" 2>/dev/null || echo "000")
-    [[ "$actual" != "$unexpected" ]] && break
-    [[ "$attempt" -lt 3 ]] && sleep 2
-  done
-  if [[ "$actual" != "$unexpected" ]]; then
-    echo "  OK  [$actual] $desc"
-  else
-    echo "  FAIL[$actual] $desc ($url)" >&2
-    FAIL=1
-  fi
-}
-
 check_header_contains() {
   local desc="$1" url="$2" header_name="$3" expected="$4" max_attempts="${5:-3}"
   local headers value attempt
@@ -63,6 +47,29 @@ check_header_contains() {
     FAIL=1
   else
     echo "  OK  [header:$header_name] $desc"
+  fi
+}
+
+check_oauth_redirect() {
+  local provider="$1" expected_host="$2"
+  local url="$BASE/oauth2/authorization/$provider"
+  local headers status location actual_host attempt
+  for attempt in 1 2 3; do
+    headers=$(curl -sS -D - -o /dev/null --max-time 10 "$url" 2>/dev/null || true)
+    status=$(printf '%s\n' "$headers" \
+      | awk '$1 ~ /^HTTP\// {code=$2} END {print code}' | tr -d '\r')
+    location=$(printf '%s\n' "$headers" \
+      | awk -F': ' 'tolower($1) == "location" {print $2; exit}' | tr -d '\r')
+    actual_host=$(printf '%s' "$location" | sed -nE 's#^https?://([^/:]+).*#\1#p')
+    [[ "$status" == "302" && "$actual_host" == "$expected_host" ]] && break
+    [[ "$attempt" -lt 3 ]] && sleep 2
+  done
+  if [[ "$status" == "302" && "$actual_host" == "$expected_host" ]]; then
+    echo "  OK  [302 -> $actual_host] GET /oauth2/authorization/$provider"
+  else
+    # Location 전체에는 공개 client_id와 일회용 state가 있으므로 실패 로그에도 남기지 않는다.
+    echo "  FAIL[status=${status:-000} redirect-host=${actual_host:-missing} expected=$expected_host] OAuth $provider" >&2
+    FAIL=1
   fi
 }
 
@@ -117,10 +124,19 @@ check_status "GET /admin -> 403 on public domain" "$BASE/admin" "403"
 check_status "GET /api/v1/community/session -> 200(익명)" "$API/community/session" "200"
 check_header_contains "GET /api/v1/community/session no-store" "$API/community/session" "Cache-Control" "no-store"
 check_status "GET /community -> 200" "$BASE/community" "200"
-# google provider가 아직 미설정이면(§4.5, CommunityOAuth2FallbackConfig) 302 대신 500을
-# 반환한다 — 이건 정상적인 완화 동작이지 배포 실패가 아니다. 여기서 검증하려는 건
-# "Caddy가 backend까지는 라우팅했다"는 사실이므로 404(=Next.js로 샘)만 아니면 통과시킨다.
-check_status_not "GET /oauth2/authorization/google -> backend로 라우팅(404 아님)" "$BASE/oauth2/authorization/google" "404"
+# 자격 증명이 설정된 provider는 단순히 backend에 도달하는 것으로 충분하지 않다. 실제
+# registration이 활성화되어 정확한 provider host로 302 되는지 확인한다. 첫 OAuth 배포 때
+# 500도 통과시키던 기존 검사가 설정 오류를 놓쳤으므로 이 조건은 배포 차단 게이트다.
+if [[ -n "${KRAFT_COMMUNITY_GOOGLE_CLIENT_ID:-}" && -n "${KRAFT_COMMUNITY_GOOGLE_CLIENT_SECRET:-}" ]]; then
+  check_oauth_redirect "google" "accounts.google.com"
+else
+  echo "  SKIP[Google OAuth credentials not configured] Google authorization redirect"
+fi
+if [[ -n "${KRAFT_COMMUNITY_NAVER_CLIENT_ID:-}" && -n "${KRAFT_COMMUNITY_NAVER_CLIENT_SECRET:-}" ]]; then
+  check_oauth_redirect "naver" "nid.naver.com"
+else
+  echo "  SKIP[Naver OAuth credentials not configured] Naver authorization redirect"
+fi
 
 # Admin UI must still be reachable on the admin domain.
 if [[ -n "${KRAFT_ADMIN_DOMAIN:-}" ]]; then
