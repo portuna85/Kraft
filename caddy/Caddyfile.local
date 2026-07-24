@@ -5,7 +5,9 @@
 # 않아 로컬에서 OAuth 로그인을 재현할 수 없다 — 이 Caddy 구성이 그 표준 대체 경로다.
 #
 # 실행: docker compose -f docker-compose.yml -f docker-compose.local.yml up
-# 접속: http://localhost
+# 접속: http://localhost (반드시 "localhost"로 접속할 것 — 127.0.0.1이나 다른 호스트명은
+# 세션 쿠키가 Secure 플래그로 발급되어 저장되지 않는다. 최신 Chrome/Edge는 "localhost"만
+# HTTPS 없이도 보안 컨텍스트로 취급해 Secure 쿠키를 예외적으로 허용한다.)
 #
 # Google/Naver OAuth 콘솔의 개발용 클라이언트에 아래 redirect URI를 등록해야 한다(수동 1회):
 #   http://localhost/login/oauth2/code/google
