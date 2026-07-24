@@ -26,6 +26,22 @@ check_status() {
   fi
 }
 
+check_status_not() {
+  local desc="$1" url="$2" unexpected="$3"
+  local actual attempt
+  for attempt in 1 2 3; do
+    actual=$(curl -o /dev/null -sS -w "%{http_code}" --max-time 10 "$url" 2>/dev/null || echo "000")
+    [[ "$actual" != "$unexpected" ]] && break
+    [[ "$attempt" -lt 3 ]] && sleep 2
+  done
+  if [[ "$actual" != "$unexpected" ]]; then
+    echo "  OK  [$actual] $desc"
+  else
+    echo "  FAIL[$actual] $desc ($url)" >&2
+    FAIL=1
+  fi
+}
+
 check_header_contains() {
   local desc="$1" url="$2" header_name="$3" expected="$4" max_attempts="${5:-3}"
   local headers value attempt
@@ -101,7 +117,10 @@ check_status "GET /admin -> 403 on public domain" "$BASE/admin" "403"
 check_status "GET /api/v1/community/session -> 200(익명)" "$API/community/session" "200"
 check_header_contains "GET /api/v1/community/session no-store" "$API/community/session" "Cache-Control" "no-store"
 check_status "GET /community -> 200" "$BASE/community" "200"
-check_status "GET /oauth2/authorization/google -> 302(backend로 라우팅)" "$BASE/oauth2/authorization/google" "302"
+# google provider가 아직 미설정이면(§4.5, CommunityOAuth2FallbackConfig) 302 대신 500을
+# 반환한다 — 이건 정상적인 완화 동작이지 배포 실패가 아니다. 여기서 검증하려는 건
+# "Caddy가 backend까지는 라우팅했다"는 사실이므로 404(=Next.js로 샘)만 아니면 통과시킨다.
+check_status_not "GET /oauth2/authorization/google -> backend로 라우팅(404 아님)" "$BASE/oauth2/authorization/google" "404"
 
 # Admin UI must still be reachable on the admin domain.
 if [[ -n "${KRAFT_ADMIN_DOMAIN:-}" ]]; then
