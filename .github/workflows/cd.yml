@@ -20,6 +20,9 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # ssh-action의 command_timeout(20m)은 원격 스크립트 실행만 감싼다 — SSH 연결 자체가
+    # 걸리는 경우까지 대비해 job 상한을 여유 있게 둔다.
+    timeout-minutes: 30
     environment:
       name: production
       url: https://kraft.io.kr
