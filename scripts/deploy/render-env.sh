@@ -36,16 +36,20 @@ substitution_list=$(printf '${%s} ' "${ALLOWED_VARS[@]}")
 # shellcheck disable=SC2086 # substitution_list는 envsubst가 요구하는 공백 구분 목록 형태라 unquoted 확장이 의도된 것
 envsubst "$substitution_list" < "$TEMPLATE" > "$OUTPUT"
 
-# application.yml의 google/naver OAuth2 등록은 이 플래그(on-property)로만 활성화된다.
-# 반드시 "값이 있을 때만 이 줄 자체를 추가"해야 한다 — docker-compose의 environment:
-# 블록처럼 ${VAR:-}로 빈 문자열을 강제로 채우면 on-property가 "존재하지만 빈 문자열"을
-# 여전히 활성으로 판정해 목적을 못 이룬다. 이 줄이 없으면 컨테이너 환경변수 자체가 생기지 않는다.
+# application.yml의 google/naver OAuth2 등록은 provider별 Spring profile로 활성화된다.
+# ID와 secret이 모두 있는 provider만 SPRING_PROFILES_INCLUDE에 넣어야 부분 설정이
+# registration 문서를 활성화해 애플리케이션 기동을 막는 일을 피할 수 있다.
 : > "$OAUTH_FLAGS_OUTPUT"
+oauth_profiles=()
 if [[ -n "${KRAFT_COMMUNITY_GOOGLE_CLIENT_ID:-}" && -n "${KRAFT_COMMUNITY_GOOGLE_CLIENT_SECRET:-}" ]]; then
-  echo "KRAFT_COMMUNITY_GOOGLE_OAUTH_ENABLED=true" >> "$OAUTH_FLAGS_OUTPUT"
+  oauth_profiles+=("community-google-oauth")
 fi
 if [[ -n "${KRAFT_COMMUNITY_NAVER_CLIENT_ID:-}" && -n "${KRAFT_COMMUNITY_NAVER_CLIENT_SECRET:-}" ]]; then
-  echo "KRAFT_COMMUNITY_NAVER_OAUTH_ENABLED=true" >> "$OAUTH_FLAGS_OUTPUT"
+  oauth_profiles+=("community-naver-oauth")
+fi
+if [[ ${#oauth_profiles[@]} -gt 0 ]]; then
+  profile_list=$(IFS=,; echo "${oauth_profiles[*]}")
+  echo "SPRING_PROFILES_INCLUDE=$profile_list" >> "$OAUTH_FLAGS_OUTPUT"
 fi
 chmod 600 "$OAUTH_FLAGS_OUTPUT"
 
